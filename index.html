@@ -140,6 +140,15 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       <div class="col-md-5"><div class="card p-3"><div class="fw-bold mb-2" style="font-size:14px"><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>보증만료 임박 (60일 이내)</div><div id="warranty-list"></div></div></div>
       <div class="col-md-7"><div class="card p-0"><div class="p-3 pb-0 fw-bold" style="font-size:14px">최근 상담일지</div><table class="table table-hover mb-0 mt-2"><thead class="table-light"><tr><th>일자</th><th>병원명</th><th>유형</th><th>내용</th></tr></thead><tbody id="recent-logs"></tbody></table></div></div>
     </div>
+    <!-- 영업사원 리더보드 -->
+    <div class="row g-3 mb-3">
+      <div class="col-12">
+        <div class="card p-0">
+          <div class="p-3 border-bottom fw-bold" style="font-size:14px"><i class="bi bi-trophy-fill me-2" style="color:#f59e0b"></i>이달의 영업사원 리더보드</div>
+          <div id="leaderboard" class="p-3"></div>
+        </div>
+      </div>
+    </div>
     <!-- ① 다음 액션 알림판 -->
     <div class="row g-3">
       <div class="col-12">
@@ -178,18 +187,23 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
   <div id="page-performance" class="page">
     <div class="page-header"><h5><i class="bi bi-graph-up-arrow me-2"></i>목표 vs 실적</h5><button class="btn btn-outline-primary btn-sm" onclick="openModal('target')"><i class="bi bi-plus-lg me-1"></i>목표 등록</button></div>
     <div class="row g-3 mb-3"><div class="col-12"><div class="card p-3"><div class="fw-bold mb-3" style="font-size:14px">월별 목표 vs 실적 (최근 12개월)</div><canvas id="chart-perf" height="90"></canvas></div></div></div>
-    <div class="row g-3">
+    <div class="row g-3 mb-3">
       <div class="col-md-6"><div class="card p-3"><div class="fw-bold mb-3" style="font-size:14px">영업사원별 달성률</div><div id="sales-perf-table"></div></div></div>
       <div class="col-md-6"><div class="card p-3"><div class="fw-bold mb-3" style="font-size:14px">병원별 계약실적 Top 10</div><canvas id="chart-cust-perf" height="220"></canvas></div></div>
+    </div>
+    <!-- Win Rate 퍼널 -->
+    <div class="row g-3">
+      <div class="col-12"><div class="card p-3"><div class="fw-bold mb-3" style="font-size:14px"><i class="bi bi-funnel-fill me-2" style="color:#7c3aed"></i>파이프라인 Win Rate 퍼널</div><div id="winrate-funnel"></div></div></div>
     </div>
   </div>
 
   <!-- 고객사 -->
   <div id="page-customers" class="page">
     <div class="page-header"><h5>고객사 관리</h5><button class="btn btn-primary btn-sm" onclick="openModal('customer')"><i class="bi bi-plus-lg me-1"></i>고객사 추가</button></div>
-    <div class="mb-3"><input type="text" id="search-cust" class="form-control form-control-sm" placeholder="병원명, 지역, 담당영업 검색..." oninput="renderCustomers()"></div>
+    <div class="mb-2"><input type="text" id="search-cust" class="form-control form-control-sm" placeholder="병원명, 지역, 담당영업, 태그 검색..." oninput="renderCustomers()"></div>
+    <div id="tag-filter-bar" class="mb-3 d-flex gap-2 flex-wrap"></div>
     <div class="card"><div class="card-body p-0"><table class="table table-hover mb-0">
-      <thead class="table-light"><tr><th>병원명</th><th>원장명</th><th>지역</th><th>전화</th><th>담당영업</th><th>등급</th><th></th></tr></thead>
+      <thead class="table-light"><tr><th>병원명</th><th>원장명</th><th>지역</th><th>전화</th><th>담당영업</th><th>등급</th><th>태그</th><th></th></tr></thead>
       <tbody id="cust-list"></tbody>
     </table></div></div>
   </div>
@@ -366,6 +380,10 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
     <div class="col-6"><label class="form-label">담당영업</label><input type="text" id="c-sales" class="form-control form-control-sm"></div>
     <div class="col-2"><label class="form-label">등급</label><select id="c-grade" class="form-select form-select-sm"><option>일반</option><option>VIP</option><option>잠재</option></select></div>
     <div class="col-4"><label class="form-label">연락처</label><input type="text" id="c-contactTel" class="form-control form-control-sm"></div>
+    <div class="col-12"><label class="form-label">태그</label>
+      <input type="text" id="c-tags" class="form-control form-control-sm" placeholder="쉼표로 구분 — VIP, 재구매예정, 신규, 이탈위험">
+      <div class="form-text">예: VIP, 재구매예정, 장기미연락</div>
+    </div>
     <div class="col-12"><label class="form-label">비고</label><textarea id="c-note" class="form-control form-control-sm" rows="2"></textarea></div>
   </div></div>
   <div class="modal-footer">
@@ -479,6 +497,22 @@ let stageChart=null, salesChart=null, perfChart=null, custPerfChart=null;
 let qItemCount=0;
 
 async function init() {
+  // 견적서 공개 링크 처리 (?q=견적번호)
+  const qParam = new URLSearchParams(location.search).get('q');
+  if(qParam) {
+    document.body.innerHTML = '<div style="padding:40px;max-width:900px;margin:auto;font-family:Noto Sans KR,sans-serif"><div id="pub-loading" class="text-center text-muted py-5">견적서 불러오는 중...</div><div id="pub-content"></div></div>';
+    try {
+      const r = await fetch(`https://raw.githubusercontent.com/${REPO}/${BRANCH}/data/quotes.json?t=${Date.now()}`);
+      const quotes = await r.json();
+      const q = quotes.find(x=>x.id===qParam);
+      if(!q) { document.getElementById('pub-loading').textContent='견적서를 찾을 수 없습니다.'; return; }
+      document.getElementById('pub-loading').style.display='none';
+      const rows=(q.items||[]).map((item,i)=>`<tr><td style="text-align:center;padding:8px;border-bottom:1px solid #eee">${i+1}</td><td style="padding:8px;border-bottom:1px solid #eee">${item.name}</td><td style="text-align:center;padding:8px;border-bottom:1px solid #eee">${item.qty}</td><td style="text-align:right;padding:8px;border-bottom:1px solid #eee">${Number(item.price||0).toLocaleString()}</td><td style="text-align:center;padding:8px;border-bottom:1px solid #eee">${item.discount||0}%</td><td style="text-align:right;padding:8px;border-bottom:1px solid #eee;font-weight:bold">${Number(item.amount||0).toLocaleString()}</td></tr>`).join('');
+      document.getElementById('pub-content').innerHTML=`<div style="padding:30px;border:1px solid #e5e7eb;border-radius:12px"><div style="text-align:center;margin-bottom:30px"><h2 style="font-size:26px;font-weight:800;color:#111827">견 적 서</h2></div><div style="display:flex;justify-content:space-between;margin-bottom:24px"><div><table style="font-size:13px;border-collapse:collapse"><tr><td style="color:#888;padding:3px 16px 3px 0">수 신</td><td style="font-weight:700;font-size:15px">${q.custName}</td></tr><tr><td style="color:#888;padding:3px 16px 3px 0">견적번호</td><td>${q.id}</td></tr><tr><td style="color:#888;padding:3px 16px 3px 0">견적일자</td><td>${new Date(q.quoteDate).toLocaleDateString('ko-KR')}</td></tr><tr><td style="color:#888;padding:3px 16px 3px 0">유효기간</td><td>${q.validUntil?new Date(q.validUntil).toLocaleDateString('ko-KR'):'-'}</td></tr></table></div><div style="text-align:right"><svg viewBox="0 0 310 205" xmlns="http://www.w3.org/2000/svg" fill="#ff4500" style="width:44px;height:29px"><rect x="0" y="0" width="95" height="95" rx="22"/><rect x="107" y="0" width="95" height="95" rx="22"/><rect x="215" y="0" width="95" height="95" rx="22"/><rect x="53" y="110" width="95" height="95" rx="22"/><rect x="161" y="110" width="95" height="95" rx="22"/></svg><span style="font-size:18px;font-weight:800;color:#ff4500;margin-left:6px">wontech</span><div style="font-size:12px;color:#888;margin-top:4px">담당: ${q.sales||''}</div><div style="font-size:22px;font-weight:800;margin-top:8px">₩ ${Number(q.total||0).toLocaleString()}</div><div style="font-size:11px;color:#888">(VAT 포함)</div></div></div><table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px"><thead><tr style="background:#1e2140;color:#fff"><th style="padding:10px;text-align:center;width:5%">No</th><th style="padding:10px;text-align:left;width:35%">제품명</th><th style="padding:10px;text-align:center;width:8%">수량</th><th style="padding:10px;text-align:right;width:18%">단가</th><th style="padding:10px;text-align:center;width:10%">할인율</th><th style="padding:10px;text-align:right;width:20%">금액</th></tr></thead><tbody>${rows}</tbody></table><div style="display:flex;justify-content:flex-end"><table style="font-size:13px;border-collapse:collapse;min-width:260px"><tr><td style="padding:6px 16px;color:#555;border-bottom:1px solid #eee">소 계</td><td style="padding:6px 16px;text-align:right;border-bottom:1px solid #eee">${Number(q.subtotal||0).toLocaleString()} 원</td></tr><tr><td style="padding:6px 16px;color:#555;border-bottom:1px solid #eee">추가 할인</td><td style="padding:6px 16px;text-align:right;border-bottom:1px solid #eee">- ${Number(q.discountAmt||0).toLocaleString()} 원</td></tr><tr><td style="padding:6px 16px;color:#555;border-bottom:1px solid #eee">부가세(10%)</td><td style="padding:6px 16px;text-align:right;border-bottom:1px solid #eee">${Number(q.vat||0).toLocaleString()} 원</td></tr><tr style="background:#f0f2f8"><td style="padding:10px 16px;font-weight:700;font-size:15px">합 계</td><td style="padding:10px 16px;text-align:right;font-weight:800;font-size:20px">₩ ${Number(q.total||0).toLocaleString()}</td></tr></table></div><div style="margin-top:20px;text-align:center"><button onclick="window.print()" style="background:#2563eb;color:#fff;border:none;padding:10px 28px;border-radius:8px;font-size:14px;cursor:pointer"><i class="bi bi-printer me-2"></i>인쇄 / PDF</button></div></div>`;
+    } catch(e) { document.getElementById('pub-loading').textContent='오류: '+e.message; }
+    return;
+  }
+
   if(!DB.token) {
     new bootstrap.Modal(document.getElementById('setupModal')).show();
     return;
@@ -572,9 +606,15 @@ function renderDashboard() {
   const wEl=document.getElementById('warranty-list');
   if(!alerts.length){wEl.innerHTML='<div class="text-muted text-center py-2" style="font-size:13px">만료 임박 장비 없음</div>';}
   else{wEl.innerHTML=alerts.map(w=>{
-    const cls=w.daysLeft<=30?'background:#fff0f0;color:#dc3545;border-left:3px solid #dc3545':'background:#fffbf0;color:#fd7e14;border-left:3px solid #fd7e14';
+    const danger=w.daysLeft<=30;
     const label=w.daysLeft<=0?'만료됨':w.daysLeft+'일 후';
-    return`<div class="d-flex justify-content-between align-items-center p-2 mb-1 rounded" style="${cls}"><div><div style="font-size:13px;font-weight:600">${w.custName||''}</div><div style="font-size:11px">${w.model||''}</div></div><span style="font-size:11px;font-weight:700">${label}</span></div>`;
+    return`<div class="d-flex justify-content-between align-items-center p-2 mb-1 rounded" style="background:${danger?'#fff0f0':'#fffbf0'};border-left:3px solid ${danger?'#dc2626':'#ea580c'}">
+      <div><div style="font-size:13px;font-weight:600;color:${danger?'#dc2626':'#ea580c'}">${w.custName||''}</div><div style="font-size:11px;color:#6b7280">${w.model||''}</div></div>
+      <div class="d-flex gap-2 align-items-center">
+        <span style="font-size:11px;font-weight:700;color:${danger?'#dc2626':'#ea580c'}">${label}</span>
+        <button class="btn btn-sm" style="font-size:10px;padding:2px 8px;background:${danger?'#dc2626':'#ea580c'};color:#fff;border:none;border-radius:6px" onclick="openDealFromWarranty('${(w.custName||'').replace(/'/g,"\\'")}','${(w.model||'').replace(/'/g,"\\'")}')">딜 등록</button>
+      </div>
+    </div>`;
   }).join('');}
 
   // 최근 상담
@@ -583,8 +623,44 @@ function renderDashboard() {
   if(!recent.length){rEl.innerHTML='<tr><td colspan="4" class="text-center text-muted py-2">없음</td></tr>';}
   else{rEl.innerHTML=recent.map(r=>`<tr><td style="font-size:12px">${fmtDate(r.date)}</td><td style="font-size:12px;font-weight:600">${r.custName||''}</td><td><span class="badge bg-secondary" style="font-size:10px">${r.type||''}</span></td><td style="font-size:12px;color:#666">${(r.content||'').substring(0,30)}</td></tr>`).join('');}
 
+  // 영업사원 리더보드
+  renderLeaderboard();
   // ① 다음 액션 알림판
   renderActionBoard();
+}
+
+function renderLeaderboard() {
+  const now = new Date();
+  const thisYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const byPerson = {};
+  DB.d.pipeline.forEach(d => {
+    const s = d.sales||'미배정';
+    if(!byPerson[s]) byPerson[s] = {deals:0, won:0, wonAmt:0, pipe:0, pipeAmt:0};
+    byPerson[s].deals++;
+    byPerson[s].pipeAmt += Number(d.amount||0);
+    if(d.stage==='계약완료') { byPerson[s].won++; byPerson[s].wonAmt += Number(d.amount||0); }
+    else byPerson[s].pipe++;
+  });
+  const sorted = Object.entries(byPerson).sort((a,b)=>b[1].wonAmt-a[1].wonAmt);
+  const maxAmt = sorted[0]?.[1]?.wonAmt || 1;
+  const medals = ['🥇','🥈','🥉'];
+  const el = document.getElementById('leaderboard');
+  if(!sorted.length) { el.innerHTML='<div class="text-muted text-center py-2" style="font-size:13px">파이프라인 데이터 없음</div>'; return; }
+  el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
+    ${sorted.map(([name,s],i)=>{
+      const rate = s.deals>0?Math.round(s.won/s.deals*100):0;
+      const barW = Math.round(s.wonAmt/maxAmt*100);
+      return`<div style="background:${i===0?'#fefce8':'#f9fafb'};border:1px solid ${i===0?'#fde68a':'#e5e7eb'};border-radius:10px;padding:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:13px;font-weight:700">${medals[i]||`#${i+1}`} ${name}</span>
+          <span style="font-size:11px;background:#e5e7eb;border-radius:6px;padding:2px 7px;color:#374151">${rate}% 성공</span>
+        </div>
+        <div style="font-size:18px;font-weight:800;color:#111827;margin-bottom:4px">${fmtAmt(s.wonAmt)}</div>
+        <div style="background:#e5e7eb;border-radius:4px;height:5px;margin-bottom:6px"><div style="background:${i===0?'#f59e0b':'#2563eb'};width:${barW}%;height:100%;border-radius:4px"></div></div>
+        <div style="font-size:11px;color:#6b7280">계약완료 ${s.won}건 · 진행중 ${s.pipe}건</div>
+      </div>`;
+    }).join('')}
+  </div>`;
 }
 
 function renderActionBoard() {
@@ -746,7 +822,18 @@ function delPipeline() {
   DB.save('pipeline').then(()=>{ bootstrap.Modal.getInstance(document.getElementById('pipelineModal')).hide(); renderPipeline(); });
 }
 
-function probColor(p){p=Number(p)||0;return p>=80?'#28a745':p>=50?'#fd7e14':'#adb5bd';}
+function probColor(p){p=Number(p)||0;return p>=80?'#16a34a':p>=50?'#ea580c':'#adb5bd';}
+
+function openDealFromWarranty(custName, model) {
+  setV('p-id',''); setV('p-cust',custName); setV('p-model',`${model} 재계약`);
+  setV('p-amount',''); setV('p-sales',''); setV('p-note',`보증만료 임박 — ${model} 재계약 제안`);
+  document.getElementById('p-stage').value='리드';
+  document.getElementById('p-prob').value='50';
+  setV('p-date','');
+  document.getElementById('p-del-btn').style.display='none';
+  showPage('pipeline', document.querySelector('.nav-link[onclick*="pipeline"]'));
+  new bootstrap.Modal(document.getElementById('pipelineModal')).show();
+}
 
 // ── 견적서 ──────────────────────────────────────────────────────
 function renderQuotes() {
@@ -760,8 +847,11 @@ function renderQuotes() {
     <td style="font-size:12px">${q.sales||''}</td>
     <td style="font-weight:700">${fmtAmt(Number(q.total||0))}</td>
     <td><span class="badge quote-status-${q.status||'임시'}">${q.status||'임시'}</span></td>
-    <td><button class="btn btn-outline-primary btn-sm" style="font-size:11px;padding:1px 6px" onclick="viewQuote('${q.id}')">보기</button>
-        <button class="btn btn-outline-danger btn-sm ms-1" style="font-size:11px;padding:1px 6px" onclick="delQuote('${q.id}')">삭제</button></td>
+    <td style="white-space:nowrap">
+      <button class="btn btn-outline-primary btn-sm me-1" style="font-size:11px;padding:1px 6px" onclick="viewQuote('${q.id}')">보기</button>
+      <button class="btn btn-outline-secondary btn-sm me-1" style="font-size:11px;padding:1px 6px" onclick="copyQuoteLink('${q.id}')"><i class="bi bi-link-45deg"></i>링크</button>
+      <button class="btn btn-outline-danger btn-sm" style="font-size:11px;padding:1px 6px" onclick="delQuote('${q.id}')">삭제</button>
+    </td>
   </tr>`).join('');
 }
 
@@ -823,6 +913,11 @@ function viewQuote(id){
 
 function delQuote(id){if(!confirm('삭제하시겠습니까?'))return;DB.d.quotes=DB.d.quotes.filter(x=>x.id!==id);DB.save('quotes').then(()=>renderQuotes());}
 
+function copyQuoteLink(id){
+  const url=`${location.origin}${location.pathname}?q=${id}`;
+  navigator.clipboard.writeText(url).then(()=>showToast('링크 복사됨!',true)).catch(()=>{prompt('아래 링크를 복사하세요:',url);});
+}
+
 // ── 목표 vs 실적 ──────────────────────────────────────────────────────
 function renderPerformance(){
   const months=[];
@@ -850,6 +945,38 @@ function renderPerformance(){
   const cl=Object.keys(custA).sort((a,b)=>custA[b]-custA[a]).slice(0,10);
   if(cl.length)custPerfChart=new Chart(ctx2,{type:'bar',data:{labels:cl,datasets:[{data:cl.map(c=>custA[c]),backgroundColor:'rgba(111,66,193,.7)',borderColor:'#6f42c1',borderWidth:2,borderRadius:4}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fmtAmt(v)}}}}});
   else document.getElementById('chart-cust-perf').parentNode.innerHTML='<div class="text-muted text-center py-4" style="font-size:13px">계약완료 실적 없음</div>';
+
+  // Win Rate 퍼널
+  const total = DB.d.pipeline.length;
+  const funnel = STAGES.map(s=>({stage:s, count:DB.d.pipeline.filter(d=>d.stage===s).length, amt:DB.d.pipeline.filter(d=>d.stage===s).reduce((a,d)=>a+Number(d.amount||0),0)}));
+  const maxCount = Math.max(...funnel.map(f=>f.count),1);
+  document.getElementById('winrate-funnel').innerHTML = total===0
+    ? '<div class="text-muted text-center py-3" style="font-size:13px">딜 데이터 없음</div>'
+    : `<div style="display:flex;flex-direction:column;gap:8px">
+      ${funnel.map((f,i)=>{
+        const prev = i>0?funnel[i-1].count:f.count;
+        const conv = prev>0?Math.round(f.count/prev*100):0;
+        const barW = Math.round(f.count/maxCount*100);
+        return`<div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-size:13px;font-weight:600;color:${SC[f.stage]}">${f.stage}</span>
+            <div style="display:flex;gap:10px;font-size:12px;color:#6b7280">
+              ${i>0?`<span style="color:${conv>=70?'#16a34a':conv>=40?'#ea580c':'#dc2626'};font-weight:700">↓ ${conv}%</span>`:'<span style="font-size:11px">시작</span>'}
+              <span>${f.count}건</span>
+              <span style="font-weight:600">${fmtAmt(f.amt)}</span>
+            </div>
+          </div>
+          <div style="background:#f3f4f6;border-radius:6px;height:28px;position:relative;overflow:hidden">
+            <div style="background:${SC[f.stage]};width:${barW}%;height:100%;border-radius:6px;opacity:.85;transition:width .4s"></div>
+            <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:700;color:#fff;mix-blend-mode:difference">${f.count}건</span>
+          </div>
+        </div>`;
+      }).join('')}
+      <div style="margin-top:8px;padding:10px 14px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0;display:flex;justify-content:space-between">
+        <span style="font-size:13px;font-weight:700;color:#15803d">전체 Win Rate</span>
+        <span style="font-size:15px;font-weight:800;color:#15803d">${total>0?Math.round(funnel[4].count/total*100):0}%</span>
+      </div>
+    </div>`;
 }
 
 function saveTarget(){
@@ -860,24 +987,43 @@ function saveTarget(){
 }
 
 // ── 고객사 ──────────────────────────────────────────────────────
+let _activeTag = '';
 function renderCustomers(){
   const q=(document.getElementById('search-cust').value||'').toLowerCase();
-  const list=DB.d.customers.filter(c=>(c.name||'').toLowerCase().includes(q)||(c.region||'').toLowerCase().includes(q)||(c.sales||'').toLowerCase().includes(q));
+  // 전체 태그 집계
+  const allTags = new Set();
+  DB.d.customers.forEach(c=>(c.tags||[]).forEach(t=>allTags.add(t)));
+  const tagBar = document.getElementById('tag-filter-bar');
+  tagBar.innerHTML = ['전체',...allTags].map(t=>`<span onclick="setTagFilter('${t}')" style="cursor:pointer;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid ${_activeTag===t||(_activeTag===''&&t==='전체')?'#2563eb':'#e5e7eb'};background:${_activeTag===t||(_activeTag===''&&t==='전체')?'#eff6ff':'#fff'};color:${_activeTag===t||(_activeTag===''&&t==='전체')?'#2563eb':'#6b7280'}">${t}</span>`).join('');
+
+  const list=DB.d.customers.filter(c=>{
+    const matchQ=!q||(c.name||'').toLowerCase().includes(q)||(c.region||'').toLowerCase().includes(q)||(c.sales||'').toLowerCase().includes(q)||((c.tags||[]).join(',').toLowerCase().includes(q));
+    const matchTag=!_activeTag||(c.tags||[]).includes(_activeTag);
+    return matchQ&&matchTag;
+  });
   const el=document.getElementById('cust-list');
-  if(!list.length){el.innerHTML='<tr><td colspan="7" class="text-center text-muted py-3">데이터 없음</td></tr>';return;}
-  el.innerHTML=list.map(c=>`<tr><td><strong>${c.name||''}</strong></td><td>${c.doctor||''}</td><td>${c.region||''}</td><td>${c.tel||''}</td><td>${c.sales||''}</td><td>${gradeBadge(c.grade)}</td><td><button class="btn btn-outline-primary" style="font-size:11px;padding:1px 6px" onclick='editCustomer("${c.id}")'>수정</button></td></tr>`).join('');
+  if(!list.length){el.innerHTML='<tr><td colspan="8" class="text-center text-muted py-3">데이터 없음</td></tr>';return;}
+  el.innerHTML=list.map(c=>`<tr>
+    <td><strong>${c.name||''}</strong></td><td>${c.doctor||''}</td><td>${c.region||''}</td><td>${c.tel||''}</td><td>${c.sales||''}</td><td>${gradeBadge(c.grade)}</td>
+    <td>${(c.tags||[]).map(t=>`<span style="background:#eff6ff;color:#2563eb;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:600;margin-right:3px">${t}</span>`).join('')}</td>
+    <td><button class="btn btn-outline-primary" style="font-size:11px;padding:1px 6px" onclick='editCustomer("${c.id}")'>수정</button></td>
+  </tr>`).join('');
 }
+function setTagFilter(t){ _activeTag=(t==='전체')?'':t; renderCustomers(); }
 
 function editCustomer(id){
   const c=DB.d.customers.find(x=>x.id===id);if(!c)return;
   setV('c-id',c.id);setV('c-name',c.name||'');setV('c-doctor',c.doctor||'');setV('c-region',c.region||'');setV('c-address',c.address||'');setV('c-tel',c.tel||'');setV('c-contact',c.contact||'');setV('c-contactTel',c.contactTel||'');setV('c-sales',c.sales||'');setV('c-note',c.note||'');
+  setV('c-tags',(c.tags||[]).join(', '));
   document.getElementById('c-grade').value=c.grade||'일반';
   document.getElementById('c-del-btn').style.display='inline-block';
   new bootstrap.Modal(document.getElementById('custModal')).show();
 }
 
 function saveCustomer(){
-  const d={id:gV('c-id')||uid(),name:gV('c-name'),doctor:gV('c-doctor'),region:gV('c-region'),address:gV('c-address'),tel:gV('c-tel'),contact:gV('c-contact'),contactTel:gV('c-contactTel'),sales:gV('c-sales'),grade:gV('c-grade'),note:gV('c-note')};
+  const tagsRaw=gV('c-tags');
+  const tags=tagsRaw?tagsRaw.split(',').map(t=>t.trim()).filter(Boolean):[];
+  const d={id:gV('c-id')||uid(),name:gV('c-name'),doctor:gV('c-doctor'),region:gV('c-region'),address:gV('c-address'),tel:gV('c-tel'),contact:gV('c-contact'),contactTel:gV('c-contactTel'),sales:gV('c-sales'),grade:gV('c-grade'),note:gV('c-note'),tags};
   if(!d.name){alert('병원명을 입력하세요.');return;}
   const idx=DB.d.customers.findIndex(x=>x.id===d.id);
   if(idx>=0) DB.d.customers[idx]=d; else DB.d.customers.push(d);
