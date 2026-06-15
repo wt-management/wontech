@@ -151,6 +151,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       <li><a class="nav-link" onclick="showPage('pipeline',this)"><i class="bi bi-kanban"></i>영업 파이프라인</a></li>
       <li><a class="nav-link" onclick="showPage('quotes',this)"><i class="bi bi-file-earmark-text"></i>견적서</a></li>
       <li><a class="nav-link" onclick="showPage('performance',this)"><i class="bi bi-bar-chart-line"></i>목표 vs 실적</a></li>
+      <li><a class="nav-link" onclick="showPage('consumables',this)"><i class="bi bi-capsule"></i>소모품 매출</a></li>
     </ul>
     <div class="nav-label mt-3">관리</div>
     <ul class="nav flex-column gap-0">
@@ -365,6 +366,73 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       <tbody id="product-list"></tbody>
     </table></div></div>
   </div>
+
+  <!-- 소모품 매출 -->
+  <div id="page-consumables" class="page">
+    <div class="page-header">
+      <h5><i class="bi bi-capsule me-2"></i>국내 소모품 매출현황</h5>
+      <div class="d-flex gap-2 align-items-center">
+        <select id="cons-year" class="form-select form-select-sm" style="width:auto" onchange="renderConsumables()">
+          <option value="both">2025 + 2026</option>
+          <option value="2025">2025년</option>
+          <option value="2026">2026년</option>
+        </select>
+        <small class="text-muted" id="cons-updated"></small>
+      </div>
+    </div>
+
+    <!-- KPI -->
+    <div class="row g-3 mb-4" id="cons-kpi"></div>
+
+    <!-- 차트 행 -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-8">
+        <div class="card p-3">
+          <div class="fw-bold mb-1" style="font-size:14px">월별 매출 추이</div>
+          <div style="font-size:11px;color:#9ca3af;margin-bottom:14px">2025 연간 vs 2026 누계 (단위: 억원)</div>
+          <canvas id="cons-chart-monthly" height="180"></canvas>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card p-3 h-100">
+          <div class="fw-bold mb-1" style="font-size:14px">제품군 비중</div>
+          <div style="font-size:11px;color:#9ca3af;margin-bottom:14px" id="cons-donut-sub">2026 YTD 기준</div>
+          <canvas id="cons-chart-donut" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- 제품 순위 -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-6">
+        <div class="card p-3">
+          <div class="fw-bold mb-1" style="font-size:14px">제품별 매출 순위 — 2025 연간</div>
+          <div style="font-size:11px;color:#9ca3af;margin-bottom:14px">국내 소모품 확정 실적</div>
+          <div id="cons-prod-2025"></div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card p-3">
+          <div class="fw-bold mb-1" style="font-size:14px">제품별 매출 순위 — 2026 (YTD)</div>
+          <div style="font-size:11px;color:#9ca3af;margin-bottom:14px">2026년 1–5월 누계</div>
+          <div id="cons-prod-2026"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 분기별 테이블 -->
+    <div class="card p-3">
+      <div class="fw-bold mb-1" style="font-size:14px">분기별 비교</div>
+      <div style="font-size:11px;color:#9ca3af;margin-bottom:14px">2025 확정 vs 2026 진행 (단위: 원)</div>
+      <table class="table table-sm mb-0">
+        <thead class="table-light">
+          <tr><th>분기</th><th class="text-end">2025 실적</th><th class="text-end">2026 실적</th><th class="text-end">전년 대비</th></tr>
+        </thead>
+        <tbody id="cons-qtr"></tbody>
+      </table>
+    </div>
+  </div>
+
 </div>
 
 <!-- 저장 토스트 -->
@@ -673,7 +741,7 @@ function showPage(name, el) {
   if(el) el.classList.add('active');
   else { const links = document.querySelectorAll('.nav-link');
     links.forEach(l=>{ if(l.textContent.trim().includes(
-      {dashboard:'대시보드',pipeline:'파이프라인',quotes:'견적서',performance:'목표',customers:'고객사',equipments:'장비',logs:'상담일지',products:'제품'}[name]||''
+      {dashboard:'대시보드',pipeline:'파이프라인',quotes:'견적서',performance:'목표',customers:'고객사',equipments:'장비',logs:'상담일지',products:'제품',consumables:'소모품'}[name]||''
     )) l.classList.add('active'); }); }
   if(name==='dashboard') renderDashboard();
   else if(name==='pipeline') renderPipeline();
@@ -683,6 +751,7 @@ function showPage(name, el) {
   else if(name==='equipments') initEquip();
   else if(name==='logs') renderLogs();
   else if(name==='products') renderProducts();
+  else if(name==='consumables') renderConsumables();
 }
 
 // ── 토스트 ──────────────────────────────────────────────────────
@@ -906,6 +975,115 @@ function renderActionBoard() {
           <button class="btn btn-sm" style="background:${g.color};color:#fff;font-size:11px;padding:3px 10px;border-radius:6px;flex-shrink:0" onclick='editLog("${a.id}")'>확인</button>
         </div>`).join('')}
     </div>`).join('');
+}
+
+// ── 소모품 매출현황 ───────────────────────────────────────────────────
+const CONS = {
+  monthly2025:{1:1916440407,2:1879075353,3:1584891152,4:2032725101,5:1402860054,6:1537911279,7:1764311210,8:1352460915,9:1561628906,10:1201389351,11:1242949951,12:1226676536},
+  monthly2026:{1:1088705043,2:853671480,3:1286439809,4:1265942064,5:1051407372,6:381210000},
+  products2025:{'Oligio Tip [F-4.0]':12580750001,'Oligio Tip [XF-4.0]':2767854545,'Oligio Tip [E-0.25]':1500000000,'A/S소모품':523114721,'Cartridge':365730000,'Oligio Tip [XE-0.25]':318000000,'의료기기':169803751,'BA600S1':126000000,'BA400RS1':121714036,'BA600S2':48000000},
+  products2026:{'Oligio Tip [F-4.0]':3735000000,'Oligio Tip [XF-4.0]':752400000,'Oligio Tip [E-0.25]':472500000,'의료기기':321614582,'A/S소모품':169802275,'Cartridge':110400000,'Oligio Tip [XE-0.25]':92800000,'BA600S2':68000000,'BA400RS1':58089000,'BA600S1':49300000},
+  groups2026:{'Oligio Tip':5052700000,'의료기기':321614582,'A/S소모품':169802275,'BA600':155370000,'Cartridge':110400000,'BA400':69539908,'AG275':23600000,'기타':24349003},
+  qtr2025:{'1분기':5380406912,'2분기':4973496434,'3분기':4678401031,'4분기':3671015838},
+  qtr2026:{'1분기':3228816332,'2분기':2698559436},
+  updatedAt:'2026.06.12'
+};
+let consMonthlyChart=null, consDonutChart=null;
+
+function renderConsumables() {
+  document.getElementById('cons-updated').textContent = `기준일 ${CONS.updatedAt} · 국내 소모품`;
+  const fmtB = v => (v/1e8).toFixed(1)+'억';
+  const fmtW = v => v>=1e8?(v/1e8).toFixed(1)+'억원':v>=1e4?Math.round(v/1e4).toLocaleString()+'만원':v.toLocaleString()+'원';
+  const fmtChg = p => (p>=0?'+':'')+p.toFixed(1)+'%';
+
+  const total2025 = Object.values(CONS.monthly2025).reduce((s,v)=>s+v,0);
+  const ytdMonths = [1,2,3,4,5];
+  const total2026ytd = ytdMonths.reduce((s,m)=>s+(CONS.monthly2026[m]||0),0);
+  const total2025ytd = ytdMonths.reduce((s,m)=>s+(CONS.monthly2025[m]||0),0);
+  const yoy = (total2026ytd/total2025ytd-1)*100;
+  const avg2026 = total2026ytd/ytdMonths.length;
+  const avg2025 = total2025/12;
+
+  // KPI 카드
+  const kpiData = [
+    {color:'#2563eb',bg:'#eff6ff',icon:'bi-calendar-check',label:'2025 연간 매출',value:fmtB(total2025),sub:'국내 소모품 확정 실적',badge:null},
+    {color:'#16a34a',bg:'#f0fdf4',icon:'bi-graph-up-arrow',label:'2026 누계 (1–5월)',value:fmtB(total2026ytd),sub:`전년 동기 ${fmtB(total2025ytd)} 대비`,badge:{text:fmtChg(yoy),up:yoy>=0}},
+    {color:'#ea580c',bg:'#fff7ed',icon:'bi-star',label:'2026 최다판매 제품',value:'Oligio Tip F-4.0',sub:fmtW(CONS.products2026['Oligio Tip [F-4.0]']),badge:null},
+    {color:'#7c3aed',bg:'#faf5ff',icon:'bi-bar-chart',label:'2026 월평균',value:fmtB(avg2026),sub:`2025 월평균 ${fmtB(avg2025)} 대비`,badge:{text:fmtChg((avg2026/avg2025-1)*100),up:avg2026>=avg2025}}
+  ];
+  document.getElementById('cons-kpi').innerHTML = kpiData.map(k=>`
+    <div class="col-6 col-lg-3">
+      <div class="card p-3" style="border-top:3px solid ${k.color}">
+        <div style="font-size:12px;font-weight:600;color:#6b7280;margin-bottom:8px"><i class="bi ${k.icon} me-1" style="color:${k.color}"></i>${k.label}</div>
+        <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:5px">${k.value}</div>
+        <div style="font-size:11px;color:#9ca3af">${k.sub}</div>
+        ${k.badge?`<span style="display:inline-flex;align-items:center;margin-top:6px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:${k.badge.up?'#f0fdf4':'#fef2f2'};color:${k.badge.up?'#16a34a':'#dc2626'}">${k.badge.text}</span>`:''}
+      </div>
+    </div>`).join('');
+
+  // 월별 차트
+  const labels12 = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const d25 = Array.from({length:12},(_,i)=>(CONS.monthly2025[i+1]||0)/1e8);
+  const d26 = Array.from({length:12},(_,i)=>(CONS.monthly2026[i+1]||null)/1e8);
+  if(consMonthlyChart) consMonthlyChart.destroy();
+  consMonthlyChart = new Chart(document.getElementById('cons-chart-monthly').getContext('2d'),{
+    data:{labels:labels12,datasets:[
+      {type:'bar',label:'2025년',data:d25,backgroundColor:'rgba(37,99,235,0.12)',borderColor:'#2563eb',borderWidth:1.5,borderRadius:5,borderSkipped:false},
+      {type:'line',label:'2026년',data:d26,borderColor:'#ff4500',borderWidth:2.5,pointBackgroundColor:'#ff4500',pointRadius:4,tension:0.35,fill:false,spanGaps:false}
+    ]},
+    options:{plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12}}},scales:{y:{ticks:{callback:v=>v+'억',font:{size:11}},grid:{color:'#f3f4f6'}},x:{grid:{display:false},ticks:{font:{size:11}}}}}
+  });
+
+  // 도넛 차트
+  const grpL = Object.keys(CONS.groups2026), grpV = Object.values(CONS.groups2026);
+  const GCOL = ['#ff4500','#2563eb','#16a34a','#f59e0b','#7c3aed','#0891b2','#db2777','#6b7280'];
+  if(consDonutChart) consDonutChart.destroy();
+  consDonutChart = new Chart(document.getElementById('cons-chart-donut').getContext('2d'),{
+    type:'doughnut',
+    data:{labels:grpL,datasets:[{data:grpV,backgroundColor:GCOL,borderWidth:2,borderColor:'#fff'}]},
+    options:{cutout:'60%',plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:6}},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${fmtW(ctx.raw)} (${(ctx.raw/grpV.reduce((s,v)=>s+v,0)*100).toFixed(1)}%)`}}}}
+  });
+
+  // 제품 순위 바
+  function prodList(elId, data, color) {
+    const items = Object.entries(data).sort((a,b)=>b[1]-a[1]);
+    const maxV = items[0][1];
+    const rankClr = ['#f59e0b','#9ca3af','#cd7f32'];
+    document.getElementById(elId).innerHTML = items.map(([name,v],i)=>`
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f3f4f6">
+        <div style="width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;background:${i<3?rankClr[i]+'22':'#f3f4f6'};color:${i<3?rankClr[i]:'#9ca3af'}">${i+1}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+          <div style="background:#f3f4f6;border-radius:4px;height:6px"><div style="width:${(v/maxV*100).toFixed(1)}%;height:100%;border-radius:4px;background:${color}"></div></div>
+        </div>
+        <div style="font-size:12px;font-weight:700;color:#374151;flex-shrink:0;min-width:64px;text-align:right">${fmtW(v)}</div>
+      </div>`).join('');
+  }
+  prodList('cons-prod-2025', CONS.products2025, '#2563eb');
+  prodList('cons-prod-2026', CONS.products2026, '#ff4500');
+
+  // 분기 테이블
+  const qtrs = ['1분기','2분기','3분기','4분기'];
+  let s25=0, s26=0;
+  const rows = qtrs.map(q=>{
+    const v25=CONS.qtr2025[q]||0, v26=CONS.qtr2026[q];
+    s25+=v25; if(v26!==undefined) s26+=v26;
+    const chg = v26!==undefined?(v26/v25-1)*100:null;
+    return`<tr>
+      <td class="fw-600">${q}</td>
+      <td class="text-end" style="font-size:13px">${v25.toLocaleString()}</td>
+      <td class="text-end" style="font-size:13px">${v26!==undefined?v26.toLocaleString():'<span style="color:#9ca3af">진행중</span>'}</td>
+      <td class="text-end" style="font-weight:700;color:${chg===null?'#9ca3af':chg>=0?'#16a34a':'#dc2626'}">${chg!==null?fmtChg(chg):'-'}</td>
+    </tr>`;
+  });
+  const totalChg = (s26/(CONS.qtr2025['1분기']+CONS.qtr2025['2분기'])-1)*100;
+  rows.push(`<tr style="background:#f9fafb;font-weight:700">
+    <td>합계</td>
+    <td class="text-end">${s25.toLocaleString()}</td>
+    <td class="text-end">${s26.toLocaleString()}</td>
+    <td class="text-end" style="color:${totalChg>=0?'#16a34a':'#dc2626'}">${fmtChg(totalChg)}</td>
+  </tr>`);
+  document.getElementById('cons-qtr').innerHTML = rows.join('');
 }
 
 // ── 병원명 자동완성 ──────────────────────────────────────────────────
