@@ -34,6 +34,26 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 .stat-num{font-size:1.7rem;font-weight:700;line-height:1;color:var(--text)}
 .stat-label{font-size:12px;color:var(--text-2);margin-top:3px;font-weight:500}
 .stat-trend{font-size:11px;margin-top:4px}
+/* 대시보드 리뉴얼 */
+.dash-hero{display:flex;justify-content:space-between;align-items:flex-start;padding:24px 0 20px;border-bottom:1px solid var(--border);margin-bottom:28px}
+.dash-greeting{font-size:1.35rem;font-weight:700;color:var(--text);line-height:1.2}
+.dash-date{font-size:13px;color:var(--text-2);margin-top:4px}
+.dash-hero-right{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.dash-badge{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--text-2)}
+.kpi-card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:20px 22px;height:100%;transition:box-shadow .15s,transform .15s}
+.kpi-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.08);transform:translateY(-1px)}
+.kpi-label{font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:10px;display:flex;align-items:center}
+.kpi-value{font-size:1.75rem;font-weight:800;color:var(--text);line-height:1;margin-bottom:6px}
+.kpi-sub{font-size:12px;color:var(--text-2);margin-bottom:10px;min-height:16px}
+.kpi-progress-wrap{display:flex;align-items:center;gap:8px;margin-top:4px}
+.kpi-progress-track{flex:1;background:#f3f4f6;border-radius:999px;height:6px;overflow:hidden}
+.kpi-progress-fill{height:100%;border-radius:999px;transition:width .6s ease}
+.kpi-progress-label{font-size:11px;font-weight:700;color:var(--text-2);flex-shrink:0}
+.funnel-row{display:flex;align-items:center;margin-bottom:8px;gap:8px}
+.funnel-bar-wrap{flex:1;background:#f3f4f6;border-radius:6px;height:28px;overflow:hidden;position:relative}
+.funnel-bar{height:100%;border-radius:6px;display:flex;align-items:center;padding:0 10px;font-size:11px;font-weight:700;color:#fff;min-width:2px;transition:width .6s ease;white-space:nowrap;overflow:hidden}
+.funnel-label{width:68px;font-size:12px;font-weight:600;color:var(--text);text-align:right;flex-shrink:0}
+.funnel-amt{width:72px;font-size:11px;color:var(--text-2);text-align:right;flex-shrink:0}
 .page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
 .page-header h5{margin:0;font-weight:700;font-size:18px;color:var(--text);letter-spacing:-.3px}
 .table{border-collapse:separate;border-spacing:0}
@@ -164,43 +184,102 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 
   <!-- 대시보드 -->
   <div id="page-dashboard" class="page active">
-    <div class="page-header"><h5>대시보드</h5><small class="text-muted" id="dash-date"></small></div>
+    <!-- 인사 헤더 -->
+    <div class="dash-hero">
+      <div>
+        <div class="dash-greeting" id="dash-greeting">안녕하세요 👋</div>
+        <div class="dash-date" id="dash-date"></div>
+      </div>
+      <div class="dash-hero-right" id="dash-quick-badges"></div>
+    </div>
+
+    <!-- KPI 카드 4개 -->
     <div class="row g-3 mb-4">
-      <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#eff6ff"><i class="bi bi-building" style="color:#2563eb;font-size:20px"></i></div><div><div class="stat-num" id="s-cust">-</div><div class="stat-label">전체 고객사</div></div></div></div>
-      <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#f0fdf4"><i class="bi bi-cpu" style="color:#16a34a;font-size:20px"></i></div><div><div class="stat-num" id="s-equip">-</div><div class="stat-label">납품 장비</div></div></div></div>
-      <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#fff7ed"><i class="bi bi-kanban" style="color:#ea580c;font-size:20px"></i></div><div><div class="stat-num" id="s-pipe">-</div><div class="stat-label">진행중 딜</div></div></div></div>
-      <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#faf5ff"><i class="bi bi-graph-up" style="color:#7c3aed;font-size:20px"></i></div><div><div class="stat-num" id="s-weighted">-</div><div class="stat-label">가중 예상매출</div></div></div></div>
-    </div>
-    <div class="row g-3 mb-3">
-      <div class="col-md-6"><div class="card p-3"><div class="fw-bold mb-3" style="font-size:14px">파이프라인 단계별 금액</div><canvas id="chart-stage" height="200"></canvas></div></div>
-      <div class="col-md-6"><div class="card p-3"><div class="fw-bold mb-3" style="font-size:14px">영업사원별 파이프라인</div><canvas id="chart-sales" height="200"></canvas></div></div>
-    </div>
-    <div class="row g-3 mb-3">
-      <div class="col-md-5"><div class="card p-3"><div class="fw-bold mb-2" style="font-size:14px"><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>보증만료 임박 (60일 이내)</div><div id="warranty-list"></div></div></div>
-      <div class="col-md-7"><div class="card p-0"><div class="p-3 pb-0 fw-bold" style="font-size:14px">최근 상담일지</div><table class="table table-hover mb-0 mt-2"><thead class="table-light"><tr><th>일자</th><th>병원명</th><th>유형</th><th>내용</th></tr></thead><tbody id="recent-logs"></tbody></table></div></div>
-    </div>
-    <!-- 영업사원 리더보드 -->
-    <div class="row g-3 mb-3">
-      <div class="col-12">
-        <div class="card p-0">
-          <div class="p-3 border-bottom fw-bold" style="font-size:14px"><i class="bi bi-trophy-fill me-2" style="color:#f59e0b"></i>이달의 영업사원 리더보드</div>
-          <div id="leaderboard" class="p-3"></div>
+      <div class="col-6 col-lg-3">
+        <div class="kpi-card">
+          <div class="kpi-label"><i class="bi bi-trophy-fill me-1" style="color:#f59e0b"></i>이달 계약금액</div>
+          <div class="kpi-value" id="kpi-won-amt">-</div>
+          <div class="kpi-sub" id="kpi-won-sub"></div>
+          <div class="kpi-progress-wrap" id="kpi-won-bar-wrap" style="display:none">
+            <div class="kpi-progress-track"><div class="kpi-progress-fill" id="kpi-won-bar" style="background:linear-gradient(90deg,#16a34a,#4ade80)"></div></div>
+            <span class="kpi-progress-label" id="kpi-won-pct"></span>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="kpi-card">
+          <div class="kpi-label"><i class="bi bi-bullseye me-1" style="color:#2563eb"></i>목표 달성률</div>
+          <div class="kpi-value" id="kpi-achieve">-</div>
+          <div class="kpi-sub" id="kpi-achieve-sub"></div>
+          <div class="kpi-progress-wrap">
+            <div class="kpi-progress-track"><div class="kpi-progress-fill" id="kpi-achieve-bar" style="background:linear-gradient(90deg,#2563eb,#60a5fa)"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="kpi-card">
+          <div class="kpi-label"><i class="bi bi-graph-up me-1" style="color:#7c3aed"></i>파이프라인 (가중)</div>
+          <div class="kpi-value" id="kpi-pipe">-</div>
+          <div class="kpi-sub" id="kpi-pipe-sub"></div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="kpi-card" id="kpi-action-card" style="cursor:pointer" onclick="document.getElementById('dash-action-section').scrollIntoView({behavior:'smooth'})">
+          <div class="kpi-label"><i class="bi bi-bell-fill me-1" style="color:#ea580c"></i>이번주 할 일</div>
+          <div class="kpi-value" id="kpi-actions">-</div>
+          <div class="kpi-sub" id="kpi-actions-sub"></div>
         </div>
       </div>
     </div>
-    <!-- ① 다음 액션 알림판 -->
-    <div class="row g-3">
-      <div class="col-12">
-        <div class="card p-0">
+
+    <!-- 차트 행 -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-7">
+        <div class="card p-3 h-100">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="fw-bold" style="font-size:14px">월별 계약 실적</div>
+            <span style="font-size:11px;color:#9ca3af">최근 6개월</span>
+          </div>
+          <canvas id="chart-monthly" height="170"></canvas>
+        </div>
+      </div>
+      <div class="col-md-5">
+        <div class="card p-3 h-100">
+          <div class="fw-bold mb-3" style="font-size:14px">파이프라인 퍼널</div>
+          <div id="dash-funnel"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 액션 + 보증만료 -->
+    <div class="row g-3 mb-4" id="dash-action-section">
+      <div class="col-md-7">
+        <div class="card p-0 h-100">
           <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
-            <div class="fw-bold" style="font-size:14px"><i class="bi bi-bell-fill me-2" style="color:#ea580c"></i>다음 액션 알림판</div>
+            <div class="fw-bold" style="font-size:14px"><i class="bi bi-bell-fill me-2" style="color:#ea580c"></i>다음 액션</div>
             <div class="d-flex gap-2">
               <span class="badge" style="background:#fef2f2;color:#dc2626;font-weight:600;font-size:11px" id="action-overdue-cnt"></span>
               <span class="badge" style="background:#fff7ed;color:#ea580c;font-weight:600;font-size:11px" id="action-today-cnt"></span>
               <span class="badge" style="background:#eff6ff;color:#2563eb;font-weight:600;font-size:11px" id="action-week-cnt"></span>
             </div>
           </div>
-          <div id="action-board" style="max-height:260px;overflow-y:auto"></div>
+          <div id="action-board" style="max-height:300px;overflow-y:auto"></div>
+        </div>
+      </div>
+      <div class="col-md-5">
+        <div class="card p-3 h-100">
+          <div class="fw-bold mb-2" style="font-size:14px"><i class="bi bi-shield-exclamation me-1" style="color:#ea580c"></i>보증만료 임박 <span style="font-weight:400;color:#9ca3af;font-size:12px">60일 이내</span></div>
+          <div id="warranty-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 리더보드 -->
+    <div class="row g-3">
+      <div class="col-12">
+        <div class="card p-0">
+          <div class="p-3 border-bottom fw-bold" style="font-size:14px"><i class="bi bi-trophy-fill me-2" style="color:#f59e0b"></i>영업사원 누적 실적</div>
+          <div id="leaderboard" class="p-3"></div>
         </div>
       </div>
     </div>
@@ -617,74 +696,142 @@ function showToast(msg, hide=false, err=false) {
 }
 
 // ── 대시보드 ──────────────────────────────────────────────────────
+let monthlyChart = null;
 function renderDashboard() {
-  document.getElementById('dash-date').textContent = new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'});
-  document.getElementById('s-cust').textContent = DB.d.customers.length;
-  document.getElementById('s-equip').textContent = DB.d.equipments.length.toLocaleString();
+  const now = new Date();
+  const thisYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const hour = now.getHours();
+  const greet = hour < 12 ? '좋은 아침이에요 ☀️' : hour < 18 ? '안녕하세요 👋' : '수고하셨어요 🌙';
+  document.getElementById('dash-greeting').textContent = greet;
+  document.getElementById('dash-date').textContent = now.toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
 
-  const activePipe = DB.d.pipeline.filter(d=>d.stage!=='계약완료');
-  document.getElementById('s-pipe').textContent = activePipe.length;
-  const weighted = DB.d.pipeline.reduce((s,d)=>s+Number(d.amount||0)*Number(d.prob||0)/100,0);
-  document.getElementById('s-weighted').textContent = fmtAmt(Math.round(weighted));
+  // 퀵 배지 (우측 상단)
+  const activePipe = DB.d.pipeline.filter(d => d.stage !== '계약완료');
+  const overdueActs = DB.d.logs.filter(l => {
+    if(!l.nextDate||!l.nextAction) return false;
+    const d = new Date(l.nextDate); d.setHours(0,0,0,0);
+    const t = new Date(); t.setHours(0,0,0,0);
+    return d < t;
+  });
+  document.getElementById('dash-quick-badges').innerHTML = `
+    <div class="dash-badge"><i class="bi bi-kanban" style="color:#2563eb"></i>딜 ${activePipe.length}건 진행중</div>
+    ${overdueActs.length ? `<div class="dash-badge" style="border-color:#fecaca;color:#dc2626"><i class="bi bi-exclamation-circle-fill" style="color:#dc2626"></i>지연 액션 ${overdueActs.length}건</div>` : ''}
+  `;
 
-  // 단계별 차트
-  const byStage={};
-  DB.d.pipeline.forEach(d=>{byStage[d.stage]=(byStage[d.stage]||0)+Number(d.amount||0);});
-  const ctx1=document.getElementById('chart-stage').getContext('2d');
-  if(stageChart)stageChart.destroy();
-  const sl=Object.keys(byStage);
-  stageChart=new Chart(ctx1,{type:'bar',data:{labels:sl,datasets:[{data:Object.values(byStage),backgroundColor:sl.map(l=>SC[l]||'#adb5bd'),borderRadius:6,borderSkipped:false}]},options:{plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>fmtAmt(v)}},x:{grid:{display:false}}}}});
+  // KPI 1: 이달 계약금액
+  const wonThisMonth = DB.d.pipeline.filter(d => d.stage === '계약완료' && (d.stageUpdatedAt||'').startsWith(thisYM));
+  const wonAmt = wonThisMonth.reduce((s,d) => s + Number(d.amount||0), 0);
+  document.getElementById('kpi-won-amt').textContent = fmtAmt(wonAmt);
+  document.getElementById('kpi-won-sub').textContent = `계약완료 ${wonThisMonth.length}건`;
 
-  // 영업사원별 차트
-  const bySales={};
-  DB.d.pipeline.forEach(d=>{bySales[d.sales||'미배정']=(bySales[d.sales||'미배정']||0)+Number(d.amount||0);});
-  const ctx2=document.getElementById('chart-sales').getContext('2d');
-  if(salesChart)salesChart.destroy();
-  salesChart=new Chart(ctx2,{type:'doughnut',data:{labels:Object.keys(bySales),datasets:[{data:Object.values(bySales),backgroundColor:['#4f8ef7','#28a745','#fd7e14','#6f42c1','#dc3545','#17a2b8'],borderWidth:2}]},options:{plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:12}}}}});
+  // KPI 2: 목표 달성률
+  const targetThisMonth = DB.d.targets.filter(t => t.ym === thisYM);
+  const targetAmt = targetThisMonth.reduce((s,t) => s + Number(t.target||0), 0);
+  const achievePct = targetAmt > 0 ? Math.round(wonAmt / targetAmt * 100) : null;
+  document.getElementById('kpi-achieve').textContent = achievePct !== null ? `${achievePct}%` : '-';
+  document.getElementById('kpi-achieve-sub').textContent = targetAmt > 0 ? `목표 ${fmtAmt(targetAmt)}` : '목표 미설정';
+  const achieveBar = document.getElementById('kpi-achieve-bar');
+  achieveBar.style.width = (achievePct !== null ? Math.min(achievePct, 100) : 0) + '%';
+  achieveBar.style.background = achievePct >= 100 ? 'linear-gradient(90deg,#16a34a,#4ade80)' : achievePct >= 70 ? 'linear-gradient(90deg,#2563eb,#60a5fa)' : 'linear-gradient(90deg,#ea580c,#fb923c)';
+
+  // KPI 3: 파이프라인 가중금액
+  const weighted = activePipe.reduce((s,d) => s + Number(d.amount||0)*Number(d.prob||0)/100, 0);
+  document.getElementById('kpi-pipe').textContent = fmtAmt(Math.round(weighted));
+  document.getElementById('kpi-pipe-sub').textContent = `진행중 딜 ${activePipe.length}건`;
+
+  // KPI 4: 이번주 할 일
+  const todayD = new Date(); todayD.setHours(0,0,0,0);
+  const weekEndD = new Date(todayD); weekEndD.setDate(weekEndD.getDate()+7);
+  const weekActions = DB.d.logs.filter(l => {
+    if(!l.nextDate||!l.nextAction) return false;
+    const d = new Date(l.nextDate); d.setHours(0,0,0,0);
+    return d <= weekEndD;
+  });
+  const todayActs = weekActions.filter(l => { const d=new Date(l.nextDate); d.setHours(0,0,0,0); return d.getTime()===todayD.getTime(); });
+  document.getElementById('kpi-actions').textContent = weekActions.length;
+  document.getElementById('kpi-actions-sub').textContent = `오늘 ${todayActs.length}건 · 지연 ${overdueActs.length}건`;
+  document.getElementById('kpi-action-card').style.borderColor = overdueActs.length ? '#fecaca' : '';
+
+  // 월별 계약 실적 차트 (최근 6개월)
+  const months = [];
+  for(let i=5; i>=0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+  }
+  const wonByMonth = months.map(ym => DB.d.pipeline.filter(d => d.stage==='계약완료' && (d.stageUpdatedAt||'').startsWith(ym)).reduce((s,d)=>s+Number(d.amount||0),0));
+  const targetByMonth = months.map(ym => DB.d.targets.filter(t=>t.ym===ym).reduce((s,t)=>s+Number(t.target||0),0));
+  const monthLabels = months.map(ym => { const [y,m]=ym.split('-'); return `${m}월`; });
+
+  if(monthlyChart) monthlyChart.destroy();
+  const ctx = document.getElementById('chart-monthly').getContext('2d');
+  monthlyChart = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: monthLabels,
+      datasets:[
+        {label:'계약금액', data:wonByMonth, backgroundColor:'rgba(37,99,235,0.15)', borderColor:'#2563eb', borderWidth:2, borderRadius:6, borderSkipped:false},
+        {label:'목표', data:targetByMonth, type:'line', borderColor:'#f59e0b', borderWidth:2, borderDash:[5,3], pointRadius:4, pointBackgroundColor:'#f59e0b', fill:false, tension:0.3}
+      ]
+    },
+    options:{
+      plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12}}},
+      scales:{
+        y:{ticks:{callback:v=>fmtAmt(v)},grid:{color:'#f3f4f6'}},
+        x:{grid:{display:false}}
+      }
+    }
+  });
+
+  // 파이프라인 퍼널
+  const funnelEl = document.getElementById('dash-funnel');
+  const stageAmts = STAGES.map(s => ({
+    stage:s,
+    amt: DB.d.pipeline.filter(d=>d.stage===s).reduce((t,d)=>t+Number(d.amount||0),0),
+    cnt: DB.d.pipeline.filter(d=>d.stage===s).length
+  }));
+  const maxAmt2 = Math.max(...stageAmts.map(s=>s.amt), 1);
+  funnelEl.innerHTML = stageAmts.map(s => `
+    <div class="funnel-row">
+      <div class="funnel-label" style="font-size:11px">${s.stage}</div>
+      <div class="funnel-bar-wrap">
+        <div class="funnel-bar" style="width:${Math.max(s.amt/maxAmt2*100,s.cnt?2:0)}%;background:${SC[s.stage]||'#adb5bd'}">
+          ${s.cnt ? s.cnt+'건' : ''}
+        </div>
+      </div>
+      <div class="funnel-amt">${s.amt>0?fmtAmt(s.amt):''}</div>
+    </div>`).join('');
 
   // 보증만료
-  const now=new Date(), soon=new Date(now.getTime()+60*24*60*60*1000);
   const alerts = DB.d.equipments
     .filter(e=>e.warrantyEnd)
-    .map(e=>({...e,daysLeft:Math.ceil((new Date(e.warrantyEnd)-now)/(24*60*60*1000))}))
-    .filter(e=>e.daysLeft<=60)
-    .sort((a,b)=>a.daysLeft-b.daysLeft)
-    .slice(0,5);
-  const wEl=document.getElementById('warranty-list');
-  if(!alerts.length){wEl.innerHTML='<div class="text-muted text-center py-2" style="font-size:13px">만료 임박 장비 없음</div>';}
-  else{wEl.innerHTML=alerts.map(w=>{
-    const danger=w.daysLeft<=30;
-    const label=w.daysLeft<=0?'만료됨':w.daysLeft+'일 후';
-    return`<div class="d-flex justify-content-between align-items-center p-2 mb-1 rounded" style="background:${danger?'#fff0f0':'#fffbf0'};border-left:3px solid ${danger?'#dc2626':'#ea580c'}">
-      <div><div style="font-size:13px;font-weight:600;color:${danger?'#dc2626':'#ea580c'}">${w.custName||''}</div><div style="font-size:11px;color:#6b7280">${w.model||''}</div></div>
+    .map(e=>({...e, daysLeft:Math.ceil((new Date(e.warrantyEnd)-now)/(864e5))}))
+    .filter(e=>e.daysLeft<=60).sort((a,b)=>a.daysLeft-b.daysLeft).slice(0,6);
+  const wEl = document.getElementById('warranty-list');
+  if(!alerts.length){ wEl.innerHTML='<div class="text-muted text-center py-3" style="font-size:13px">만료 임박 장비 없음</div>'; }
+  else { wEl.innerHTML = alerts.map(w=>{
+    const danger=w.daysLeft<=30, label=w.daysLeft<=0?'만료됨':w.daysLeft+'일 후';
+    return`<div class="d-flex justify-content-between align-items-center py-2" style="border-bottom:1px solid #f3f4f6">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:8px;height:8px;border-radius:50%;background:${danger?'#dc2626':'#f59e0b'};flex-shrink:0"></div>
+        <div><div style="font-size:13px;font-weight:600">${w.custName||''}</div><div style="font-size:11px;color:#9ca3af">${w.model||''}</div></div>
+      </div>
       <div class="d-flex gap-2 align-items-center">
         <span style="font-size:11px;font-weight:700;color:${danger?'#dc2626':'#ea580c'}">${label}</span>
         <button class="btn btn-sm" style="font-size:10px;padding:2px 8px;background:${danger?'#dc2626':'#ea580c'};color:#fff;border:none;border-radius:6px" onclick="openDealFromWarranty('${(w.custName||'').replace(/'/g,"\\'")}','${(w.model||'').replace(/'/g,"\\'")}')">딜 등록</button>
       </div>
     </div>`;
-  }).join('');}
+  }).join(''); }
 
-  // 최근 상담
-  const rEl=document.getElementById('recent-logs');
-  const recent=[...DB.d.logs].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
-  if(!recent.length){rEl.innerHTML='<tr><td colspan="4" class="text-center text-muted py-2">없음</td></tr>';}
-  else{rEl.innerHTML=recent.map(r=>`<tr><td style="font-size:12px">${fmtDate(r.date)}</td><td style="font-size:12px;font-weight:600">${r.custName||''}</td><td><span class="badge bg-secondary" style="font-size:10px">${r.type||''}</span></td><td style="font-size:12px;color:#666">${(r.content||'').substring(0,30)}</td></tr>`).join('');}
-
-  // 영업사원 리더보드
   renderLeaderboard();
-  // ① 다음 액션 알림판
   renderActionBoard();
 }
 
 function renderLeaderboard() {
-  const now = new Date();
-  const thisYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const byPerson = {};
   DB.d.pipeline.forEach(d => {
     const s = d.sales||'미배정';
-    if(!byPerson[s]) byPerson[s] = {deals:0, won:0, wonAmt:0, pipe:0, pipeAmt:0};
+    if(!byPerson[s]) byPerson[s] = {deals:0, won:0, wonAmt:0, pipe:0};
     byPerson[s].deals++;
-    byPerson[s].pipeAmt += Number(d.amount||0);
     if(d.stage==='계약완료') { byPerson[s].won++; byPerson[s].wonAmt += Number(d.amount||0); }
     else byPerson[s].pipe++;
   });
@@ -692,19 +839,19 @@ function renderLeaderboard() {
   const maxAmt = sorted[0]?.[1]?.wonAmt || 1;
   const medals = ['🥇','🥈','🥉'];
   const el = document.getElementById('leaderboard');
-  if(!sorted.length) { el.innerHTML='<div class="text-muted text-center py-2" style="font-size:13px">파이프라인 데이터 없음</div>'; return; }
-  el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
+  if(!sorted.length) { el.innerHTML='<div class="text-muted text-center py-3" style="font-size:13px">파이프라인 데이터 없음</div>'; return; }
+  el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px">
     ${sorted.map(([name,s],i)=>{
       const rate = s.deals>0?Math.round(s.won/s.deals*100):0;
       const barW = Math.round(s.wonAmt/maxAmt*100);
-      return`<div style="background:${i===0?'#fefce8':'#f9fafb'};border:1px solid ${i===0?'#fde68a':'#e5e7eb'};border-radius:10px;padding:14px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      return`<div style="background:${i===0?'#fffbeb':'#f9fafb'};border:1px solid ${i===0?'#fde68a':'#e5e7eb'};border-radius:12px;padding:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
           <span style="font-size:13px;font-weight:700">${medals[i]||`#${i+1}`} ${name}</span>
-          <span style="font-size:11px;background:#e5e7eb;border-radius:6px;padding:2px 7px;color:#374151">${rate}% 성공</span>
+          <span style="font-size:10px;background:#e5e7eb;border-radius:6px;padding:2px 7px;color:#374151;font-weight:600">성공률 ${rate}%</span>
         </div>
-        <div style="font-size:18px;font-weight:800;color:#111827;margin-bottom:4px">${fmtAmt(s.wonAmt)}</div>
-        <div style="background:#e5e7eb;border-radius:4px;height:5px;margin-bottom:6px"><div style="background:${i===0?'#f59e0b':'#2563eb'};width:${barW}%;height:100%;border-radius:4px"></div></div>
-        <div style="font-size:11px;color:#6b7280">계약완료 ${s.won}건 · 진행중 ${s.pipe}건</div>
+        <div style="font-size:20px;font-weight:800;color:#111827;margin-bottom:6px">${fmtAmt(s.wonAmt)}</div>
+        <div style="background:#e5e7eb;border-radius:4px;height:4px;margin-bottom:8px"><div style="background:${i===0?'#f59e0b':'#2563eb'};width:${barW}%;height:100%;border-radius:4px"></div></div>
+        <div style="font-size:11px;color:#6b7280">계약완료 ${s.won}건 &nbsp;·&nbsp; 진행중 ${s.pipe}건</div>
       </div>`;
     }).join('')}
   </div>`;
