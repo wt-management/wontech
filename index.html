@@ -64,6 +64,23 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 .modal-header{border-bottom:1px solid var(--border);padding:18px 22px}
 .modal-footer{border-top:1px solid var(--border);padding:14px 22px}
 .modal-body{padding:20px 22px}
+/* 통합 검색 오버레이 */
+.search-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;display:none;align-items:flex-start;justify-content:center;padding-top:80px}
+.search-overlay.open{display:flex}
+.search-box{background:#fff;border-radius:16px;width:640px;max-width:90vw;box-shadow:0 24px 60px rgba(0,0,0,.25);overflow:hidden}
+.search-input-wrap{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid #e5e7eb}
+.search-input-wrap input{flex:1;border:none;outline:none;font-size:16px;font-family:inherit;color:#111}
+.search-results{max-height:440px;overflow-y:auto}
+.search-group-label{padding:10px 20px 4px;font-size:10px;font-weight:700;color:#9ca3af;letter-spacing:.08em;text-transform:uppercase}
+.search-item{padding:10px 20px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:background .1s}
+.search-item:hover,.search-item.focused{background:#f0f7ff}
+.search-item-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.search-empty{padding:40px 20px;text-align:center;color:#9ca3af;font-size:14px}
+/* 드래그앤드롭 */
+.pipeline-col.drag-over{background:#e0eaff;border-color:#2563eb;border-style:dashed}
+.deal-card.dragging{opacity:.4;transform:rotate(2deg)}
+/* 견적서 템플릿 */
+.tmpl-bar{display:flex;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid #e5e7eb;margin-bottom:12px;flex-wrap:wrap}
 @media(max-width:768px){.sidebar{width:100%;min-height:auto;position:relative}.main{margin-left:0;padding:16px}}
 </style>
 </head>
@@ -117,9 +134,24 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
     </ul>
   </div>
   <div class="sidebar-footer">
+    <a class="nav-link" style="color:#6b7280;margin:0 0 4px" onclick="openSearch()"><i class="bi bi-search"></i>통합 검색 <kbd style="font-size:9px;background:#1e293b;border:1px solid #334155;border-radius:4px;padding:1px 4px;color:#94a3b8;margin-left:auto">⌘K</kbd></a>
     <a class="nav-link" style="color:#ef4444;margin:0" onclick="resetToken()"><i class="bi bi-box-arrow-right"></i>토큰 재설정</a>
   </div>
 </nav>
+
+<!-- 통합 검색 오버레이 -->
+<div class="search-overlay" id="search-overlay" onclick="if(event.target===this)closeSearch()">
+  <div class="search-box">
+    <div class="search-input-wrap">
+      <i class="bi bi-search" style="color:#9ca3af;font-size:18px;flex-shrink:0"></i>
+      <input id="global-search-input" placeholder="병원명, 모델명, 담당자, 견적번호 검색..." oninput="runGlobalSearch(this.value)" onkeydown="searchKeyNav(event)" autocomplete="off">
+      <kbd style="font-size:11px;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:5px;padding:2px 6px;color:#6b7280;flex-shrink:0">ESC</kbd>
+    </div>
+    <div class="search-results" id="search-results">
+      <div class="search-empty"><i class="bi bi-search" style="font-size:28px;display:block;margin-bottom:8px;opacity:.3"></i>검색어를 입력하세요</div>
+    </div>
+  </div>
+</div>
 
 <div class="main" id="main-content" style="display:none">
 
@@ -330,6 +362,14 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       <div class="col-md-2"><label class="form-label">유효기간</label><input type="date" id="q-valid" class="form-control form-control-sm"></div>
       <div class="col-md-2"><label class="form-label">담당영업사원</label><input type="text" id="q-sales" class="form-control form-control-sm"></div>
       <div class="col-md-2"><label class="form-label">상태</label><select id="q-status" class="form-select form-select-sm"><option>임시</option><option>발송</option><option>수락</option><option>거절</option></select></div>
+    </div>
+    <div class="tmpl-bar">
+      <span style="font-size:12px;font-weight:600;color:#6b7280">템플릿</span>
+      <select id="tmpl-select" class="form-select form-select-sm" style="width:auto;min-width:160px" onchange="loadTemplate(this.value)">
+        <option value="">불러오기...</option>
+      </select>
+      <button class="btn btn-outline-primary btn-sm" onclick="saveTemplate()"><i class="bi bi-bookmark-plus me-1"></i>현재 항목 저장</button>
+      <button class="btn btn-outline-danger btn-sm" id="tmpl-del-btn" style="display:none" onclick="deleteTemplate()"><i class="bi bi-trash me-1"></i>삭제</button>
     </div>
     <table class="table table-sm"><thead class="table-light"><tr><th style="width:38%">제품명</th><th style="width:10%">수량</th><th style="width:18%">단가</th><th style="width:12%">할인%</th><th style="width:16%">금액</th><th style="width:6%"></th></tr></thead><tbody id="q-items"></tbody></table>
     <button class="btn btn-outline-secondary btn-sm" onclick="addQItem()"><i class="bi bi-plus me-1"></i>항목 추가</button>
@@ -714,6 +754,161 @@ function renderActionBoard() {
     </div>`).join('');
 }
 
+// ── 드래그앤드롭 ─────────────────────────────────────────────────────
+let _dragId = null;
+function dragStart(e, id) {
+  _dragId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => e.target.classList.add('dragging'), 0);
+}
+function dragOver(e, stage) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+function dragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+async function dropDeal(e, newStage) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (!_dragId) return;
+  const idx = DB.d.pipeline.findIndex(d => d.id === _dragId);
+  if (idx === -1) return;
+  const prev = DB.d.pipeline[idx];
+  if (prev.stage === newStage) { _dragId = null; return; }
+  DB.d.pipeline[idx] = {
+    ...prev,
+    stage: newStage,
+    stageUpdatedAt: new Date().toISOString()
+  };
+  _dragId = null;
+  renderPipeline();
+  showToast(`${prev.custName||'딜'} → ${newStage} 이동 저장 중...`);
+  await DB.save('pipeline');
+  showToast(`저장 완료`);
+}
+
+// ── 전체 통합검색 ────────────────────────────────────────────────────
+let _searchIdx = -1;
+function openSearch() {
+  const ov = document.getElementById('search-overlay');
+  ov.classList.add('open');
+  const inp = document.getElementById('global-search-input');
+  inp.value = '';
+  document.getElementById('search-results').innerHTML = '<div class="search-empty">검색어를 입력하세요</div>';
+  _searchIdx = -1;
+  setTimeout(() => inp.focus(), 50);
+}
+function closeSearch() {
+  document.getElementById('search-overlay').classList.remove('open');
+  _searchIdx = -1;
+}
+function runGlobalSearch(kw) {
+  const q = kw.trim().toLowerCase();
+  const el = document.getElementById('search-results');
+  if (!q) { el.innerHTML = '<div class="search-empty">검색어를 입력하세요</div>'; _searchIdx=-1; return; }
+  const results = [];
+  // 고객사
+  DB.d.customers.filter(c => [c.name,c.doctor,c.region,c.contact].join(' ').toLowerCase().includes(q)).slice(0,5).forEach(c =>
+    results.push({group:'고객사', icon:'bi-hospital', label:c.name, sub:`${c.region||''} ${c.doctor||''}`, action:`showPage('customers');document.getElementById('cust-search').value='${c.name.replace(/'/g,"\\'")}';filterCust();closeSearch()`}));
+  // 장비
+  DB.d.equipments.filter(e => [e.custName,e.model,e.serial].join(' ').toLowerCase().includes(q)).slice(0,5).forEach(e =>
+    results.push({group:'장비', icon:'bi-device-ssd', label:`${e.custName} — ${e.model}`, sub:e.serial||'', action:`showPage('equips');document.getElementById('equip-search').value='${(e.model||'').replace(/'/g,"\\'")}';filterEquip();closeSearch()`}));
+  // 파이프라인
+  DB.d.pipeline.filter(d => [d.custName,d.model,d.sales].join(' ').toLowerCase().includes(q)).slice(0,4).forEach(d =>
+    results.push({group:'파이프라인', icon:'bi-kanban', label:`${d.custName} — ${d.model}`, sub:`${d.stage} · ${fmtAmt(Number(d.amount||0))}`, action:`showPage('pipeline');closeSearch();editPipeline('${d.id}')`}));
+  // 견적서
+  DB.d.quotes.filter(q2 => [q2.id,q2.cust,q2.sales].join(' ').toLowerCase().includes(q)).slice(0,4).forEach(qt =>
+    results.push({group:'견적서', icon:'bi-file-earmark-text', label:`${qt.id} — ${qt.cust}`, sub:qt.sales||'', action:`showPage('quotes');closeSearch();editQuote('${qt.id}')`}));
+
+  if (!results.length) { el.innerHTML = '<div class="search-empty">검색 결과가 없습니다</div>'; _searchIdx=-1; return; }
+
+  const groups = [...new Set(results.map(r=>r.group))];
+  el.innerHTML = groups.map(g => {
+    const items = results.filter(r=>r.group===g);
+    return `<div class="search-group-label">${g}</div>` + items.map((r,i) =>
+      `<div class="search-item" onclick="${r.action}" data-idx="${results.indexOf(r)}">
+        <i class="bi ${r.icon}" style="color:#6b7280;flex-shrink:0"></i>
+        <div style="flex:1;min-width:0"><div style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.label}</div><div style="font-size:11px;color:#9ca3af">${r.sub}</div></div>
+      </div>`).join('');
+  }).join('');
+  _searchIdx = -1;
+}
+function searchKeyNav(e) {
+  const items = document.querySelectorAll('#search-results .search-item');
+  if (!items.length) return;
+  if (e.key === 'ArrowDown') { e.preventDefault(); _searchIdx=(_searchIdx+1)%items.length; }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); _searchIdx=(_searchIdx-1+items.length)%items.length; }
+  else if (e.key === 'Enter') { e.preventDefault(); if(_searchIdx>=0) items[_searchIdx].click(); return; }
+  else if (e.key === 'Escape') { closeSearch(); return; }
+  items.forEach((el,i) => el.classList.toggle('active', i===_searchIdx));
+  if(_searchIdx>=0) items[_searchIdx].scrollIntoView({block:'nearest'});
+}
+document.addEventListener('keydown', e => {
+  if ((e.metaKey||e.ctrlKey) && e.key==='k') { e.preventDefault(); openSearch(); }
+  if (e.key==='Escape' && document.getElementById('search-overlay').classList.contains('open')) closeSearch();
+});
+
+// ── 견적서 템플릿 ────────────────────────────────────────────────────
+const TMPL_KEY = 'wt_quote_templates';
+function getTemplates() { return JSON.parse(localStorage.getItem(TMPL_KEY)||'[]'); }
+function refreshTmplSelect() {
+  const sel = document.getElementById('tmpl-select');
+  if(!sel) return;
+  const tmpls = getTemplates();
+  sel.innerHTML = '<option value="">불러오기...</option>' + tmpls.map((t,i)=>`<option value="${i}">${t.name}</option>`).join('');
+  document.getElementById('tmpl-del-btn').style.display = 'none';
+}
+function loadTemplate(idx) {
+  if(idx==='') { document.getElementById('tmpl-del-btn').style.display='none'; return; }
+  const t = getTemplates()[Number(idx)];
+  if(!t) return;
+  document.getElementById('tmpl-del-btn').style.display = 'inline-flex';
+  const tbody = document.getElementById('q-items');
+  tbody.innerHTML = '';
+  t.items.forEach(item => {
+    addQItem();
+    const rows = tbody.querySelectorAll('tr');
+    const r = rows[rows.length-1];
+    r.querySelector('.qi-name').value = item.name||'';
+    r.querySelector('.qi-qty').value = item.qty||1;
+    r.querySelector('.qi-price').value = item.price||0;
+    r.querySelector('.qi-disc').value = item.disc||0;
+  });
+  calcQ();
+}
+function saveTemplate() {
+  const items = getQItems();
+  if(!items.length) { alert('항목을 먼저 추가하세요'); return; }
+  const name = prompt('템플릿 이름을 입력하세요:');
+  if(!name) return;
+  const tmpls = getTemplates();
+  tmpls.push({name, items});
+  localStorage.setItem(TMPL_KEY, JSON.stringify(tmpls));
+  refreshTmplSelect();
+  showToast('템플릿 저장 완료');
+}
+function deleteTemplate() {
+  const sel = document.getElementById('tmpl-select');
+  const idx = Number(sel.value);
+  if(sel.value==='') return;
+  const tmpls = getTemplates();
+  if(!confirm(`"${tmpls[idx].name}" 템플릿을 삭제할까요?`)) return;
+  tmpls.splice(idx,1);
+  localStorage.setItem(TMPL_KEY, JSON.stringify(tmpls));
+  refreshTmplSelect();
+  showToast('템플릿 삭제 완료');
+}
+function getQItems() {
+  return [...document.querySelectorAll('#q-items tr')].map(r=>({
+    name: r.querySelector('.qi-name')?.value||'',
+    qty: Number(r.querySelector('.qi-qty')?.value||1),
+    price: Number((r.querySelector('.qi-price')?.value||'0').replace(/,/g,'')),
+    disc: Number(r.querySelector('.qi-disc')?.value||0)
+  })).filter(i=>i.name);
+}
+
 // ── 파이프라인 ──────────────────────────────────────────────────────
 function renderPipeline() {
   const total=DB.d.pipeline.reduce((s,d)=>s+Number(d.amount||0),0);
@@ -725,14 +920,15 @@ function renderPipeline() {
   document.getElementById('kanban-board').innerHTML=STAGES.map(stage=>{
     const deals=DB.d.pipeline.filter(d=>d.stage===stage);
     const stotal=deals.reduce((s,d)=>s+Number(d.amount||0),0);
-    return`<div class="pipeline-col"><div class="pipeline-col-header"><span style="color:${SC[stage]}">${stage}</span><span style="background:#e0e4ef;color:#555;border-radius:10px;padding:1px 7px;font-size:11px">${deals.length}</span></div>
+    return`<div class="pipeline-col" ondragover="dragOver(event,'${stage}')" ondragleave="dragLeave(event)" ondrop="dropDeal(event,'${stage}')">
+    <div class="pipeline-col-header"><span style="color:${SC[stage]}">${stage}</span><span style="background:#e0e4ef;color:#555;border-radius:10px;padding:1px 7px;font-size:11px">${deals.length}</span></div>
     <div style="font-size:11px;color:#888;margin-bottom:8px">${fmtAmt(stotal)}</div>
     ${deals.map(d=>{
       const daysInStage = d.stageUpdatedAt ? Math.floor((Date.now()-new Date(d.stageUpdatedAt))/(864e5)) : null;
       const staleWarn = daysInStage!==null && daysInStage>=14;
       const staleDanger = daysInStage!==null && daysInStage>=30;
       const daysBadge = daysInStage!==null ? `<span style="background:${staleDanger?'#dc2626':staleWarn?'#f59e0b':'#e5e7eb'};color:${staleDanger||staleWarn?'#fff':'#6b7280'};border-radius:6px;padding:1px 6px;font-size:10px;font-weight:700">${daysInStage}일째</span>` : '';
-      return`<div class="deal-card" onclick='editPipeline("${d.id}")' style="border-left:3px solid ${SC[d.stage]||'#4f8ef7'}">
+      return`<div class="deal-card" draggable="true" ondragstart="dragStart(event,'${d.id}')" onclick='editPipeline("${d.id}")' style="border-left:3px solid ${SC[d.stage]||'#4f8ef7'}">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div style="font-size:13px;font-weight:600;flex:1">${d.custName||''}</div>
           ${daysBadge}
@@ -862,6 +1058,7 @@ function clearQuoteForm(){
   document.getElementById('q-status').value='임시';
   document.getElementById('q-items').innerHTML='';
   qItemCount=0; addQItem(); calcQ();
+  refreshTmplSelect();
 }
 
 function addQItem(name='',qty=1,price='',disc=0){
