@@ -323,8 +323,8 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 
 <!-- 장비 모달 -->
 <div class="modal fade" id="equipModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
-  <div class="modal-header"><h5 class="modal-title">장비</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-  <div class="modal-body"><div class="row g-2">
+  <div class="modal-header"><h5 class="modal-title" id="equip-modal-title">장비 추가</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body"><input type="hidden" id="e-orig-serial"><div class="row g-2">
     <div class="col-6"><label class="form-label">병원명 *</label><input type="text" id="e-custName" class="form-control form-control-sm"></div>
     <div class="col-6"><label class="form-label">모델명 *</label><input type="text" id="e-model" class="form-control form-control-sm"></div>
     <div class="col-6"><label class="form-label">시리얼번호</label><input type="text" id="e-serial" class="form-control form-control-sm"></div>
@@ -333,8 +333,13 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
     <div class="col-6"><label class="form-label">상태</label><select id="e-status" class="form-select form-select-sm"><option>정상</option><option>점검중</option><option>폐기</option></select></div>
     <div class="col-6"><label class="form-label">납품단가</label><input type="number" id="e-price" class="form-control form-control-sm"></div>
     <div class="col-6"><label class="form-label">담당영업</label><input type="text" id="e-sales" class="form-control form-control-sm"></div>
+    <div class="col-12"><label class="form-label">비고</label><input type="text" id="e-note" class="form-control form-control-sm"></div>
   </div></div>
-  <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button><button class="btn btn-primary btn-sm" onclick="saveEquip()">저장</button></div>
+  <div class="modal-footer">
+    <button class="btn btn-danger btn-sm me-auto" id="e-del-btn" style="display:none" onclick="delEquipFromModal()">삭제</button>
+    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button>
+    <button class="btn btn-primary btn-sm" onclick="saveEquip()">저장</button>
+  </div>
 </div></div></div>
 
 <!-- 상담일지 모달 -->
@@ -571,8 +576,10 @@ function openModal(type,data={}) {
     document.getElementById('c-del-btn').style.display='none';
     new bootstrap.Modal(document.getElementById('custModal')).show();
   } else if(type==='equip'){
-    ['e-custName','e-model','e-serial','e-deliv','e-warranty','e-price','e-sales'].forEach(id=>setV(id,''));
+    ['e-orig-serial','e-custName','e-model','e-serial','e-deliv','e-warranty','e-price','e-sales','e-note'].forEach(id=>setV(id,''));
     document.getElementById('e-status').value='정상';
+    document.getElementById('e-del-btn').style.display='none';
+    document.getElementById('equip-modal-title').textContent='장비 추가';
     new bootstrap.Modal(document.getElementById('equipModal')).show();
   } else if(type==='log'){
     ['l-id','l-custName','l-content','l-product','l-next','l-sales'].forEach(id=>setV(id,''));
@@ -782,7 +789,10 @@ function filterEquip(){
     <td>${fmtDate(e.warrantyEnd)}</td>
     <td>${statusBadge(e.status)}</td>
     <td style="color:#6b7280">${e.sales||''}</td>
-    <td><button class="btn btn-outline-danger btn-sm" style="font-size:11px;padding:2px 8px" onclick="delEquip('${e.serial}')">삭제</button></td>
+    <td style="white-space:nowrap">
+      <button class="btn btn-outline-secondary btn-sm me-1" style="font-size:11px;padding:2px 8px" onclick="editEquip('${(e.serial||'').replace(/'/g,"\\'")}')" >수정</button>
+      <button class="btn btn-outline-danger btn-sm" style="font-size:11px;padding:2px 8px" onclick="delEquip('${(e.serial||'').replace(/'/g,"\\'")}')">삭제</button>
+    </td>
   </tr>`).join('');
   if(result.length>300){const more=document.createElement('tr');more.innerHTML=`<td colspan="8" class="text-center text-muted py-2" style="font-size:12px">검색어를 좁히면 전체 결과를 볼 수 있습니다 (현재 300건 표시)</td>`;el.appendChild(more);}
 }
@@ -819,14 +829,37 @@ function showHospitalDetail(name){
   new bootstrap.Modal(document.getElementById('hospitalModal')).show();
 }
 
+function editEquip(serial){
+  const e=DB.d.equipments.find(x=>x.serial===serial);if(!e)return;
+  setV('e-orig-serial',serial);
+  setV('e-custName',e.custName||'');setV('e-model',e.model||'');setV('e-serial',e.serial||'');
+  setV('e-deliv',e.delivDate||'');setV('e-warranty',e.warrantyEnd||'');
+  setV('e-price',e.price||'');setV('e-sales',e.sales||'');setV('e-note',e.note||'');
+  document.getElementById('e-status').value=e.status||'정상';
+  document.getElementById('e-del-btn').style.display='inline-block';
+  document.getElementById('equip-modal-title').textContent='장비 수정';
+  new bootstrap.Modal(document.getElementById('equipModal')).show();
+}
+
 function saveEquip(){
-  const d={custName:gV('e-custName'),model:gV('e-model'),serial:gV('e-serial'),delivDate:gV('e-deliv'),warrantyEnd:gV('e-warranty'),status:gV('e-status'),price:Number(gV('e-price'))||0,sales:gV('e-sales')};
+  const d={custName:gV('e-custName'),model:gV('e-model'),serial:gV('e-serial'),delivDate:gV('e-deliv'),warrantyEnd:gV('e-warranty'),status:gV('e-status'),price:Number(gV('e-price'))||0,sales:gV('e-sales'),note:gV('e-note')};
   if(!d.custName||!d.model){alert('병원명과 모델명을 입력하세요.');return;}
   if(!d.warrantyEnd&&d.delivDate){const dt=new Date(d.delivDate);dt.setFullYear(dt.getFullYear()+1);d.warrantyEnd=dt.toISOString().split('T')[0];}
-  DB.d.equipments.push(d);
+  const origSerial=gV('e-orig-serial');
+  if(origSerial){
+    const idx=DB.d.equipments.findIndex(x=>x.serial===origSerial);
+    if(idx>=0) DB.d.equipments[idx]=d;
+  } else {
+    DB.d.equipments.push(d);
+  }
   DB.save('equipments').then(()=>{bootstrap.Modal.getInstance(document.getElementById('equipModal')).hide();filterEquip();});
 }
 
+function delEquipFromModal(){
+  const serial=gV('e-orig-serial');if(!confirm('삭제하시겠습니까?'))return;
+  DB.d.equipments=DB.d.equipments.filter(x=>x.serial!==serial);
+  DB.save('equipments').then(()=>{bootstrap.Modal.getInstance(document.getElementById('equipModal')).hide();filterEquip();});
+}
 function delEquip(serial){if(!confirm('삭제하시겠습니까?'))return;DB.d.equipments=DB.d.equipments.filter(x=>x.serial!==serial);DB.save('equipments').then(()=>filterEquip());}
 function statusBadge(s){if(s==='점검중')return'<span class="badge bg-warning text-dark">점검중</span>';if(s==='폐기')return'<span class="badge bg-danger">폐기</span>';return'<span class="badge bg-success">정상</span>';}
 
