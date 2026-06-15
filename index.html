@@ -1067,7 +1067,7 @@ function renderDashboard() {
   const alerts = DB.d.equipments
     .filter(e=>e.warrantyEnd)
     .map(e=>({...e, daysLeft:Math.ceil((new Date(e.warrantyEnd)-now)/(864e5))}))
-    .filter(e=>e.daysLeft<=30).sort((a,b)=>a.daysLeft-b.daysLeft).slice(0,6);
+    .filter(e=>e.daysLeft>0 && e.daysLeft<=30).sort((a,b)=>a.daysLeft-b.daysLeft).slice(0,6);
   const wEl = document.getElementById('warranty-list');
   if(!alerts.length){ wEl.innerHTML='<div class="text-muted text-center py-3" style="font-size:13px">만료 임박 장비 없음</div>'; }
   else { wEl.innerHTML = alerts.map(w=>{
