@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>원텍 CRM</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box}
+body{display:flex;min-height:100vh;background:#f0f2f8;font-family:'Malgun Gothic',sans-serif;margin:0}
+.sidebar{width:210px;background:#1e2140;min-height:100vh;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto}
+.main{flex:1;margin-left:210px;padding:22px;overflow-y:auto;min-height:100vh}
+.sidebar-brand{padding:18px 16px;color:#fff;font-size:15px;font-weight:700;border-bottom:1px solid #2d3561;display:flex;align-items:center;gap:8px}
+.sidebar .nav-link{color:#8892b0;padding:10px 18px;font-size:13px;border-left:3px solid transparent;display:flex;align-items:center;gap:8px;cursor:pointer}
+.sidebar .nav-link:hover,.sidebar .nav-link.active{color:#fff;background:rgba(255,255,255,.07);border-left-color:#4f8ef7}
+.page{display:none}.page.active{display:block}
+.card{border:none;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.stat-card{border-radius:12px;padding:18px 20px;color:#fff}
+.stat-num{font-size:2rem;font-weight:700;line-height:1}
+.stat-label{font-size:12px;opacity:.85;margin-top:4px}
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.page-header h5{margin:0;font-weight:700;color:#1e2140}
+.table th{font-size:12px;font-weight:600;color:#666;white-space:nowrap}
+.table td{font-size:13px;vertical-align:middle}
+.pipeline-board{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px}
+.pipeline-col{min-width:195px;flex:1;background:#f8f9fc;border-radius:10px;padding:12px}
+.pipeline-col-header{font-size:12px;font-weight:700;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.deal-card{background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.08);cursor:pointer;transition:box-shadow .15s}
+.deal-card:hover{box-shadow:0 3px 8px rgba(0,0,0,.15)}
+.saving-toast{position:fixed;bottom:20px;right:20px;background:#1e2140;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:9999;display:none}
+.quote-status-임시{background:#e9ecef;color:#495057}
+.quote-status-발송{background:#cfe2ff;color:#084298}
+.quote-status-수락{background:#d1e7dd;color:#0f5132}
+.quote-status-거절{background:#f8d7da;color:#842029}
+@media(max-width:768px){.sidebar{width:100%;min-height:auto;position:relative}.main{margin-left:0}}
+</style>
+</head>
+<body>
+
+<!-- 토큰 설정 모달 -->
+<div class="modal fade" id="setupModal" tabindex="-1" data-bs-backdrop="static">
+<div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+  <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">원텍 CRM 설정</h5></div>
+  <div class="modal-body">
+    <p class="text-muted" style="font-size:13px">처음 한 번만 설정하면 됩니다.</p>
+    <label class="form-label fw-bold">GitHub Token</label>
+    <input type="password" id="setup-token" class="form-control" placeholder="ghp_...">
+    <div class="form-text">GitHub → Settings → Developer settings → Personal access tokens</div>
+  </div>
+  <div class="modal-footer border-0">
+    <button class="btn btn-primary w-100" onclick="saveSetup()">저장하고 시작</button>
+  </div>
+</div></div>
+</div>
+
+<nav class="sidebar">
+  <div class="sidebar-brand"><i class="bi bi-hospital-fill" style="color:#4f8ef7;font-size:18px"></i>원텍 CRM</div>
+  <ul class="nav flex-column mt-1">
+    <li><a class="nav-link active" onclick="showPage('dashboard',this)"><i class="bi bi-speedometer2"></i>대시보드</a></li>
+    <li><a class="nav-link" onclick="showPage('pipeline',this)"><i class="bi bi-kanban"></i>영업 파이프라인</a></li>
+    <li><a class="nav-link" onclick="showPage('quotes',this)"><i class="bi bi-file-earmark-text"></i>견적서</a></li>
+    <li><a class="nav-link" onclick="showPage('performance',this)"><i class="bi bi-graph-up-arrow"></i>목표 vs 실적</a></li>
+    <li><a class="nav-link" onclick="showPage('customers',this)"><i class="bi bi-hospital"></i>고객사</a></li>
+    <li><a class="nav-link" onclick="showPage('equipments',this)"><i class="bi bi-cpu"></i>장비</a></li>
+    <li><a class="nav-link" onclick="showPage('logs',this)"><i class="bi bi-journal-text"></i>상담일지</a></li>
+    <li><a class="nav-link" onclick="showPage('products',this)"><i class="bi bi-box-seam"></i>제품</a></li>
+    <li class="mt-auto" style="margin-top:auto"><a class="nav-link" style="color:#dc3545" onclick="resetToken()"><i class="bi bi-box-arrow-right"></i>토큰 재설정</a></li>
+  </ul>
+</nav>
+
+<div class="main" id="main-content" style="display:none">
+
+  <!-- 대시보드 -->
+  <div id="page-dashboard" class="page active">
+    <div class="page-header"><h5>대시보드</h5><small class="text-muted" id="dash-date"></small></div>
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3"><div class="stat-card" style="background:linear-gradient(135deg,#4f8ef7,#3a6fd8)"><div class="stat-num" id="s-cust">-</div><div class="stat-label">전체 고객사</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-card" style="background:linear-gradient(135deg,#28a745,#1e7e34)"><div class="stat-num" id="s-equip">-</div><div class="stat-label">납품 장비</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-card" style="background:linear-gradient(135deg,#fd7e14,#e06000)"><div class="stat-num" id="s-pipe">-</div><div class="stat-label">진행중 딜</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-card" style="background:linear-gradient(135deg,#6f42c1,#5a32a3)"><div class="stat-num" id="s-weighted">-</div><div class="stat-label">가중 예상매출</div></div></div>
+    </div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-6"><div class="card p-3"><div class="fw-bold mb-3" style="font-size:14px">파이프라인 단계별 금액</div><canvas id="chart-stage" height="200"></canvas></div></div>
+      <div class="col-md-6"><div class="card p-3"><div class="fw-bold mb-3" style="font-size:14px">영업사원별 파이프라인</div><canvas id="chart-sales" height="200"></canvas></div></div>
+    </div>
+    <div class="row g-3">
+      <div class="col-md-5"><div class="card p-3"><div class="fw-bold mb-2" style="font-size:14px"><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>보증만료 임박 (60일 이내)</div><div id="warranty-list"></div></div></div>
+      <div class="col-md-7"><div class="card p-0"><div class="p-3 pb-0 fw-bold" style="font-size:14px">최근 상담일지</div><table class="table table-hover mb-0 mt-2"><thead class="table-light"><tr><th>일자</th><th>병원명</th><th>유형</th><th>내용</th></tr></thead><tbody id="recent-logs"></tbody></table></div></div>
+    </div>
+  </div>
+
+  <!-- 파이프라인 -->
+  <div id="page-pipeline" class="page">
+    <div class="page-header"><h5><i class="bi bi-kanban me-2"></i>영업 파이프라인</h5><button class="btn btn-primary btn-sm" onclick="openModal('pipeline')"><i class="bi bi-plus-lg me-1"></i>딜 추가</button></div>
+    <div class="row g-2 mb-3" id="pipe-summary"></div>
+    <div class="pipeline-board" id="kanban-board"></div>
+  </div>
+
+  <!-- 견적서 -->
+  <div id="page-quotes" class="page">
+    <div class="page-header"><h5><i class="bi bi-file-earmark-text me-2"></i>견적서</h5><button class="btn btn-primary btn-sm" onclick="openModal('quote')"><i class="bi bi-plus-lg me-1"></i>견적서 작성</button></div>
+    <div class="card"><div class="card-body p-0"><table class="table table-hover mb-0">
+      <thead class="table-light"><tr><th>견적번호</th><th>병원명</th><th>견적일</th><th>담당</th><th>합계</th><th>상태</th><th></th></tr></thead>
+      <tbody id="quote-list"></tbody>
+    </table></div></div>
+  </div>
+
+  <!-- 목표 vs 실적 -->
+  <div id="page-performance" class="page">
+    <div class="page-header"><h5><i class="bi bi-graph-up-arrow me-2"></i>목표 vs 실적</h5><button class="btn btn-outline-primary btn-sm" onclick="openModal('target')"><i class="bi bi-plus-lg me-1"></i>목표 등록</button></div>
+    <div class="row g-3 mb-3"><div class="col-12"><div class="card p-3"><div class="fw-bold mb-3" style="font-size:14px">월별 목표 vs 실적 (최근 12개월)</div><canvas id="chart-perf" height="90"></canvas></div></div></div>
+    <div class="row g-3">
+      <div class="col-md-6"><div class="card p-3"><div class="fw-bold mb-3" style="font-size:14px">영업사원별 달성률</div><div id="sales-perf-table"></div></div></div>
+      <div class="col-md-6"><div class="card p-3"><div class="fw-bold mb-3" style="font-size:14px">병원별 계약실적 Top 10</div><canvas id="chart-cust-perf" height="220"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- 고객사 -->
+  <div id="page-customers" class="page">
+    <div class="page-header"><h5>고객사 관리</h5><button class="btn btn-primary btn-sm" onclick="openModal('customer')"><i class="bi bi-plus-lg me-1"></i>고객사 추가</button></div>
+    <div class="mb-3"><input type="text" id="search-cust" class="form-control form-control-sm" placeholder="병원명, 지역, 담당영업 검색..." oninput="renderCustomers()"></div>
+    <div class="card"><div class="card-body p-0"><table class="table table-hover mb-0">
+      <thead class="table-light"><tr><th>병원명</th><th>원장명</th><th>지역</th><th>전화</th><th>담당영업</th><th>등급</th><th></th></tr></thead>
+      <tbody id="cust-list"></tbody>
+    </table></div></div>
+  </div>
+
+  <!-- 장비 -->
+  <div id="page-equipments" class="page">
+    <div class="page-header">
+      <h5>장비 관리</h5>
+      <div class="d-flex gap-2">
+        <span id="equip-load-status" class="text-muted" style="font-size:12px;align-self:center"></span>
+        <button class="btn btn-primary btn-sm" onclick="openModal('equip')"><i class="bi bi-plus-lg me-1"></i>장비 추가</button>
+      </div>
+    </div>
+    <div class="mb-3">
+      <input type="text" id="search-equip" class="form-control" placeholder="병원명, 모델명, 시리얼번호, 담당자 검색..." oninput="filterEquip()">
+    </div>
+    <div id="equip-result-info" class="text-muted mb-2" style="font-size:12px"></div>
+    <div class="card"><div class="card-body p-0"><table class="table table-hover mb-0">
+      <thead class="table-light"><tr><th>병원명</th><th>모델명</th><th>시리얼</th><th>납품일</th><th>보증만료</th><th>상태</th><th>담당영업</th><th></th></tr></thead>
+      <tbody id="equip-list"><tr><td colspan="8" class="text-center text-muted py-4">데이터 로딩중...</td></tr></tbody>
+    </table></div></div>
+  </div>
+
+  <!-- 상담일지 -->
+  <div id="page-logs" class="page">
+    <div class="page-header"><h5>상담일지</h5><button class="btn btn-primary btn-sm" onclick="openModal('log')"><i class="bi bi-plus-lg me-1"></i>일지 추가</button></div>
+    <div class="mb-2"><input type="text" id="search-log" class="form-control form-control-sm" placeholder="병원명, 내용, 담당자 검색..." oninput="renderLogs()"></div>
+    <div class="card"><div class="card-body p-0"><table class="table table-hover mb-0">
+      <thead class="table-light"><tr><th>일자</th><th>병원명</th><th>유형</th><th>내용</th><th>관심제품</th><th>다음액션</th><th>담당</th><th></th></tr></thead>
+      <tbody id="log-list"></tbody>
+    </table></div></div>
+  </div>
+
+  <!-- 제품 -->
+  <div id="page-products" class="page">
+    <div class="page-header"><h5>제품 목록</h5><button class="btn btn-primary btn-sm" onclick="openModal('product')"><i class="bi bi-plus-lg me-1"></i>제품 추가</button></div>
+    <div class="card"><div class="card-body p-0"><table class="table table-hover mb-0">
+      <thead class="table-light"><tr><th>제품코드</th><th>제품명</th><th>카테고리</th><th>정가</th><th>보증기간</th><th></th></tr></thead>
+      <tbody id="product-list"></tbody>
+    </table></div></div>
+  </div>
+</div>
+
+<!-- 저장 토스트 -->
+<div class="saving-toast" id="saving-toast"><i class="bi bi-cloud-upload me-2"></i><span id="saving-msg">저장 중...</span></div>
+
+<!-- 파이프라인 모달 -->
+<div class="modal fade" id="pipelineModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">딜 정보</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body"><input type="hidden" id="p-id">
+    <div class="row g-2">
+      <div class="col-12"><label class="form-label">병원명 *</label><input type="text" id="p-cust" class="form-control form-control-sm"></div>
+      <div class="col-12"><label class="form-label">제품/모델 *</label><input type="text" id="p-model" class="form-control form-control-sm"></div>
+      <div class="col-6"><label class="form-label">예상금액 (원)</label><input type="number" id="p-amount" class="form-control form-control-sm"></div>
+      <div class="col-6"><label class="form-label">단계</label><select id="p-stage" class="form-select form-select-sm"><option>리드</option><option>상담중</option><option>견적발송</option><option>협의중</option><option>계약완료</option></select></div>
+      <div class="col-6"><label class="form-label">성공확률 (%)</label><input type="number" id="p-prob" class="form-control form-control-sm" value="50"></div>
+      <div class="col-6"><label class="form-label">예상마감일</label><input type="date" id="p-date" class="form-control form-control-sm"></div>
+      <div class="col-12"><label class="form-label">담당영업사원</label><input type="text" id="p-sales" class="form-control form-control-sm"></div>
+      <div class="col-12"><label class="form-label">메모</label><textarea id="p-note" class="form-control form-control-sm" rows="2"></textarea></div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-danger btn-sm me-auto" id="p-del-btn" onclick="delPipeline()" style="display:none">삭제</button>
+    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button>
+    <button class="btn btn-primary btn-sm" onclick="savePipeline()">저장</button>
+  </div>
+</div></div></div>
+
+<!-- 견적서 모달 -->
+<div class="modal fade" id="quoteModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">견적서 작성</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body">
+    <div class="row g-2 mb-3">
+      <div class="col-md-4"><label class="form-label">병원명 *</label><input type="text" id="q-cust" class="form-control form-control-sm"></div>
+      <div class="col-md-2"><label class="form-label">견적일</label><input type="date" id="q-date" class="form-control form-control-sm"></div>
+      <div class="col-md-2"><label class="form-label">유효기간</label><input type="date" id="q-valid" class="form-control form-control-sm"></div>
+      <div class="col-md-2"><label class="form-label">담당영업사원</label><input type="text" id="q-sales" class="form-control form-control-sm"></div>
+      <div class="col-md-2"><label class="form-label">상태</label><select id="q-status" class="form-select form-select-sm"><option>임시</option><option>발송</option><option>수락</option><option>거절</option></select></div>
+    </div>
+    <table class="table table-sm"><thead class="table-light"><tr><th style="width:38%">제품명</th><th style="width:10%">수량</th><th style="width:18%">단가</th><th style="width:12%">할인%</th><th style="width:16%">금액</th><th style="width:6%"></th></tr></thead><tbody id="q-items"></tbody></table>
+    <button class="btn btn-outline-secondary btn-sm" onclick="addQItem()"><i class="bi bi-plus me-1"></i>항목 추가</button>
+    <div class="row mt-3 justify-content-end"><div class="col-md-4">
+      <table class="table table-sm mb-0">
+        <tr><td class="text-muted" style="font-size:12px">소계</td><td class="text-end fw-bold" id="q-sub">0원</td></tr>
+        <tr><td class="text-muted" style="font-size:12px">추가할인(원)</td><td class="text-end"><input type="number" id="q-disc" class="form-control form-control-sm text-end" value="0" oninput="calcQ()" style="max-width:120px;margin-left:auto"></td></tr>
+        <tr><td class="text-muted" style="font-size:12px">VAT(10%)</td><td class="text-end" id="q-vat">0원</td></tr>
+        <tr class="table-primary"><td class="fw-bold">합계</td><td class="text-end fw-bold" id="q-total">0원</td></tr>
+      </table>
+    </div></div>
+    <div class="mt-2"><label class="form-label">메모</label><textarea id="q-note" class="form-control form-control-sm" rows="2"></textarea></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button><button class="btn btn-primary btn-sm" onclick="saveQuote()">저장</button></div>
+</div></div></div>
+
+<!-- 견적서 미리보기 -->
+<div class="modal fade" id="quotePrintModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content">
+  <div class="modal-header">
+    <h5 class="modal-title">견적서 미리보기</h5>
+    <div><button class="btn btn-primary btn-sm me-2" onclick="window.print()"><i class="bi bi-printer me-1"></i>인쇄</button><button type="button" class="btn-close ms-2" data-bs-dismiss="modal"></button></div>
+  </div>
+  <div class="modal-body" id="print-content"></div>
+</div></div></div>
+
+<!-- 목표 모달 -->
+<div class="modal fade" id="targetModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">매출 목표 등록</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body"><div class="row g-2">
+    <div class="col-6"><label class="form-label">년월 *</label><input type="month" id="t-ym" class="form-control form-control-sm"></div>
+    <div class="col-6"><label class="form-label">영업사원 *</label><input type="text" id="t-sales" class="form-control form-control-sm"></div>
+    <div class="col-6"><label class="form-label">목표금액 *</label><input type="number" id="t-target" class="form-control form-control-sm"></div>
+    <div class="col-6"><label class="form-label">병원명(선택)</label><input type="text" id="t-cust" class="form-control form-control-sm"></div>
+  </div></div>
+  <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button><button class="btn btn-primary btn-sm" onclick="saveTarget()">저장</button></div>
+</div></div></div>
+
+<!-- 고객사 모달 -->
+<div class="modal fade" id="custModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">고객사</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body"><input type="hidden" id="c-id"><div class="row g-2">
+    <div class="col-6"><label class="form-label">병원명 *</label><input type="text" id="c-name" class="form-control form-control-sm"></div>
+    <div class="col-6"><label class="form-label">원장명</label><input type="text" id="c-doctor" class="form-control form-control-sm"></div>
+    <div class="col-4"><label class="form-label">지역</label><input type="text" id="c-region" class="form-control form-control-sm"></div>
+    <div class="col-8"><label class="form-label">주소</label><input type="text" id="c-address" class="form-control form-control-sm"></div>
+    <div class="col-6"><label class="form-label">전화</label><input type="text" id="c-tel" class="form-control form-control-sm"></div>
+    <div class="col-6"><label class="form-label">담당자</label><input type="text" id="c-contact" class="form-control form-control-sm"></div>
+    <div class="col-6"><label class="form-label">담당영업</label><input type="text" id="c-sales" class="form-control form-control-sm"></div>
+    <div class="col-2"><label class="form-label">등급</label><select id="c-grade" class="form-select form-select-sm"><option>일반</option><option>VIP</option><option>잠재</option></select></div>
+    <div class="col-4"><label class="form-label">연락처</label><input type="text" id="c-contactTel" class="form-control form-control-sm"></div>
+    <div class="col-12"><label class="form-label">비고</label><textarea id="c-note" class="form-control form-control-sm" rows="2"></textarea></div>
+  </div></div>
+  <div class="modal-footer">
+    <button class="btn btn-danger btn-sm me-auto" id="c-del-btn" style="display:none" onclick="delCustomer()">삭제</button>
+    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button>
+    <button class="btn btn-primary btn-sm" onclick="saveCustomer()">저장</button>
+  </div>
+</div></div></div>
+
+<!-- 장비 모달 -->
+<div class="modal fade" id="equipModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">장비</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body"><div class="row g-2">
+    <div class="col-6"><label class="form-label">병원명 *</label><input type="text" id="e-custName" class="form-control form-control-sm"></div>
+    <div class="col-6"><label class="form-label">모델명 *</label><input type="text" id="e-model" class="form-control form-control-sm"></div>
+    <div class="col-6"><label class="form-label">시리얼번호</label><input type="text" id="e-serial" class="form-control form-control-sm"></div>
+    <div class="col-6"><label class="form-label">납품일</label><input type="date" id="e-deliv" class="form-control form-control-sm"></div>
+    <div class="col-6"><label class="form-label">보증만료일</label><input type="date" id="e-warranty" class="form-control form-control-sm"></div>
+    <div class="col-6"><label class="form-label">상태</label><select id="e-status" class="form-select form-select-sm"><option>정상</option><option>점검중</option><option>폐기</option></select></div>
+    <div class="col-6"><label class="form-label">납품단가</label><input type="number" id="e-price" class="form-control form-control-sm"></div>
+    <div class="col-6"><label class="form-label">담당영업</label><input type="text" id="e-sales" class="form-control form-control-sm"></div>
+  </div></div>
+  <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button><button class="btn btn-primary btn-sm" onclick="saveEquip()">저장</button></div>
+</div></div></div>
+
+<!-- 상담일지 모달 -->
+<div class="modal fade" id="logModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">상담일지</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body"><input type="hidden" id="l-id"><div class="row g-2">
+    <div class="col-4"><label class="form-label">상담일 *</label><input type="date" id="l-date" class="form-control form-control-sm"></div>
+    <div class="col-4"><label class="form-label">병원명 *</label><input type="text" id="l-custName" class="form-control form-control-sm"></div>
+    <div class="col-4"><label class="form-label">상담유형</label><select id="l-type" class="form-select form-select-sm"><option>방문</option><option>전화</option><option>이메일</option><option>화상</option></select></div>
+    <div class="col-4"><label class="form-label">관심제품</label><input type="text" id="l-product" class="form-control form-control-sm"></div>
+    <div class="col-4"><label class="form-label">담당영업사원</label><input type="text" id="l-sales" class="form-control form-control-sm"></div>
+    <div class="col-12"><label class="form-label">상담내용</label><textarea id="l-content" class="form-control form-control-sm" rows="3"></textarea></div>
+    <div class="col-6"><label class="form-label">다음액션</label><input type="text" id="l-next" class="form-control form-control-sm"></div>
+    <div class="col-6"><label class="form-label">다음액션일</label><input type="date" id="l-nextDate" class="form-control form-control-sm"></div>
+  </div></div>
+  <div class="modal-footer">
+    <button class="btn btn-danger btn-sm me-auto" id="l-del-btn" style="display:none" onclick="delLog()">삭제</button>
+    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button>
+    <button class="btn btn-primary btn-sm" onclick="saveLog()">저장</button>
+  </div>
+</div></div></div>
+
+<!-- 제품 모달 -->
+<div class="modal fade" id="productModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">제품</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body"><input type="hidden" id="pp-id"><div class="row g-2">
+    <div class="col-6"><label class="form-label">제품코드</label><input type="text" id="pp-code" class="form-control form-control-sm"></div>
+    <div class="col-6"><label class="form-label">제품명 *</label><input type="text" id="pp-name" class="form-control form-control-sm"></div>
+    <div class="col-6"><label class="form-label">카테고리</label><input type="text" id="pp-cat" class="form-control form-control-sm"></div>
+    <div class="col-3"><label class="form-label">정가</label><input type="number" id="pp-price" class="form-control form-control-sm"></div>
+    <div class="col-3"><label class="form-label">보증(개월)</label><input type="number" id="pp-warranty" class="form-control form-control-sm"></div>
+  </div></div>
+  <div class="modal-footer">
+    <button class="btn btn-danger btn-sm me-auto" id="pp-del-btn" style="display:none" onclick="delProduct()">삭제</button>
+    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button>
+    <button class="btn btn-primary btn-sm" onclick="saveProduct()">저장</button>
+  </div>
+</div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ── 설정 ──────────────────────────────────────────────────────
+const REPO = 'PMW0406/wontech-crm';
+const BRANCH = 'main';
+const STAGES = ['리드','상담중','견적발송','협의중','계약완료'];
+const SC = {'리드':'#adb5bd','상담중':'#4f8ef7','견적발송':'#fd7e14','협의중':'#6f42c1','계약완료':'#28a745'};
+
+// ── DB ──────────────────────────────────────────────────────
+const DB = {
+  d: {customers:[],equipments:[],logs:[],products:[],pipeline:[],quotes:[],targets:[]},
+  token: localStorage.getItem('wt_token')||'',
+
+  async load() {
+    const files = Object.keys(this.d);
+    await Promise.all(files.map(async f => {
+      try {
+        const r = await fetch(`https://raw.githubusercontent.com/${REPO}/${BRANCH}/data/${f}.json?t=${Date.now()}`);
+        if(r.ok) this.d[f] = await r.json();
+      } catch(e) { console.warn(f, e); }
+    }));
+  },
+
+  async save(name) {
+    showToast('저장 중...');
+    try {
+      const infoRes = await fetch(`https://api.github.com/repos/${REPO}/contents/data/${name}.json`,
+        {headers:{Authorization:`token ${this.token}`}});
+      const info = await infoRes.json();
+      const content = btoa(unescape(encodeURIComponent(JSON.stringify(this.d[name], null, 2))));
+      const res = await fetch(`https://api.github.com/repos/${REPO}/contents/data/${name}.json`,{
+        method:'PUT',
+        headers:{Authorization:`token ${this.token}`,'Content-Type':'application/json'},
+        body:JSON.stringify({message:`update ${name}`,content,sha:info.sha})
+      });
+      if(!res.ok) throw new Error(await res.text());
+      showToast('저장 완료!', true);
+    } catch(e) { showToast('저장 실패: '+e.message, true, true); }
+  }
+};
+
+// ── 초기화 ──────────────────────────────────────────────────────
+let stageChart=null, salesChart=null, perfChart=null, custPerfChart=null;
+let qItemCount=0;
+
+async function init() {
+  if(!DB.token) {
+    new bootstrap.Modal(document.getElementById('setupModal')).show();
+    return;
+  }
+  document.getElementById('main-content').style.display='block';
+  await DB.load();
+  showPage('dashboard');
+}
+
+function saveSetup() {
+  const t = document.getElementById('setup-token').value.trim();
+  if(!t){alert('토큰을 입력하세요.');return;}
+  DB.token = t;
+  localStorage.setItem('wt_token', t);
+  bootstrap.Modal.getInstance(document.getElementById('setupModal')).hide();
+  document.getElementById('main-content').style.display='block';
+  DB.load().then(()=>showPage('dashboard'));
+}
+
+function resetToken() {
+  if(!confirm('토큰을 재설정하시겠습니까?'))return;
+  localStorage.removeItem('wt_token');
+  location.reload();
+}
+
+// ── 페이지 전환 ──────────────────────────────────────────────────────
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(a=>a.classList.remove('active'));
+  const page = document.getElementById('page-'+name);
+  if(page) page.classList.add('active');
+  if(el) el.classList.add('active');
+  else { const links = document.querySelectorAll('.nav-link');
+    links.forEach(l=>{ if(l.textContent.trim().includes(
+      {dashboard:'대시보드',pipeline:'파이프라인',quotes:'견적서',performance:'목표',customers:'고객사',equipments:'장비',logs:'상담일지',products:'제품'}[name]||''
+    )) l.classList.add('active'); }); }
+  if(name==='dashboard') renderDashboard();
+  else if(name==='pipeline') renderPipeline();
+  else if(name==='quotes') renderQuotes();
+  else if(name==='performance') renderPerformance();
+  else if(name==='customers') renderCustomers();
+  else if(name==='equipments') initEquip();
+  else if(name==='logs') renderLogs();
+  else if(name==='products') renderProducts();
+}
+
+// ── 토스트 ──────────────────────────────────────────────────────
+function showToast(msg, hide=false, err=false) {
+  const t=document.getElementById('saving-toast');
+  const m=document.getElementById('saving-msg');
+  t.style.display='block';
+  t.style.background = err?'#dc3545':'#1e2140';
+  m.textContent=msg;
+  if(hide) setTimeout(()=>t.style.display='none', 2000);
+}
+
+// ── 대시보드 ──────────────────────────────────────────────────────
+function renderDashboard() {
+  document.getElementById('dash-date').textContent = new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('s-cust').textContent = DB.d.customers.length;
+  document.getElementById('s-equip').textContent = DB.d.equipments.length.toLocaleString();
+
+  const activePipe = DB.d.pipeline.filter(d=>d.stage!=='계약완료');
+  document.getElementById('s-pipe').textContent = activePipe.length;
+  const weighted = DB.d.pipeline.reduce((s,d)=>s+Number(d.amount||0)*Number(d.prob||0)/100,0);
+  document.getElementById('s-weighted').textContent = fmtAmt(Math.round(weighted));
+
+  // 단계별 차트
+  const byStage={};
+  DB.d.pipeline.forEach(d=>{byStage[d.stage]=(byStage[d.stage]||0)+Number(d.amount||0);});
+  const ctx1=document.getElementById('chart-stage').getContext('2d');
+  if(stageChart)stageChart.destroy();
+  const sl=Object.keys(byStage);
+  stageChart=new Chart(ctx1,{type:'bar',data:{labels:sl,datasets:[{data:Object.values(byStage),backgroundColor:sl.map(l=>SC[l]||'#adb5bd'),borderRadius:6,borderSkipped:false}]},options:{plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>fmtAmt(v)}},x:{grid:{display:false}}}}});
+
+  // 영업사원별 차트
+  const bySales={};
+  DB.d.pipeline.forEach(d=>{bySales[d.sales||'미배정']=(bySales[d.sales||'미배정']||0)+Number(d.amount||0);});
+  const ctx2=document.getElementById('chart-sales').getContext('2d');
+  if(salesChart)salesChart.destroy();
+  salesChart=new Chart(ctx2,{type:'doughnut',data:{labels:Object.keys(bySales),datasets:[{data:Object.values(bySales),backgroundColor:['#4f8ef7','#28a745','#fd7e14','#6f42c1','#dc3545','#17a2b8'],borderWidth:2}]},options:{plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:12}}}}});
+
+  // 보증만료
+  const now=new Date(), soon=new Date(now.getTime()+60*24*60*60*1000);
+  const alerts = DB.d.equipments
+    .filter(e=>e.warrantyEnd)
+    .map(e=>({...e,daysLeft:Math.ceil((new Date(e.warrantyEnd)-now)/(24*60*60*1000))}))
+    .filter(e=>e.daysLeft<=60)
+    .sort((a,b)=>a.daysLeft-b.daysLeft)
+    .slice(0,5);
+  const wEl=document.getElementById('warranty-list');
+  if(!alerts.length){wEl.innerHTML='<div class="text-muted text-center py-2" style="font-size:13px">만료 임박 장비 없음</div>';}
+  else{wEl.innerHTML=alerts.map(w=>{
+    const cls=w.daysLeft<=30?'background:#fff0f0;color:#dc3545;border-left:3px solid #dc3545':'background:#fffbf0;color:#fd7e14;border-left:3px solid #fd7e14';
+    const label=w.daysLeft<=0?'만료됨':w.daysLeft+'일 후';
+    return`<div class="d-flex justify-content-between align-items-center p-2 mb-1 rounded" style="${cls}"><div><div style="font-size:13px;font-weight:600">${w.custName||''}</div><div style="font-size:11px">${w.model||''}</div></div><span style="font-size:11px;font-weight:700">${label}</span></div>`;
+  }).join('');}
+
+  // 최근 상담
+  const rEl=document.getElementById('recent-logs');
+  const recent=[...DB.d.logs].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
+  if(!recent.length){rEl.innerHTML='<tr><td colspan="4" class="text-center text-muted py-2">없음</td></tr>';}
+  else{rEl.innerHTML=recent.map(r=>`<tr><td style="font-size:12px">${fmtDate(r.date)}</td><td style="font-size:12px;font-weight:600">${r.custName||''}</td><td><span class="badge bg-secondary" style="font-size:10px">${r.type||''}</span></td><td style="font-size:12px;color:#666">${(r.content||'').substring(0,30)}</td></tr>`).join('');}
+}
+
+// ── 파이프라인 ──────────────────────────────────────────────────────
+function renderPipeline() {
+  const total=DB.d.pipeline.reduce((s,d)=>s+Number(d.amount||0),0);
+  const weighted=DB.d.pipeline.reduce((s,d)=>s+Number(d.amount||0)*Number(d.prob||0)/100,0);
+  document.getElementById('pipe-summary').innerHTML=`
+    <div class="col-4"><div class="card p-3 text-center"><div style="font-size:11px;color:#888">전체 딜</div><div style="font-size:1.5rem;font-weight:700">${DB.d.pipeline.length}건</div></div></div>
+    <div class="col-4"><div class="card p-3 text-center"><div style="font-size:11px;color:#888">총 파이프라인</div><div style="font-size:1.5rem;font-weight:700;color:#4f8ef7">${fmtAmt(total)}</div></div></div>
+    <div class="col-4"><div class="card p-3 text-center"><div style="font-size:11px;color:#888">가중 예상매출</div><div style="font-size:1.5rem;font-weight:700;color:#6f42c1">${fmtAmt(Math.round(weighted))}</div></div></div>`;
+  document.getElementById('kanban-board').innerHTML=STAGES.map(stage=>{
+    const deals=DB.d.pipeline.filter(d=>d.stage===stage);
+    const stotal=deals.reduce((s,d)=>s+Number(d.amount||0),0);
+    return`<div class="pipeline-col"><div class="pipeline-col-header"><span style="color:${SC[stage]}">${stage}</span><span style="background:#e0e4ef;color:#555;border-radius:10px;padding:1px 7px;font-size:11px">${deals.length}</span></div>
+    <div style="font-size:11px;color:#888;margin-bottom:8px">${fmtAmt(stotal)}</div>
+    ${deals.map(d=>`<div class="deal-card" onclick='editPipeline("${d.id}")' style="border-left:3px solid ${SC[d.stage]||'#4f8ef7'}">
+      <div style="font-size:13px;font-weight:600">${d.custName||''}</div>
+      <div style="font-size:11px;color:#888">${d.model||''}</div>
+      <div style="font-size:12px;font-weight:700;color:#4f8ef7;margin-top:4px">${fmtAmt(Number(d.amount||0))}</div>
+      <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:11px;color:#aaa">
+        <span>${d.sales||''}</span>
+        <span style="background:${probColor(d.prob)};color:#fff;border-radius:8px;padding:1px 6px;font-size:10px;font-weight:700">${d.prob||0}%</span>
+      </div>
+      ${d.expectedDate?`<div style="font-size:10px;color:#aaa;margin-top:2px">마감: ${fmtDate(d.expectedDate)}</div>`:''}
+    </div>`).join('')}</div>`;
+  }).join('');
+}
+
+function openModal(type,data={}) {
+  if(type==='pipeline'){
+    ['p-id','p-cust','p-model','p-amount','p-sales','p-note'].forEach(id=>setV(id,''));
+    document.getElementById('p-stage').value='리드';
+    document.getElementById('p-prob').value='50';
+    document.getElementById('p-date').value='';
+    document.getElementById('p-del-btn').style.display='none';
+    new bootstrap.Modal(document.getElementById('pipelineModal')).show();
+  } else if(type==='quote'){
+    clearQuoteForm();
+    new bootstrap.Modal(document.getElementById('quoteModal')).show();
+  } else if(type==='target'){
+    ['t-ym','t-sales','t-target','t-cust'].forEach(id=>setV(id,''));
+    new bootstrap.Modal(document.getElementById('targetModal')).show();
+  } else if(type==='customer'){
+    ['c-id','c-name','c-doctor','c-region','c-address','c-tel','c-contact','c-contactTel','c-sales','c-note'].forEach(id=>setV(id,''));
+    document.getElementById('c-grade').value='일반';
+    document.getElementById('c-del-btn').style.display='none';
+    new bootstrap.Modal(document.getElementById('custModal')).show();
+  } else if(type==='equip'){
+    ['e-custName','e-model','e-serial','e-deliv','e-warranty','e-price','e-sales'].forEach(id=>setV(id,''));
+    document.getElementById('e-status').value='정상';
+    new bootstrap.Modal(document.getElementById('equipModal')).show();
+  } else if(type==='log'){
+    ['l-id','l-custName','l-content','l-product','l-next','l-sales'].forEach(id=>setV(id,''));
+    setV('l-date',new Date().toISOString().split('T')[0]);
+    setV('l-nextDate','');
+    document.getElementById('l-type').value='방문';
+    document.getElementById('l-del-btn').style.display='none';
+    new bootstrap.Modal(document.getElementById('logModal')).show();
+  } else if(type==='product'){
+    ['pp-id','pp-code','pp-name','pp-cat','pp-price','pp-warranty'].forEach(id=>setV(id,''));
+    document.getElementById('pp-del-btn').style.display='none';
+    new bootstrap.Modal(document.getElementById('productModal')).show();
+  }
+}
+
+function editPipeline(id) {
+  const d=DB.d.pipeline.find(x=>x.id===id); if(!d)return;
+  setV('p-id',d.id); setV('p-cust',d.custName); setV('p-model',d.model);
+  setV('p-amount',d.amount); setV('p-sales',d.sales); setV('p-note',d.note||'');
+  document.getElementById('p-stage').value=d.stage||'리드';
+  document.getElementById('p-prob').value=d.prob||50;
+  setV('p-date',d.expectedDate||'');
+  document.getElementById('p-del-btn').style.display='inline-block';
+  new bootstrap.Modal(document.getElementById('pipelineModal')).show();
+}
+
+function savePipeline() {
+  const d={id:gV('p-id')||uid(),custName:gV('p-cust'),model:gV('p-model'),amount:Number(gV('p-amount'))||0,stage:gV('p-stage'),prob:Number(gV('p-prob'))||0,expectedDate:gV('p-date'),sales:gV('p-sales'),note:gV('p-note')};
+  if(!d.custName||!d.model){alert('병원명과 제품/모델을 입력하세요.');return;}
+  const idx=DB.d.pipeline.findIndex(x=>x.id===d.id);
+  if(idx>=0) DB.d.pipeline[idx]=d; else DB.d.pipeline.push(d);
+  DB.save('pipeline').then(()=>{ bootstrap.Modal.getInstance(document.getElementById('pipelineModal')).hide(); renderPipeline(); });
+}
+
+function delPipeline() {
+  const id=gV('p-id'); if(!confirm('삭제하시겠습니까?'))return;
+  DB.d.pipeline=DB.d.pipeline.filter(x=>x.id!==id);
+  DB.save('pipeline').then(()=>{ bootstrap.Modal.getInstance(document.getElementById('pipelineModal')).hide(); renderPipeline(); });
+}
+
+function probColor(p){p=Number(p)||0;return p>=80?'#28a745':p>=50?'#fd7e14':'#adb5bd';}
+
+// ── 견적서 ──────────────────────────────────────────────────────
+function renderQuotes() {
+  const el=document.getElementById('quote-list');
+  const sorted=[...DB.d.quotes].reverse();
+  if(!sorted.length){el.innerHTML='<tr><td colspan="7" class="text-center text-muted py-3">견적서 없음</td></tr>';return;}
+  el.innerHTML=sorted.map(q=>`<tr>
+    <td><small class="text-muted" style="font-size:11px">${q.id}</small></td>
+    <td><strong>${q.custName||''}</strong></td>
+    <td style="font-size:12px">${fmtDate(q.quoteDate)}</td>
+    <td style="font-size:12px">${q.sales||''}</td>
+    <td style="font-weight:700">${fmtAmt(Number(q.total||0))}</td>
+    <td><span class="badge quote-status-${q.status||'임시'}">${q.status||'임시'}</span></td>
+    <td><button class="btn btn-outline-primary btn-sm" style="font-size:11px;padding:1px 6px" onclick="viewQuote('${q.id}')">보기</button>
+        <button class="btn btn-outline-danger btn-sm ms-1" style="font-size:11px;padding:1px 6px" onclick="delQuote('${q.id}')">삭제</button></td>
+  </tr>`).join('');
+}
+
+function clearQuoteForm(){
+  ['q-cust','q-sales','q-note'].forEach(id=>setV(id,''));
+  setV('q-date',new Date().toISOString().split('T')[0]);
+  setV('q-valid',''); setV('q-disc','0');
+  document.getElementById('q-status').value='임시';
+  document.getElementById('q-items').innerHTML='';
+  qItemCount=0; addQItem(); calcQ();
+}
+
+function addQItem(name='',qty=1,price='',disc=0){
+  qItemCount++;
+  const idx=qItemCount;
+  const tr=document.createElement('tr'); tr.id='qi-'+idx;
+  tr.innerHTML=`<td><input type="text" class="form-control form-control-sm qi-name" value="${name}" oninput="calcQ()"></td><td><input type="number" class="form-control form-control-sm qi-qty" value="${qty}" oninput="calcQ()"></td><td><input type="number" class="form-control form-control-sm qi-price" value="${price}" oninput="calcQ()"></td><td><input type="number" class="form-control form-control-sm qi-disc" value="${disc}" oninput="calcQ()"></td><td class="qi-amt text-end fw-bold" style="font-size:12px">0</td><td><button class="btn btn-sm btn-outline-danger" onclick="document.getElementById('qi-${idx}').remove();calcQ()"><i class="bi bi-trash"></i></button></td>`;
+  document.getElementById('q-items').appendChild(tr);
+  calcQ();
+}
+
+function calcQ(){
+  let sub=0;
+  document.querySelectorAll('#q-items tr').forEach(tr=>{
+    const qty=Number(tr.querySelector('.qi-qty')?.value||0),price=Number(tr.querySelector('.qi-price')?.value||0),disc=Number(tr.querySelector('.qi-disc')?.value||0);
+    const amt=Math.round(qty*price*(1-disc/100));
+    const el=tr.querySelector('.qi-amt');if(el)el.textContent=fmtAmt(amt);
+    sub+=amt;
+  });
+  const discAmt=Number(gV('q-disc'))||0,base=sub-discAmt,vat=Math.round(base*.1);
+  document.getElementById('q-sub').textContent=fmtAmt(sub);
+  document.getElementById('q-vat').textContent=fmtAmt(vat);
+  document.getElementById('q-total').textContent=fmtAmt(base+vat);
+}
+
+function saveQuote(){
+  if(!gV('q-cust')){alert('병원명을 입력하세요.');return;}
+  const items=[];
+  document.querySelectorAll('#q-items tr').forEach(tr=>{
+    const name=tr.querySelector('.qi-name')?.value||'';if(!name)return;
+    const qty=Number(tr.querySelector('.qi-qty')?.value||1),price=Number(tr.querySelector('.qi-price')?.value||0),disc=Number(tr.querySelector('.qi-disc')?.value||0);
+    items.push({name,qty,price,discount:disc,amount:Math.round(qty*price*(1-disc/100))});
+  });
+  const discAmt=Number(gV('q-disc'))||0;
+  const sub=items.reduce((s,i)=>s+i.amount,0);
+  const base=sub-discAmt,vat=Math.round(base*.1);
+  const today=new Date();
+  const q={id:'Q'+today.getFullYear()+(today.getMonth()+1).toString().padStart(2,'0')+today.getDate().toString().padStart(2,'0')+'-'+String(DB.d.quotes.length+1).padStart(3,'0'),custName:gV('q-cust'),quoteDate:gV('q-date'),validUntil:gV('q-valid'),sales:gV('q-sales'),status:gV('q-status'),note:gV('q-note'),subtotal:sub,discountAmt:discAmt,vat,total:base+vat,items};
+  DB.d.quotes.push(q);
+  DB.save('quotes').then(()=>{bootstrap.Modal.getInstance(document.getElementById('quoteModal')).hide();renderQuotes();});
+}
+
+function viewQuote(id){
+  const q=DB.d.quotes.find(x=>x.id===id);if(!q)return;
+  const rows=(q.items||[]).map((item,i)=>`<tr><td style="text-align:center;padding:8px;border-bottom:1px solid #eee">${i+1}</td><td style="padding:8px;border-bottom:1px solid #eee">${item.name}</td><td style="text-align:center;padding:8px;border-bottom:1px solid #eee">${item.qty}</td><td style="text-align:right;padding:8px;border-bottom:1px solid #eee">${Number(item.price||0).toLocaleString()}</td><td style="text-align:center;padding:8px;border-bottom:1px solid #eee">${item.discount||0}%</td><td style="text-align:right;padding:8px;border-bottom:1px solid #eee;font-weight:bold">${Number(item.amount||0).toLocaleString()}</td></tr>`).join('');
+  document.getElementById('print-content').innerHTML=`<div style="padding:30px;font-family:'Malgun Gothic',sans-serif"><div style="text-align:center;margin-bottom:30px"><h2 style="font-size:26px;font-weight:800;color:#1e2140">견 적 서</h2></div><div style="display:flex;justify-content:space-between;margin-bottom:24px"><div><table style="font-size:13px;border-collapse:collapse"><tr><td style="color:#888;padding:3px 16px 3px 0">수 신</td><td style="font-weight:700;font-size:15px">${q.custName}</td></tr><tr><td style="color:#888;padding:3px 16px 3px 0">견적번호</td><td>${q.id}</td></tr><tr><td style="color:#888;padding:3px 16px 3px 0">견적일자</td><td>${fmtDate(q.quoteDate)}</td></tr><tr><td style="color:#888;padding:3px 16px 3px 0">유효기간</td><td>${fmtDate(q.validUntil)||'-'}</td></tr></table></div><div style="text-align:right"><div style="font-size:22px;font-weight:800;color:#4f8ef7">원텍</div><div style="font-size:12px;color:#888">담당: ${q.sales||''}</div><div style="margin-top:10px;font-size:13px;color:#555">합계금액</div><div style="font-size:24px;font-weight:800">₩ ${Number(q.total||0).toLocaleString()}</div><div style="font-size:11px;color:#888">(VAT 포함)</div></div></div><table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px"><thead><tr style="background:#1e2140;color:#fff"><th style="padding:10px;text-align:center;width:5%">No</th><th style="padding:10px;text-align:left;width:35%">제품명</th><th style="padding:10px;text-align:center;width:8%">수량</th><th style="padding:10px;text-align:right;width:18%">단가</th><th style="padding:10px;text-align:center;width:10%">할인율</th><th style="padding:10px;text-align:right;width:20%">금액</th></tr></thead><tbody>${rows}</tbody></table><div style="display:flex;justify-content:flex-end"><table style="font-size:13px;border-collapse:collapse;min-width:260px"><tr><td style="padding:6px 16px;color:#555;border-bottom:1px solid #eee">소 계</td><td style="padding:6px 16px;text-align:right;border-bottom:1px solid #eee">${Number(q.subtotal||0).toLocaleString()} 원</td></tr><tr><td style="padding:6px 16px;color:#555;border-bottom:1px solid #eee">추가 할인</td><td style="padding:6px 16px;text-align:right;border-bottom:1px solid #eee">- ${Number(q.discountAmt||0).toLocaleString()} 원</td></tr><tr><td style="padding:6px 16px;color:#555;border-bottom:1px solid #eee">부가세(10%)</td><td style="padding:6px 16px;text-align:right;border-bottom:1px solid #eee">${Number(q.vat||0).toLocaleString()} 원</td></tr><tr style="background:#f0f2f8"><td style="padding:10px 16px;font-weight:700;font-size:15px">합 계</td><td style="padding:10px 16px;text-align:right;font-weight:800;font-size:20px">₩ ${Number(q.total||0).toLocaleString()}</td></tr></table></div></div>`;
+  new bootstrap.Modal(document.getElementById('quotePrintModal')).show();
+}
+
+function delQuote(id){if(!confirm('삭제하시겠습니까?'))return;DB.d.quotes=DB.d.quotes.filter(x=>x.id!==id);DB.save('quotes').then(()=>renderQuotes());}
+
+// ── 목표 vs 실적 ──────────────────────────────────────────────────────
+function renderPerformance(){
+  const months=[];
+  const now=new Date();
+  for(let i=11;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push(d.toISOString().substring(0,7));}
+  const monthlyT={},monthlyA={},salesT={},salesA={},custA={};
+  DB.d.targets.forEach(t=>{monthlyT[t.ym]=(monthlyT[t.ym]||0)+Number(t.target||0);salesT[t.sales]=(salesT[t.sales]||0)+Number(t.target||0);});
+  DB.d.pipeline.filter(d=>d.stage==='계약완료').forEach(r=>{
+    const ym=(r.expectedDate||'').substring(0,7);
+    if(ym){monthlyA[ym]=(monthlyA[ym]||0)+Number(r.amount||0);}
+    salesA[r.sales||'미배정']=(salesA[r.sales||'미배정']||0)+Number(r.amount||0);
+    custA[r.custName||'미분류']=(custA[r.custName||'미분류']||0)+Number(r.amount||0);
+  });
+  const ctx=document.getElementById('chart-perf').getContext('2d');
+  if(perfChart)perfChart.destroy();
+  perfChart=new Chart(ctx,{type:'bar',data:{labels:months.map(m=>m.substring(2)),datasets:[{label:'목표',data:months.map(m=>monthlyT[m]||0),backgroundColor:'rgba(79,142,247,.4)',borderColor:'#4f8ef7',borderWidth:2,borderRadius:4},{label:'실적',data:months.map(m=>monthlyA[m]||0),backgroundColor:'rgba(40,167,69,.7)',borderColor:'#28a745',borderWidth:2,borderRadius:4}]},options:{plugins:{legend:{position:'top'}},scales:{y:{ticks:{callback:v=>fmtAmt(v)}},x:{grid:{display:false}}}}});
+  const allS=new Set([...Object.keys(salesT),...Object.keys(salesA)]);
+  document.getElementById('sales-perf-table').innerHTML=[...allS].map(s=>{
+    const t=salesT[s]||0,a=salesA[s]||0,rate=t>0?Math.round(a/t*100):a>0?100:0;
+    const col=rate>=100?'#28a745':rate>=70?'#fd7e14':'#dc3545';
+    return`<div class="mb-3"><div class="d-flex justify-content-between mb-1"><span style="font-size:13px;font-weight:600">${s}</span><span style="font-size:12px;color:#666">${fmtAmt(a)} / ${fmtAmt(t)}</span></div><div class="progress" style="height:12px"><div class="progress-bar" style="width:${Math.min(rate,100)}%;background:${col}"></div></div><div style="font-size:11px;color:${col};font-weight:700;margin-top:2px">${rate}% 달성</div></div>`;
+  }).join('')||'<div class="text-muted text-center py-3" style="font-size:13px">목표를 먼저 등록하세요</div>';
+  const ctx2=document.getElementById('chart-cust-perf').getContext('2d');
+  if(custPerfChart)custPerfChart.destroy();
+  const cl=Object.keys(custA).sort((a,b)=>custA[b]-custA[a]).slice(0,10);
+  if(cl.length)custPerfChart=new Chart(ctx2,{type:'bar',data:{labels:cl,datasets:[{data:cl.map(c=>custA[c]),backgroundColor:'rgba(111,66,193,.7)',borderColor:'#6f42c1',borderWidth:2,borderRadius:4}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fmtAmt(v)}}}}});
+  else document.getElementById('chart-cust-perf').parentNode.innerHTML='<div class="text-muted text-center py-4" style="font-size:13px">계약완료 실적 없음</div>';
+}
+
+function saveTarget(){
+  const d={id:uid(),ym:gV('t-ym'),sales:gV('t-sales'),target:Number(gV('t-target'))||0,custName:gV('t-cust')};
+  if(!d.ym||!d.sales||!d.target){alert('년월, 영업사원, 목표금액을 입력하세요.');return;}
+  DB.d.targets.push(d);
+  DB.save('targets').then(()=>{bootstrap.Modal.getInstance(document.getElementById('targetModal')).hide();renderPerformance();});
+}
+
+// ── 고객사 ──────────────────────────────────────────────────────
+function renderCustomers(){
+  const q=(document.getElementById('search-cust').value||'').toLowerCase();
+  const list=DB.d.customers.filter(c=>(c.name||'').toLowerCase().includes(q)||(c.region||'').toLowerCase().includes(q)||(c.sales||'').toLowerCase().includes(q));
+  const el=document.getElementById('cust-list');
+  if(!list.length){el.innerHTML='<tr><td colspan="7" class="text-center text-muted py-3">데이터 없음</td></tr>';return;}
+  el.innerHTML=list.map(c=>`<tr><td><strong>${c.name||''}</strong></td><td>${c.doctor||''}</td><td>${c.region||''}</td><td>${c.tel||''}</td><td>${c.sales||''}</td><td>${gradeBadge(c.grade)}</td><td><button class="btn btn-outline-primary" style="font-size:11px;padding:1px 6px" onclick='editCustomer("${c.id}")'>수정</button></td></tr>`).join('');
+}
+
+function editCustomer(id){
+  const c=DB.d.customers.find(x=>x.id===id);if(!c)return;
+  setV('c-id',c.id);setV('c-name',c.name||'');setV('c-doctor',c.doctor||'');setV('c-region',c.region||'');setV('c-address',c.address||'');setV('c-tel',c.tel||'');setV('c-contact',c.contact||'');setV('c-contactTel',c.contactTel||'');setV('c-sales',c.sales||'');setV('c-note',c.note||'');
+  document.getElementById('c-grade').value=c.grade||'일반';
+  document.getElementById('c-del-btn').style.display='inline-block';
+  new bootstrap.Modal(document.getElementById('custModal')).show();
+}
+
+function saveCustomer(){
+  const d={id:gV('c-id')||uid(),name:gV('c-name'),doctor:gV('c-doctor'),region:gV('c-region'),address:gV('c-address'),tel:gV('c-tel'),contact:gV('c-contact'),contactTel:gV('c-contactTel'),sales:gV('c-sales'),grade:gV('c-grade'),note:gV('c-note')};
+  if(!d.name){alert('병원명을 입력하세요.');return;}
+  const idx=DB.d.customers.findIndex(x=>x.id===d.id);
+  if(idx>=0) DB.d.customers[idx]=d; else DB.d.customers.push(d);
+  DB.save('customers').then(()=>{bootstrap.Modal.getInstance(document.getElementById('custModal')).hide();renderCustomers();});
+}
+
+function delCustomer(){
+  const id=gV('c-id');if(!confirm('삭제하시겠습니까?'))return;
+  DB.d.customers=DB.d.customers.filter(x=>x.id!==id);
+  DB.save('customers').then(()=>{bootstrap.Modal.getInstance(document.getElementById('custModal')).hide();renderCustomers();});
+}
+
+function gradeBadge(g){if(g==='VIP')return'<span class="badge" style="background:#ffd700;color:#333">VIP</span>';if(g==='잠재')return'<span class="badge bg-info">잠재</span>';return'<span class="badge bg-secondary">일반</span>';}
+
+// ── 장비 ──────────────────────────────────────────────────────
+function initEquip(){
+  document.getElementById('equip-load-status').textContent=`총 ${DB.d.equipments.length.toLocaleString()}건 로드됨`;
+  filterEquip();
+}
+
+function filterEquip(){
+  const kw=(document.getElementById('search-equip').value||'').toLowerCase();
+  const result=kw
+    ?DB.d.equipments.filter(e=>(e.custName||'').toLowerCase().includes(kw)||(e.model||'').toLowerCase().includes(kw)||(e.serial||'').toLowerCase().includes(kw)||(e.sales||'').toLowerCase().includes(kw))
+    :DB.d.equipments;
+  document.getElementById('equip-result-info').textContent=kw?`${result.length.toLocaleString()}건 검색됨`:`전체 ${result.length.toLocaleString()}건`;
+  const el=document.getElementById('equip-list');
+  if(!result.length){el.innerHTML='<tr><td colspan="8" class="text-center text-muted py-3">검색 결과 없음</td></tr>';return;}
+  el.innerHTML=result.slice(0,300).map(e=>`<tr>
+    <td>${e.custName||''}</td><td><strong>${e.model||''}</strong></td>
+    <td><small style="font-size:11px">${e.serial||''}</small></td>
+    <td style="font-size:12px">${fmtDate(e.delivDate)}</td>
+    <td style="font-size:12px">${fmtDate(e.warrantyEnd)}</td>
+    <td>${statusBadge(e.status)}</td>
+    <td style="font-size:12px">${e.sales||''}</td>
+    <td><button class="btn btn-outline-danger" style="font-size:11px;padding:1px 6px" onclick="delEquip('${e.serial}')">삭제</button></td>
+  </tr>`).join('');
+  if(result.length>300){const more=document.createElement('tr');more.innerHTML=`<td colspan="8" class="text-center text-muted py-2" style="font-size:12px">검색어를 더 구체적으로 입력하면 전체 결과를 볼 수 있습니다 (현재 300건 표시)</td>`;el.appendChild(more);}
+}
+
+function saveEquip(){
+  const d={custName:gV('e-custName'),model:gV('e-model'),serial:gV('e-serial'),delivDate:gV('e-deliv'),warrantyEnd:gV('e-warranty'),status:gV('e-status'),price:Number(gV('e-price'))||0,sales:gV('e-sales')};
+  if(!d.custName||!d.model){alert('병원명과 모델명을 입력하세요.');return;}
+  if(!d.warrantyEnd&&d.delivDate){const dt=new Date(d.delivDate);dt.setFullYear(dt.getFullYear()+1);d.warrantyEnd=dt.toISOString().split('T')[0];}
+  DB.d.equipments.push(d);
+  DB.save('equipments').then(()=>{bootstrap.Modal.getInstance(document.getElementById('equipModal')).hide();filterEquip();});
+}
+
+function delEquip(serial){if(!confirm('삭제하시겠습니까?'))return;DB.d.equipments=DB.d.equipments.filter(x=>x.serial!==serial);DB.save('equipments').then(()=>filterEquip());}
+function statusBadge(s){if(s==='점검중')return'<span class="badge bg-warning text-dark">점검중</span>';if(s==='폐기')return'<span class="badge bg-danger">폐기</span>';return'<span class="badge bg-success">정상</span>';}
+
+// ── 상담일지 ──────────────────────────────────────────────────────
+function renderLogs(){
+  const q=(document.getElementById('search-log').value||'').toLowerCase();
+  const list=[...DB.d.logs].sort((a,b)=>new Date(b.date)-new Date(a.date)).filter(l=>!q||(l.custName||'').toLowerCase().includes(q)||(l.content||'').toLowerCase().includes(q)||(l.sales||'').toLowerCase().includes(q));
+  const el=document.getElementById('log-list');
+  if(!list.length){el.innerHTML='<tr><td colspan="8" class="text-center text-muted py-3">데이터 없음</td></tr>';return;}
+  el.innerHTML=list.map(l=>`<tr><td style="font-size:12px">${fmtDate(l.date)}</td><td><strong>${l.custName||''}</strong></td><td><span class="badge bg-secondary" style="font-size:10px">${l.type||''}</span></td><td style="font-size:12px;color:#555">${(l.content||'').substring(0,35)}</td><td style="font-size:12px">${l.product||''}</td><td style="font-size:12px">${l.nextAction||''}</td><td style="font-size:12px">${l.sales||''}</td><td><button class="btn btn-outline-primary" style="font-size:11px;padding:1px 6px" onclick='editLog("${l.id}")'>수정</button></td></tr>`).join('');
+}
+
+function editLog(id){
+  const l=DB.d.logs.find(x=>x.id===id);if(!l)return;
+  setV('l-id',l.id);setV('l-custName',l.custName||'');setV('l-content',l.content||'');setV('l-product',l.product||'');setV('l-next',l.nextAction||'');setV('l-nextDate',l.nextDate||'');setV('l-sales',l.sales||'');setV('l-date',l.date||'');
+  document.getElementById('l-type').value=l.type||'방문';
+  document.getElementById('l-del-btn').style.display='inline-block';
+  new bootstrap.Modal(document.getElementById('logModal')).show();
+}
+
+function saveLog(){
+  const d={id:gV('l-id')||uid(),date:gV('l-date'),custName:gV('l-custName'),type:gV('l-type'),content:gV('l-content'),product:gV('l-product'),nextAction:gV('l-next'),nextDate:gV('l-nextDate'),sales:gV('l-sales')};
+  if(!d.custName){alert('병원명을 입력하세요.');return;}
+  const idx=DB.d.logs.findIndex(x=>x.id===d.id);
+  if(idx>=0) DB.d.logs[idx]=d; else DB.d.logs.push(d);
+  DB.save('logs').then(()=>{bootstrap.Modal.getInstance(document.getElementById('logModal')).hide();renderLogs();});
+}
+
+function delLog(){
+  const id=gV('l-id');if(!confirm('삭제하시겠습니까?'))return;
+  DB.d.logs=DB.d.logs.filter(x=>x.id!==id);
+  DB.save('logs').then(()=>{bootstrap.Modal.getInstance(document.getElementById('logModal')).hide();renderLogs();});
+}
+
+// ── 제품 ──────────────────────────────────────────────────────
+function renderProducts(){
+  const el=document.getElementById('product-list');
+  if(!DB.d.products.length){el.innerHTML='<tr><td colspan="6" class="text-center text-muted py-3">데이터 없음</td></tr>';return;}
+  el.innerHTML=DB.d.products.map(p=>`<tr><td>${p.code||''}</td><td><strong>${p.name||''}</strong></td><td>${p.category||''}</td><td>${p.price?Number(p.price).toLocaleString()+'원':''}</td><td>${p.warranty?p.warranty+'개월':''}</td><td><button class="btn btn-outline-primary" style="font-size:11px;padding:1px 6px" onclick='editProduct("${p.id}")'>수정</button></td></tr>`).join('');
+}
+
+function editProduct(id){
+  const p=DB.d.products.find(x=>x.id===id);if(!p)return;
+  setV('pp-id',p.id);setV('pp-code',p.code||'');setV('pp-name',p.name||'');setV('pp-cat',p.category||'');setV('pp-price',p.price||'');setV('pp-warranty',p.warranty||'');
+  document.getElementById('pp-del-btn').style.display='inline-block';
+  new bootstrap.Modal(document.getElementById('productModal')).show();
+}
+
+function saveProduct(){
+  const d={id:gV('pp-id')||uid(),code:gV('pp-code'),name:gV('pp-name'),category:gV('pp-cat'),price:Number(gV('pp-price'))||0,warranty:Number(gV('pp-warranty'))||0};
+  if(!d.name){alert('제품명을 입력하세요.');return;}
+  const idx=DB.d.products.findIndex(x=>x.id===d.id);
+  if(idx>=0) DB.d.products[idx]=d; else DB.d.products.push(d);
+  DB.save('products').then(()=>{bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();renderProducts();});
+}
+
+function delProduct(){
+  const id=gV('pp-id');if(!confirm('삭제하시겠습니까?'))return;
+  DB.d.products=DB.d.products.filter(x=>x.id!==id);
+  DB.save('products').then(()=>{bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();renderProducts();});
+}
+
+// ── 유틸 ──────────────────────────────────────────────────────
+function gV(id){return(document.getElementById(id)?.value||'');}
+function setV(id,v){const el=document.getElementById(id);if(el)el.value=v;}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).substr(2,5);}
+function fmtDate(d){if(!d)return'';try{return new Date(d).toLocaleDateString('ko-KR');}catch(e){return String(d);}}
+function fmtAmt(n){n=Number(n)||0;if(!n)return'0원';if(n>=100000000)return(n/100000000).toFixed(1)+'억';if(n>=10000000)return(n/10000000).toFixed(1)+'천만';if(n>=10000)return Math.round(n/10000)+'만';return n.toLocaleString()+'원';}
+
+init();
+</script>
+</body>
+</html>
