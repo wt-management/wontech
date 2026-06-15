@@ -1071,15 +1071,28 @@ function renderDashboard() {
   const wEl = document.getElementById('warranty-list');
   if(!alerts.length){ wEl.innerHTML='<div class="text-muted text-center py-3" style="font-size:13px">만료 임박 장비 없음</div>'; }
   else { wEl.innerHTML = alerts.map(w=>{
-    const danger=w.daysLeft<=30, label=w.daysLeft<=0?'만료됨':w.daysLeft+'일 후';
-    return`<div class="d-flex justify-content-between align-items-center py-2" style="border-bottom:1px solid #f3f4f6">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:8px;height:8px;border-radius:50%;background:${danger?'#dc2626':'#f59e0b'};flex-shrink:0"></div>
-        <div><div style="font-size:13px;font-weight:600">${w.custName||''}</div><div style="font-size:11px;color:#9ca3af">${w.model||''}</div></div>
+    const label = w.daysLeft+'일 후';
+    const urgentColor = w.daysLeft<=7 ? '#dc2626' : '#ea580c';
+    const delivStr = w.delivDate ? fmtDate(w.delivDate) : '-';
+    const warrantyStr = w.warrantyMonths ? w.warrantyMonths+'개월' : (w.warranty ? w.warranty+'개월' : '-');
+    return`<div style="border-bottom:1px solid #f3f4f6;padding:10px 0">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:8px;height:8px;border-radius:50%;background:${urgentColor};flex-shrink:0;margin-top:3px"></div>
+          <div>
+            <div style="font-size:13px;font-weight:600">${w.custName||''}</div>
+            <div style="font-size:11px;color:#6b7280">${w.model||''}</div>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:12px;font-weight:700;color:${urgentColor}">${label}</div>
+          <button class="btn btn-sm" style="font-size:10px;padding:1px 8px;background:${urgentColor};color:#fff;border:none;border-radius:5px;margin-top:3px" onclick="openDealFromWarranty('${(w.custName||'').replace(/'/g,"\\'")}','${(w.model||'').replace(/'/g,"\\'")}')">딜 등록</button>
+        </div>
       </div>
-      <div class="d-flex gap-2 align-items-center">
-        <span style="font-size:11px;font-weight:700;color:${danger?'#dc2626':'#ea580c'}">${label}</span>
-        <button class="btn btn-sm" style="font-size:10px;padding:2px 8px;background:${danger?'#dc2626':'#ea580c'};color:#fff;border:none;border-radius:6px" onclick="openDealFromWarranty('${(w.custName||'').replace(/'/g,"\\'")}','${(w.model||'').replace(/'/g,"\\'")}')">딜 등록</button>
+      <div style="display:flex;gap:12px;margin-top:5px;margin-left:16px">
+        <span style="font-size:11px;color:#9ca3af"><i class="bi bi-calendar3 me-1"></i>납품 ${delivStr}</span>
+        <span style="font-size:11px;color:#9ca3af"><i class="bi bi-shield-check me-1"></i>보증 ${warrantyStr}</span>
+        <span style="font-size:11px;color:#9ca3af"><i class="bi bi-calendar-x me-1"></i>만료 ${fmtDate(w.warrantyEnd)}</span>
       </div>
     </div>`;
   }).join(''); }
