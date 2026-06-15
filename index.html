@@ -136,9 +136,25 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       <div class="col-md-6"><div class="card p-3"><div class="fw-bold mb-3" style="font-size:14px">파이프라인 단계별 금액</div><canvas id="chart-stage" height="200"></canvas></div></div>
       <div class="col-md-6"><div class="card p-3"><div class="fw-bold mb-3" style="font-size:14px">영업사원별 파이프라인</div><canvas id="chart-sales" height="200"></canvas></div></div>
     </div>
-    <div class="row g-3">
+    <div class="row g-3 mb-3">
       <div class="col-md-5"><div class="card p-3"><div class="fw-bold mb-2" style="font-size:14px"><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>보증만료 임박 (60일 이내)</div><div id="warranty-list"></div></div></div>
       <div class="col-md-7"><div class="card p-0"><div class="p-3 pb-0 fw-bold" style="font-size:14px">최근 상담일지</div><table class="table table-hover mb-0 mt-2"><thead class="table-light"><tr><th>일자</th><th>병원명</th><th>유형</th><th>내용</th></tr></thead><tbody id="recent-logs"></tbody></table></div></div>
+    </div>
+    <!-- ① 다음 액션 알림판 -->
+    <div class="row g-3">
+      <div class="col-12">
+        <div class="card p-0">
+          <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+            <div class="fw-bold" style="font-size:14px"><i class="bi bi-bell-fill me-2" style="color:#ea580c"></i>다음 액션 알림판</div>
+            <div class="d-flex gap-2">
+              <span class="badge" style="background:#fef2f2;color:#dc2626;font-weight:600;font-size:11px" id="action-overdue-cnt"></span>
+              <span class="badge" style="background:#fff7ed;color:#ea580c;font-weight:600;font-size:11px" id="action-today-cnt"></span>
+              <span class="badge" style="background:#eff6ff;color:#2563eb;font-weight:600;font-size:11px" id="action-week-cnt"></span>
+            </div>
+          </div>
+          <div id="action-board" style="max-height:260px;overflow-y:auto"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -249,12 +265,21 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
   </div>
   <div class="modal-body p-0">
     <div class="p-4 border-bottom" id="hosp-stat-row" style="background:#f9fafb"></div>
-    <div class="p-4">
-      <div class="fw-semibold mb-3" style="font-size:14px">납품 장비 목록 <span class="text-muted fw-normal" id="hosp-equip-count"></span></div>
+    <!-- 탭 -->
+    <ul class="nav nav-tabs px-4 pt-2" style="border-bottom:1px solid #e5e7eb">
+      <li class="nav-item"><a class="nav-link active" style="font-size:13px;cursor:pointer" onclick="hospTab('equip',this)"><i class="bi bi-cpu me-1"></i>장비 목록 <span id="hosp-equip-count" class="text-muted fw-normal"></span></a></li>
+      <li class="nav-item"><a class="nav-link" style="font-size:13px;cursor:pointer" onclick="hospTab('timeline',this)"><i class="bi bi-clock-history me-1"></i>활동 타임라인</a></li>
+    </ul>
+    <!-- 장비 탭 -->
+    <div id="hosp-tab-equip" class="p-4">
       <table class="table mb-0">
         <thead class="table-light"><tr><th>모델명</th><th>시리얼번호</th><th>납품일</th><th>보증만료</th><th>상태</th><th>담당영업</th></tr></thead>
         <tbody id="hosp-equip-tbody"></tbody>
       </table>
+    </div>
+    <!-- 타임라인 탭 -->
+    <div id="hosp-tab-timeline" class="p-4" style="display:none">
+      <div id="hosp-timeline-content"></div>
     </div>
   </div>
 </div></div></div>
@@ -557,6 +582,60 @@ function renderDashboard() {
   const recent=[...DB.d.logs].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
   if(!recent.length){rEl.innerHTML='<tr><td colspan="4" class="text-center text-muted py-2">없음</td></tr>';}
   else{rEl.innerHTML=recent.map(r=>`<tr><td style="font-size:12px">${fmtDate(r.date)}</td><td style="font-size:12px;font-weight:600">${r.custName||''}</td><td><span class="badge bg-secondary" style="font-size:10px">${r.type||''}</span></td><td style="font-size:12px;color:#666">${(r.content||'').substring(0,30)}</td></tr>`).join('');}
+
+  // ① 다음 액션 알림판
+  renderActionBoard();
+}
+
+function renderActionBoard() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const weekEnd = new Date(today); weekEnd.setDate(weekEnd.getDate()+7);
+
+  const actions = DB.d.logs
+    .filter(l => l.nextDate && l.nextAction)
+    .map(l => {
+      const d = new Date(l.nextDate); d.setHours(0,0,0,0);
+      const diff = Math.ceil((d - today) / 864e5);
+      return { ...l, _d: d, _diff: diff };
+    })
+    .sort((a,b) => a._d - b._d);
+
+  const overdue = actions.filter(a => a._diff < 0);
+  const todayList = actions.filter(a => a._diff === 0);
+  const weekList = actions.filter(a => a._diff > 0 && a._diff <= 7);
+
+  document.getElementById('action-overdue-cnt').textContent = overdue.length ? `지연 ${overdue.length}건` : '';
+  document.getElementById('action-today-cnt').textContent = todayList.length ? `오늘 ${todayList.length}건` : '';
+  document.getElementById('action-week-cnt').textContent = weekList.length ? `이번주 ${weekList.length}건` : '';
+
+  const el = document.getElementById('action-board');
+  if (!actions.filter(a => a._diff <= 7).length) {
+    el.innerHTML = '<div class="text-center text-muted py-4" style="font-size:13px">이번 주 예정된 액션이 없습니다</div>';
+    return;
+  }
+
+  const groups = [
+    { label:'지연', color:'#dc2626', bg:'#fef2f2', border:'#fecaca', items: overdue },
+    { label:'오늘', color:'#ea580c', bg:'#fff7ed', border:'#fed7aa', items: todayList },
+    { label:'이번주', color:'#2563eb', bg:'#eff6ff', border:'#bfdbfe', items: weekList },
+  ];
+
+  el.innerHTML = groups.filter(g=>g.items.length).map(g => `
+    <div class="px-3 pt-3 pb-1">
+      <div style="font-size:11px;font-weight:700;color:${g.color};letter-spacing:.05em;margin-bottom:8px">${g.label.toUpperCase()} · ${g.items.length}건</div>
+      ${g.items.map(a => `
+        <div class="d-flex align-items-start gap-3 p-2 mb-2 rounded-3" style="background:${g.bg};border:1px solid ${g.border}">
+          <div style="width:36px;height:36px;background:${g.color};border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:#fff;line-height:1.1;text-align:center">
+            ${a._diff===0?'오늘':a._diff<0?`${Math.abs(a._diff)}일<br>지연`:`D-${a._diff}`}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;color:${g.color}">${a.custName||''}</div>
+            <div style="font-size:12px;color:#374151;margin-top:2px">${a.nextAction||''}</div>
+            <div style="font-size:11px;color:#9ca3af;margin-top:1px">${fmtDate(a.nextDate)} · ${a.sales||''}</div>
+          </div>
+          <button class="btn btn-sm" style="background:${g.color};color:#fff;font-size:11px;padding:3px 10px;border-radius:6px;flex-shrink:0" onclick='editLog("${a.id}")'>확인</button>
+        </div>`).join('')}
+    </div>`).join('');
 }
 
 // ── 파이프라인 ──────────────────────────────────────────────────────
@@ -572,16 +651,25 @@ function renderPipeline() {
     const stotal=deals.reduce((s,d)=>s+Number(d.amount||0),0);
     return`<div class="pipeline-col"><div class="pipeline-col-header"><span style="color:${SC[stage]}">${stage}</span><span style="background:#e0e4ef;color:#555;border-radius:10px;padding:1px 7px;font-size:11px">${deals.length}</span></div>
     <div style="font-size:11px;color:#888;margin-bottom:8px">${fmtAmt(stotal)}</div>
-    ${deals.map(d=>`<div class="deal-card" onclick='editPipeline("${d.id}")' style="border-left:3px solid ${SC[d.stage]||'#4f8ef7'}">
-      <div style="font-size:13px;font-weight:600">${d.custName||''}</div>
-      <div style="font-size:11px;color:#888">${d.model||''}</div>
-      <div style="font-size:12px;font-weight:700;color:#4f8ef7;margin-top:4px">${fmtAmt(Number(d.amount||0))}</div>
-      <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:11px;color:#aaa">
-        <span>${d.sales||''}</span>
-        <span style="background:${probColor(d.prob)};color:#fff;border-radius:8px;padding:1px 6px;font-size:10px;font-weight:700">${d.prob||0}%</span>
-      </div>
-      ${d.expectedDate?`<div style="font-size:10px;color:#aaa;margin-top:2px">마감: ${fmtDate(d.expectedDate)}</div>`:''}
-    </div>`).join('')}</div>`;
+    ${deals.map(d=>{
+      const daysInStage = d.stageUpdatedAt ? Math.floor((Date.now()-new Date(d.stageUpdatedAt))/(864e5)) : null;
+      const staleWarn = daysInStage!==null && daysInStage>=14;
+      const staleDanger = daysInStage!==null && daysInStage>=30;
+      const daysBadge = daysInStage!==null ? `<span style="background:${staleDanger?'#dc2626':staleWarn?'#f59e0b':'#e5e7eb'};color:${staleDanger||staleWarn?'#fff':'#6b7280'};border-radius:6px;padding:1px 6px;font-size:10px;font-weight:700">${daysInStage}일째</span>` : '';
+      return`<div class="deal-card" onclick='editPipeline("${d.id}")' style="border-left:3px solid ${SC[d.stage]||'#4f8ef7'}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="font-size:13px;font-weight:600;flex:1">${d.custName||''}</div>
+          ${daysBadge}
+        </div>
+        <div style="font-size:11px;color:#888;margin-top:1px">${d.model||''}</div>
+        <div style="font-size:13px;font-weight:700;color:#2563eb;margin-top:6px">${fmtAmt(Number(d.amount||0))}</div>
+        <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:11px;color:#9ca3af;align-items:center">
+          <span>${d.sales||''}</span>
+          <span style="background:${probColor(d.prob)};color:#fff;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:700">${d.prob||0}%</span>
+        </div>
+        ${d.expectedDate?`<div style="font-size:10px;color:#9ca3af;margin-top:3px"><i class="bi bi-calendar3 me-1"></i>마감 ${fmtDate(d.expectedDate)}</div>`:''}
+      </div>`;
+    }).join('')}</div>`;
   }).join('');
 }
 
@@ -636,7 +724,16 @@ function editPipeline(id) {
 }
 
 function savePipeline() {
-  const d={id:gV('p-id')||uid(),custName:gV('p-cust'),model:gV('p-model'),amount:Number(gV('p-amount'))||0,stage:gV('p-stage'),prob:Number(gV('p-prob'))||0,expectedDate:gV('p-date'),sales:gV('p-sales'),note:gV('p-note')};
+  const prev = DB.d.pipeline.find(x=>x.id===gV('p-id'));
+  const newStage = gV('p-stage');
+  const d={
+    id: gV('p-id')||uid(),
+    custName: gV('p-cust'), model: gV('p-model'),
+    amount: Number(gV('p-amount'))||0, stage: newStage,
+    prob: Number(gV('p-prob'))||0, expectedDate: gV('p-date'),
+    sales: gV('p-sales'), note: gV('p-note'),
+    stageUpdatedAt: (prev && prev.stage===newStage) ? (prev.stageUpdatedAt||new Date().toISOString()) : new Date().toISOString()
+  };
   if(!d.custName||!d.model){alert('병원명과 제품/모델을 입력하세요.');return;}
   const idx=DB.d.pipeline.findIndex(x=>x.id===d.id);
   if(idx>=0) DB.d.pipeline[idx]=d; else DB.d.pipeline.push(d);
@@ -826,6 +923,13 @@ function filterEquip(){
   if(result.length>300){const more=document.createElement('tr');more.innerHTML=`<td colspan="8" class="text-center text-muted py-2" style="font-size:12px">검색어를 좁히면 전체 결과를 볼 수 있습니다 (현재 300건 표시)</td>`;el.appendChild(more);}
 }
 
+function hospTab(tab, el) {
+  document.querySelectorAll('#hospitalModal .nav-link').forEach(a=>a.classList.remove('active'));
+  if(el) el.classList.add('active');
+  document.getElementById('hosp-tab-equip').style.display = tab==='equip' ? '' : 'none';
+  document.getElementById('hosp-tab-timeline').style.display = tab==='timeline' ? '' : 'none';
+}
+
 function showHospitalDetail(name){
   const equips=[...DB.d.equipments.filter(e=>e.custName===name)].sort((a,b)=>new Date(b.delivDate||0)-new Date(a.delivDate||0));
   document.getElementById('hosp-modal-name').textContent=name;
@@ -855,6 +959,44 @@ function showHospitalDetail(name){
       <td style="color:#6b7280">${e.sales||''}</td>
     </tr>`;
   }).join('');
+  // ③ 활동 타임라인 생성
+  const tlItems = [];
+  DB.d.logs.filter(l=>l.custName===name).forEach(l=>tlItems.push({
+    date:l.date, type:'log', icon:'bi-journal-text', color:'#2563eb', bg:'#eff6ff',
+    title:`상담 — ${l.type||''}`, sub: l.content||'', extra: l.nextAction?`다음액션: ${l.nextAction}${l.nextDate?' ('+fmtDate(l.nextDate)+')':''}`:''
+  }));
+  DB.d.quotes.filter(q=>q.custName===name).forEach(q=>tlItems.push({
+    date:q.quoteDate, type:'quote', icon:'bi-file-earmark-text', color:'#7c3aed', bg:'#faf5ff',
+    title:`견적서 — ${fmtAmt(q.total||0)}`, sub:`${q.id} · ${q.status||''}`, extra:''
+  }));
+  DB.d.pipeline.filter(p=>p.custName===name).forEach(p=>tlItems.push({
+    date:p.stageUpdatedAt||p.expectedDate||'', type:'deal', icon:'bi-kanban', color:SC[p.stage]||'#adb5bd', bg:'#f9fafb',
+    title:`딜 — ${p.stage}`, sub:`${p.model||''} · ${fmtAmt(p.amount||0)} (${p.prob||0}%)`, extra:p.expectedDate?`예상마감: ${fmtDate(p.expectedDate)}`:''
+  }));
+  DB.d.equipments.filter(e=>e.custName===name).forEach(e=>tlItems.push({
+    date:e.delivDate, type:'equip', icon:'bi-cpu', color:'#16a34a', bg:'#f0fdf4',
+    title:`납품 — ${e.model||''}`, sub:`S/N ${e.serial||''} · 보증 ${fmtDate(e.warrantyEnd)}까지`, extra:''
+  }));
+  tlItems.sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
+
+  document.getElementById('hosp-timeline-content').innerHTML = tlItems.length ? tlItems.map((t,i)=>`
+    <div style="display:flex;gap:14px;margin-bottom:0">
+      <div style="display:flex;flex-direction:column;align-items:center;width:36px;flex-shrink:0">
+        <div style="width:36px;height:36px;border-radius:50%;background:${t.bg};border:2px solid ${t.color};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="bi ${t.icon}" style="color:${t.color};font-size:14px"></i>
+        </div>
+        ${i<tlItems.length-1?`<div style="width:2px;flex:1;background:#e5e7eb;margin:4px 0"></div>`:''}
+      </div>
+      <div style="flex:1;padding-bottom:20px">
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:2px">${fmtDate(t.date)}</div>
+        <div style="font-size:13px;font-weight:600;color:#111827">${t.title}</div>
+        <div style="font-size:12px;color:#6b7280;margin-top:2px">${t.sub}</div>
+        ${t.extra?`<div style="font-size:11px;color:#9ca3af;margin-top:2px">${t.extra}</div>`:''}
+      </div>
+    </div>`).join('') : '<div class="text-muted text-center py-4" style="font-size:13px">활동 기록이 없습니다</div>';
+
+  // 탭 초기화 (장비 탭 먼저)
+  hospTab('equip');
   new bootstrap.Modal(document.getElementById('hospitalModal')).show();
 }
 
