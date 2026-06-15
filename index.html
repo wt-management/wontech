@@ -109,6 +109,21 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 .ac-item:last-child{border-bottom:none}
 .ac-item:hover,.ac-item.active{background:#eff6ff;color:#2563eb}
 @media(max-width:768px){.sidebar{width:100%;min-height:auto;position:relative}.main{margin-left:0;padding:16px}}
+/* 페이지 전환 애니메이션 */
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.page.active{display:block;animation:fadeIn .22s ease}
+/* 파이프라인 필터 칩 */
+.pipe-chip{display:inline-flex;align-items:center;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--text-2);transition:all .15s;user-select:none}
+.pipe-chip.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+/* 대시보드 기간 필터 */
+.dash-period-btn{font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:#fff;color:var(--text-2);cursor:pointer;transition:all .15s}
+.dash-period-btn.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+/* VIP 배지 */
+.vip-badge{font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;margin-left:5px;vertical-align:middle}
+.vip-gold{background:#fef9c3;color:#92400e}
+.vip-silver{background:#f1f5f9;color:#475569}
+/* 이탈위험 */
+.risk-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;background:#fef2f2;border:1px solid #fecaca;margin-bottom:6px}
 </style>
 </head>
 <body>
@@ -197,6 +212,13 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
         <div class="dash-date" id="dash-date"></div>
       </div>
       <div class="dash-hero-right" id="dash-quick-badges"></div>
+    </div>
+
+    <!-- 기간 필터 -->
+    <div class="d-flex gap-1 mb-4">
+      <button class="dash-period-btn on" id="dp-month" onclick="setDashPeriod('month',this)">이번달</button>
+      <button class="dash-period-btn" id="dp-quarter" onclick="setDashPeriod('quarter',this)">이번분기</button>
+      <button class="dash-period-btn" id="dp-year" onclick="setDashPeriod('year',this)">올해</button>
     </div>
 
     <!-- KPI 카드 4개 -->
@@ -294,6 +316,17 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
   <!-- 파이프라인 -->
   <div id="page-pipeline" class="page">
     <div class="page-header"><h5><i class="bi bi-kanban me-2"></i>영업 파이프라인</h5><button class="btn btn-primary btn-sm" onclick="openModal('pipeline')"><i class="bi bi-plus-lg me-1"></i>딜 추가</button></div>
+    <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+      <input type="text" id="pipe-search" class="form-control form-control-sm" style="max-width:220px" placeholder="병원명, 제품, 담당자..." oninput="renderPipeline()">
+      <div class="d-flex gap-1 flex-wrap" id="pipe-stage-chips">
+        <span class="pipe-chip on" onclick="setPipeChip('all',this)">전체</span>
+        <span class="pipe-chip" onclick="setPipeChip('리드',this)">리드</span>
+        <span class="pipe-chip" onclick="setPipeChip('상담중',this)">상담중</span>
+        <span class="pipe-chip" onclick="setPipeChip('견적발송',this)">견적발송</span>
+        <span class="pipe-chip" onclick="setPipeChip('협의중',this)">협의중</span>
+        <span class="pipe-chip" onclick="setPipeChip('계약완료',this)">계약완료</span>
+      </div>
+    </div>
     <div class="row g-2 mb-3" id="pipe-summary"></div>
     <div class="pipeline-board" id="kanban-board"></div>
   </div>
@@ -482,6 +515,18 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       </div>
     </div>
     <div class="row g-3 mb-4" id="hosp-kpi"></div>
+    <!-- 이탈위험 분석 -->
+    <div class="card p-3 mb-3" id="hosp-risk-section">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+          <div class="fw-bold" style="font-size:14px"><i class="bi bi-exclamation-triangle-fill me-1" style="color:#dc2626"></i>이탈위험 병원 <span id="hosp-risk-cnt" class="text-muted fw-normal" style="font-size:12px"></span></div>
+          <div style="font-size:11px;color:#9ca3af">2025년 구매 있으나 2026년 거래 없는 병원</div>
+        </div>
+        <button class="btn btn-sm" style="font-size:11px;color:#6b7280;border:1px solid #e5e7eb" onclick="document.getElementById('hosp-risk-section').style.display='none'">숨기기</button>
+      </div>
+      <div id="hosp-risk-list"></div>
+    </div>
+
     <div class="row g-3">
       <div class="col-md-6">
         <div class="card p-3">
@@ -511,6 +556,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       <h5><i class="bi bi-person-lines-fill me-2"></i>소모품 거래처 현황</h5>
       <div class="d-flex gap-2 align-items-center">
         <span style="font-size:12px;color:#9ca3af" id="acct-count"></span>
+        <button class="btn btn-outline-success btn-sm" onclick="consExportAccounts()"><i class="bi bi-file-earmark-excel me-1"></i>엑셀 내보내기</button>
       </div>
     </div>
     <div class="mb-3 d-flex gap-2">
@@ -805,6 +851,11 @@ let stageChart=null, salesChart=null, perfChart=null, custPerfChart=null;
 let qItemCount=0;
 
 async function init() {
+  // 소모품 데이터 복원 (localStorage)
+  try {
+    const sc = localStorage.getItem('wt_cons_data');
+    if(sc) Object.assign(CONS, JSON.parse(sc));
+  } catch(e) {}
   // 견적서 공개 링크 처리 (?q=견적번호)
   const qParam = new URLSearchParams(location.search).get('q');
   if(qParam) {
@@ -882,9 +933,36 @@ function showToast(msg, hide=false, err=false) {
 
 // ── 대시보드 ──────────────────────────────────────────────────────
 let monthlyChart = null;
+let _dashPeriod = 'month';
+
+function setDashPeriod(p, btn) {
+  _dashPeriod = p;
+  document.querySelectorAll('.dash-period-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderDashboard();
+}
+
+function _dashPeriodYMs() {
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth()+1;
+  if(_dashPeriod === 'month') {
+    const ym = `${y}-${String(m).padStart(2,'0')}`;
+    return { yms:[ym], label:'이번달', targetYMs:[ym] };
+  }
+  if(_dashPeriod === 'quarter') {
+    const q = Math.ceil(m/3);
+    const start = (q-1)*3+1;
+    const yms = [0,1,2].map(i => `${y}-${String(start+i).padStart(2,'0')}`);
+    return { yms, label:`${q}분기`, targetYMs: yms };
+  }
+  // year
+  const yms = Array.from({length:m},(_,i)=>`${y}-${String(i+1).padStart(2,'0')}`);
+  return { yms, label:'올해', targetYMs: yms };
+}
+
 function renderDashboard() {
   const now = new Date();
-  const thisYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const { yms, label, targetYMs } = _dashPeriodYMs();
   const hour = now.getHours();
   const greet = hour < 12 ? '좋은 아침이에요 ☀️' : hour < 18 ? '안녕하세요 👋' : '수고하셨어요 🌙';
   document.getElementById('dash-greeting').textContent = greet;
@@ -903,15 +981,14 @@ function renderDashboard() {
     ${overdueActs.length ? `<div class="dash-badge" style="border-color:#fecaca;color:#dc2626"><i class="bi bi-exclamation-circle-fill" style="color:#dc2626"></i>지연 액션 ${overdueActs.length}건</div>` : ''}
   `;
 
-  // KPI 1: 이달 계약금액
-  const wonThisMonth = DB.d.pipeline.filter(d => d.stage === '계약완료' && (d.stageUpdatedAt||'').startsWith(thisYM));
-  const wonAmt = wonThisMonth.reduce((s,d) => s + Number(d.amount||0), 0);
+  // KPI 1: 기간별 계약금액
+  const wonPeriod = DB.d.pipeline.filter(d => d.stage === '계약완료' && yms.some(ym => (d.stageUpdatedAt||'').startsWith(ym)));
+  const wonAmt = wonPeriod.reduce((s,d) => s + Number(d.amount||0), 0);
   document.getElementById('kpi-won-amt').textContent = fmtAmt(wonAmt);
-  document.getElementById('kpi-won-sub').textContent = `계약완료 ${wonThisMonth.length}건`;
+  document.getElementById('kpi-won-sub').textContent = `${label} 계약완료 ${wonPeriod.length}건`;
 
   // KPI 2: 목표 달성률
-  const targetThisMonth = DB.d.targets.filter(t => t.ym === thisYM);
-  const targetAmt = targetThisMonth.reduce((s,t) => s + Number(t.target||0), 0);
+  const targetAmt = targetYMs.reduce((s,ym) => s + DB.d.targets.filter(t=>t.ym===ym).reduce((a,t)=>a+Number(t.target||0),0), 0);
   const achievePct = targetAmt > 0 ? Math.round(wonAmt / targetAmt * 100) : null;
   document.getElementById('kpi-achieve').textContent = achievePct !== null ? `${achievePct}%` : '-';
   document.getElementById('kpi-achieve-sub').textContent = targetAmt > 0 ? `목표 ${fmtAmt(targetAmt)}` : '목표 미설정';
@@ -1248,6 +1325,9 @@ function consParseExcel(input) {
       CONS.hospitals = hospMap;
       CONS.updatedAt = updatedAt;
 
+      // 새로고침 후에도 유지
+      try { localStorage.setItem('wt_cons_data', JSON.stringify(CONS)); } catch(e) {}
+
       renderConsumables();
       setDone('업로드 완료!', `2025년 ${r25.length}건 · 2026년 ${r26.length}건 반영`);
     } catch(err) {
@@ -1384,6 +1464,23 @@ function renderConsHospitals() {
     <div style="font-size:11px;color:#9ca3af">${k.sub}</div>
   </div></div>`).join('');
 
+  // 이탈위험 병원 (2025 구매 있으나 2026 없음)
+  const riskList = Object.entries(CONS.hospitals)
+    .filter(([,h]) => h.y2025 >= 30000000 && h.y2026 <= 0)
+    .sort((a,b) => b[1].y2025 - a[1].y2025);
+  document.getElementById('hosp-risk-cnt').textContent = `${riskList.length}개`;
+  document.getElementById('hosp-risk-section').style.display = riskList.length ? '' : 'none';
+  document.getElementById('hosp-risk-list').innerHTML = riskList.slice(0,8).map(([name,h]) =>
+    `<div class="risk-row" onclick="showHospDetail('${name.replace(/'/g,"\\'")}')">
+      <i class="bi bi-exclamation-circle-fill" style="color:#dc2626;flex-shrink:0"></i>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+        <div style="font-size:11px;color:#9ca3af">2025 실적 ${fmtW(h.y2025)}</div>
+      </div>
+      <button class="btn btn-sm btn-danger" style="font-size:11px;padding:2px 10px;flex-shrink:0" onclick="event.stopPropagation();openModal('pipeline')">딜 생성</button>
+    </div>`
+  ).join('') + (riskList.length > 8 ? `<div style="font-size:11px;color:#9ca3af;text-align:center;padding:6px">외 ${riskList.length-8}개 병원</div>` : '');
+
   // 순위 리스트
   const maxV = hlist[0]?.[1]?.[key] || 1;
   document.getElementById('hosp-rank-list').innerHTML = hlist.slice(0,20).map(([name,h],i)=>{
@@ -1391,10 +1488,12 @@ function renderConsHospitals() {
     const chg = h.y2025>0 ? (h.y2026/h.y2025-1)*100 : null;
     const isNew = h.y2025<=0 && h.y2026>0;
     const rankClr = ['#f59e0b','#9ca3af','#cd7f32'];
+    const tot = h.total;
+    const vipBadge = tot >= 3e8 ? '<span class="vip-badge vip-gold">VVIP</span>' : tot >= 1e8 ? '<span class="vip-badge vip-silver">VIP</span>' : '';
     return`<div class="d-flex align-items-center gap-2 py-2 px-2 rounded-2 hosp-rank-item" style="cursor:pointer;border-bottom:1px solid #f3f4f6;transition:background .12s" onclick="showHospDetail('${name.replace(/'/g,"\\'")}')">
       <div style="width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;background:${i<3?rankClr[i]+'22':'#f3f4f6'};color:${i<3?rankClr[i]:'#9ca3af'}">${i+1}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}${isNew?'<span style="font-size:9px;background:#dcfce7;color:#16a34a;border-radius:4px;padding:1px 5px;margin-left:5px;font-weight:700">NEW</span>':''}</div>
+        <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}${vipBadge}${isNew?'<span style="font-size:9px;background:#dcfce7;color:#16a34a;border-radius:4px;padding:1px 5px;margin-left:5px;font-weight:700">NEW</span>':''}</div>
         <div style="background:#f3f4f6;border-radius:3px;height:5px;margin-top:4px"><div style="width:${(v/maxV*100).toFixed(1)}%;height:100%;border-radius:3px;background:${i<3?'#ff4500':'#2563eb'}"></div></div>
       </div>
       <div style="text-align:right;flex-shrink:0">
@@ -1496,6 +1595,29 @@ function renderConsAccounts() {
       <td class="text-end">${chg!==null?fmtChg(chg):isNew?'<span style="font-size:10px;color:#16a34a;font-weight:700">신규</span>':'<span style="color:#d1d5db;font-size:11px">-</span>'}</td>
     </tr>`;
   }).join('');
+}
+
+function consExportAccounts() {
+  const q = (document.getElementById('acct-search')?.value||'').trim().toLowerCase();
+  const sortKey = document.getElementById('acct-sort')?.value||'total';
+  const filter = document.getElementById('acct-filter')?.value||'all';
+  let list = Object.entries(CONS.hospitals);
+  if(filter==='active26') list = list.filter(([,h])=>h.y2026>0);
+  else if(filter==='inactive26') list = list.filter(([,h])=>h.y2026<=0);
+  else if(filter==='new26') list = list.filter(([,h])=>h.y2026>0&&h.y2025<=0);
+  if(q) list = list.filter(([name])=>name.toLowerCase().includes(q));
+  list.sort((a,b) => b[1][sortKey] - a[1][sortKey]);
+
+  const ws_data = [['순위','병원명','2025 매출','2026 매출','전체 누적','주요 제품','구매건수','전년 대비(%)']];
+  list.forEach(([name,h],i) => {
+    const chg = h.y2025>0 && h.y2026>0 ? ((h.y2026/h.y2025-1)*100).toFixed(1) : '';
+    ws_data.push([i+1, name, h.y2025||0, h.y2026||0, h.total||0, h.topProd||'', h.orders||0, chg]);
+  });
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+  ws['!cols'] = [{wch:5},{wch:30},{wch:14},{wch:14},{wch:14},{wch:24},{wch:10},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, ws, '거래처현황');
+  XLSX.writeFile(wb, `소모품_거래처현황_${CONS.updatedAt||'export'}.xlsx`);
 }
 
 // ── 병원명 자동완성 ──────────────────────────────────────────────────
@@ -1701,15 +1823,33 @@ function getQItems() {
 }
 
 // ── 파이프라인 ──────────────────────────────────────────────────────
+let _pipeStage = 'all';
+function setPipeChip(stage, el) {
+  _pipeStage = stage;
+  document.querySelectorAll('.pipe-chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  renderPipeline();
+}
+
 function renderPipeline() {
-  const total=DB.d.pipeline.reduce((s,d)=>s+Number(d.amount||0),0);
-  const weighted=DB.d.pipeline.reduce((s,d)=>s+Number(d.amount||0)*Number(d.prob||0)/100,0);
+  const q = (document.getElementById('pipe-search')?.value||'').toLowerCase().trim();
+  let allDeals = DB.d.pipeline;
+  if(q) allDeals = allDeals.filter(d =>
+    (d.custName||'').toLowerCase().includes(q) ||
+    (d.model||'').toLowerCase().includes(q) ||
+    (d.sales||'').toLowerCase().includes(q)
+  );
+  if(_pipeStage !== 'all') allDeals = allDeals.filter(d => d.stage === _pipeStage);
+
+  const total=allDeals.reduce((s,d)=>s+Number(d.amount||0),0);
+  const weighted=allDeals.reduce((s,d)=>s+Number(d.amount||0)*Number(d.prob||0)/100,0);
   document.getElementById('pipe-summary').innerHTML=`
-    <div class="col-4"><div class="card p-3 text-center"><div style="font-size:11px;color:#888">전체 딜</div><div style="font-size:1.5rem;font-weight:700">${DB.d.pipeline.length}건</div></div></div>
+    <div class="col-4"><div class="card p-3 text-center"><div style="font-size:11px;color:#888">필터된 딜</div><div style="font-size:1.5rem;font-weight:700">${allDeals.length}건</div></div></div>
     <div class="col-4"><div class="card p-3 text-center"><div style="font-size:11px;color:#888">총 파이프라인</div><div style="font-size:1.5rem;font-weight:700;color:#4f8ef7">${fmtAmt(total)}</div></div></div>
     <div class="col-4"><div class="card p-3 text-center"><div style="font-size:11px;color:#888">가중 예상매출</div><div style="font-size:1.5rem;font-weight:700;color:#6f42c1">${fmtAmt(Math.round(weighted))}</div></div></div>`;
-  document.getElementById('kanban-board').innerHTML=STAGES.map(stage=>{
-    const deals=DB.d.pipeline.filter(d=>d.stage===stage);
+  const stagesToShow = _pipeStage !== 'all' ? [_pipeStage] : STAGES;
+  document.getElementById('kanban-board').innerHTML=stagesToShow.map(stage=>{
+    const deals=allDeals.filter(d=>d.stage===stage);
     const stotal=deals.reduce((s,d)=>s+Number(d.amount||0),0);
     return`<div class="pipeline-col" ondragover="dragOver(event,'${stage}')" ondragleave="dragLeave(event)" ondrop="dropDeal(event,'${stage}')">
     <div class="pipeline-col-header"><span style="color:${SC[stage]}">${stage}</span><span style="background:#e0e4ef;color:#555;border-radius:10px;padding:1px 7px;font-size:11px">${deals.length}</span></div>
