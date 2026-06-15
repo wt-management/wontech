@@ -418,7 +418,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 <div class="modal fade" id="custModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
   <div class="modal-header"><h5 class="modal-title">고객사</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
   <div class="modal-body"><input type="hidden" id="c-id"><div class="row g-2">
-    <div class="col-6"><label class="form-label">병원명 *</label><input type="text" id="c-name" class="form-control form-control-sm"></div>
+    <div class="col-6"><label class="form-label">병원명 *</label><div class="ac-wrap"><input type="text" id="c-name" class="form-control form-control-sm" oninput="acInput(this,'c-name')" onkeydown="acKey(event,'c-name')" autocomplete="off"><div class="ac-dropdown" id="ac-c-name"></div></div></div>
     <div class="col-6"><label class="form-label">원장명</label><input type="text" id="c-doctor" class="form-control form-control-sm"></div>
     <div class="col-4"><label class="form-label">지역</label><input type="text" id="c-region" class="form-control form-control-sm"></div>
     <div class="col-8"><label class="form-label">주소</label><input type="text" id="c-address" class="form-control form-control-sm"></div>
