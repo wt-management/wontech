@@ -83,7 +83,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 .tmpl-bar{display:flex;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid #e5e7eb;margin-bottom:12px;flex-wrap:wrap}
 /* 병원명 자동완성 */
 .ac-wrap{position:relative}
-.ac-dropdown{position:absolute;top:calc(100% + 2px);left:0;right:0;background:#fff;border:1px solid #d1d5db;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:3000;max-height:220px;overflow-y:auto;display:none}
+.ac-dropdown{position:fixed;background:#fff;border:1px solid #d1d5db;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:9999;max-height:220px;overflow-y:auto;display:none}
 .ac-dropdown.open{display:block}
 .ac-item{padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid #f3f4f6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ac-item:last-child{border-bottom:none}
@@ -777,7 +777,11 @@ function acInput(inp, id) {
   const matches = acGetNames().filter(n => n.includes(q)).slice(0, 10);
   if (!matches.length) { dd.classList.remove('open'); return; }
   _acIdx[id] = -1;
-  dd.innerHTML = matches.map((n,i) =>
+  const rect = inp.getBoundingClientRect();
+  dd.style.top = (rect.bottom + 2) + 'px';
+  dd.style.left = rect.left + 'px';
+  dd.style.width = rect.width + 'px';
+  dd.innerHTML = matches.map(n =>
     `<div class="ac-item" onmousedown="acPick(event,'${id}','${n.replace(/'/g,"\\'")}')">
       ${n.replace(q, `<strong>${q}</strong>`)}
     </div>`).join('');
