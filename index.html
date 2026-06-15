@@ -4,37 +4,66 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>원텍 CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
+:root{--blue:#2563eb;--blue-light:#eff6ff;--sidebar-bg:#0f172a;--sidebar-hover:rgba(255,255,255,.06);--sidebar-active:rgba(255,255,255,.1);--text:#111827;--text-2:#6b7280;--border:#e5e7eb;--bg:#f3f4f6;--white:#ffffff;--green:#16a34a;--orange:#ea580c;--purple:#7c3aed;--red:#dc2626}
 *{box-sizing:border-box}
-body{display:flex;min-height:100vh;background:#f0f2f8;font-family:'Malgun Gothic',sans-serif;margin:0}
-.sidebar{width:210px;background:#1e2140;min-height:100vh;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto}
-.main{flex:1;margin-left:210px;padding:22px;overflow-y:auto;min-height:100vh}
-.sidebar-brand{padding:18px 16px;color:#fff;font-size:15px;font-weight:700;border-bottom:1px solid #2d3561;display:flex;align-items:center;gap:8px}
-.sidebar .nav-link{color:#8892b0;padding:10px 18px;font-size:13px;border-left:3px solid transparent;display:flex;align-items:center;gap:8px;cursor:pointer}
-.sidebar .nav-link:hover,.sidebar .nav-link.active{color:#fff;background:rgba(255,255,255,.07);border-left-color:#4f8ef7}
+body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans KR',sans-serif;margin:0;color:var(--text);font-size:14px}
+.sidebar{width:220px;background:var(--sidebar-bg);min-height:100vh;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;display:flex;flex-direction:column}
+.main{flex:1;margin-left:220px;padding:28px 32px;overflow-y:auto;min-height:100vh}
+.sidebar-brand{padding:22px 20px 16px;color:#fff;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.07)}
+.brand-icon{width:32px;height:32px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.brand-name{font-size:15px;font-weight:700;letter-spacing:-.3px}
+.brand-sub{font-size:10px;color:#94a3b8;margin-top:1px}
+.nav-section{padding:12px 0}
+.nav-label{padding:6px 20px;font-size:10px;font-weight:600;letter-spacing:.08em;color:#475569;text-transform:uppercase}
+.sidebar .nav-link{color:#94a3b8;padding:8px 18px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:9px;cursor:pointer;border-radius:0;transition:all .15s;margin:1px 8px;border-radius:6px}
+.sidebar .nav-link i{font-size:15px;width:18px;text-align:center;flex-shrink:0}
+.sidebar .nav-link:hover{color:#e2e8f0;background:var(--sidebar-hover)}
+.sidebar .nav-link.active{color:#fff;background:var(--sidebar-active);font-weight:600}
+.sidebar .nav-link.active i{color:var(--blue)}
+.sidebar-footer{margin-top:auto;padding:12px 8px;border-top:1px solid rgba(255,255,255,.06)}
 .page{display:none}.page.active{display:block}
-.card{border:none;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-.stat-card{border-radius:12px;padding:18px 20px;color:#fff}
-.stat-num{font-size:2rem;font-weight:700;line-height:1}
-.stat-label{font-size:12px;opacity:.85;margin-top:4px}
-.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-.page-header h5{margin:0;font-weight:700;color:#1e2140}
-.table th{font-size:12px;font-weight:600;color:#666;white-space:nowrap}
-.table td{font-size:13px;vertical-align:middle}
-.pipeline-board{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px}
-.pipeline-col{min-width:195px;flex:1;background:#f8f9fc;border-radius:10px;padding:12px}
-.pipeline-col-header{font-size:12px;font-weight:700;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
-.deal-card{background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.08);cursor:pointer;transition:box-shadow .15s}
-.deal-card:hover{box-shadow:0 3px 8px rgba(0,0,0,.15)}
-.saving-toast{position:fixed;bottom:20px;right:20px;background:#1e2140;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:9999;display:none}
-.quote-status-임시{background:#e9ecef;color:#495057}
-.quote-status-발송{background:#cfe2ff;color:#084298}
-.quote-status-수락{background:#d1e7dd;color:#0f5132}
-.quote-status-거절{background:#f8d7da;color:#842029}
-@media(max-width:768px){.sidebar{width:100%;min-height:auto;position:relative}.main{margin-left:0}}
+.card{border:1px solid var(--border);border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.04);background:var(--white)}
+.stat-card{border-radius:14px;padding:20px 22px;background:var(--white);border:1px solid var(--border);display:flex;align-items:center;gap:16px}
+.stat-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.stat-num{font-size:1.7rem;font-weight:700;line-height:1;color:var(--text)}
+.stat-label{font-size:12px;color:var(--text-2);margin-top:3px;font-weight:500}
+.stat-trend{font-size:11px;margin-top:4px}
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.page-header h5{margin:0;font-weight:700;font-size:18px;color:var(--text);letter-spacing:-.3px}
+.table{border-collapse:separate;border-spacing:0}
+.table th{font-size:11px;font-weight:600;color:var(--text-2);white-space:nowrap;border-bottom:2px solid var(--border);padding:10px 14px;background:#fff;letter-spacing:.03em;text-transform:uppercase}
+.table td{font-size:13px;vertical-align:middle;padding:11px 14px;border-bottom:1px solid #f3f4f6;color:var(--text)}
+.table tbody tr:hover td{background:#f9fafb}
+.table tbody tr:last-child td{border-bottom:none}
+.pipeline-board{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px}
+.pipeline-col{min-width:200px;flex:1;background:#f9fafb;border-radius:12px;padding:14px;border:1px solid var(--border)}
+.pipeline-col-header{font-size:11px;font-weight:700;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;letter-spacing:.05em;text-transform:uppercase}
+.deal-card{background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);cursor:pointer;transition:all .2s;border:1px solid var(--border)}
+.deal-card:hover{box-shadow:0 6px 16px rgba(0,0,0,.1);transform:translateY(-1px)}
+.saving-toast{position:fixed;bottom:24px;right:24px;background:#1e293b;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;z-index:9999;display:none;box-shadow:0 4px 12px rgba(0,0,0,.2);display:flex;align-items:center;gap:8px}
+.saving-toast{display:none}
+.badge{font-weight:500;letter-spacing:.02em}
+.quote-status-임시{background:#f1f5f9;color:#475569;border:1px solid #e2e8f0}
+.quote-status-발송{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+.quote-status-수락{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0}
+.quote-status-거절{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+.btn{font-weight:500;font-size:13px;border-radius:8px}
+.btn-primary{background:var(--blue);border-color:var(--blue)}
+.btn-primary:hover{background:#1d4ed8;border-color:#1d4ed8}
+.form-control,.form-select{border-color:var(--border);border-radius:8px;font-family:inherit;font-size:13px}
+.form-control:focus,.form-select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.hospital-link{color:var(--text);font-weight:600;cursor:pointer;text-decoration:none;border-bottom:1px dashed #d1d5db;padding-bottom:1px;transition:color .15s}
+.hospital-link:hover{color:var(--blue);border-bottom-color:var(--blue)}
+.modal-content{border:none;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.modal-header{border-bottom:1px solid var(--border);padding:18px 22px}
+.modal-footer{border-top:1px solid var(--border);padding:14px 22px}
+.modal-body{padding:20px 22px}
+@media(max-width:768px){.sidebar{width:100%;min-height:auto;position:relative}.main{margin-left:0;padding:16px}}
 </style>
 </head>
 <body>
@@ -56,18 +85,29 @@ body{display:flex;min-height:100vh;background:#f0f2f8;font-family:'Malgun Gothic
 </div>
 
 <nav class="sidebar">
-  <div class="sidebar-brand"><i class="bi bi-hospital-fill" style="color:#4f8ef7;font-size:18px"></i>원텍 CRM</div>
-  <ul class="nav flex-column mt-1">
-    <li><a class="nav-link active" onclick="showPage('dashboard',this)"><i class="bi bi-speedometer2"></i>대시보드</a></li>
-    <li><a class="nav-link" onclick="showPage('pipeline',this)"><i class="bi bi-kanban"></i>영업 파이프라인</a></li>
-    <li><a class="nav-link" onclick="showPage('quotes',this)"><i class="bi bi-file-earmark-text"></i>견적서</a></li>
-    <li><a class="nav-link" onclick="showPage('performance',this)"><i class="bi bi-graph-up-arrow"></i>목표 vs 실적</a></li>
-    <li><a class="nav-link" onclick="showPage('customers',this)"><i class="bi bi-hospital"></i>고객사</a></li>
-    <li><a class="nav-link" onclick="showPage('equipments',this)"><i class="bi bi-cpu"></i>장비</a></li>
-    <li><a class="nav-link" onclick="showPage('logs',this)"><i class="bi bi-journal-text"></i>상담일지</a></li>
-    <li><a class="nav-link" onclick="showPage('products',this)"><i class="bi bi-box-seam"></i>제품</a></li>
-    <li class="mt-auto" style="margin-top:auto"><a class="nav-link" style="color:#dc3545" onclick="resetToken()"><i class="bi bi-box-arrow-right"></i>토큰 재설정</a></li>
-  </ul>
+  <div class="sidebar-brand">
+    <div class="brand-icon"><i class="bi bi-hospital-fill text-white" style="font-size:15px"></i></div>
+    <div><div class="brand-name">원텍 CRM</div><div class="brand-sub">Wontech Co.</div></div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">메인</div>
+    <ul class="nav flex-column gap-0">
+      <li><a class="nav-link active" onclick="showPage('dashboard',this)"><i class="bi bi-grid-1x2"></i>대시보드</a></li>
+      <li><a class="nav-link" onclick="showPage('pipeline',this)"><i class="bi bi-kanban"></i>영업 파이프라인</a></li>
+      <li><a class="nav-link" onclick="showPage('quotes',this)"><i class="bi bi-file-earmark-text"></i>견적서</a></li>
+      <li><a class="nav-link" onclick="showPage('performance',this)"><i class="bi bi-bar-chart-line"></i>목표 vs 실적</a></li>
+    </ul>
+    <div class="nav-label mt-3">관리</div>
+    <ul class="nav flex-column gap-0">
+      <li><a class="nav-link" onclick="showPage('customers',this)"><i class="bi bi-building"></i>고객사</a></li>
+      <li><a class="nav-link" onclick="showPage('equipments',this)"><i class="bi bi-cpu"></i>장비</a></li>
+      <li><a class="nav-link" onclick="showPage('logs',this)"><i class="bi bi-journal-text"></i>상담일지</a></li>
+      <li><a class="nav-link" onclick="showPage('products',this)"><i class="bi bi-box-seam"></i>제품</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-footer">
+    <a class="nav-link" style="color:#ef4444;margin:0" onclick="resetToken()"><i class="bi bi-box-arrow-right"></i>토큰 재설정</a>
+  </div>
 </nav>
 
 <div class="main" id="main-content" style="display:none">
@@ -76,10 +116,10 @@ body{display:flex;min-height:100vh;background:#f0f2f8;font-family:'Malgun Gothic
   <div id="page-dashboard" class="page active">
     <div class="page-header"><h5>대시보드</h5><small class="text-muted" id="dash-date"></small></div>
     <div class="row g-3 mb-4">
-      <div class="col-6 col-md-3"><div class="stat-card" style="background:linear-gradient(135deg,#4f8ef7,#3a6fd8)"><div class="stat-num" id="s-cust">-</div><div class="stat-label">전체 고객사</div></div></div>
-      <div class="col-6 col-md-3"><div class="stat-card" style="background:linear-gradient(135deg,#28a745,#1e7e34)"><div class="stat-num" id="s-equip">-</div><div class="stat-label">납품 장비</div></div></div>
-      <div class="col-6 col-md-3"><div class="stat-card" style="background:linear-gradient(135deg,#fd7e14,#e06000)"><div class="stat-num" id="s-pipe">-</div><div class="stat-label">진행중 딜</div></div></div>
-      <div class="col-6 col-md-3"><div class="stat-card" style="background:linear-gradient(135deg,#6f42c1,#5a32a3)"><div class="stat-num" id="s-weighted">-</div><div class="stat-label">가중 예상매출</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#eff6ff"><i class="bi bi-building" style="color:#2563eb;font-size:20px"></i></div><div><div class="stat-num" id="s-cust">-</div><div class="stat-label">전체 고객사</div></div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#f0fdf4"><i class="bi bi-cpu" style="color:#16a34a;font-size:20px"></i></div><div><div class="stat-num" id="s-equip">-</div><div class="stat-label">납품 장비</div></div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#fff7ed"><i class="bi bi-kanban" style="color:#ea580c;font-size:20px"></i></div><div><div class="stat-num" id="s-pipe">-</div><div class="stat-label">진행중 딜</div></div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#faf5ff"><i class="bi bi-graph-up" style="color:#7c3aed;font-size:20px"></i></div><div><div class="stat-num" id="s-weighted">-</div><div class="stat-label">가중 예상매출</div></div></div></div>
     </div>
     <div class="row g-3 mb-3">
       <div class="col-md-6"><div class="card p-3"><div class="fw-bold mb-3" style="font-size:14px">파이프라인 단계별 금액</div><canvas id="chart-stage" height="200"></canvas></div></div>
@@ -167,7 +207,28 @@ body{display:flex;min-height:100vh;background:#f0f2f8;font-family:'Malgun Gothic
 </div>
 
 <!-- 저장 토스트 -->
-<div class="saving-toast" id="saving-toast"><i class="bi bi-cloud-upload me-2"></i><span id="saving-msg">저장 중...</span></div>
+<div class="saving-toast" id="saving-toast"><i class="bi bi-cloud-upload"></i><span id="saving-msg">저장 중...</span></div>
+
+<!-- 병원 상세 모달 -->
+<div class="modal fade" id="hospitalModal" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content">
+  <div class="modal-header">
+    <div>
+      <h5 class="modal-title fw-bold mb-0" id="hosp-modal-name"></h5>
+      <div class="text-muted mt-1" style="font-size:12px" id="hosp-modal-sub"></div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+  </div>
+  <div class="modal-body p-0">
+    <div class="p-4 border-bottom" id="hosp-stat-row" style="background:#f9fafb"></div>
+    <div class="p-4">
+      <div class="fw-semibold mb-3" style="font-size:14px">납품 장비 목록 <span class="text-muted fw-normal" id="hosp-equip-count"></span></div>
+      <table class="table mb-0">
+        <thead class="table-light"><tr><th>모델명</th><th>시리얼번호</th><th>납품일</th><th>보증만료</th><th>상태</th><th>담당영업</th></tr></thead>
+        <tbody id="hosp-equip-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div></div></div>
 
 <!-- 파이프라인 모달 -->
 <div class="modal fade" id="pipelineModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
@@ -706,22 +767,56 @@ function initEquip(){
 
 function filterEquip(){
   const kw=(document.getElementById('search-equip').value||'').toLowerCase();
-  const result=kw
+  const filtered=kw
     ?DB.d.equipments.filter(e=>(e.custName||'').toLowerCase().includes(kw)||(e.model||'').toLowerCase().includes(kw)||(e.serial||'').toLowerCase().includes(kw)||(e.sales||'').toLowerCase().includes(kw))
     :DB.d.equipments;
+  const result=[...filtered].sort((a,b)=>new Date(b.delivDate||0)-new Date(a.delivDate||0));
   document.getElementById('equip-result-info').textContent=kw?`${result.length.toLocaleString()}건 검색됨`:`전체 ${result.length.toLocaleString()}건`;
   const el=document.getElementById('equip-list');
-  if(!result.length){el.innerHTML='<tr><td colspan="8" class="text-center text-muted py-3">검색 결과 없음</td></tr>';return;}
+  if(!result.length){el.innerHTML='<tr><td colspan="8" class="text-center text-muted py-4">검색 결과 없음</td></tr>';return;}
   el.innerHTML=result.slice(0,300).map(e=>`<tr>
-    <td>${e.custName||''}</td><td><strong>${e.model||''}</strong></td>
-    <td><small style="font-size:11px">${e.serial||''}</small></td>
-    <td style="font-size:12px">${fmtDate(e.delivDate)}</td>
-    <td style="font-size:12px">${fmtDate(e.warrantyEnd)}</td>
+    <td><span class="hospital-link" onclick="showHospitalDetail('${(e.custName||'').replace(/'/g,"\\'")}')">${e.custName||''}</span></td>
+    <td><strong>${e.model||''}</strong></td>
+    <td><span style="font-size:11px;color:#6b7280;font-family:monospace">${e.serial||''}</span></td>
+    <td>${fmtDate(e.delivDate)}</td>
+    <td>${fmtDate(e.warrantyEnd)}</td>
     <td>${statusBadge(e.status)}</td>
-    <td style="font-size:12px">${e.sales||''}</td>
-    <td><button class="btn btn-outline-danger" style="font-size:11px;padding:1px 6px" onclick="delEquip('${e.serial}')">삭제</button></td>
+    <td style="color:#6b7280">${e.sales||''}</td>
+    <td><button class="btn btn-outline-danger btn-sm" style="font-size:11px;padding:2px 8px" onclick="delEquip('${e.serial}')">삭제</button></td>
   </tr>`).join('');
-  if(result.length>300){const more=document.createElement('tr');more.innerHTML=`<td colspan="8" class="text-center text-muted py-2" style="font-size:12px">검색어를 더 구체적으로 입력하면 전체 결과를 볼 수 있습니다 (현재 300건 표시)</td>`;el.appendChild(more);}
+  if(result.length>300){const more=document.createElement('tr');more.innerHTML=`<td colspan="8" class="text-center text-muted py-2" style="font-size:12px">검색어를 좁히면 전체 결과를 볼 수 있습니다 (현재 300건 표시)</td>`;el.appendChild(more);}
+}
+
+function showHospitalDetail(name){
+  const equips=[...DB.d.equipments.filter(e=>e.custName===name)].sort((a,b)=>new Date(b.delivDate||0)-new Date(a.delivDate||0));
+  document.getElementById('hosp-modal-name').textContent=name;
+  document.getElementById('hosp-modal-sub').textContent=`납품 장비 ${equips.length}대`;
+  // 모델별 집계
+  const models={};
+  equips.forEach(e=>{models[e.model||'미상']=(models[e.model||'미상']||0)+1;});
+  const modelTags=Object.entries(models).sort((a,b)=>b[1]-a[1]).map(([m,c])=>`<span style="display:inline-flex;align-items:center;gap:4px;background:#eff6ff;color:#1d4ed8;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;margin:2px">${m}<span style="background:#2563eb;color:#fff;border-radius:4px;padding:0 5px;font-size:10px">${c}</span></span>`).join('');
+  const now=new Date();
+  const expiring=equips.filter(e=>e.warrantyEnd&&Math.ceil((new Date(e.warrantyEnd)-now)/(864e5))<=60).length;
+  document.getElementById('hosp-stat-row').innerHTML=`
+    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center">
+      <div style="text-align:center"><div style="font-size:22px;font-weight:700;color:#2563eb">${equips.length}</div><div style="font-size:11px;color:#6b7280">총 장비</div></div>
+      <div style="text-align:center"><div style="font-size:22px;font-weight:700;color:${expiring?'#dc2626':'#16a34a'}">${expiring}</div><div style="font-size:11px;color:#6b7280">보증만료임박</div></div>
+      <div style="flex:1;min-width:200px"><div style="font-size:11px;color:#6b7280;margin-bottom:6px;font-weight:600">보유 모델</div><div>${modelTags}</div></div>
+    </div>`;
+  document.getElementById('hosp-equip-count').textContent=`(${equips.length}대)`;
+  document.getElementById('hosp-equip-tbody').innerHTML=equips.map(e=>{
+    const days=e.warrantyEnd?Math.ceil((new Date(e.warrantyEnd)-now)/(864e5)):null;
+    const wStyle=days!==null&&days<=30?'color:#dc2626;font-weight:600':days!==null&&days<=60?'color:#ea580c':'';
+    return`<tr>
+      <td><strong>${e.model||''}</strong></td>
+      <td><span style="font-size:11px;color:#6b7280;font-family:monospace">${e.serial||''}</span></td>
+      <td>${fmtDate(e.delivDate)}</td>
+      <td style="${wStyle}">${fmtDate(e.warrantyEnd)}${days!==null&&days<=60?`<span style="font-size:10px;margin-left:4px">(${days<=0?'만료':days+'일 후'})</span>`:''}</td>
+      <td>${statusBadge(e.status)}</td>
+      <td style="color:#6b7280">${e.sales||''}</td>
+    </tr>`;
+  }).join('');
+  new bootstrap.Modal(document.getElementById('hospitalModal')).show();
 }
 
 function saveEquip(){
