@@ -8,6 +8,7 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{--blue:#2563eb;--blue-light:#eff6ff;--sidebar-bg:#0f172a;--sidebar-hover:rgba(255,255,255,.06);--sidebar-active:rgba(255,255,255,.1);--text:#111827;--text-2:#6b7280;--border:#e5e7eb;--bg:#f3f4f6;--white:#ffffff;--green:#16a34a;--orange:#ea580c;--purple:#7c3aed;--red:#dc2626}
 *{box-sizing:border-box}
@@ -171,8 +172,10 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
   <div id="page-equipments" class="page">
     <div class="page-header">
       <h5>장비 관리</h5>
-      <div class="d-flex gap-2">
-        <span id="equip-load-status" class="text-muted" style="font-size:12px;align-self:center"></span>
+      <div class="d-flex gap-2 align-items-center">
+        <span id="equip-load-status" class="text-muted" style="font-size:12px"></span>
+        <input type="file" id="equip-excel-input" accept=".xlsx,.xls" style="display:none" onchange="handleEquipExcel(this)">
+        <button class="btn btn-outline-success btn-sm" onclick="document.getElementById('equip-excel-input').click()"><i class="bi bi-file-earmark-excel me-1"></i>엑셀 업로드</button>
         <button class="btn btn-primary btn-sm" onclick="openModal('equip')"><i class="bi bi-plus-lg me-1"></i>장비 추가</button>
       </div>
     </div>
@@ -208,6 +211,22 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 
 <!-- 저장 토스트 -->
 <div class="saving-toast" id="saving-toast"><i class="bi bi-cloud-upload"></i><span id="saving-msg">저장 중...</span></div>
+
+<!-- 엑셀 업로드 미리보기 모달 -->
+<div class="modal fade" id="excelPreviewModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+  <div class="modal-header">
+    <h5 class="modal-title"><i class="bi bi-file-earmark-excel me-2 text-success"></i>엑셀 업로드 확인</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+  </div>
+  <div class="modal-body">
+    <div id="excel-preview-summary" class="mb-3"></div>
+    <div id="excel-preview-table" style="max-height:340px;overflow-y:auto"></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button>
+    <button class="btn btn-success btn-sm" id="excel-confirm-btn" onclick="confirmEquipExcel()"><i class="bi bi-cloud-upload me-1"></i>추가 저장</button>
+  </div>
+</div></div></div>
 
 <!-- 병원 상세 모달 -->
 <div class="modal fade" id="hospitalModal" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content">
@@ -861,6 +880,131 @@ function delEquipFromModal(){
   DB.save('equipments').then(()=>{bootstrap.Modal.getInstance(document.getElementById('equipModal')).hide();filterEquip();});
 }
 function delEquip(serial){if(!confirm('삭제하시겠습니까?'))return;DB.d.equipments=DB.d.equipments.filter(x=>x.serial!==serial);DB.save('equipments').then(()=>filterEquip());}
+
+// ── 엑셀 업로드 ──────────────────────────────────────────────────────
+let _excelPending = [];
+
+function handleEquipExcel(input) {
+  const file = input.files[0]; if(!file) return;
+  input.value = '';
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, {type:'array', cellDates:true});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {defval:''});
+      if(!rows.length){alert('데이터가 없습니다.');return;}
+
+      // 헤더 키 탐지 (한글 컬럼명 유연하게 매핑)
+      const keys = Object.keys(rows[0]);
+      const find = (...candidates) => keys.find(k => candidates.some(c => k.includes(c))) || '';
+      const kCust    = find('병원','고객');
+      const kModel   = find('모델','제품명');
+      const kSerial  = find('시리얼','S/N','일련');
+      const kDeliv   = find('납품일','설치일','출고일');
+      const kWarrEnd = find('보증만료','만료');
+      const kStatus  = find('상태');
+      const kSales   = find('담당','영업');
+      const kNote    = find('비고','메모');
+      const kGubun   = find('구분');
+      const kPurpose = find('목적');
+
+      // 필터: 구분==출고 AND 목적==납품 (컬럼이 있을 때만)
+      const filtered = rows.filter(r => {
+        if(kGubun   && String(r[kGubun]||'').trim()   !== '출고') return false;
+        if(kPurpose && String(r[kPurpose]||'').trim() !== '납품') return false;
+        return !!(r[kCust]||r[kModel]); // 최소한 병원명이나 모델명은 있어야
+      });
+
+      // 날짜 포맷 헬퍼
+      const toDate = v => {
+        if(!v) return '';
+        if(v instanceof Date) return v.toISOString().split('T')[0];
+        const s = String(v).trim();
+        // 엑셀 숫자 날짜
+        if(/^\d{5}$/.test(s)) {
+          const d = XLSX.SSF.parse_date_code(Number(s));
+          if(d) return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`;
+        }
+        // YYYY-MM-DD or YYYY.MM.DD
+        const m = s.match(/(\d{4})[-./](\d{1,2})[-./](\d{1,2})/);
+        if(m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+        return s;
+      };
+
+      const existingSerials = new Set(DB.d.equipments.map(e=>e.serial).filter(Boolean));
+
+      const newItems=[], dupItems=[];
+      filtered.forEach(r => {
+        const serial = String(r[kSerial]||'').trim();
+        const obj = {
+          custName:  String(r[kCust]  ||'').trim(),
+          model:     String(r[kModel] ||'').trim(),
+          serial,
+          delivDate: toDate(r[kDeliv]),
+          warrantyEnd: toDate(r[kWarrEnd]),
+          status:    String(r[kStatus]||'정상').trim() || '정상',
+          price:     0,
+          sales:     String(r[kSales] ||'').trim(),
+          note:      String(r[kNote]  ||'').trim(),
+        };
+        if(!obj.custName && !obj.model) return;
+        // 보증만료 자동계산
+        if(!obj.warrantyEnd && obj.delivDate) {
+          const dt = new Date(obj.delivDate); dt.setFullYear(dt.getFullYear()+1);
+          obj.warrantyEnd = dt.toISOString().split('T')[0];
+        }
+        if(serial && existingSerials.has(serial)) dupItems.push(obj);
+        else newItems.push(obj);
+      });
+
+      _excelPending = newItems;
+
+      // 요약
+      const sumEl = document.getElementById('excel-preview-summary');
+      sumEl.innerHTML = `
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div class="rounded p-3 text-center" style="background:#f0fdf4;flex:1;min-width:100px">
+            <div style="font-size:22px;font-weight:700;color:#16a34a">${newItems.length}</div>
+            <div style="font-size:12px;color:#15803d">신규 추가</div>
+          </div>
+          <div class="rounded p-3 text-center" style="background:#fef9c3;flex:1;min-width:100px">
+            <div style="font-size:22px;font-weight:700;color:#ca8a04">${dupItems.length}</div>
+            <div style="font-size:12px;color:#a16207">중복(시리얼 동일) — 스킵</div>
+          </div>
+          <div class="rounded p-3 text-center" style="background:#f0f9ff;flex:1;min-width:100px">
+            <div style="font-size:22px;font-weight:700;color:#0369a1">${DB.d.equipments.length + newItems.length}</div>
+            <div style="font-size:12px;color:#0c4a6e">저장 후 총 장비</div>
+          </div>
+        </div>`;
+
+      // 미리보기 테이블 (신규 20건)
+      const preview = newItems.slice(0,20);
+      document.getElementById('excel-preview-table').innerHTML = preview.length ? `
+        <div style="font-size:12px;color:#6b7280;margin-bottom:6px">신규 추가 항목 미리보기 (최대 20건)</div>
+        <table class="table table-sm" style="font-size:12px">
+          <thead class="table-light"><tr><th>병원명</th><th>모델명</th><th>시리얼</th><th>납품일</th><th>보증만료</th><th>담당</th></tr></thead>
+          <tbody>${preview.map(r=>`<tr><td>${r.custName}</td><td><strong>${r.model}</strong></td><td style="font-family:monospace;font-size:11px">${r.serial}</td><td>${fmtDate(r.delivDate)}</td><td>${fmtDate(r.warrantyEnd)}</td><td>${r.sales}</td></tr>`).join('')}</tbody>
+        </table>` : '<div class="text-muted text-center py-3">신규 추가할 항목이 없습니다 (전부 중복)</div>';
+
+      document.getElementById('excel-confirm-btn').disabled = newItems.length === 0;
+      new bootstrap.Modal(document.getElementById('excelPreviewModal')).show();
+    } catch(err) {
+      alert('파일 읽기 오류: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function confirmEquipExcel() {
+  if(!_excelPending.length) return;
+  DB.d.equipments.push(..._excelPending);
+  _excelPending = [];
+  DB.save('equipments').then(() => {
+    bootstrap.Modal.getInstance(document.getElementById('excelPreviewModal')).hide();
+    initEquip();
+  });
+}
 function statusBadge(s){if(s==='점검중')return'<span class="badge bg-warning text-dark">점검중</span>';if(s==='폐기')return'<span class="badge bg-danger">폐기</span>';return'<span class="badge bg-success">정상</span>';}
 
 // ── 상담일지 ──────────────────────────────────────────────────────
