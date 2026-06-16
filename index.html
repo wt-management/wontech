@@ -1116,15 +1116,15 @@ function renderDashboard() {
     </div>`;
   }).join(''):'<div class="text-muted text-center py-4" style="font-size:13px">예정된 액션 없음</div>';
 
-  // 보증만료 임박
-  const warningDays=60;
-  const expiring=DB.d.equipments.filter(e=>e.warrantyEnd&&Math.ceil((new Date(e.warrantyEnd)-now)/864e5)<=warningDays).sort((a,b)=>new Date(a.warrantyEnd)-new Date(b.warrantyEnd));
+  // 보증만료 임박 (이미 만료된 건 제외, 30일 이내만)
+  const warningDays=30;
+  const expiring=DB.d.equipments.filter(e=>e.warrantyEnd&&(()=>{const d=Math.ceil((new Date(e.warrantyEnd)-now)/864e5);return d>0&&d<=warningDays;})()).sort((a,b)=>new Date(a.warrantyEnd)-new Date(b.warrantyEnd));
   document.getElementById('warranty-list').innerHTML=expiring.length?expiring.slice(0,8).map(e=>{
     const days=Math.ceil((new Date(e.warrantyEnd)-now)/864e5);
-    const c=days<=0?'#dc2626':days<=30?'#ea580c':'#f59e0b';
+    const c=days<=7?'#dc2626':days<=14?'#ea580c':'#f59e0b';
     return`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f3f4f6;font-size:12px">
       <div><div style="font-weight:600">${e.custName||''}</div><div style="color:#6b7280;font-size:11px">${e.model||''} · ${e.serial||''}</div></div>
-      <span style="color:${c};font-weight:700;font-size:11px;white-space:nowrap">${days<=0?'만료':days+'일 후'}</span>
+      <span style="color:${c};font-weight:700;font-size:11px;white-space:nowrap">${days}일 후</span>
     </div>`;
   }).join(''):'<div class="text-muted text-center py-3" style="font-size:13px">만료 임박 장비 없음</div>';
 
