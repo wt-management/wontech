@@ -1555,7 +1555,7 @@ function renderConsHospitals() {
 
   const active26 = all.filter(([,h])=>h.y2026>0).length;
   const new26    = all.filter(([,h])=>h.y2026>0&&h.y2025<=0).length;
-  const risk     = all.filter(([,h])=>h.y2025>=2e7&&h.y2026<=0);
+  const risk     = all.filter(([,h])=>h.y2025>0&&h.y2026<=0);
   const decline  = all.filter(([,h])=>h.y2026>0&&h.y2025>0&&h.y2026<ytd25est(h));
 
   // KPI
