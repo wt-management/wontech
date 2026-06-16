@@ -1830,6 +1830,14 @@ function renderConsHospitals() {
   };
   const logCount   = nm => (DB?.d?.logs||[]).filter(l=>l.custName===nm).length;
   const lastLogDate= nm => { const ls=(DB?.d?.logs||[]).filter(l=>l.custName===nm).sort((a,b)=>b.date.localeCompare(a.date)); return ls[0]?.date||null; };
+  const calcPat = txns => {
+    if(!txns||!txns.length) return null;
+    const dates=txns.map(t=>new Date(t[1])).filter(d=>!isNaN(d)).sort((a,b)=>a-b);
+    let avgGap=null;
+    if(dates.length>1){const gaps=[];for(let i=1;i<dates.length;i++)gaps.push((dates[i]-dates[i-1])/864e5);avgGap=Math.round(gaps.reduce((s,g)=>s+g,0)/gaps.length);}
+    const total=txns.reduce((s,t)=>s+t[3],0);
+    return {cnt:txns.length, avgGap, avgAmt:Math.round(total/txns.length)};
+  };
 
   const q      = (document.getElementById('hosp-search')?.value||'').trim().toLowerCase();
   const salesF = document.getElementById('hosp-sales-filter')?.value||'';
@@ -1872,16 +1880,29 @@ function renderConsHospitals() {
   document.getElementById('hosp-risk-cnt').textContent=`(${risk.length})`;
 
   // ── 이탈위험 ──
+  const fmtP = v=>v==null?'-':v+'일';
   document.getElementById('hosp-risk-list').innerHTML=[...risk].sort((a,b)=>b[1].y2025-a[1].y2025).map(([name,h])=>{
     const lc=logCount(name), ld=lastLogDate(name);
-    return`<div style="display:flex;align-items:flex-start;gap:8px;padding:9px 0;border-bottom:1px solid #fecaca">
-      <div style="flex:1;min-width:0;cursor:pointer" data-name="${name.replace(/"/g,'&quot;')}" onclick="showHospitalDetail(this.dataset.name)">
-        <div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${gradeBadge(h)}<span style="color:#dc2626;text-decoration:underline dotted">${name}</span>${h.sales?`<span style="font-size:10px;color:#9ca3af;margin-left:6px">${h.sales}</span>`:''}
+    const p25=calcPat(h.txns2025||[]);
+    const ldDays=ld?Math.floor((Date.now()-new Date(ld))/864e5):null;
+    const ldStr=ldDays!=null?`상담 ${lc}회 · 마지막 ${ldDays}일전`:`<span style="color:#fca5a5">상담 이력 없음</span>`;
+    const lastPurch=h.lastDate?`마지막 구매 <strong>${Math.floor((Date.now()-new Date(h.lastDate))/864e5)}일전</strong>`:'구매이력없음';
+    const safeN=name.replace(/"/g,'&quot;');
+    return`<div style="padding:8px 0;border-bottom:1px solid #fecaca">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <div style="flex:1;min-width:0;cursor:pointer" data-name="${safeN}" onclick="showHospitalDetail(this.dataset.name)">
+          <span style="font-size:12px;font-weight:700">${gradeBadge(h)}<span style="color:#dc2626;text-decoration:underline dotted">${name}</span>${h.sales?`<span style="font-size:10px;color:#9ca3af;margin-left:5px">${h.sales}</span>`:''}</span>
         </div>
-        <div style="font-size:11px;color:#6b7280;margin-top:2px">2025실적 ${fmtW(h.y2025)} · ${lastBadge(h)}</div>
-        <div style="font-size:10px;color:#9ca3af;margin-top:2px">상담 ${lc}회${ld?` · 마지막상담 ${ld}`:' · 상담이력없음'}</div>
+        <span style="font-size:12px;font-weight:800;color:#dc2626;flex-shrink:0">${fmtW(h.y2025)}</span>
+        <button class="btn btn-sm btn-outline-primary" style="font-size:10px;padding:1px 6px;flex-shrink:0" data-name="${safeN}" onclick="openLogFromHosp(this.dataset.name)"><i class="bi bi-journal-plus"></i></button>
       </div>
-      <button class="btn btn-sm btn-outline-primary" style="font-size:10px;padding:2px 7px;flex-shrink:0;margin-top:2px" title="상담일지 작성" data-name="${name.replace(/"/g,'&quot;')}" onclick="openLogFromHosp(this.dataset.name)"><i class="bi bi-journal-plus"></i></button>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">
+        <div style="background:#fff5f5;border-radius:4px;padding:3px 6px;font-size:10px;color:#6b7280"><div style="font-size:9px;color:#9ca3af;margin-bottom:1px">구매건수</div><strong style="color:#374151">${p25?p25.cnt+'건':'-'}</strong></div>
+        <div style="background:#fff5f5;border-radius:4px;padding:3px 6px;font-size:10px;color:#6b7280"><div style="font-size:9px;color:#9ca3af;margin-bottom:1px">평균간격</div><strong style="color:#374151">${fmtP(p25?.avgGap)}</strong></div>
+        <div style="background:#fff5f5;border-radius:4px;padding:3px 6px;font-size:10px;color:#6b7280"><div style="font-size:9px;color:#9ca3af;margin-bottom:1px">건당평균</div><strong style="color:#374151">${p25?fmtS(p25.avgAmt):'-'}</strong></div>
+        <div style="background:#fff5f5;border-radius:4px;padding:3px 6px;font-size:10px;color:#6b7280"><div style="font-size:9px;color:#9ca3af;margin-bottom:1px">마지막구매</div><strong style="color:#dc2626">${lastPurch}</strong></div>
+      </div>
+      <div style="font-size:10px;color:#9ca3af;margin-top:3px">${ldStr}</div>
     </div>`;
   }).join('') || '<div style="font-size:12px;color:#9ca3af;padding:16px 0;text-align:center">해당 병원 없음</div>';
 
@@ -1891,13 +1912,25 @@ function renderConsHospitals() {
     return (ea>0?a[1].y2026/ea:0)-(eb>0?b[1].y2026/eb:0);
   }).map(([name,h])=>{
     const est25=ytd25est(h),chg=est25>0?(h.y2026/est25-1)*100:null;
-    return`<div style="display:flex;align-items:flex-start;gap:8px;padding:9px 0;border-bottom:1px solid #fef3c7">
-      <div style="flex:1;min-width:0;cursor:pointer" data-name="${name.replace(/"/g,'&quot;')}" onclick="showHospitalDetail(this.dataset.name)">
-        <div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${gradeBadge(h)}<span style="color:#b45309;text-decoration:underline dotted">${name}</span>${h.sales?`<span style="font-size:10px;color:#9ca3af;margin-left:6px">${h.sales}</span>`:''}
+    const p25=calcPat(h.txns2025||[]), p26=calcPat(h.txns2026||[]);
+    const safeN=name.replace(/"/g,'&quot;');
+    const cntChg=p25&&p26?`${p25.cnt}건→<strong style="color:#dc2626">${p26.cnt}건</strong>`:(p26?p26.cnt+'건':'-');
+    const gapChg=p25?.avgGap!=null&&p26?.avgGap!=null?`${p25.avgGap}일→<strong style="color:${p26.avgGap>p25.avgGap?'#dc2626':'#16a34a'}">${p26.avgGap}일</strong>`:(p26?.avgGap!=null?p26.avgGap+'일':'-');
+    const amtChg=p25&&p26?`${fmtS(p25.avgAmt)}→<strong style="color:#374151">${fmtS(p26.avgAmt)}</strong>`:(p26?fmtS(p26.avgAmt):'-');
+    return`<div style="padding:8px 0;border-bottom:1px solid #fef3c7">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <div style="flex:1;min-width:0;cursor:pointer" data-name="${safeN}" onclick="showHospitalDetail(this.dataset.name)">
+          <span style="font-size:12px;font-weight:700">${gradeBadge(h)}<span style="color:#b45309;text-decoration:underline dotted">${name}</span>${h.sales?`<span style="font-size:10px;color:#9ca3af;margin-left:5px">${h.sales}</span>`:''}</span>
         </div>
-        <div style="font-size:11px;color:#6b7280;margin-top:2px">2026 ${fmtS(h.y2026)} vs 동기 ${fmtS(est25)} · ${lastBadge(h)}</div>
+        <span style="font-size:11px;color:#6b7280;flex-shrink:0">${fmtS(h.y2026)} <span style="color:#9ca3af">vs</span> ${fmtS(est25)}</span>
+        ${pctBadge(chg)}
       </div>
-      ${pctBadge(chg)}
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">
+        <div style="background:#fffbeb;border-radius:4px;padding:3px 6px;font-size:10px"><div style="font-size:9px;color:#9ca3af;margin-bottom:1px">구매건수</div>${cntChg}</div>
+        <div style="background:#fffbeb;border-radius:4px;padding:3px 6px;font-size:10px"><div style="font-size:9px;color:#9ca3af;margin-bottom:1px">평균간격</div>${gapChg}</div>
+        <div style="background:#fffbeb;border-radius:4px;padding:3px 6px;font-size:10px"><div style="font-size:9px;color:#9ca3af;margin-bottom:1px">건당평균</div>${amtChg}</div>
+        <div style="background:#fffbeb;border-radius:4px;padding:3px 6px;font-size:10px"><div style="font-size:9px;color:#9ca3af;margin-bottom:1px">최근구매</div>${lastBadge(h)}</div>
+      </div>
     </div>`;
   }).join('') || '<div style="font-size:12px;color:#9ca3af;padding:16px 0;text-align:center">해당 병원 없음</div>';
 
@@ -1906,28 +1939,49 @@ function renderConsHospitals() {
     .sort((a,b)=>(b[1].y2026/Math.max(ytd25est(b[1]),1))-(a[1].y2026/Math.max(ytd25est(a[1]),1)))
     .map(([name,h])=>{
       const est25=ytd25est(h),chg=est25>0?(h.y2026/est25-1)*100:null;
-      return`<div style="display:flex;align-items:flex-start;gap:8px;padding:9px 0;border-bottom:1px solid #dcfce7">
-        <div style="flex:1;min-width:0;cursor:pointer" data-name="${name.replace(/"/g,'&quot;')}" onclick="showHospitalDetail(this.dataset.name)">
-          <div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${gradeBadge(h)}<span style="color:#15803d;text-decoration:underline dotted">${name}</span>${h.sales?`<span style="font-size:10px;color:#9ca3af;margin-left:6px">${h.sales}</span>`:''}
+      const p25=calcPat(h.txns2025||[]), p26=calcPat(h.txns2026||[]);
+      const safeN=name.replace(/"/g,'&quot;');
+      const cntChg=p25&&p26?`${p25.cnt}건→<strong style="color:#16a34a">${p26.cnt}건</strong>`:(p26?p26.cnt+'건':'-');
+      const gapChg=p25?.avgGap!=null&&p26?.avgGap!=null?`${p25.avgGap}일→<strong style="color:${p26.avgGap<p25.avgGap?'#16a34a':'#6b7280'}">${p26.avgGap}일</strong>`:(p26?.avgGap!=null?p26.avgGap+'일':'-');
+      const amtChg=p25&&p26?`${fmtS(p25.avgAmt)}→<strong style="color:#16a34a">${fmtS(p26.avgAmt)}</strong>`:(p26?fmtS(p26.avgAmt):'-');
+      return`<div style="padding:8px 0;border-bottom:1px solid #dcfce7">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <div style="flex:1;min-width:0;cursor:pointer" data-name="${safeN}" onclick="showHospitalDetail(this.dataset.name)">
+            <span style="font-size:12px;font-weight:700">${gradeBadge(h)}<span style="color:#15803d;text-decoration:underline dotted">${name}</span>${h.sales?`<span style="font-size:10px;color:#9ca3af;margin-left:5px">${h.sales}</span>`:''}</span>
           </div>
-          <div style="font-size:11px;color:#6b7280;margin-top:2px">2026 ${fmtS(h.y2026)} vs 동기 ${fmtS(est25)} · ${lastBadge(h)}</div>
+          <span style="font-size:11px;color:#6b7280;flex-shrink:0">${fmtS(h.y2026)} <span style="color:#9ca3af">vs</span> ${fmtS(est25)}</span>
+          ${pctBadge(chg)}
         </div>
-        ${pctBadge(chg)}
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">
+          <div style="background:#f0fdf4;border-radius:4px;padding:3px 6px;font-size:10px"><div style="font-size:9px;color:#9ca3af;margin-bottom:1px">구매건수</div>${cntChg}</div>
+          <div style="background:#f0fdf4;border-radius:4px;padding:3px 6px;font-size:10px"><div style="font-size:9px;color:#9ca3af;margin-bottom:1px">평균간격</div>${gapChg}</div>
+          <div style="background:#f0fdf4;border-radius:4px;padding:3px 6px;font-size:10px"><div style="font-size:9px;color:#9ca3af;margin-bottom:1px">건당평균</div>${amtChg}</div>
+          <div style="background:#f0fdf4;border-radius:4px;padding:3px 6px;font-size:10px"><div style="font-size:9px;color:#9ca3af;margin-bottom:1px">최근구매</div>${lastBadge(h)}</div>
+        </div>
       </div>`;
     }).join('') || '<div style="font-size:12px;color:#9ca3af;padding:16px 0;text-align:center">해당 병원 없음</div>';
 
   // ── 신규 ──
   document.getElementById('hosp-new-list').innerHTML=all.filter(([,h])=>h.y2026>0&&h.y2025<=0)
     .sort((a,b)=>b[1].y2026-a[1].y2026)
-    .map(([name,h])=>`
-      <div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #ede9fe">
-        <div style="flex:1;min-width:0;cursor:pointer" data-name="${name.replace(/"/g,'&quot;')}" onclick="showHospitalDetail(this.dataset.name)">
-          <div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${gradeBadge(h)}<span style="text-decoration:underline dotted">${name}</span><span style="font-size:9px;background:#dcfce7;color:#16a34a;border-radius:4px;padding:1px 5px;margin-left:5px">NEW</span>${h.sales?`<span style="font-size:10px;color:#9ca3af;margin-left:6px">${h.sales}</span>`:''}
+    .map(([name,h])=>{
+      const p26=calcPat(h.txns2026||[]);
+      const safeN=name.replace(/"/g,'&quot;');
+      return`<div style="padding:8px 0;border-bottom:1px solid #ede9fe">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <div style="flex:1;min-width:0;cursor:pointer" data-name="${safeN}" onclick="showHospitalDetail(this.dataset.name)">
+            <span style="font-size:12px;font-weight:700">${gradeBadge(h)}<span style="text-decoration:underline dotted">${name}</span><span style="font-size:9px;background:#dcfce7;color:#16a34a;border-radius:4px;padding:1px 5px;margin-left:4px">NEW</span>${h.sales?`<span style="font-size:10px;color:#9ca3af;margin-left:5px">${h.sales}</span>`:''}</span>
           </div>
-          <div style="font-size:11px;color:#6b7280;margin-top:2px">2026 YTD ${fmtW(h.y2026)} · ${h.topProd||'-'}</div>
+          <span style="font-size:12px;font-weight:800;color:#7c3aed;flex-shrink:0">${fmtW(h.y2026)}</span>
         </div>
-        <span style="font-size:11px;font-weight:700;color:#7c3aed;flex-shrink:0">${fmtS(h.y2026)}</span>
-      </div>`).join('') || '<div style="font-size:12px;color:#9ca3af;padding:16px 0;text-align:center">해당 병원 없음</div>';
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">
+          <div style="background:#faf5ff;border-radius:4px;padding:3px 6px;font-size:10px"><div style="font-size:9px;color:#9ca3af;margin-bottom:1px">구매건수</div><strong style="color:#374151">${p26?p26.cnt+'건':'-'}</strong></div>
+          <div style="background:#faf5ff;border-radius:4px;padding:3px 6px;font-size:10px"><div style="font-size:9px;color:#9ca3af;margin-bottom:1px">평균간격</div><strong style="color:#374151">${fmtP(p26?.avgGap)}</strong></div>
+          <div style="background:#faf5ff;border-radius:4px;padding:3px 6px;font-size:10px"><div style="font-size:9px;color:#9ca3af;margin-bottom:1px">건당평균</div><strong style="color:#374151">${p26?fmtS(p26.avgAmt):'-'}</strong></div>
+          <div style="background:#faf5ff;border-radius:4px;padding:3px 6px;font-size:10px"><div style="font-size:9px;color:#9ca3af;margin-bottom:1px">주력제품</div><strong style="color:#7c3aed;font-size:9px">${h.topProd||'-'}</strong></div>
+        </div>
+      </div>`;
+    }).join('') || '<div style="font-size:12px;color:#9ca3af;padding:16px 0;text-align:center">해당 병원 없음</div>';
 
   if(_hospTab==='rank') renderHospRank();
 }
