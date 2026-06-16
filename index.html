@@ -329,7 +329,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       </div>
     </div>
     <div id="pipe-summary" class="mb-3"></div>
-    <div class="pipeline-board" id="kanban-board"></div>
+    <div class="pipeline-board" id="kanban-board" style="align-items:stretch"></div>
   </div>
 
   <!-- 견적서 -->
@@ -2084,63 +2084,91 @@ function renderPipeline() {
   const q=(document.getElementById('pipe-search')?.value||'').toLowerCase().trim();
   const salesF=document.getElementById('pipe-sales-filter')?.value||'';
 
-  // 담당자 목록 채우기
+  // 담당자 필터 옵션 채우기
   const salesSel=document.getElementById('pipe-sales-filter');
   if(salesSel&&salesSel.options.length<=1){
     const sl=[...new Set(DB.d.pipeline.map(d=>d.sales).filter(Boolean))].sort();
     sl.forEach(s=>{const o=document.createElement('option');o.value=o.textContent=s;salesSel.appendChild(o);});
   }
 
+  // 전체 데이터 기준 요약 (필터 전)
+  const allRaw=DB.d.pipeline;
+  const thisYm=new Date().toISOString().substring(0,7);
+  const today=new Date().toISOString().split('T')[0];
+  const activeRaw=allRaw.filter(d=>d.stage!=='계약완료');
+  const weightedRaw=activeRaw.reduce((s,d)=>s+Number(d.amount||0)*Number(d.prob||0)/100,0);
+  const closingRaw=activeRaw.filter(d=>d.expectedDate&&d.expectedDate.startsWith(thisYm));
+  const wonRaw=allRaw.filter(d=>d.stage==='계약완료').reduce((s,d)=>s+Number(d.amount||0),0);
+
+  // 상단 요약 바 (전체 기준 3개 수치)
+  document.getElementById('pipe-summary').innerHTML=`
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:2px">
+      <div style="display:flex;align-items:center;gap:6px;background:#eff6ff;border-radius:8px;padding:6px 14px">
+        <i class="bi bi-layers" style="color:#2563eb;font-size:13px"></i>
+        <span style="font-size:11px;color:#6b7280">진행중</span>
+        <span style="font-size:14px;font-weight:800;color:#2563eb">${activeRaw.length}건</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;background:#f5f3ff;border-radius:8px;padding:6px 14px">
+        <i class="bi bi-graph-up" style="color:#7c3aed;font-size:13px"></i>
+        <span style="font-size:11px;color:#6b7280">가중 예상매출</span>
+        <span style="font-size:14px;font-weight:800;color:#7c3aed">${fmtAmt(Math.round(weightedRaw))}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;background:#fff7ed;border-radius:8px;padding:6px 14px">
+        <i class="bi bi-calendar-check" style="color:#d97706;font-size:13px"></i>
+        <span style="font-size:11px;color:#6b7280">이달 마감 예정</span>
+        <span style="font-size:14px;font-weight:800;color:#d97706">${closingRaw.length}건</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;background:#f0fdf4;border-radius:8px;padding:6px 14px">
+        <i class="bi bi-check-circle" style="color:#16a34a;font-size:13px"></i>
+        <span style="font-size:11px;color:#6b7280">계약완료 누계</span>
+        <span style="font-size:14px;font-weight:800;color:#16a34a">${fmtAmt(wonRaw)}</span>
+      </div>
+    </div>`;
+
+  // 필터 적용
   let allDeals=DB.d.pipeline;
   if(q) allDeals=allDeals.filter(d=>(d.custName||'').toLowerCase().includes(q)||(d.model||'').toLowerCase().includes(q)||(d.sales||'').toLowerCase().includes(q));
   if(salesF) allDeals=allDeals.filter(d=>(d.sales||'')=== salesF);
-  if(_pipeStage!=='all') allDeals=allDeals.filter(d=>d.stage===_pipeStage);
 
-  const active=allDeals.filter(d=>d.stage!=='계약완료');
-  const total=allDeals.reduce((s,d)=>s+Number(d.amount||0),0);
-  const weighted=active.reduce((s,d)=>s+Number(d.amount||0)*Number(d.prob||0)/100,0);
-  const thisYm=new Date().toISOString().substring(0,7);
-  const closingThis=active.filter(d=>d.expectedDate&&d.expectedDate.startsWith(thisYm));
-  const won=allDeals.filter(d=>d.stage==='계약완료').reduce((s,d)=>s+Number(d.amount||0),0);
-
-  document.getElementById('pipe-summary').innerHTML=`
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">
-      <div class="card p-3 text-center"><div style="font-size:10px;color:#6b7280;margin-bottom:4px">진행중 딜</div><div style="font-size:1.4rem;font-weight:800;color:#2563eb">${active.length}<span style="font-size:12px;font-weight:400;color:#6b7280">건</span></div></div>
-      <div class="card p-3 text-center"><div style="font-size:10px;color:#6b7280;margin-bottom:4px">총 파이프라인</div><div style="font-size:1.1rem;font-weight:800;color:#374151">${fmtAmt(total)}</div></div>
-      <div class="card p-3 text-center"><div style="font-size:10px;color:#6b7280;margin-bottom:4px">가중 예상매출</div><div style="font-size:1.1rem;font-weight:800;color:#7c3aed">${fmtAmt(Math.round(weighted))}</div></div>
-      <div class="card p-3 text-center" style="border-top:2px solid #f59e0b"><div style="font-size:10px;color:#d97706;font-weight:600;margin-bottom:4px">이달 마감 예정</div><div style="font-size:1.4rem;font-weight:800;color:#d97706">${closingThis.length}<span style="font-size:12px;font-weight:400;color:#6b7280">건</span></div></div>
-      <div class="card p-3 text-center" style="border-top:2px solid #16a34a"><div style="font-size:10px;color:#16a34a;font-weight:600;margin-bottom:4px">계약완료</div><div style="font-size:1.1rem;font-weight:800;color:#16a34a">${fmtAmt(won)}</div></div>
-    </div>`;
-
-  const today=new Date().toISOString().split('T')[0];
+  // 칸반 보드 — 각 컬럼 헤더에 건수+금액 통합
   const stagesToShow=_pipeStage!=='all'?[_pipeStage]:STAGES;
   document.getElementById('kanban-board').innerHTML=stagesToShow.map(stage=>{
     const deals=allDeals.filter(d=>d.stage===stage);
     const stotal=deals.reduce((s,d)=>s+Number(d.amount||0),0);
+    const isWon=stage==='계약완료';
+    const hdrBg=isWon?'#f0fdf4':'#f8faff';
+    const hdrBorder=SC[stage]||'#e5e7eb';
     return`<div class="pipeline-col" ondragover="dragOver(event,'${stage}')" ondragleave="dragLeave(event)" ondrop="dropDeal(event,'${stage}')">
-    <div class="pipeline-col-header"><span style="color:${SC[stage]}">${stage}</span><span style="background:#e0e4ef;color:#555;border-radius:10px;padding:1px 7px;font-size:11px">${deals.length}</span></div>
-    <div style="font-size:11px;color:#888;margin-bottom:8px">${fmtAmt(stotal)}</div>
-    ${deals.map(d=>{
-      const daysInStage=d.stageUpdatedAt?Math.floor((Date.now()-new Date(d.stageUpdatedAt))/864e5):null;
-      const staleWarn=daysInStage!==null&&daysInStage>=14;
-      const staleDanger=daysInStage!==null&&daysInStage>=30;
-      const daysBadge=daysInStage!==null?`<span style="background:${staleDanger?'#dc2626':staleWarn?'#f59e0b':'#e5e7eb'};color:${staleDanger||staleWarn?'#fff':'#6b7280'};border-radius:6px;padding:1px 6px;font-size:10px;font-weight:700">${daysInStage}일째</span>`:'';
-      const isClosingThis=d.expectedDate&&d.expectedDate.startsWith(thisYm)&&d.stage!=='계약완료';
-      const isOverdue=d.expectedDate&&d.expectedDate<today&&d.stage!=='계약완료';
-      return`<div class="deal-card" draggable="true" ondragstart="dragStart(event,'${d.id}')" onclick='editPipeline("${d.id}")' style="border-left:3px solid ${SC[d.stage]||'#4f8ef7'}${isClosingThis?';box-shadow:0 0 0 1px #f59e0b':isOverdue?';box-shadow:0 0 0 1px #dc2626':''}">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start">
-          <div style="font-size:13px;font-weight:600;flex:1">${d.custName||''}</div>
-          ${daysBadge}
+      <div style="background:${hdrBg};border-radius:8px;padding:10px 12px;margin-bottom:10px;border-left:3px solid ${hdrBorder}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:12px;font-weight:700;color:${SC[stage]};letter-spacing:.04em">${stage}</span>
+          <span style="background:${SC[stage]};color:#fff;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:700">${deals.length}</span>
         </div>
-        <div style="font-size:11px;color:#888;margin-top:1px">${d.model||''}</div>
-        <div style="font-size:14px;font-weight:700;color:#2563eb;margin-top:5px">${fmtAmt(Number(d.amount||0))}</div>
-        <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:11px;color:#9ca3af;align-items:center">
-          <span style="font-weight:600;color:#374151">${d.sales||''}</span>
-          <span style="background:${probColor(d.prob)};color:#fff;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:700">${d.prob||0}%</span>
-        </div>
-        ${d.expectedDate?`<div style="font-size:10px;color:${isOverdue?'#dc2626':isClosingThis?'#d97706':'#9ca3af'};margin-top:3px;font-weight:${isOverdue||isClosingThis?'700':'400'}"><i class="bi bi-calendar3 me-1"></i>마감 ${fmtDate(d.expectedDate)}${isOverdue?' ⚠️ 기한초과':isClosingThis?' 이달마감':''}</div>`:''}
-      </div>`;
-    }).join('')}</div>`;
+        <div style="font-size:13px;font-weight:800;color:#374151">${fmtAmt(stotal)}</div>
+      </div>
+      ${deals.length===0?`<div style="text-align:center;padding:24px 0;color:#d1d5db;font-size:12px"><i class="bi bi-inbox" style="font-size:22px;display:block;margin-bottom:4px"></i>딜 없음</div>`:''}
+      ${deals.map(d=>{
+        const daysInStage=d.stageUpdatedAt?Math.floor((Date.now()-new Date(d.stageUpdatedAt))/864e5):null;
+        const staleDanger=daysInStage!==null&&daysInStage>=30;
+        const staleWarn=daysInStage!==null&&daysInStage>=14;
+        const daysBadge=daysInStage!==null?`<span style="background:${staleDanger?'#dc2626':staleWarn?'#f59e0b':'#e5e7eb'};color:${staleDanger||staleWarn?'#fff':'#6b7280'};border-radius:6px;padding:1px 6px;font-size:10px;font-weight:700">${daysInStage}일째</span>`:'';
+        const isClosingThis=d.expectedDate&&d.expectedDate.startsWith(thisYm)&&!isWon;
+        const isOverdue=d.expectedDate&&d.expectedDate<today&&!isWon;
+        return`<div class="deal-card" draggable="true" ondragstart="dragStart(event,'${d.id}')" onclick='editPipeline("${d.id}")' style="border-left:3px solid ${SC[d.stage]||'#4f8ef7'}${isClosingThis?';box-shadow:0 0 0 2px #f59e0b40':isOverdue?';box-shadow:0 0 0 2px #dc262640':''}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:4px">
+            <div style="font-size:13px;font-weight:600;flex:1;line-height:1.3">${d.custName||''}</div>
+            ${daysBadge}
+          </div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:2px">${d.model||''}</div>
+          <div style="font-size:15px;font-weight:800;color:#1d4ed8;margin-top:6px">${fmtAmt(Number(d.amount||0))}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+            <span style="font-size:11px;font-weight:600;color:#374151">${d.sales||''}</span>
+            <span style="background:${probColor(d.prob)};color:#fff;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700">${d.prob||0}%</span>
+          </div>
+          ${d.expectedDate?`<div style="font-size:10px;color:${isOverdue?'#dc2626':isClosingThis?'#d97706':'#9ca3af'};margin-top:5px;font-weight:${isOverdue||isClosingThis?'700':'400'}"><i class="bi bi-calendar3 me-1"></i>마감 ${fmtDate(d.expectedDate)}${isOverdue?' ⚠️ 기한초과':isClosingThis?' · 이달마감':''}</div>`:''}
+        </div>`;
+      }).join('')}
+    </div>`;
   }).join('');
 }
 
