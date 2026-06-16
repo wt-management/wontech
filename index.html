@@ -1278,7 +1278,7 @@ function consParseExcel(input) {
       }
 
       function aggregate(rows) {
-        const monthly = {}, products = {}, groups = {}, qtr = {};
+        const monthly = {}, products = {}, groups = {}, qtr = {}, oligioMo = {};
         rows.forEach(r => {
           const amt = Number(r[' 금액 '] || r['금액'] || 0);
           if (!amt) return;
@@ -1287,8 +1287,15 @@ function consParseExcel(input) {
           const prod = r['구분#4']; if (prod) products[prod] = (products[prod]||0) + amt;
           const grp  = r['구분#1']; if (grp)  groups[grp]   = (groups[grp]||0)   + amt;
           const q    = r['분기'];   if (q)    qtr[q]        = (qtr[q]||0)        + amt;
+          // Oligio 그룹별 월별 집계
+          if (mo && prod) {
+            let og = null;
+            if (/Oligio Tip \[(F|E)-/.test(prod))   og = '올리지오';
+            else if (/Oligio Tip \[(XF|XE)-/.test(prod)) og = 'X/XM';
+            if (og) { if (!oligioMo[og]) oligioMo[og]={}; oligioMo[og][mo]=(oligioMo[og][mo]||0)+amt; }
+          }
         });
-        return {monthly, products, groups, qtr};
+        return {monthly, products, groups, qtr, oligioMo};
       }
 
       const a25 = aggregate(r25);
@@ -1338,6 +1345,8 @@ function consParseExcel(input) {
       CONS.groups2026 = groups26final;
       CONS.qtr2025 = a25.qtr;
       CONS.qtr2026 = a26.qtr;
+      CONS.oligioMo2025 = a25.oligioMo;
+      CONS.oligioMo2026 = a26.oligioMo;
       CONS.hospitals = hospMap;
       CONS.updatedAt = updatedAt;
 
@@ -1388,55 +1397,84 @@ function renderConsumables() {
       </div>
     </div>`).join('');
 
-  // ── Oligio Tip 시리즈 분석 차트 ──
-  const OLIG_PRODS = [
-    {key:'Oligio Tip [F-4.0]',  label:'F-4.0',  short:'올리지오 F',  col:'#ff4500'},
-    {key:'Oligio Tip [XF-4.0]', label:'XF-4.0', short:'올리지오 XF', col:'#2563eb'},
-    {key:'Oligio Tip [E-0.25]', label:'E-0.25',  short:'올리지오 E',  col:'#16a34a'},
-    {key:'Oligio Tip [XE-0.25]',label:'XE-0.25', short:'올리지오 XE', col:'#7c3aed'},
-  ];
-  const op25 = OLIG_PRODS.map(p=>(CONS.products2025[p.key]||0)/1e8);
-  const op26 = OLIG_PRODS.map(p=>(CONS.products2026[p.key]||0)/1e8);
+  // ── Oligio Tip 월별 트렌드 (4-라인: 올리지오/X·XM × 2025/2026) ──
+  // 월별 데이터 확보: 엑셀 업로드 시 정확한 값, 없으면 월별 비율로 근사
+  function getOligioMonthly() {
+    if (CONS.oligioMo2025 && CONS.oligioMo2026) return { mo25: CONS.oligioMo2025, mo26: CONS.oligioMo2026 };
+    const tot25 = Object.values(CONS.monthly2025).reduce((s,v)=>s+v,0)||1;
+    const tot26 = Object.values(CONS.monthly2026).reduce((s,v)=>s+v,0)||1;
+    const olig25=(CONS.products2025['Oligio Tip [F-4.0]']||0)+(CONS.products2025['Oligio Tip [E-0.25]']||0);
+    const xm25  =(CONS.products2025['Oligio Tip [XF-4.0]']||0)+(CONS.products2025['Oligio Tip [XE-0.25]']||0);
+    const olig26=(CONS.products2026['Oligio Tip [F-4.0]']||0)+(CONS.products2026['Oligio Tip [E-0.25]']||0);
+    const xm26  =(CONS.products2026['Oligio Tip [XF-4.0]']||0)+(CONS.products2026['Oligio Tip [XE-0.25]']||0);
+    const mo25={'올리지오':{},'X/XM':{}}, mo26={'올리지오':{},'X/XM':{}};
+    Object.entries(CONS.monthly2025).forEach(([m,v])=>{const r=v/tot25; mo25['올리지오'][m]=Math.round(olig25*r); mo25['X/XM'][m]=Math.round(xm25*r);});
+    Object.entries(CONS.monthly2026).forEach(([m,v])=>{const r=v/tot26; mo26['올리지오'][m]=Math.round(olig26*r); mo26['X/XM'][m]=Math.round(xm26*r);});
+    return {mo25, mo26};
+  }
+  const {mo25, mo26} = getOligioMonthly();
+  const MO_LABELS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+
+  const d_olig25 = Array.from({length:12},(_,i)=>(mo25['올리지오']?.[i+1]||0)/1e8);
+  const d_xm25   = Array.from({length:12},(_,i)=>(mo25['X/XM']?.[i+1]||0)/1e8);
+  const d_olig26 = Array.from({length:12},(_,i)=>mo26['올리지오']?.[i+1]!=null?(mo26['올리지오'][i+1]/1e8):null);
+  const d_xm26   = Array.from({length:12},(_,i)=>mo26['X/XM']?.[i+1]!=null?(mo26['X/XM'][i+1]/1e8):null);
 
   if(consMonthlyChart) consMonthlyChart.destroy();
   consMonthlyChart = new Chart(document.getElementById('cons-chart-oligio').getContext('2d'),{
-    type:'bar',
+    type:'line',
     data:{
-      labels: OLIG_PRODS.map(p=>p.short),
+      labels: MO_LABELS,
       datasets:[
-        {label:'2025 연간', data:op25, backgroundColor:'rgba(37,99,235,0.18)', borderColor:'#2563eb', borderWidth:1.5, borderRadius:5, borderSkipped:false},
-        {label:'2026 YTD', data:op26, backgroundColor:'rgba(255,69,0,0.85)', borderColor:'#ff4500', borderWidth:0, borderRadius:5, borderSkipped:false}
+        {label:'올리지오 2025', data:d_olig25, borderColor:'rgba(37,99,235,0.4)', backgroundColor:'rgba(37,99,235,0.05)', borderWidth:1.5, borderDash:[4,3], pointRadius:2, tension:0.35, fill:false},
+        {label:'올리지오 2026', data:d_olig26, borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,0.08)', borderWidth:3, pointRadius:4, pointBackgroundColor:'#2563eb', tension:0.35, fill:true, spanGaps:false},
+        {label:'X/XM 2025',    data:d_xm25,   borderColor:'rgba(124,58,237,0.4)', backgroundColor:'transparent', borderWidth:1.5, borderDash:[4,3], pointRadius:2, tension:0.35, fill:false},
+        {label:'X/XM 2026',   data:d_xm26,   borderColor:'#7c3aed', backgroundColor:'rgba(124,58,237,0.06)', borderWidth:3, pointRadius:4, pointBackgroundColor:'#7c3aed', tension:0.35, fill:true, spanGaps:false},
       ]
     },
     options:{
       maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
       plugins:{
-        legend:{position:'top',labels:{font:{size:11},boxWidth:10,padding:12}},
-        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.raw.toFixed(1)}억원`}}
+        legend:{position:'top',labels:{font:{size:11},boxWidth:12,padding:10,usePointStyle:true}},
+        tooltip:{callbacks:{label:ctx=>ctx.raw!=null?`${ctx.dataset.label}: ${ctx.raw.toFixed(1)}억`:null}}
       },
       scales:{
-        y:{ticks:{callback:v=>v+'억',font:{size:11}},grid:{color:'#f3f4f6'}},
+        y:{ticks:{callback:v=>v+'억',font:{size:11}},grid:{color:'#f3f4f6'},beginAtZero:true},
         x:{grid:{display:false},ticks:{font:{size:11}}}
       }
     }
   });
 
-  // Oligio 요약 테이블 (전년대비)
-  const oligTotal25 = op25.reduce((s,v)=>s+v,0);
-  const oligTotal26 = op26.reduce((s,v)=>s+v,0);
+  // 전년동기대비 요약 테이블 (1-5월)
+  const ytdMos = [1,2,3,4,5];
+  const sumOlig25 = ytdMos.reduce((s,m)=>s+(mo25['올리지오']?.[m]||0),0);
+  const sumXM25   = ytdMos.reduce((s,m)=>s+(mo25['X/XM']?.[m]||0),0);
+  const sumOlig26 = ytdMos.reduce((s,m)=>s+(mo26['올리지오']?.[m]||0),0);
+  const sumXM26   = ytdMos.reduce((s,m)=>s+(mo26['X/XM']?.[m]||0),0);
+  const chgOlig = sumOlig25>0?((sumOlig26/sumOlig25-1)*100):null;
+  const chgXM   = sumXM25>0?((sumXM26/sumXM25-1)*100):null;
+  const badge = (chg,v26,v25) => chg===null?'':
+    `<span style="font-size:11px;font-weight:700;color:${chg>=0?'#16a34a':'#dc2626'}">${chg>=0?'▲':'▼'} ${Math.abs(chg).toFixed(1)}%</span>`;
+
   document.getElementById('cons-oligio-table').innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:4px">
-      ${OLIG_PRODS.map((p,i)=>{
-        const v25=op25[i], v26=op26[i];
-        const chg = v25>0?(v26/v25-1)*100:null;
-        const pct26 = oligTotal26>0?(v26/oligTotal26*100).toFixed(0):0;
-        return `<div style="background:#f9fafb;border-radius:8px;padding:8px 10px;border-top:2px solid ${p.col}">
-          <div style="font-size:10px;font-weight:700;color:${p.col};margin-bottom:3px">${p.short}</div>
-          <div style="font-size:13px;font-weight:800;color:#111">${v26.toFixed(1)}억</div>
-          <div style="font-size:10px;color:#9ca3af;margin-top:1px">2025: ${v25.toFixed(1)}억 · 구성 ${pct26}%</div>
-          ${chg!==null?`<div style="font-size:11px;font-weight:700;margin-top:2px;color:${chg>=0?'#16a34a':'#dc2626'}">${chg>=0?'+':''}${chg.toFixed(0)}%</div>`:''}
-        </div>`;
-      }).join('')}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+      <div style="background:#eff6ff;border-radius:10px;padding:10px 14px;border-left:3px solid #2563eb">
+        <div style="font-size:11px;font-weight:700;color:#2563eb;margin-bottom:4px">올리지오 (F·E) · 1–5월</div>
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <span style="font-size:18px;font-weight:800;color:#111">${(sumOlig26/1e8).toFixed(1)}억</span>
+          ${badge(chgOlig)}
+        </div>
+        <div style="font-size:11px;color:#6b7280;margin-top:2px">전년 동기 ${(sumOlig25/1e8).toFixed(1)}억</div>
+      </div>
+      <div style="background:#f5f3ff;border-radius:10px;padding:10px 14px;border-left:3px solid #7c3aed">
+        <div style="font-size:11px;font-weight:700;color:#7c3aed;margin-bottom:4px">X/XM (XF·XE) · 1–5월</div>
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <span style="font-size:18px;font-weight:800;color:#111">${(sumXM26/1e8).toFixed(1)}억</span>
+          ${badge(chgXM)}
+        </div>
+        <div style="font-size:11px;color:#6b7280;margin-top:2px">전년 동기 ${(sumXM25/1e8).toFixed(1)}억</div>
+      </div>
     </div>`;
 
   // ── 제품군 구성비 (우측) — 의료기기/A/S소모품/기타 제외, 써지컬 묶기 ──
