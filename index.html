@@ -455,16 +455,19 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
     <div class="row g-3 mb-4" style="align-items:stretch">
       <div class="col-md-8 d-flex flex-column">
         <div class="card p-3 flex-fill" style="min-height:0">
-          <div class="fw-bold mb-1" style="font-size:14px">월별 매출 추이</div>
-          <div style="font-size:11px;color:#9ca3af;margin-bottom:10px">2025 연간 vs 2026 누계 (단위: 억원)</div>
-          <div style="position:relative;height:220px"><canvas id="cons-chart-monthly"></canvas></div>
+          <div class="d-flex justify-content-between align-items-start mb-1">
+            <div class="fw-bold" style="font-size:14px"><i class="bi bi-star-fill me-1" style="color:#ff4500;font-size:12px"></i>Oligio Tip 시리즈 분석</div>
+            <span style="font-size:11px;color:#9ca3af">2025 연간 vs 2026 YTD(1–5월)</span>
+          </div>
+          <div style="position:relative;height:190px;margin-bottom:8px"><canvas id="cons-chart-oligio"></canvas></div>
+          <div id="cons-oligio-table"></div>
         </div>
       </div>
       <div class="col-md-4 d-flex flex-column">
         <div class="card p-3 flex-fill" style="min-height:0">
-          <div class="fw-bold mb-1" style="font-size:14px">제품군 비중</div>
-          <div style="font-size:11px;color:#9ca3af;margin-bottom:12px">2026 YTD · 제품군별 구성비</div>
-          <div id="cons-group-bars" style="overflow-y:auto;flex:1"></div>
+          <div class="fw-bold mb-1" style="font-size:14px">제품군 구성비</div>
+          <div style="font-size:11px;color:#9ca3af;margin-bottom:14px">2026 YTD · 소모품 카테고리별</div>
+          <div id="cons-group-bars"></div>
         </div>
       </div>
     </div>
@@ -1385,48 +1388,86 @@ function renderConsumables() {
       </div>
     </div>`).join('');
 
-  // 월별 차트
-  const labels12 = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  const d25 = Array.from({length:12},(_,i)=>(CONS.monthly2025[i+1]||0)/1e8);
-  const d26 = Array.from({length:12},(_,i)=>(CONS.monthly2026[i+1]||null)/1e8);
+  // ── Oligio Tip 시리즈 분석 차트 ──
+  const OLIG_PRODS = [
+    {key:'Oligio Tip [F-4.0]',  label:'F-4.0',  short:'올리지오 F',  col:'#ff4500'},
+    {key:'Oligio Tip [XF-4.0]', label:'XF-4.0', short:'올리지오 XF', col:'#2563eb'},
+    {key:'Oligio Tip [E-0.25]', label:'E-0.25',  short:'올리지오 E',  col:'#16a34a'},
+    {key:'Oligio Tip [XE-0.25]',label:'XE-0.25', short:'올리지오 XE', col:'#7c3aed'},
+  ];
+  const op25 = OLIG_PRODS.map(p=>(CONS.products2025[p.key]||0)/1e8);
+  const op26 = OLIG_PRODS.map(p=>(CONS.products2026[p.key]||0)/1e8);
+
   if(consMonthlyChart) consMonthlyChart.destroy();
-  consMonthlyChart = new Chart(document.getElementById('cons-chart-monthly').getContext('2d'),{
-    data:{labels:labels12,datasets:[
-      {type:'bar',label:'2025년',data:d25,backgroundColor:'rgba(37,99,235,0.12)',borderColor:'#2563eb',borderWidth:1.5,borderRadius:5,borderSkipped:false},
-      {type:'line',label:'2026년',data:d26,borderColor:'#ff4500',borderWidth:2.5,pointBackgroundColor:'#ff4500',pointRadius:4,tension:0.35,fill:false,spanGaps:false}
-    ]},
+  consMonthlyChart = new Chart(document.getElementById('cons-chart-oligio').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels: OLIG_PRODS.map(p=>p.short),
+      datasets:[
+        {label:'2025 연간', data:op25, backgroundColor:'rgba(37,99,235,0.18)', borderColor:'#2563eb', borderWidth:1.5, borderRadius:5, borderSkipped:false},
+        {label:'2026 YTD', data:op26, backgroundColor:'rgba(255,69,0,0.85)', borderColor:'#ff4500', borderWidth:0, borderRadius:5, borderSkipped:false}
+      ]
+    },
     options:{
       maintainAspectRatio:false,
-      plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12}}},
-      scales:{y:{ticks:{callback:v=>v+'억',font:{size:11}},grid:{color:'#f3f4f6'}},x:{grid:{display:false},ticks:{font:{size:11}}}}
+      plugins:{
+        legend:{position:'top',labels:{font:{size:11},boxWidth:10,padding:12}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.raw.toFixed(1)}억원`}}
+      },
+      scales:{
+        y:{ticks:{callback:v=>v+'억',font:{size:11}},grid:{color:'#f3f4f6'}},
+        x:{grid:{display:false},ticks:{font:{size:11}}}
+      }
     }
   });
 
-  // 제품군 비중 — 가로 바 차트 (도넛 대체)
-  const grpL = Object.keys(CONS.groups2026), grpV = Object.values(CONS.groups2026);
-  const GCOL = ['#ff4500','#2563eb','#16a34a','#f59e0b','#7c3aed','#0891b2','#db2777','#6b7280'];
-  const grpTotal = grpV.reduce((s,v)=>s+v,0);
+  // Oligio 요약 테이블 (전년대비)
+  const oligTotal25 = op25.reduce((s,v)=>s+v,0);
+  const oligTotal26 = op26.reduce((s,v)=>s+v,0);
+  document.getElementById('cons-oligio-table').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:4px">
+      ${OLIG_PRODS.map((p,i)=>{
+        const v25=op25[i], v26=op26[i];
+        const chg = v25>0?(v26/v25-1)*100:null;
+        const pct26 = oligTotal26>0?(v26/oligTotal26*100).toFixed(0):0;
+        return `<div style="background:#f9fafb;border-radius:8px;padding:8px 10px;border-top:2px solid ${p.col}">
+          <div style="font-size:10px;font-weight:700;color:${p.col};margin-bottom:3px">${p.short}</div>
+          <div style="font-size:13px;font-weight:800;color:#111">${v26.toFixed(1)}억</div>
+          <div style="font-size:10px;color:#9ca3af;margin-top:1px">2025: ${v25.toFixed(1)}억 · 구성 ${pct26}%</div>
+          ${chg!==null?`<div style="font-size:11px;font-weight:700;margin-top:2px;color:${chg>=0?'#16a34a':'#dc2626'}">${chg>=0?'+':''}${chg.toFixed(0)}%</div>`:''}
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  // ── 제품군 구성비 (우측) — 의료기기/A/S소모품/기타 제외, 써지컬 묶기 ──
+  const simplifiedGroups = [
+    {name:'Oligio Tip', v: CONS.groups2026['Oligio Tip']||0, col:'#ff4500'},
+    {name:'Cartridge',  v: CONS.groups2026['Cartridge']||0,  col:'#2563eb'},
+    {name:'써지컬 소모품', v:(CONS.groups2026['BA600']||0)+(CONS.groups2026['BA400']||0)+(CONS.groups2026['AG275']||0), col:'#16a34a'},
+  ].filter(g=>g.v>0);
+  const sgTotal = simplifiedGroups.reduce((s,g)=>s+g.v,0);
+
   if(consDonutChart) { consDonutChart.destroy(); consDonutChart = null; }
-  document.getElementById('cons-group-bars').innerHTML = grpL.map((name,i)=>{
-    const v = grpV[i];
-    const pct = (v/grpTotal*100).toFixed(1);
-    const col = GCOL[i]||'#6b7280';
-    return `<div style="margin-bottom:11px">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
-        <div style="display:flex;align-items:center;gap:6px">
-          <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${col};flex-shrink:0"></span>
-          <span style="font-size:12px;font-weight:600;color:#374151">${name}</span>
+  document.getElementById('cons-group-bars').innerHTML = simplifiedGroups.map(g=>{
+    const pct = (g.v/sgTotal*100).toFixed(1);
+    return `<div style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${g.col};flex-shrink:0"></span>
+          <span style="font-size:13px;font-weight:700;color:#111">${g.name}</span>
         </div>
-        <div style="text-align:right;flex-shrink:0;margin-left:8px">
-          <span style="font-size:12px;font-weight:700;color:#111">${fmtW(v)}</span>
-          <span style="font-size:11px;color:#9ca3af;margin-left:4px">${pct}%</span>
+        <div style="text-align:right">
+          <span style="font-size:13px;font-weight:800;color:#111">${fmtW(g.v)}</span>
+          <span style="font-size:12px;font-weight:700;color:${g.col};margin-left:6px">${pct}%</span>
         </div>
       </div>
-      <div style="background:#f3f4f6;border-radius:4px;height:10px;overflow:hidden">
-        <div style="width:${pct}%;height:100%;border-radius:4px;background:${col};transition:width .5s ease"></div>
+      <div style="background:#f3f4f6;border-radius:6px;height:14px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;border-radius:6px;background:${g.col}"></div>
       </div>
     </div>`;
-  }).join('');
+  }).join('') + `<div style="margin-top:16px;padding-top:12px;border-top:1px solid #f3f4f6;font-size:11px;color:#9ca3af">
+    ※ 의료기기·A/S소모품 제외 기준<br>써지컬 = BA600 + BA400 + AG275
+  </div>`;
 
   // 제품 순위 바
   function prodList(elId, data, color) {
