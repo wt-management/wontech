@@ -451,16 +451,29 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
     <!-- ① 핵심 KPI 카드 -->
     <div class="row g-3 mb-3" id="cons-kpi"></div>
 
-    <!-- ② Oligio Tip 월별 트렌드 (전체 너비) -->
-    <div class="card p-3 mb-3">
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <div>
-          <div class="fw-bold" style="font-size:14px"><i class="bi bi-graph-up-arrow me-1" style="color:#2563eb"></i>Oligio Tip 월별 트렌드 — 전년대비</div>
-          <div style="font-size:11px;color:#9ca3af">올리지오(F·E) vs X/XM(XF·XE) · 점선=2025 실선=2026</div>
+    <!-- ② Oligio Tip 월별 트렌드 — 3패널 -->
+    <div class="row g-3 mb-3">
+      <div class="col-12">
+        <div class="card p-3">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <div class="fw-bold" style="font-size:14px"><i class="bi bi-graph-up-arrow me-1" style="color:#374151"></i>Oligio Tip 종합 <span style="font-size:11px;font-weight:400;color:#9ca3af">전체 합산 · 점선=2025 실선=2026</span></div>
+            <div id="cons-trend-badge" style="font-size:12px"></div>
+          </div>
+          <div style="position:relative;height:160px"><canvas id="cons-chart-total"></canvas></div>
         </div>
-        <div id="cons-trend-badge" style="font-size:12px"></div>
       </div>
-      <div style="position:relative;height:220px"><canvas id="cons-chart-oligio"></canvas></div>
+      <div class="col-md-6">
+        <div class="card p-3">
+          <div class="fw-bold mb-1" style="font-size:13px"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#2563eb;margin-right:6px;vertical-align:middle"></span>Oligio (F-4.0 · E-0.25)</div>
+          <div style="position:relative;height:150px"><canvas id="cons-chart-olig"></canvas></div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card p-3">
+          <div class="fw-bold mb-1" style="font-size:13px"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#7c3aed;margin-right:6px;vertical-align:middle"></span>Oligio X/XM (XF-4.0 · XE-0.25)</div>
+          <div style="position:relative;height:150px"><canvas id="cons-chart-xm"></canvas></div>
+        </div>
+      </div>
     </div>
 
     <!-- ③ Oligio 그룹 YoY 카드 + 제품별 세부 -->
@@ -1183,7 +1196,7 @@ const CONS = {
   updatedAt:'2026.06.12',
   hospitals:{"주식회사 르미":{"total":800000000,"y2025":500000000,"y2026":300000000,"orders":14,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":720000000,"Oligio Tip [E-0.25]":80000000}},"세니아의원":{"total":760500000,"y2025":658200000,"y2026":102300000,"orders":47,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":592500000,"Oligio Tip [E-0.25]":157500000,"A/S소모품":5300000,"의료기기":5200000}},"에이티움(구.제이앤케이프런티어컴퍼니)":{"total":743050000,"y2025":573550000,"y2026":169500000,"orders":75,"topProd":"Oligio Tip [XF-4.0]","prods":{"Oligio Tip [XF-4.0]":326000000,"Oligio Tip [F-4.0]":263750000,"Oligio Tip [XE-0.25]":80000000,"Oligio Tip [E-0.25]":61250000}},"주식회사 진이어스":{"total":605000000,"y2025":515000000,"y2026":90000000,"orders":16,"topProd":"Oligio Tip [XF-4.0]","prods":{"Oligio Tip [XF-4.0]":436000000,"Oligio Tip [F-4.0]":110000000,"Oligio Tip [XE-0.25]":44000000,"Oligio Tip [E-0.25]":15000000}},"사적인아름다움지유의원 서초점":{"total":331920000,"y2025":255420000,"y2026":76500000,"orders":34,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":295000000,"Oligio Tip [E-0.25]":30000000,"A/S소모품":4670000,"의료기기":2250000}},"샤인빔의원 강남점":{"total":308800000,"y2025":279600000,"y2026":29200000,"orders":30,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":210000000,"Oligio Tip [E-0.25]":90000000,"의료기기":8800000}},"아비쥬의원 명동점":{"total":253700000,"y2025":153700000,"y2026":100000000,"orders":16,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":205000000,"Oligio Tip [E-0.25]":45000000,"A/S소모품":2700000,"의료기기":1000000}},"오블리주의원 홍대점":{"total":252000000,"y2025":200750000,"y2026":51250000,"orders":34,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":146250000,"Oligio Tip [E-0.25]":63750000,"Oligio Tip [XF-4.0]":24000000,"Oligio Tip [XE-0.25]":16000000}},"오션의원 강남점":{"total":240000000,"y2025":200000000,"y2026":40000000,"orders":5,"topProd":"Oligio Tip [XF-4.0]","prods":{"Oligio Tip [XF-4.0]":232000000,"Oligio Tip [XE-0.25]":8000000}},"리프트성형외과 대구점":{"total":200000000,"y2025":120000000,"y2026":80000000,"orders":5,"topProd":"Oligio Tip [XF-4.0]","prods":{"Oligio Tip [XF-4.0]":176000000,"Oligio Tip [XE-0.25]":24000000}},"포레스트랩":{"total":192000000,"y2025":108000000,"y2026":84000000,"orders":15,"topProd":"BA600S2","prods":{"BA600S2":116000000,"BA600S1":76000000}},"포르테의원 강남역점":{"total":183700000,"y2025":128300000,"y2026":55400000,"orders":99,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":122500000,"Oligio Tip [E-0.25]":60000000,"의료기기":1200000}},"유앤아이의원 강남점":{"total":176400000,"y2025":176400000,"y2026":0,"orders":12,"topProd":"Oligio Tip [XF-4.0]","prods":{"Oligio Tip [XF-4.0]":144000000,"Oligio Tip [XE-0.25]":28000000,"의료기기":4400000}},"더힐피부과 흑석점":{"total":162500000,"y2025":82500000,"y2026":80000000,"orders":5,"topProd":"Oligio Tip [XF-4.0]","prods":{"Oligio Tip [XF-4.0]":160000000,"Oligio Tip [XE-0.25]":2000000}},"아비쥬의원 강남점":{"total":157000000,"y2025":105200000,"y2026":51800000,"orders":15,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":110000000,"Oligio Tip [E-0.25]":40000000,"의료기기":4600000,"A/S소모품":2400000}},"라클라쎄의원(구.비비라인플렉스의원)":{"total":150600000,"y2025":150400000,"y2026":200000,"orders":6,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":150000000,"의료기기":600000}},"블리비의원 동탄점":{"total":139500000,"y2025":85550000,"y2026":53950000,"orders":37,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":122500000,"Oligio Tip [E-0.25]":16250000,"의료기기":600000}},"블리비의원 창원점":{"total":139000000,"y2025":135500000,"y2026":3500000,"orders":15,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":123750000,"Oligio Tip [E-0.25]":13750000,"의료기기":1400000}},"유앤아이의원 대구점":{"total":137050000,"y2025":97900000,"y2026":39150000,"orders":18,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":126250000,"Oligio Tip [E-0.25]":10000000,"의료기기":800000}},"치유성형외과 신사점":{"total":130800000,"y2025":126850000,"y2026":3950000,"orders":26,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":116250000,"Oligio Tip [E-0.25]":13750000,"의료기기":800000}},"뮤즈의원 강남점":{"total":130200000,"y2025":130200000,"y2026":0,"orders":12,"topProd":"Oligio Tip [XF-4.0]","prods":{"Oligio Tip [XF-4.0]":44000000,"Oligio Tip [XE-0.25]":36000000,"Oligio Tip [F-4.0]":35000000,"Oligio Tip [E-0.25]":15000000}},"올라인클리닉 홍대점":{"total":130000000,"y2025":130000000,"y2026":0,"orders":14,"topProd":"Oligio Tip [XF-4.0]","prods":{"Oligio Tip [XF-4.0]":108000000,"Oligio Tip [XE-0.25]":22000000}},"(주)베스트메디칼":{"total":129600000,"y2025":83950000,"y2026":45650000,"orders":32,"topProd":"BA400RS1","prods":{"BA400RS1":61600000,"BA600S1":50700000,"BA600RS1":10200000,"BA400R":4900000}},"밴스피부과 동탄점":{"total":128250000,"y2025":100600000,"y2026":27650000,"orders":11,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":122500000,"A/S소모품":2650000,"Oligio Tip [E-0.25]":2500000}},"뷰티라운지의원 홍대글로벌점(민성홍원장)":{"total":121000000,"y2025":103300000,"y2026":17700000,"orders":20,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":92500000,"Oligio Tip [E-0.25]":27500000,"의료기기":1000000}},"샤인빔의원 홍대점":{"total":120000000,"y2025":120000000,"y2026":0,"orders":2,"topProd":"Oligio Tip [XF-4.0]","prods":{"Oligio Tip [XF-4.0]":120000000}},"오앤의원 강남점":{"total":118600000,"y2025":73200000,"y2026":45400000,"orders":33,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":100000000,"Cartridge":15200000,"의료기기":3400000}},"베러미의원 강남점":{"total":117700000,"y2025":66450000,"y2026":51250000,"orders":48,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":93750000,"Oligio Tip [E-0.25]":23750000,"의료기기":200000}},"리베리의원 명동점":{"total":114350000,"y2025":23950000,"y2026":90400000,"orders":32,"topProd":"Oligio Tip [E-0.25]","prods":{"Oligio Tip [E-0.25]":77500000,"Oligio Tip [F-4.0]":36250000,"의료기기":600000}},"스토리피부과 강남점":{"total":114000000,"y2025":84000000,"y2026":30000000,"orders":12,"topProd":"Oligio Tip [XF-4.0]","prods":{"Oligio Tip [XF-4.0]":114000000}},"리엔장피부과 목동점":{"total":112500000,"y2025":77500000,"y2026":35000000,"orders":46,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":112500000}},"(주)원메디코":{"total":104720000,"y2025":88200000,"y2026":16520000,"orders":41,"topProd":"Cartridge","prods":{"Cartridge":76700000,"의료기기":28020000}},"블리비의원 목동점":{"total":104150000,"y2025":103750000,"y2026":400000,"orders":10,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":97500000,"A/S소모품":3550000,"Oligio Tip [E-0.25]":2500000}},"아비쥬의원 인천구월점(강우철)":{"total":101825000,"y2025":101250000,"y2026":575000,"orders":12,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":95000000,"Oligio Tip [E-0.25]":5000000,"A/S소모품":1025000}},"나인피부과 연신내점(최현석)":{"total":100800000,"y2025":75600000,"y2026":25200000,"orders":8,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":100000000,"의료기기":800000}},"쁨클리닉 하남미사점":{"total":100800000,"y2025":75600000,"y2026":25200000,"orders":10,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":90000000,"Oligio Tip [E-0.25]":10000000,"의료기기":800000}},"나인피부과 강남점":{"total":100600000,"y2025":75600000,"y2026":25000000,"orders":10,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":70000000,"Oligio Tip [E-0.25]":30000000,"의료기기":600000}},"바로그의원 부산하단점(오현)":{"total":100600000,"y2025":72900000,"y2026":27700000,"orders":24,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":91250000,"Oligio Tip [E-0.25]":8750000,"의료기기":600000}},"논현엘여성의원":{"total":100400001,"y2025":100400001,"y2026":0,"orders":6,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":100000001,"의료기기":400000}},"닥터쁘띠의원 강남점":{"total":100000000,"y2025":90000000,"y2026":10000000,"orders":7,"topProd":"Oligio Tip [XF-4.0]","prods":{"Oligio Tip [XF-4.0]":100000000}},"로바에의원 홍대점":{"total":97700000,"y2025":44800000,"y2026":52900000,"orders":40,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":81250000,"Oligio Tip [E-0.25]":15750000,"의료기기":700000}},"반니성형외과 강남역점":{"total":97450000,"y2025":47450000,"y2026":50000000,"orders":17,"topProd":"Oligio Tip [XF-4.0]","prods":{"Oligio Tip [XF-4.0]":72000000,"Oligio Tip [F-4.0]":20000000,"Oligio Tip [XE-0.25]":4000000}},"리버스의원 강남점":{"total":95200000,"y2025":45000000,"y2026":50200000,"orders":20,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":57500000,"Oligio Tip [E-0.25]":37500000,"의료기기":200000}},"프리아의원 서초점":{"total":99450000,"y2025":93500000,"y2026":5950000,"orders":16,"topProd":"Oligio Tip [F-4.0]","prods":{"Oligio Tip [F-4.0]":65000000,"Oligio Tip [E-0.25]":30000000,"의료기기":3200000,"A/S소모품":1250000}}}
 };
-let consMonthlyChart=null, consDonutChart=null;
+let consMonthlyChart=null, consChartOlig=null, consChartXm=null, consDonutChart=null;
 const CONS_PW = 'wontech2026'; // ← 비밀번호 변경 시 이 값을 수정하세요
 
 function consUnlock() {
@@ -1416,28 +1429,48 @@ function renderConsumables() {
   const d_og26 = Array.from({length:12},(_,i)=>{ const v=mo26['Oligio']?.[i+1]; return v!=null?v/1e8:null; });
   const d_xm26 = Array.from({length:12},(_,i)=>{ const v=mo26['Oligio X/XM']?.[i+1]; return v!=null?v/1e8:null; });
 
-  if(consMonthlyChart) consMonthlyChart.destroy();
-  consMonthlyChart = new Chart(document.getElementById('cons-chart-oligio').getContext('2d'),{
-    type:'line',
-    data:{labels:MO, datasets:[
-      {label:'Oligio 2025',     data:d_og25, borderColor:'rgba(37,99,235,0.35)', borderWidth:1.5, borderDash:[5,3], pointRadius:2, tension:0.3, fill:false},
-      {label:'Oligio 2026',     data:d_og26, borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,0.07)', borderWidth:3, pointRadius:4, pointBackgroundColor:'#2563eb', tension:0.3, fill:true, spanGaps:false},
-      {label:'Oligio X/XM 2025', data:d_xm25, borderColor:'rgba(124,58,237,0.35)', borderWidth:1.5, borderDash:[5,3], pointRadius:2, tension:0.3, fill:false},
-      {label:'Oligio X/XM 2026', data:d_xm26, borderColor:'#7c3aed', backgroundColor:'rgba(124,58,237,0.06)', borderWidth:3, pointRadius:4, pointBackgroundColor:'#7c3aed', tension:0.3, fill:true, spanGaps:false},
-    ]},
-    options:{
-      maintainAspectRatio:false,
-      interaction:{mode:'index',intersect:false},
-      plugins:{
-        legend:{position:'top',labels:{font:{size:11},boxWidth:12,padding:12,usePointStyle:true}},
-        tooltip:{callbacks:{label:ctx=>ctx.raw!=null?`${ctx.dataset.label}: ${ctx.raw.toFixed(1)}억`:null}}
-      },
-      scales:{
-        y:{ticks:{callback:v=>v+'억',font:{size:11}},grid:{color:'#f3f4f6'},beginAtZero:true},
-        x:{grid:{display:false},ticks:{font:{size:11}}}
+  function makeLineChart(canvasId, datasets, oldChart) {
+    if(oldChart) oldChart.destroy();
+    return new Chart(document.getElementById(canvasId).getContext('2d'),{
+      type:'line',
+      data:{labels:MO, datasets},
+      options:{
+        maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{
+          legend:{position:'top',labels:{font:{size:11},boxWidth:10,padding:10,usePointStyle:true}},
+          tooltip:{callbacks:{label:ctx=>ctx.raw!=null?`${ctx.dataset.label}: ${ctx.raw.toFixed(1)}억`:null}}
+        },
+        scales:{
+          y:{ticks:{callback:v=>v+'억',font:{size:10}},grid:{color:'#f3f4f6'},beginAtZero:true},
+          x:{grid:{display:false},ticks:{font:{size:10}}}
+        }
       }
-    }
+    });
+  }
+
+  // 종합 차트 (Oligio + X/XM 합산)
+  const d_tot25 = Array.from({length:12},(_,i)=>((mo25['Oligio']?.[i+1]||0)+(mo25['Oligio X/XM']?.[i+1]||0))/1e8);
+  const d_tot26 = Array.from({length:12},(_,i)=>{
+    const a=mo26['Oligio']?.[i+1], b=mo26['Oligio X/XM']?.[i+1];
+    return (a!=null||b!=null)?((a||0)+(b||0))/1e8:null;
   });
+  consMonthlyChart = makeLineChart('cons-chart-total',[
+    {label:'종합 2025', data:d_tot25, borderColor:'rgba(55,65,81,0.35)', borderWidth:1.5, borderDash:[5,3], pointRadius:2, tension:0.3, fill:false},
+    {label:'종합 2026', data:d_tot26, borderColor:'#374151', backgroundColor:'rgba(55,65,81,0.06)', borderWidth:3, pointRadius:4, pointBackgroundColor:'#374151', tension:0.3, fill:true, spanGaps:false},
+  ], consMonthlyChart);
+
+  // Oligio (F+E) 차트
+  consChartOlig = makeLineChart('cons-chart-olig',[
+    {label:'Oligio 2025', data:d_og25, borderColor:'rgba(37,99,235,0.35)', borderWidth:1.5, borderDash:[5,3], pointRadius:2, tension:0.3, fill:false},
+    {label:'Oligio 2026', data:d_og26, borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,0.08)', borderWidth:3, pointRadius:4, pointBackgroundColor:'#2563eb', tension:0.3, fill:true, spanGaps:false},
+  ], consChartOlig);
+
+  // Oligio X/XM (XF+XE) 차트
+  consChartXm = makeLineChart('cons-chart-xm',[
+    {label:'Oligio X/XM 2025', data:d_xm25, borderColor:'rgba(124,58,237,0.35)', borderWidth:1.5, borderDash:[5,3], pointRadius:2, tension:0.3, fill:false},
+    {label:'Oligio X/XM 2026', data:d_xm26, borderColor:'#7c3aed', backgroundColor:'rgba(124,58,237,0.06)', borderWidth:3, pointRadius:4, pointBackgroundColor:'#7c3aed', tension:0.3, fill:true, spanGaps:false},
+  ], consChartXm);
 
   const ogYtd26=YTD.reduce((s,m)=>s+(mo26['Oligio']?.[m]||0)+(mo26['Oligio X/XM']?.[m]||0),0);
   const ogYtd25=YTD.reduce((s,m)=>s+(mo25['Oligio']?.[m]||0)+(mo25['Oligio X/XM']?.[m]||0),0);
