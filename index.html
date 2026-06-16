@@ -1319,7 +1319,7 @@ function consParseExcel(input) {
   uploadModal.show();
 
   const reader = new FileReader();
-  reader.onload = (e) => {
+  reader.onload = async (e) => {
     try {
       setMsg('엑셀 파싱 중...', '잠시만 기다려 주세요');
       const wb = XLSX.read(e.target.result, {type:'array', cellDates:true});
