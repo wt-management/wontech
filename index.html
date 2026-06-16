@@ -485,11 +485,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       <div class="row g-3" id="cons-cart-row"></div>
     </div>
 
-    <!-- ⑤ 소모품 전체 구성비 -->
-    <div class="card p-3">
-      <div class="fw-bold mb-2" style="font-size:14px">소모품 카테고리 구성비 <span style="font-size:11px;font-weight:400;color:#9ca3af">2026 YTD</span></div>
-      <div id="cons-group-bars"></div>
-    </div>
+    <div id="cons-group-bars" style="display:none"></div>
   </div>
 
 </div>
@@ -1369,20 +1365,26 @@ function renderConsumables() {
   const yoy = total2025ytd>0?(total2026ytd/total2025ytd-1)*100:0;
 
   const OLIG = [
-    {key:'Oligio Tip [F-4.0]',  label:'F-4.0',  grp:'올리지오', col:'#2563eb'},
-    {key:'Oligio Tip [E-0.25]', label:'E-0.25',  grp:'올리지오', col:'#60a5fa'},
-    {key:'Oligio Tip [XF-4.0]', label:'XF-4.0', grp:'X/XM',    col:'#7c3aed'},
-    {key:'Oligio Tip [XE-0.25]',label:'XE-0.25', grp:'X/XM',    col:'#a78bfa'},
+    {key:'Oligio Tip [F-4.0]',  label:'F-4.0',  grp:'Oligio',      col:'#2563eb'},
+    {key:'Oligio Tip [E-0.25]', label:'E-0.25',  grp:'Oligio',      col:'#60a5fa'},
+    {key:'Oligio Tip [XF-4.0]', label:'XF-4.0', grp:'Oligio X/XM', col:'#7c3aed'},
+    {key:'Oligio Tip [XE-0.25]',label:'XE-0.25', grp:'Oligio X/XM', col:'#a78bfa'},
   ];
   const oligTotal26 = OLIG.reduce((s,p)=>s+(CONS.products2026[p.key]||0),0);
   const cartV26 = CONS.groups2026['Cartridge']||0;
   const cartV25 = Object.entries(CONS.products2025).filter(([k])=>k.toLowerCase().startsWith('cartridge')).reduce((s,[,v])=>s+v,0);
 
+  const oligYtd26=YTD.reduce((s,m)=>s+(CONS.monthly2026[m]||0),0);
+  const oligYtd25=YTD.reduce((s,m)=>s+(CONS.monthly2025[m]||0),0);
+  const oligF26=(CONS.products2026['Oligio Tip [F-4.0]']||0)+(CONS.products2026['Oligio Tip [E-0.25]']||0);
+  const oligF25=(CONS.products2025['Oligio Tip [F-4.0]']||0)+(CONS.products2025['Oligio Tip [E-0.25]']||0);
+  const oligX26=(CONS.products2026['Oligio Tip [XF-4.0]']||0)+(CONS.products2026['Oligio Tip [XE-0.25]']||0);
+  const oligX25=(CONS.products2025['Oligio Tip [XF-4.0]']||0)+(CONS.products2025['Oligio Tip [XE-0.25]']||0);
   const kpiData = [
-    {color:'#1e40af',icon:'bi-calendar-check',label:'2025 연간 매출',    value:fmtB(total2025),    sub:'국내 소모품 확정 실적',            chg:null},
-    {color:'#16a34a',icon:'bi-graph-up-arrow',label:'2026 누계 (1–5월)', value:fmtB(total2026ytd), sub:`전년 동기 ${fmtB(total2025ytd)}`,  chg:yoy},
-    {color:'#ff4500',icon:'bi-star-fill',      label:'Oligio Tip 비중',  value:((oligTotal26/total2026ytd)*100).toFixed(0)+'%', sub:`${fmtB(oligTotal26)} · 2026 YTD`, chg:null},
-    {color:'#0891b2',icon:'bi-cpu',            label:'Cartridge YTD',   value:fmtB(cartV26),      sub:'전년 동기비',                       chg:cartV25>0?(cartV26/cartV25-1)*100:null},
+    {color:'#0891b2',icon:'bi-cpu',            label:'Cartridge YTD',        value:fmtB(cartV26),   sub:`vs 전년 동기 ${fmtB(cartV25)}`,    chg:cartV25>0?(cartV26/cartV25-1)*100:null},
+    {color:'#ff4500',icon:'bi-star-fill',      label:'Oligio Tip 전체',      value:fmtB(oligTotal26), sub:`전년 동기 ${fmtB(OLIG.reduce((s,p)=>s+(CONS.products2025[p.key]||0),0))}`, chg:OLIG.reduce((s,p)=>s+(CONS.products2025[p.key]||0),0)>0?(oligTotal26/OLIG.reduce((s,p)=>s+(CONS.products2025[p.key]||0),0)-1)*100:null},
+    {color:'#2563eb',icon:'bi-graph-up-arrow', label:'Oligio (F·E) YTD',    value:fmtB(oligF26),   sub:`vs 전년 동기 ${fmtB(oligF25)}`,     chg:oligF25>0?(oligF26/oligF25-1)*100:null},
+    {color:'#7c3aed',icon:'bi-bar-chart',      label:'Oligio X/XM (XF·XE)', value:fmtB(oligX26),   sub:`vs 전년 동기 ${fmtB(oligX25)}`,     chg:oligX25>0?(oligX26/oligX25-1)*100:null},
   ];
   document.getElementById('cons-kpi').innerHTML = kpiData.map(k=>`
     <div class="col-6 col-lg-3">
@@ -1402,26 +1404,26 @@ function renderConsumables() {
     const xm25=(CONS.products2025['Oligio Tip [XF-4.0]']||0)+(CONS.products2025['Oligio Tip [XE-0.25]']||0);
     const og26=(CONS.products2026['Oligio Tip [F-4.0]']||0)+(CONS.products2026['Oligio Tip [E-0.25]']||0);
     const xm26=(CONS.products2026['Oligio Tip [XF-4.0]']||0)+(CONS.products2026['Oligio Tip [XE-0.25]']||0);
-    const mo25={'올리지오':{},'X/XM':{}}, mo26={'올리지오':{},'X/XM':{}};
-    Object.entries(CONS.monthly2025).forEach(([m,v])=>{const r=v/tot25; mo25['올리지오'][m]=Math.round(og25*r); mo25['X/XM'][m]=Math.round(xm25*r);});
-    Object.entries(CONS.monthly2026).forEach(([m,v])=>{const r=v/tot26; mo26['올리지오'][m]=Math.round(og26*r); mo26['X/XM'][m]=Math.round(xm26*r);});
+    const mo25={'Oligio':{},'Oligio X/XM':{}}, mo26={'Oligio':{},'Oligio X/XM':{}};
+    Object.entries(CONS.monthly2025).forEach(([m,v])=>{const r=v/tot25; mo25['Oligio'][m]=Math.round(og25*r); mo25['Oligio X/XM'][m]=Math.round(xm25*r);});
+    Object.entries(CONS.monthly2026).forEach(([m,v])=>{const r=v/tot26; mo26['Oligio'][m]=Math.round(og26*r); mo26['Oligio X/XM'][m]=Math.round(xm26*r);});
     return {mo25, mo26};
   }
   const {mo25, mo26} = getOligioMonthly();
   const MO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  const d_og25 = Array.from({length:12},(_,i)=>(mo25['올리지오']?.[i+1]||0)/1e8);
-  const d_xm25 = Array.from({length:12},(_,i)=>(mo25['X/XM']?.[i+1]||0)/1e8);
-  const d_og26 = Array.from({length:12},(_,i)=>{ const v=mo26['올리지오']?.[i+1]; return v!=null?v/1e8:null; });
-  const d_xm26 = Array.from({length:12},(_,i)=>{ const v=mo26['X/XM']?.[i+1]; return v!=null?v/1e8:null; });
+  const d_og25 = Array.from({length:12},(_,i)=>(mo25['Oligio']?.[i+1]||0)/1e8);
+  const d_xm25 = Array.from({length:12},(_,i)=>(mo25['Oligio X/XM']?.[i+1]||0)/1e8);
+  const d_og26 = Array.from({length:12},(_,i)=>{ const v=mo26['Oligio']?.[i+1]; return v!=null?v/1e8:null; });
+  const d_xm26 = Array.from({length:12},(_,i)=>{ const v=mo26['Oligio X/XM']?.[i+1]; return v!=null?v/1e8:null; });
 
   if(consMonthlyChart) consMonthlyChart.destroy();
   consMonthlyChart = new Chart(document.getElementById('cons-chart-oligio').getContext('2d'),{
     type:'line',
     data:{labels:MO, datasets:[
-      {label:'올리지오 2025', data:d_og25, borderColor:'rgba(37,99,235,0.35)', borderWidth:1.5, borderDash:[5,3], pointRadius:2, tension:0.3, fill:false},
-      {label:'올리지오 2026', data:d_og26, borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,0.07)', borderWidth:3, pointRadius:4, pointBackgroundColor:'#2563eb', tension:0.3, fill:true, spanGaps:false},
-      {label:'X/XM 2025',   data:d_xm25, borderColor:'rgba(124,58,237,0.35)', borderWidth:1.5, borderDash:[5,3], pointRadius:2, tension:0.3, fill:false},
-      {label:'X/XM 2026',  data:d_xm26, borderColor:'#7c3aed', backgroundColor:'rgba(124,58,237,0.06)', borderWidth:3, pointRadius:4, pointBackgroundColor:'#7c3aed', tension:0.3, fill:true, spanGaps:false},
+      {label:'Oligio 2025',     data:d_og25, borderColor:'rgba(37,99,235,0.35)', borderWidth:1.5, borderDash:[5,3], pointRadius:2, tension:0.3, fill:false},
+      {label:'Oligio 2026',     data:d_og26, borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,0.07)', borderWidth:3, pointRadius:4, pointBackgroundColor:'#2563eb', tension:0.3, fill:true, spanGaps:false},
+      {label:'Oligio X/XM 2025', data:d_xm25, borderColor:'rgba(124,58,237,0.35)', borderWidth:1.5, borderDash:[5,3], pointRadius:2, tension:0.3, fill:false},
+      {label:'Oligio X/XM 2026', data:d_xm26, borderColor:'#7c3aed', backgroundColor:'rgba(124,58,237,0.06)', borderWidth:3, pointRadius:4, pointBackgroundColor:'#7c3aed', tension:0.3, fill:true, spanGaps:false},
     ]},
     options:{
       maintainAspectRatio:false,
@@ -1437,8 +1439,8 @@ function renderConsumables() {
     }
   });
 
-  const ogYtd26=YTD.reduce((s,m)=>s+(mo26['올리지오']?.[m]||0)+(mo26['X/XM']?.[m]||0),0);
-  const ogYtd25=YTD.reduce((s,m)=>s+(mo25['올리지오']?.[m]||0)+(mo25['X/XM']?.[m]||0),0);
+  const ogYtd26=YTD.reduce((s,m)=>s+(mo26['Oligio']?.[m]||0)+(mo26['Oligio X/XM']?.[m]||0),0);
+  const ogYtd25=YTD.reduce((s,m)=>s+(mo25['Oligio']?.[m]||0)+(mo25['Oligio X/XM']?.[m]||0),0);
   const ogYoy=ogYtd25>0?(ogYtd26/ogYtd25-1)*100:0;
   document.getElementById('cons-trend-badge').innerHTML =
     `<span style="background:${ogYoy>=0?'#f0fdf4':'#fef2f2'};color:${ogYoy>=0?'#16a34a':'#dc2626'};font-weight:700;padding:3px 10px;border-radius:20px;font-size:12px">Oligio 전체 YoY ${ogYoy>=0?'+':''}${ogYoy.toFixed(1)}%</span>`;
@@ -1471,8 +1473,8 @@ function renderConsumables() {
   }).join('');
 
   const grpData = [
-    {name:'올리지오',col:'#2563eb', v26:YTD.reduce((s,m)=>s+(mo26['올리지오']?.[m]||0),0), v25:YTD.reduce((s,m)=>s+(mo25['올리지오']?.[m]||0),0)},
-    {name:'X/XM',   col:'#7c3aed', v26:YTD.reduce((s,m)=>s+(mo26['X/XM']?.[m]||0),0), v25:YTD.reduce((s,m)=>s+(mo25['X/XM']?.[m]||0),0)},
+    {name:'Oligio',     col:'#2563eb', v26:YTD.reduce((s,m)=>s+(mo26['Oligio']?.[m]||0),0), v25:YTD.reduce((s,m)=>s+(mo25['Oligio']?.[m]||0),0)},
+    {name:'Oligio X/XM',col:'#7c3aed', v26:YTD.reduce((s,m)=>s+(mo26['Oligio X/XM']?.[m]||0),0), v25:YTD.reduce((s,m)=>s+(mo25['Oligio X/XM']?.[m]||0),0)},
   ];
   const grpSum26 = grpData.reduce((s,g)=>s+g.v26,0)||1;
   document.getElementById('cons-oligio-group-cards').innerHTML = grpData.map(g=>{
@@ -1525,30 +1527,6 @@ function renderConsumables() {
     </div>`;
 
   if(consDonutChart){consDonutChart.destroy();consDonutChart=null;}
-  const catGroups = [
-    {name:'Oligio Tip', v:CONS.groups2026['Oligio Tip']||0, col:'#ff4500'},
-    {name:'Cartridge',  v:cartV26, col:'#0891b2'},
-    {name:'써지콜 소모품', v:(CONS.groups2026['BA600']||0)+(CONS.groups2026['BA400']||0)+(CONS.groups2026['AG275']||0), col:'#16a34a'},
-  ].filter(g=>g.v>0);
-  const catTotal = catGroups.reduce((s,g)=>s+g.v,0)||1;
-  document.getElementById('cons-group-bars').innerHTML = catGroups.map(g=>{
-    const pct=(g.v/catTotal*100);
-    return `<div style="margin-bottom:14px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-        <div style="display:flex;align-items:center;gap:7px">
-          <span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${g.col}"></span>
-          <span style="font-size:13px;font-weight:700">${g.name}</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <span style="font-size:13px;font-weight:800">${fmtW(g.v)}</span>
-          <span style="font-size:12px;font-weight:700;color:${g.col};min-width:36px;text-align:right">${pct.toFixed(1)}%</span>
-        </div>
-      </div>
-      <div style="background:#f3f4f6;border-radius:6px;height:14px;overflow:hidden">
-        <div style="width:${pct.toFixed(1)}%;height:100%;border-radius:6px;background:${g.col}"></div>
-      </div>
-    </div>`;
-  }).join('') + `<div style="font-size:11px;color:#9ca3af;margin-top:12px;padding-top:10px;border-top:1px solid #f3f4f6">※ 의료기기·A/S소모품 제외 · 써지콜 = BA600+BA400+AG275</div>`;
 }
 
 
