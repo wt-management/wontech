@@ -618,6 +618,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       <h5 class="modal-title fw-bold mb-0" id="hosp-modal-name"></h5>
       <div class="text-muted mt-1" style="font-size:12px" id="hosp-modal-sub"></div>
     </div>
+    <button class="btn btn-primary btn-sm me-2" onclick="openLogFromHospModal()"><i class="bi bi-journal-plus me-1"></i>상담일지 작성</button>
     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
   </div>
   <div class="modal-body p-0">
@@ -1577,11 +1578,11 @@ function renderConsHospitals() {
   document.getElementById('hosp-risk-list').innerHTML = riskSorted.length
     ? riskSorted.map(([name,h])=>`
       <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #fecaca">
-        <div style="flex:1;min-width:0">
-          <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+        <div style="flex:1;min-width:0;cursor:pointer" data-name="${name.replace(/"/g,'&quot;')}" onclick="showHospitalDetail(this.dataset.name)">
+          <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#dc2626;text-decoration:underline dotted">${name}</div>
           <div style="font-size:11px;color:#9ca3af">2025 실적 ${fmtW(h.y2025)} · 주력: ${h.topProd||'-'}</div>
         </div>
-        <button class="btn btn-sm btn-outline-danger" style="font-size:10px;padding:2px 8px;flex-shrink:0" onclick="openModal('pipeline')">딜 생성</button>
+        <button class="btn btn-sm btn-outline-primary" style="font-size:10px;padding:2px 8px;flex-shrink:0" title="상담일지 작성" data-name="${name.replace(/"/g,'&quot;')}" onclick="openLogFromHosp(this.dataset.name)"><i class="bi bi-journal-plus"></i></button>
       </div>`).join('')
     : '<div style="font-size:12px;color:#9ca3af;padding:16px 0;text-align:center">해당 병원 없음</div>';
 
@@ -1596,7 +1597,7 @@ function renderConsHospitals() {
         const chg = est25>0?(h.y2026/est25-1)*100:null;
         return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #fef3c7">
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+            <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:#b45309;text-decoration:underline dotted" data-name="${name.replace(/"/g,'&quot;')}" onclick="showHospitalDetail(this.dataset.name)">${name}</div>
             <div style="font-size:11px;color:#9ca3af">2026 ${fmtS(h.y2026)} vs 동기 추정 ${fmtS(est25)}</div>
           </div>
           ${pctBadge(chg,false)}
@@ -1612,7 +1613,7 @@ function renderConsHospitals() {
         const est25=ytd25est(h), chg=est25>0?(h.y2026/est25-1)*100:null;
         return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #dcfce7">
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+            <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:#15803d;text-decoration:underline dotted" data-name="${name.replace(/"/g,'&quot;')}" onclick="showHospitalDetail(this.dataset.name)">${name}</div>
             <div style="font-size:11px;color:#9ca3af">2026 ${fmtS(h.y2026)} vs 동기 추정 ${fmtS(est25)}</div>
           </div>
           ${pctBadge(chg,false)}
@@ -1625,7 +1626,7 @@ function renderConsHospitals() {
     ? newList.map(([name,h])=>`
         <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #ede9fe">
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}
+            <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;text-decoration:underline dotted" data-name="${name.replace(/"/g,'&quot;')}" onclick="showHospitalDetail(this.dataset.name)">${name}
               <span style="font-size:9px;background:#dcfce7;color:#16a34a;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">NEW</span>
             </div>
             <div style="font-size:11px;color:#9ca3af">2026 YTD ${fmtW(h.y2026)} · ${h.topProd||'-'}</div>
@@ -1664,7 +1665,7 @@ function renderHospRank() {
     const vip=h.total>=3e8?'<span class="vip-badge vip-gold">VVIP</span>':h.total>=1e8?'<span class="vip-badge vip-silver">VIP</span>':'';
     return`<tr>
       <td style="font-size:11px;color:${i<3?rankClr[i]:'#9ca3af'};font-weight:${i<3?'800':'400'}">${i+1}</td>
-      <td style="font-size:12px;font-weight:600">${name}${vip}${isNew?'<span style="font-size:9px;background:#dcfce7;color:#16a34a;border-radius:4px;padding:1px 5px;margin-left:4px">NEW</span>':''}</td>
+      <td style="font-size:12px;font-weight:600;cursor:pointer;color:#2563eb;text-decoration:underline dotted" data-name="${name.replace(/"/g,'&quot;')}" onclick="showHospitalDetail(this.dataset.name)">${name}${vip}${isNew?'<span style="font-size:9px;background:#dcfce7;color:#16a34a;border-radius:4px;padding:1px 5px;margin-left:4px">NEW</span>':''}</td>
       <td class="text-end" style="font-size:12px">${fmtS(est25)}</td>
       <td class="text-end" style="font-size:12px;font-weight:${h.y2026?'700':'400'};color:${h.y2026?'#ff4500':'inherit'}">${fmtS(h.y2026)}</td>
       <td class="text-end">${chg!==null?`<span style="font-size:11px;font-weight:700;color:${chg>=0?'#16a34a':'#dc2626'}">${chg>=0?'+':''}${chg.toFixed(0)}%</span>`:'<span style="color:#d1d5db;font-size:11px">-</span>'}</td>
@@ -1675,6 +1676,21 @@ function renderHospRank() {
 }
 
 function showHospDetail() {}
+function openLogFromHosp(name){
+  ['l-id','l-content','l-product','l-next','l-sales'].forEach(id=>setV(id,''));
+  setV('l-date',new Date().toISOString().split('T')[0]);
+  setV('l-nextDate','');
+  setV('l-custName', name||'');
+  document.getElementById('l-type').value='방문';
+  document.getElementById('l-del-btn').style.display='none';
+  new bootstrap.Modal(document.getElementById('logModal')).show();
+}
+function openLogFromHospModal(){
+  const name = document.getElementById('hosp-modal-name').textContent||'';
+  const m = bootstrap.Modal.getInstance(document.getElementById('hospitalModal'));
+  if(m) m.hide();
+  setTimeout(()=>openLogFromHosp(name), 350);
+}
 
 function renderConsAccounts() { renderConsHospitals(); }
 
