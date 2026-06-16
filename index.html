@@ -215,40 +215,40 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
     </div>
 
     <!-- 기간 필터 -->
-    <div class="d-flex gap-1 mb-4">
-      <button class="dash-period-btn on" id="dp-month" onclick="setDashPeriod('month',this)">이번달</button>
-      <button class="dash-period-btn" id="dp-quarter" onclick="setDashPeriod('quarter',this)">이번분기</button>
-      <button class="dash-period-btn" id="dp-year" onclick="setDashPeriod('year',this)">올해</button>
+    <div class="d-flex align-items-center gap-2 mb-4">
+      <select class="form-select form-select-sm" style="width:auto;font-weight:600;border-radius:20px;font-size:13px" id="dash-period-select" onchange="setDashPeriod(this.value)">
+        <option value="month">이번달</option>
+        <option value="last-month">지난달</option>
+        <option value="quarter">이번분기</option>
+        <option value="last-quarter">지난분기</option>
+        <option value="year">올해</option>
+        <option value="last-year">작년</option>
+      </select>
+      <span id="dash-period-desc" style="font-size:12px;color:#9ca3af"></span>
     </div>
 
     <!-- KPI 카드 4개 -->
     <div class="row g-3 mb-4">
       <div class="col-6 col-lg-3">
         <div class="kpi-card">
-          <div class="kpi-label"><i class="bi bi-trophy-fill me-1" style="color:#f59e0b"></i>이달 계약금액</div>
-          <div class="kpi-value" id="kpi-won-amt">-</div>
-          <div class="kpi-sub" id="kpi-won-sub"></div>
-          <div class="kpi-progress-wrap" id="kpi-won-bar-wrap" style="display:none">
-            <div class="kpi-progress-track"><div class="kpi-progress-fill" id="kpi-won-bar" style="background:linear-gradient(90deg,#16a34a,#4ade80)"></div></div>
-            <span class="kpi-progress-label" id="kpi-won-pct"></span>
-          </div>
+          <div class="kpi-label"><i class="bi bi-trophy-fill me-1" style="color:#16a34a"></i>확정 매출</div>
+          <div class="kpi-value" id="kpi-confirmed">-</div>
+          <div class="kpi-sub" id="kpi-confirmed-sub"></div>
+          <div class="kpi-progress-wrap"><div class="kpi-progress-track"><div class="kpi-progress-fill" id="kpi-confirmed-bar" style="background:linear-gradient(90deg,#16a34a,#4ade80)"></div></div></div>
         </div>
       </div>
       <div class="col-6 col-lg-3">
         <div class="kpi-card">
-          <div class="kpi-label"><i class="bi bi-journal-check me-1" style="color:#2563eb"></i>이달 활동</div>
-          <div class="kpi-value" id="kpi-achieve">-</div>
-          <div class="kpi-sub" id="kpi-achieve-sub"></div>
-          <div class="kpi-progress-wrap" id="kpi-won-bar-wrap2">
-            <div class="kpi-progress-track"><div class="kpi-progress-fill" id="kpi-achieve-bar" style="background:linear-gradient(90deg,#2563eb,#60a5fa)"></div></div>
-          </div>
+          <div class="kpi-label"><i class="bi bi-graph-up-arrow me-1" style="color:#2563eb"></i>예상 추가</div>
+          <div class="kpi-value" id="kpi-expected">-</div>
+          <div class="kpi-sub" id="kpi-expected-sub"></div>
         </div>
       </div>
       <div class="col-6 col-lg-3">
-        <div class="kpi-card">
-          <div class="kpi-label"><i class="bi bi-graph-up me-1" style="color:#7c3aed"></i>파이프라인 (가중)</div>
-          <div class="kpi-value" id="kpi-pipe">-</div>
-          <div class="kpi-sub" id="kpi-pipe-sub"></div>
+        <div class="kpi-card" style="border-top:3px solid #7c3aed">
+          <div class="kpi-label"><i class="bi bi-bullseye me-1" style="color:#7c3aed"></i>총 전망</div>
+          <div class="kpi-value" id="kpi-total-forecast">-</div>
+          <div class="kpi-sub" id="kpi-total-forecast-sub"></div>
         </div>
       </div>
       <div class="col-6 col-lg-3">
@@ -260,21 +260,76 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       </div>
     </div>
 
+    <!-- 매출 요약 바 -->
+    <div id="dash-revenue-bar" class="mb-4" style="display:none">
+      <div class="card p-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span style="font-size:13px;font-weight:700">기간 매출 전망</span>
+          <span id="dash-revenue-label" style="font-size:11px;color:#9ca3af"></span>
+        </div>
+        <div style="display:flex;height:20px;border-radius:8px;overflow:hidden;background:#f3f4f6">
+          <div id="dash-bar-confirmed" style="height:100%;background:#16a34a;transition:width .5s"></div>
+          <div id="dash-bar-expected" style="height:100%;background:#93c5fd;transition:width .5s"></div>
+        </div>
+        <div class="d-flex gap-4 mt-2" style="font-size:11px">
+          <span><span style="display:inline-block;width:10px;height:10px;background:#16a34a;border-radius:2px;margin-right:4px"></span>확정 <strong id="dash-bar-confirmed-val"></strong></span>
+          <span><span style="display:inline-block;width:10px;height:10px;background:#93c5fd;border-radius:2px;margin-right:4px"></span>예상 <strong id="dash-bar-expected-val"></strong></span>
+          <span style="margin-left:auto;font-weight:700">합계 <span id="dash-bar-total-val" style="color:#7c3aed"></span></span>
+        </div>
+      </div>
+    </div>
+
     <!-- 차트 행 -->
     <div class="row g-3 mb-4">
       <div class="col-md-7">
         <div class="card p-3 h-100">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="fw-bold" style="font-size:14px">월별 계약 실적</div>
-            <span style="font-size:11px;color:#9ca3af">최근 6개월</span>
+            <div class="fw-bold" style="font-size:14px">월별 매출 현황</div>
+            <div style="display:flex;gap:8px;font-size:10px;color:#9ca3af">
+              <span><span style="display:inline-block;width:8px;height:8px;background:#2563eb;border-radius:2px;margin-right:3px"></span>확정</span>
+              <span><span style="display:inline-block;width:8px;height:8px;background:#93c5fd;border-radius:2px;margin-right:3px"></span>예상</span>
+            </div>
           </div>
-          <canvas id="chart-monthly" height="170"></canvas>
+          <canvas id="chart-monthly" height="160"></canvas>
         </div>
       </div>
       <div class="col-md-5">
-        <div class="card p-3 h-100">
-          <div class="fw-bold mb-3" style="font-size:14px">파이프라인 퍼널</div>
+        <div class="card p-3">
+          <div class="fw-bold mb-2" style="font-size:14px">파이프라인 퍼널</div>
           <div id="dash-funnel"></div>
+          <div id="dash-funnel-summary" class="mt-3 pt-3" style="border-top:1px solid #f3f4f6"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 영업 지표 -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="card p-3 text-center">
+          <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Win Rate</div>
+          <div id="dash-winrate" style="font-size:1.6rem;font-weight:800;color:#16a34a">-</div>
+          <div id="dash-winrate-sub" style="font-size:10px;color:#9ca3af"></div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card p-3 text-center">
+          <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">평균 딜 크기</div>
+          <div id="dash-avg-deal" style="font-size:1.6rem;font-weight:800;color:#2563eb">-</div>
+          <div id="dash-avg-deal-sub" style="font-size:10px;color:#9ca3af"></div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card p-3 text-center">
+          <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">파이프라인 잔고</div>
+          <div id="dash-pipe-total" style="font-size:1.6rem;font-weight:800;color:#7c3aed">-</div>
+          <div id="dash-pipe-total-sub" style="font-size:10px;color:#9ca3af"></div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card p-3 text-center">
+          <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">이달 신규 딜</div>
+          <div id="dash-new-deals" style="font-size:1.6rem;font-weight:800;color:#ea580c">-</div>
+          <div id="dash-new-deals-sub" style="font-size:10px;color:#9ca3af"></div>
         </div>
       </div>
     </div>
@@ -1023,29 +1078,41 @@ function showToast(msg, hide=false, err=false) {
 let monthlyChart = null;
 let _dashPeriod = 'month';
 
-function setDashPeriod(p, btn) {
+function setDashPeriod(p) {
   _dashPeriod = p;
-  document.querySelectorAll('.dash-period-btn').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
+  const sel = document.getElementById('dash-period-select');
+  if(sel) sel.value = p;
   renderDashboard();
 }
 
 function _dashPeriodYMs() {
   const now = new Date();
   const y = now.getFullYear(), m = now.getMonth()+1;
+  const ym = (yr,mo) => `${yr}-${String(mo).padStart(2,'0')}`;
   if(_dashPeriod === 'month') {
-    const ym = `${y}-${String(m).padStart(2,'0')}`;
-    return { yms:[ym], label:'이번달', targetYMs:[ym] };
+    return { yms:[ym(y,m)], label:'이번달', shortLabel:`${y}.${m}월` };
+  }
+  if(_dashPeriod === 'last-month') {
+    const lm=m===1?12:m-1, ly=m===1?y-1:y;
+    return { yms:[ym(ly,lm)], label:'지난달', shortLabel:`${ly}.${lm}월` };
   }
   if(_dashPeriod === 'quarter') {
-    const q = Math.ceil(m/3);
-    const start = (q-1)*3+1;
-    const yms = [0,1,2].map(i => `${y}-${String(start+i).padStart(2,'0')}`);
-    return { yms, label:`${q}분기`, targetYMs: yms };
+    const q=Math.ceil(m/3), start=(q-1)*3+1;
+    const yms=[0,1,2].map(i=>ym(y,start+i));
+    return { yms, label:`${y}년 ${q}분기`, shortLabel:`${q}Q` };
+  }
+  if(_dashPeriod === 'last-quarter') {
+    const q=Math.ceil(m/3), pq=q===1?4:q-1, py=q===1?y-1:y, start=(pq-1)*3+1;
+    const yms=[0,1,2].map(i=>ym(py,start+i));
+    return { yms, label:`${py}년 ${pq}분기`, shortLabel:`${py}년 ${pq}Q` };
+  }
+  if(_dashPeriod === 'last-year') {
+    const yms=Array.from({length:12},(_,i)=>ym(y-1,i+1));
+    return { yms, label:`${y-1}년`, shortLabel:`${y-1}년` };
   }
   // year
-  const yms = Array.from({length:m},(_,i)=>`${y}-${String(i+1).padStart(2,'0')}`);
-  return { yms, label:'올해', targetYMs: yms };
+  const yms=Array.from({length:m},(_,i)=>ym(y,i+1));
+  return { yms, label:`${y}년`, shortLabel:`${y}년` };
 }
 
 function renderDashboard() {
@@ -1068,26 +1135,44 @@ function renderDashboard() {
     ${overdueActs.length?`<div class="dash-badge" style="border-color:#fecaca;color:#dc2626"><i class="bi bi-exclamation-circle-fill" style="color:#dc2626"></i>지연 ${overdueActs.length}건</div>`:''}
   `;
 
-  // KPI 1: 기간별 계약금액
+  // KPI 1: 기간별 확정 매출
   const wonPeriod=DB.d.pipeline.filter(d=>d.stage==='계약완료'&&yms.some(ym=>(d.stageUpdatedAt||'').startsWith(ym)));
   const wonAmt=wonPeriod.reduce((s,d)=>s+Number(d.amount||0),0);
-  document.getElementById('kpi-won-amt').textContent=fmtAmt(wonAmt);
-  document.getElementById('kpi-won-sub').textContent=`${label} 계약완료 ${wonPeriod.length}건`;
-
-  // KPI 2: 이달 활동 (상담일지)
-  const thisYm=now.toISOString().substring(0,7);
-  const monthLogs=DB.d.logs.filter(l=>(l.date||'').startsWith(thisYm));
-  const monthPipes=DB.d.pipeline.filter(d=>(d.stageUpdatedAt||'').startsWith(thisYm));
-  document.getElementById('kpi-achieve').textContent=monthLogs.length+'건';
-  document.getElementById('kpi-achieve-sub').textContent=`이달 상담일지 · 파이프라인 ${monthPipes.length}건 업데이트`;
-  const achieveBar=document.getElementById('kpi-achieve-bar');
-  const maxLog=Math.max(...[...new Set(DB.d.logs.map(l=>(l.date||'').substring(0,7)))].map(ym=>DB.d.logs.filter(l=>(l.date||'').startsWith(ym)).length),1);
-  achieveBar.style.width=Math.min(monthLogs.length/maxLog*100,100)+'%';
-
-  // KPI 3: 파이프라인 가중금액
-  const weighted=activePipe.reduce((s,d)=>s+Number(d.amount||0)*Number(d.prob||0)/100,0);
-  document.getElementById('kpi-pipe').textContent=fmtAmt(Math.round(weighted));
-  document.getElementById('kpi-pipe-sub').textContent=`진행중 딜 ${activePipe.length}건`;
+  // KPI 2: 기간 내 마감 예정 파이프라인 가중금액
+  const closingPeriod=DB.d.pipeline.filter(d=>d.stage!=='계약완료'&&yms.some(ym=>(d.expectedDate||'').startsWith(ym)));
+  const expectedAmt=Math.round(closingPeriod.reduce((s,d)=>s+Number(d.amount||0)*Number(d.prob||0)/100,0));
+  const totalForecast=wonAmt+expectedAmt;
+  // 전월 확정 대비
+  const prevYms=(()=>{
+    if(_dashPeriod==='month'||_dashPeriod==='last-month'){
+      const [y0,m0]=yms[0].split('-').map(Number);
+      const pm=m0===1?12:m0-1, py=m0===1?y0-1:y0;
+      return [`${py}-${String(pm).padStart(2,'0')}`];
+    }
+    return [];
+  })();
+  const prevWon=prevYms.length?DB.d.pipeline.filter(d=>d.stage==='계약완료'&&prevYms.some(pym=>(d.stageUpdatedAt||'').startsWith(pym))).reduce((s,d)=>s+Number(d.amount||0),0):null;
+  const momChg=prevWon!=null&&prevWon>0?((wonAmt/prevWon-1)*100).toFixed(0):null;
+  document.getElementById('kpi-confirmed').textContent=fmtAmt(wonAmt);
+  document.getElementById('kpi-confirmed-sub').textContent=`${label} 계약완료 ${wonPeriod.length}건${momChg!==null?' · 전월 '+(Number(momChg)>=0?'▲':'▼')+Math.abs(momChg)+'%':''}`;
+  const confirmedBar=document.getElementById('kpi-confirmed-bar');
+  if(confirmedBar&&totalForecast>0) confirmedBar.style.width=Math.min(wonAmt/totalForecast*100,100)+'%';
+  document.getElementById('kpi-expected').textContent=fmtAmt(expectedAmt);
+  document.getElementById('kpi-expected-sub').textContent=`마감예정 딜 ${closingPeriod.length}건 · 가중합산`;
+  document.getElementById('kpi-total-forecast').textContent=fmtAmt(totalForecast);
+  document.getElementById('kpi-total-forecast-sub').textContent=`확정 ${Math.round(wonAmt/Math.max(totalForecast,1)*100)}% · 예상 ${Math.round(expectedAmt/Math.max(totalForecast,1)*100)}%`;
+  // 매출 바
+  const revBar=document.getElementById('dash-revenue-bar');
+  if(revBar&&totalForecast>0){
+    revBar.style.display='block';
+    const cp=Math.round(wonAmt/totalForecast*100);
+    document.getElementById('dash-bar-confirmed').style.width=cp+'%';
+    document.getElementById('dash-bar-expected').style.width=(100-cp)+'%';
+    document.getElementById('dash-bar-confirmed-val').textContent=fmtAmt(wonAmt);
+    document.getElementById('dash-bar-expected-val').textContent=fmtAmt(expectedAmt);
+    document.getElementById('dash-bar-total-val').textContent=fmtAmt(totalForecast);
+    document.getElementById('dash-revenue-label').textContent=label;
+  } else if(revBar) revBar.style.display='none';
 
   // KPI 4: 이번주 할 일
   const todayD=new Date(); todayD.setHours(0,0,0,0);
@@ -1102,11 +1187,11 @@ function renderDashboard() {
   document.getElementById('kpi-actions-sub').textContent=`오늘 ${todayActs.length}건 · 지연 ${overdueActs.length}건`;
   document.getElementById('kpi-action-card').style.borderColor=overdueActs.length?'#fecaca':'';
 
-  // 월별 계약 실적 차트 (목표 없음)
+  // 월별 매출 현황 차트 (확정 vs 예상)
   const months=[];
   for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);}
-  const wonByMonth=months.map(ym=>DB.d.pipeline.filter(d=>d.stage==='계약완료'&&(d.stageUpdatedAt||'').startsWith(ym)).reduce((s,d)=>s+Number(d.amount||0),0));
-  const logsByMonth=months.map(ym=>DB.d.logs.filter(l=>(l.date||'').startsWith(ym)).length);
+  const confirmedByMonth=months.map(ym=>DB.d.pipeline.filter(d=>d.stage==='계약완료'&&(d.stageUpdatedAt||'').startsWith(ym)).reduce((s,d)=>s+Number(d.amount||0),0));
+  const expectedByMonth=months.map(ym=>Math.round(DB.d.pipeline.filter(d=>d.stage!=='계약완료'&&(d.expectedDate||'').startsWith(ym)).reduce((s,d)=>s+Number(d.amount||0)*Number(d.prob||0)/100,0)));
   const monthLabels=months.map(ym=>ym.split('-')[1]+'월');
   if(monthlyChart) monthlyChart.destroy();
   const ctx=document.getElementById('chart-monthly').getContext('2d');
@@ -1115,15 +1200,18 @@ function renderDashboard() {
     data:{
       labels:monthLabels,
       datasets:[
-        {label:'계약금액',data:wonByMonth,backgroundColor:'rgba(37,99,235,0.15)',borderColor:'#2563eb',borderWidth:2,borderRadius:6,borderSkipped:false,yAxisID:'y'},
-        {label:'상담건수',data:logsByMonth,type:'line',borderColor:'#f59e0b',borderWidth:2,pointRadius:4,pointBackgroundColor:'#f59e0b',fill:false,tension:0.3,yAxisID:'y2'}
+        {label:'확정 매출',data:confirmedByMonth,backgroundColor:'#2563eb',borderRadius:4,borderSkipped:false,stack:'rev'},
+        {label:'예상 추가',data:expectedByMonth,backgroundColor:'#bfdbfe',borderRadius:4,borderSkipped:false,stack:'rev'},
       ]
     },
     options:{
-      plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12}}},
+      plugins:{
+        legend:{position:'top',labels:{font:{size:11},boxWidth:12}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmtAmt(ctx.parsed.y)}`}}
+      },
       scales:{
-        y:{ticks:{callback:v=>fmtAmt(v)},grid:{color:'#f3f4f6'},position:'left'},
-        y2:{ticks:{callback:v=>v+'건'},grid:{display:false},position:'right'}
+        y:{ticks:{callback:v=>fmtAmt(v),font:{size:10}},grid:{color:'#f3f4f6'},stacked:true},
+        x:{ticks:{font:{size:11}},grid:{display:false},stacked:true}
       }
     }
   });
@@ -1140,6 +1228,44 @@ function renderDashboard() {
       </div>
       <div class="funnel-amt" style="font-size:11px">${fmtAmt(s.amt)}</div>
     </div>`).join('');
+
+  // 퍼널 요약
+  const activePipeAll=DB.d.pipeline.filter(d=>d.stage!=='계약완료');
+  const weightedAll=Math.round(activePipeAll.reduce((s,d)=>s+Number(d.amount||0)*Number(d.prob||0)/100,0));
+  const funnelSum=document.getElementById('dash-funnel-summary');
+  if(funnelSum) funnelSum.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">진행중 딜</div><div style="font-size:16px;font-weight:800;color:#374151">${activePipeAll.length}<span style="font-size:11px;font-weight:400">건</span></div></div>
+      <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">가중 예상 합계</div><div style="font-size:14px;font-weight:800;color:#7c3aed">${fmtAmt(weightedAll)}</div></div>
+    </div>`;
+
+  // 영업 지표
+  const thisYm=now.toISOString().substring(0,7);
+  const won6m=DB.d.pipeline.filter(d=>{
+    if(d.stage!=='계약완료') return false;
+    const t=new Date(); t.setMonth(t.getMonth()-6);
+    return new Date(d.stageUpdatedAt||0)>=t;
+  });
+  const totalDeals6m=DB.d.pipeline.filter(d=>{
+    const t=new Date(); t.setMonth(t.getMonth()-6);
+    const ref=new Date(d.stageUpdatedAt||d.expectedDate||0);
+    return ref>=t;
+  });
+  const wr=totalDeals6m.length>0?Math.round(won6m.length/totalDeals6m.length*100):null;
+  const avgDeal=won6m.length>0?Math.round(won6m.reduce((s,d)=>s+Number(d.amount||0),0)/won6m.length):0;
+  const weightedTotal=Math.round(activePipe.reduce((s,d)=>s+Number(d.amount||0)*Number(d.prob||0)/100,0));
+  const newDeals=DB.d.pipeline.filter(d=>(d.stageUpdatedAt||'').startsWith(thisYm)&&d.stage!=='계약완료');
+  const monthLogs2=DB.d.logs.filter(l=>(l.date||'').startsWith(thisYm));
+  if(document.getElementById('dash-winrate')) {
+    document.getElementById('dash-winrate').textContent=wr!=null?wr+'%':'-';
+    document.getElementById('dash-winrate-sub').textContent=`최근 6개월 기준`;
+    document.getElementById('dash-avg-deal').textContent=avgDeal?fmtAmt(avgDeal):'-';
+    document.getElementById('dash-avg-deal-sub').textContent=`완료딜 ${won6m.length}건 평균`;
+    document.getElementById('dash-pipe-total').textContent=fmtAmt(weightedTotal);
+    document.getElementById('dash-pipe-total-sub').textContent=`진행중 ${activePipe.length}건 가중합산`;
+    document.getElementById('dash-new-deals').textContent=newDeals.length+'건';
+    document.getElementById('dash-new-deals-sub').textContent=`이달 업데이트 · 상담 ${monthLogs2.length}건`;
+  }
 
   // 다음 액션
   const todayStr=now.toISOString().split('T')[0];
