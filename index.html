@@ -1389,10 +1389,10 @@ function renderConsumables() {
   const oligX26=(CONS.products2026['Oligio Tip [XF-4.0]']||0)+(CONS.products2026['Oligio Tip [XE-0.25]']||0);
   const oligX25=(CONS.products2025['Oligio Tip [XF-4.0]']||0)+(CONS.products2025['Oligio Tip [XE-0.25]']||0);
   const kpiData = [
-    {color:'#0891b2',icon:'bi-cpu',            label:'Cartridge YTD',        value:fmtB(cartV26),   sub:`vs 전년 동기 ${fmtB(cartV25)}`,    chg:cartV25>0?(cartV26/cartV25-1)*100:null},
     {color:'#ff4500',icon:'bi-star-fill',      label:'Oligio Tip 전체',      value:fmtB(oligTotal26), sub:`전년 동기 ${fmtB(OLIG.reduce((s,p)=>s+(CONS.products2025[p.key]||0),0))}`, chg:OLIG.reduce((s,p)=>s+(CONS.products2025[p.key]||0),0)>0?(oligTotal26/OLIG.reduce((s,p)=>s+(CONS.products2025[p.key]||0),0)-1)*100:null},
     {color:'#2563eb',icon:'bi-graph-up-arrow', label:'Oligio (F·E) YTD',    value:fmtB(oligF26),   sub:`vs 전년 동기 ${fmtB(oligF25)}`,     chg:oligF25>0?(oligF26/oligF25-1)*100:null},
     {color:'#7c3aed',icon:'bi-bar-chart',      label:'Oligio X/XM (XF·XE)', value:fmtB(oligX26),   sub:`vs 전년 동기 ${fmtB(oligX25)}`,     chg:oligX25>0?(oligX26/oligX25-1)*100:null},
+    {color:'#0891b2',icon:'bi-cpu',            label:'Cartridge YTD',        value:fmtB(cartV26),   sub:`vs 전년 동기 ${fmtB(cartV25)}`,    chg:cartV25>0?(cartV26/cartV25-1)*100:null},
   ];
   document.getElementById('cons-kpi').innerHTML = kpiData.map(k=>`
     <div class="col-6 col-lg-3">
