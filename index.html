@@ -299,7 +299,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
               <span><span style="display:inline-block;width:8px;height:8px;background:#93c5fd;border-radius:2px;margin-right:3px"></span>예상</span>
             </div>
           </div>
-          <canvas id="chart-monthly" height="160"></canvas>
+          <div style="position:relative;height:200px"><canvas id="chart-monthly"></canvas></div>
         </div>
       </div>
       <div class="col-md-5">
@@ -1057,15 +1057,25 @@ let monthlyChart = null;
 let _dashYear = new Date().getFullYear();
 let _dashPeriodType = String(new Date().getMonth()+1); // 'year','Q1'-'Q4','1'-'12'
 
+let _dashUIInited = false;
 function _initDashPeriodUI() {
+  if(_dashUIInited) return;
+  _dashUIInited = true;
   const ySel = document.getElementById('dash-year-select');
-  if(ySel && ySel.options.length === 0) {
+  if(ySel) {
     const curY = new Date().getFullYear();
-    for(let y=curY; y>=2024; y--) { const o=document.createElement('option'); o.value=o.textContent=y; ySel.appendChild(o); }
+    for(let y=curY; y>=2024; y--) {
+      const o=document.createElement('option');
+      o.value=String(y); o.textContent=String(y);
+      if(y===_dashYear) o.selected=true;
+      ySel.appendChild(o);
+    }
   }
-  if(ySel) ySel.value = _dashYear;
   const pSel = document.getElementById('dash-period-type-select');
-  if(pSel) pSel.value = _dashPeriodType;
+  if(pSel) {
+    const idx=[...pSel.options].findIndex(o=>o.value===String(_dashPeriodType));
+    if(idx>=0) pSel.selectedIndex=idx;
+  }
 }
 
 function _dashPeriodYMs() {
