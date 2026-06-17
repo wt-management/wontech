@@ -181,6 +181,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       <li><a class="nav-link" onclick="showPage('equipments',this)"><i class="bi bi-cpu"></i>장비</a></li>
       <li><a class="nav-link" onclick="showPage('logs',this)"><i class="bi bi-journal-text"></i>상담일지</a></li>
       <li><a class="nav-link" onclick="showPage('products',this)"><i class="bi bi-box-seam"></i>제품</a></li>
+      <li id="nav-users" style="display:none"><a class="nav-link" onclick="showPage('users',this)"><i class="bi bi-people"></i>사용자 관리</a></li>
     </ul>
   </div>
   <div class="sidebar-footer">
@@ -491,6 +492,20 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
     </table></div></div>
   </div>
 
+  <!-- 사용자 관리 -->
+  <div id="page-users" class="page">
+    <div class="page-header">
+      <h5>사용자 관리</h5>
+      <button class="btn btn-primary btn-sm" onclick="openAddUserModal()"><i class="bi bi-person-plus me-1"></i>사용자 추가</button>
+    </div>
+    <div class="card"><div class="card-body p-0">
+      <table class="table table-hover mb-0">
+        <thead class="table-light"><tr><th>이메일</th><th>이름</th><th>권한</th><th>상태</th><th></th></tr></thead>
+        <tbody id="user-list"></tbody>
+      </table>
+    </div></div>
+  </div>
+
   <!-- 소모품 매출 -->
   <div id="page-consumables" class="page">
     <div class="page-header">
@@ -508,6 +523,23 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
         </div>
       </div>
     </div>
+    <!-- 사용자 추가 모달 -->
+    <div class="modal fade" id="addUserModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content">
+      <div class="modal-header border-0 pb-0"><h6 class="modal-title"><i class="bi bi-person-plus me-2 text-primary"></i>사용자 추가</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="mb-2"><label class="form-label fw-bold" style="font-size:12px">이메일</label><input type="email" id="new-user-email" class="form-control form-control-sm" placeholder="example@gmail.com"></div>
+        <div class="mb-2"><label class="form-label fw-bold" style="font-size:12px">임시 비밀번호</label><input type="text" id="new-user-pw" class="form-control form-control-sm" placeholder="임시 비밀번호"></div>
+        <div class="mb-2"><label class="form-label fw-bold" style="font-size:12px">이름</label><input type="text" id="new-user-name" class="form-control form-control-sm" placeholder="홍길동"></div>
+        <div class="mb-2"><label class="form-label fw-bold" style="font-size:12px">권한</label>
+          <select id="new-user-role" class="form-select form-select-sm"><option value="user">일반</option><option value="admin">관리자</option></select>
+        </div>
+        <div id="add-user-error" style="font-size:12px;color:#dc2626;display:none"></div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button class="btn btn-primary w-100" onclick="saveNewUser()">추가</button>
+      </div>
+    </div></div></div>
+
     <!-- 업로드 비밀번호 모달 -->
     <div class="modal fade" id="consPasswordModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content">
       <div class="modal-header border-0 pb-0"><h6 class="modal-title"><i class="bi bi-shield-lock me-2 text-primary"></i>업로드 권한 확인</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -1034,7 +1066,7 @@ async function init() {
 
 async function _bootApp() {
   document.getElementById('main-content').style.display='block';
-  await DB.load();
+  await Promise.all([DB.load(), loadUserRole()]);
   showPage('dashboard');
 }
 
@@ -1057,6 +1089,7 @@ function showPage(name, el) {
   else if(name==='equipments') initEquip();
   else if(name==='logs') renderLogs();
   else if(name==='products') renderProducts();
+  else if(name==='users') { if(_isAdmin) renderUsers(); }
   else if(name==='consumables') renderConsumables();
   else if(name==='cons-hospitals') renderConsHospitals();
   else if(name==='cons-accounts') renderConsAccounts();
@@ -3556,6 +3589,79 @@ function delLog(){
   const id=gV('l-id');if(!confirm('삭제하시겠습니까?'))return;
   DB.d.logs=DB.d.logs.filter(x=>x.id!==id);
   DB.save('logs').then(()=>{bootstrap.Modal.getInstance(document.getElementById('logModal')).hide();renderLogs();});
+}
+
+// ── 사용자 관리 ──────────────────────────────────────────────────────
+let _isAdmin = false;
+
+async function loadUserRole() {
+  const {data:{session}} = await _sb.auth.getSession();
+  if(!session) return;
+  const {data} = await _sb.from('crm_profiles').select('role').eq('id', session.user.id).single();
+  _isAdmin = data?.role === 'admin';
+  if(_isAdmin) document.getElementById('nav-users').style.display = '';
+}
+
+async function renderUsers() {
+  const el = document.getElementById('user-list');
+  el.innerHTML = '<tr><td colspan="5" class="text-center py-3"><div class="spinner-border spinner-border-sm"></div></td></tr>';
+  const {data: profiles} = await _sb.from('crm_profiles').select('*').order('email');
+  if(!profiles?.length) { el.innerHTML='<tr><td colspan="5" class="text-center text-muted py-3">사용자 없음</td></tr>'; return; }
+  el.innerHTML = profiles.map(p=>`<tr>
+    <td style="font-size:13px">${p.email||''}</td>
+    <td><input type="text" value="${p.display_name||''}" style="border:1px solid #e5e7eb;border-radius:6px;padding:2px 8px;font-size:12px;width:90px" onchange="updateUserName('${p.id}',this.value)"></td>
+    <td><select style="border:1px solid #e5e7eb;border-radius:6px;padding:2px 6px;font-size:12px" onchange="updateUserRole('${p.id}',this.value)">
+      <option value="user" ${p.role!=='admin'?'selected':''}>일반</option>
+      <option value="admin" ${p.role==='admin'?'selected':''}>관리자</option>
+    </select></td>
+    <td><span class="badge" style="background:${p.role==='admin'?'#dc2626':'#2563eb'};font-size:10px">${p.role==='admin'?'관리자':'일반'}</span></td>
+    <td><button class="btn btn-outline-danger" style="font-size:11px;padding:1px 8px" onclick="deleteUser('${p.id}','${p.email}')">삭제</button></td>
+  </tr>`).join('');
+}
+
+async function updateUserName(id, name) {
+  await _sb.from('crm_profiles').update({display_name: name}).eq('id', id);
+  showToast('이름 저장됨', true);
+}
+
+async function updateUserRole(id, role) {
+  await _sb.from('crm_profiles').update({role}).eq('id', id);
+  showToast('권한 변경됨', true);
+}
+
+async function deleteUser(id, email) {
+  if(!confirm(`${email} 사용자를 삭제하시겠습니까?`)) return;
+  await _sb.from('crm_profiles').delete().eq('id', id);
+  showToast('사용자 삭제됨', true);
+  renderUsers();
+}
+
+function openAddUserModal() {
+  ['new-user-email','new-user-pw','new-user-name'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('new-user-role').value='user';
+  document.getElementById('add-user-error').style.display='none';
+  new bootstrap.Modal(document.getElementById('addUserModal')).show();
+}
+
+async function saveNewUser() {
+  const email = document.getElementById('new-user-email').value.trim();
+  const pw = document.getElementById('new-user-pw').value.trim();
+  const name = document.getElementById('new-user-name').value.trim();
+  const role = document.getElementById('new-user-role').value;
+  const errEl = document.getElementById('add-user-error');
+  if(!email||!pw) { errEl.textContent='이메일과 비밀번호를 입력하세요.'; errEl.style.display='block'; return; }
+
+  // Supabase Admin API (service role 필요) 대신 signUp 사용
+  const {data, error} = await _sb.auth.signUp({email, password: pw});
+  if(error) { errEl.textContent='오류: '+error.message; errEl.style.display='block'; return; }
+
+  // 프로필 등록
+  if(data.user) {
+    await _sb.from('crm_profiles').upsert({id: data.user.id, email, display_name: name||email.split('@')[0], role});
+  }
+  bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
+  showToast('사용자 추가됨!', true);
+  renderUsers();
 }
 
 // ── 제품 ──────────────────────────────────────────────────────
