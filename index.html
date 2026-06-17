@@ -3184,16 +3184,17 @@ function showHospitalDetail(name){
     const hc = CONS.hospitals?.[window._hospDetailName]; if(!hc) return;
     const fmtMl = v => v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만원':v?v.toLocaleString()+'원':'-';
     const txns = yr===2025 ? (hc.txns2025||[]) : (hc.txns2026||[]);
-    let filtered = txns;
-    if(filterType==='mo') filtered = txns.filter(t=>t[0]===filterVal);
-    if(filterType==='prod') filtered = txns.filter(t=>t[2]===filterVal);
+    const EXCL_PROD_DETAIL = ['A/S소모품'];
+    let filtered = txns.filter(t=>!EXCL_PROD_DETAIL.includes(t[2]));
+    if(filterType==='mo') filtered = filtered.filter(t=>t[0]===filterVal);
+    if(filterType==='prod') filtered = filtered.filter(t=>t[2]===filterVal);
     const total = filtered.reduce((s,t)=>s+t[3],0);
     const rows = filtered.map(t=>`<tr>
       <td style="font-size:11px;white-space:nowrap">${t[1]}</td>
       <td style="font-size:11px">${t[2]||'(미분류)'}</td>
       <td class="text-end fw-bold" style="font-size:11px">${fmtMl(t[3])}</td>
     </tr>`).join('');
-    const label = filterType==='mo' ? `${filterVal}월` : filterVal||'전체';
+    const label = filterType==='mo' ? `${filterVal}월` : filterType==='all' ? '전체' : filterVal||'전체';
     document.getElementById('hosp-txn-detail').innerHTML = `
       <div style="border-top:2px solid #e5e7eb;margin-top:12px;padding-top:10px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
@@ -3232,7 +3233,7 @@ function showHospitalDetail(name){
     }).join('');
 
     // 제품별 비교 테이블 (2025 / 2026 한 화면)
-    const allProds = new Set([...Object.keys(hospCons.prods2025||{}), ...Object.keys(hospCons.prods2026||{})]);
+    const allProds = new Set([...Object.keys(hospCons.prods2025||{}), ...Object.keys(hospCons.prods2026||{})].filter(p=>p!=='A/S소모품'));
     const prodCompRows = [...allProds].map(p=>({p, v25:(hospCons.prods2025||{})[p]||0, v26:(hospCons.prods2026||{})[p]||0}))
       .sort((a,b)=>(b.v26||b.v25)-(a.v26||a.v25))
       .map(({p,v25,v26},i)=>{
@@ -3300,8 +3301,8 @@ function showHospitalDetail(name){
             <tbody>${monthRows||'<tr><td colspan="4" class="text-center text-muted py-3">내역 없음</td></tr>'}</tbody>
             <tfoot class="table-light"><tr>
               <td class="fw-bold text-center" style="font-size:11px">합계</td>
-              <td class="text-end fw-bold" style="font-size:11px;color:#6b7280">${fmtM(allMonths.reduce((s,m)=>s+(hospCons?.m2025?.[m]||0),0))}</td>
-              <td class="text-end fw-bold" style="font-size:11px;color:#1d4ed8">${fmtM(hospCons?.y2026||0)}</td>
+              <td class="text-end fw-bold" style="font-size:11px;color:#6b7280"><span style="cursor:pointer;text-decoration:underline dotted" onclick="_hospTxnDetail(2025,'all',null)">${fmtM(allMonths.reduce((s,m)=>s+(hospCons?.m2025?.[m]||0),0))}</span></td>
+              <td class="text-end fw-bold" style="font-size:11px;color:#1d4ed8"><span style="cursor:pointer;text-decoration:underline dotted" onclick="_hospTxnDetail(2026,'all',null)">${fmtM(hospCons?.y2026||0)}</span></td>
               <td></td>
             </tr></tfoot>
           </table>
