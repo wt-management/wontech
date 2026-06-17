@@ -3284,7 +3284,7 @@ function showHospitalDetail(name){
     const fmtMl = v => v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만원':v?v.toLocaleString()+'원':'-';
     const txns = yr===2025 ? (hc.txns2025||[]) : (hc.txns2026||[]);
     const EXCL_PROD_DETAIL = ['A/S소모품'];
-    let filtered = txns.filter(t=>!EXCL_PROD_DETAIL.includes(t[2]));
+    let filtered = txns.filter(t=>t[2] && !EXCL_PROD_DETAIL.includes(t[2]));
     if(filterType==='mo') filtered = filtered.filter(t=>t[0]===filterVal);
     if(filterType==='prod') filtered = filtered.filter(t=>t[2]===filterVal);
     const total = filtered.reduce((s,t)=>s+t[3],0);
