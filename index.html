@@ -1051,6 +1051,7 @@ async function init() {
     if(ls) ls.style.display='flex';
     return;
   }
+  document.getElementById('login-screen').style.display='none';
   _applyLoginUI(loginUser);
   await _bootApp();
 }
