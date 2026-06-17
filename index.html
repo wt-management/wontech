@@ -9,6 +9,7 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root{--blue:#2563eb;--blue-light:#eff6ff;--sidebar-bg:#0f172a;--sidebar-hover:rgba(255,255,255,.06);--sidebar-active:rgba(255,255,255,.1);--text:#111827;--text-2:#6b7280;--border:#e5e7eb;--bg:#f3f4f6;--white:#ffffff;--green:#16a34a;--orange:#ea580c;--purple:#7c3aed;--red:#dc2626}
 *{box-sizing:border-box}
@@ -140,8 +141,8 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       <div style="font-size:12px;color:#9ca3af;margin-top:4px">로그인하여 계속하세요</div>
     </div>
     <div style="margin-bottom:14px">
-      <label style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px;display:block">아이디</label>
-      <input id="login-id" type="text" class="form-control" placeholder="아이디 입력" onkeydown="if(event.key==='Enter')document.getElementById('login-pw').focus()">
+      <label style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px;display:block">이메일</label>
+      <input id="login-id" type="email" class="form-control" placeholder="이메일 입력" onkeydown="if(event.key==='Enter')document.getElementById('login-pw').focus()">
     </div>
     <div style="margin-bottom:20px">
       <label style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px;display:block">비밀번호</label>
@@ -152,28 +153,6 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
   </div>
 </div>
 
-<!-- 토큰 설정 모달 -->
-<div class="modal fade" id="setupModal" tabindex="-1" data-bs-backdrop="static">
-<div class="modal-dialog modal-dialog-centered"><div class="modal-content">
-  <div class="modal-header border-0 pb-0 justify-content-center flex-column text-center pt-4">
-    <svg viewBox="0 0 310 205" xmlns="http://www.w3.org/2000/svg" fill="#ff4500" style="width:52px;height:34px;margin-bottom:10px">
-      <rect x="0" y="0" width="95" height="95" rx="22"/><rect x="107" y="0" width="95" height="95" rx="22"/><rect x="215" y="0" width="95" height="95" rx="22"/>
-      <rect x="53" y="110" width="95" height="95" rx="22"/><rect x="161" y="110" width="95" height="95" rx="22"/>
-    </svg>
-    <h5 class="modal-title fw-bold" style="font-size:20px;letter-spacing:-.5px">wontech CRM</h5>
-    <div class="text-muted" style="font-size:12px;margin-top:2px">처음 한 번만 설정하면 됩니다</div>
-  </div>
-  <div class="modal-body">
-    <p class="text-muted" style="font-size:13px">처음 한 번만 설정하면 됩니다.</p>
-    <label class="form-label fw-bold">GitHub Token</label>
-    <input type="password" id="setup-token" class="form-control" placeholder="ghp_...">
-    <div class="form-text">GitHub → Settings → Developer settings → Personal access tokens</div>
-  </div>
-  <div class="modal-footer border-0">
-    <button class="btn btn-primary w-100" onclick="saveSetup()">저장하고 시작</button>
-  </div>
-</div></div>
-</div>
 
 <nav class="sidebar">
   <div class="sidebar-brand">
@@ -218,7 +197,6 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       </div>
     </div>
     <a class="nav-link" style="color:#6b7280;margin:0 0 4px" onclick="openSearch()"><i class="bi bi-search"></i>통합 검색 <kbd style="font-size:9px;background:#1e293b;border:1px solid #334155;border-radius:4px;padding:1px 4px;color:#94a3b8;margin-left:auto">⌘K</kbd></a>
-    <a class="nav-link" style="color:#ef4444;margin:0" onclick="resetToken()"><i class="bi bi-box-arrow-right"></i>토큰 재설정</a>
   </div>
 </nav>
 
@@ -969,37 +947,36 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 // ── 설정 ──────────────────────────────────────────────────────
 const REPO = 'PMW0406/wontech-crm';
 const BRANCH = 'main';
+const SUPABASE_URL = 'https://mhfacbsittfdkknwybhc.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_aPMOOWAlyJlMcP1ZM_gpPA_jlrcvCRd';
+const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const STAGES = ['리드','상담중','견적발송','협의중','계약완료'];
 const SC = {'리드':'#adb5bd','상담중':'#4f8ef7','견적발송':'#fd7e14','협의중':'#6f42c1','계약완료':'#28a745'};
 
 // ── DB ──────────────────────────────────────────────────────
 const DB = {
   d: {customers:[],equipments:[],logs:[],products:[],pipeline:[],quotes:[],targets:[]},
-  token: localStorage.getItem('wt_token')||'',
 
   async load() {
-    const files = Object.keys(this.d);
-    await Promise.all(files.map(async f => {
+    const tables = Object.keys(this.d);
+    await Promise.all(tables.map(async t => {
       try {
-        const r = await fetch(`https://raw.githubusercontent.com/${REPO}/${BRANCH}/data/${f}.json?t=${Date.now()}`);
-        if(r.ok) this.d[f] = await r.json();
-      } catch(e) { console.warn(f, e); }
+        const {data, error} = await _sb.from(t).select('id, data');
+        if(!error && data) this.d[t] = data.map(r => r.data);
+      } catch(e) { console.warn(t, e); }
     }));
   },
 
   async save(name) {
     showToast('저장 중...');
     try {
-      const infoRes = await fetch(`https://api.github.com/repos/${REPO}/contents/data/${name}.json`,
-        {headers:{Authorization:`token ${this.token}`}});
-      const info = await infoRes.json();
-      const content = btoa(unescape(encodeURIComponent(JSON.stringify(this.d[name], null, 2))));
-      const res = await fetch(`https://api.github.com/repos/${REPO}/contents/data/${name}.json`,{
-        method:'PUT',
-        headers:{Authorization:`token ${this.token}`,'Content-Type':'application/json'},
-        body:JSON.stringify({message:`update ${name}`,content,sha:info.sha})
-      });
-      if(!res.ok) throw new Error(await res.text());
+      const rows = this.d[name].map(item => ({id: item.id || item.serial, data: item}));
+      const {data: existing} = await _sb.from(name).select('id');
+      const existingIds = (existing||[]).map(r=>r.id);
+      const currentIds = rows.map(r=>r.id);
+      const toDelete = existingIds.filter(id=>!currentIds.includes(id));
+      if(toDelete.length) await _sb.from(name).delete().in('id', toDelete);
+      if(rows.length) { const {error} = await _sb.from(name).upsert(rows); if(error) throw error; }
       showToast('저장 완료!', true);
     } catch(e) { showToast('저장 실패: '+e.message, true, true); }
   }
@@ -1020,22 +997,21 @@ function purgeForeignHospitals() {
 }
 
 async function init() {
-  // 소모품 데이터 복원 (GitHub → localStorage fallback)
+  // 소모품 데이터 복원 (Supabase → localStorage fallback)
   try {
-    const cr = await fetch(`https://raw.githubusercontent.com/${REPO}/${BRANCH}/cons_data.json?t=${Date.now()}`);
-    if(cr.ok) Object.assign(CONS, await cr.json());
+    const {data: cd} = await _sb.from('cons_cache').select('data').eq('key','main').single();
+    if(cd?.data) Object.assign(CONS, cd.data);
   } catch(e) {
     try { const sc=localStorage.getItem('wt_cons_data'); if(sc) Object.assign(CONS,JSON.parse(sc)); } catch(e2){}
   }
-  purgeForeignHospitals(); // 해외 병원 제거 (캐시 잔존 데이터 방어)
+  purgeForeignHospitals();
   // 견적서 공개 링크 처리 (?q=견적번호)
   const qParam = new URLSearchParams(location.search).get('q');
   if(qParam) {
     document.body.innerHTML = '<div style="padding:40px;max-width:900px;margin:auto;font-family:Noto Sans KR,sans-serif"><div id="pub-loading" class="text-center text-muted py-5">견적서 불러오는 중...</div><div id="pub-content"></div></div>';
     try {
-      const r = await fetch(`https://raw.githubusercontent.com/${REPO}/${BRANCH}/data/quotes.json?t=${Date.now()}`);
-      const quotes = await r.json();
-      const q = quotes.find(x=>x.id===qParam);
+      const {data: qrows} = await _sb.from('quotes').select('data').eq('id', qParam).single();
+      const q = qrows?.data;
       if(!q) { document.getElementById('pub-loading').textContent='견적서를 찾을 수 없습니다.'; return; }
       document.getElementById('pub-loading').style.display='none';
       const rows=(q.items||[]).map((item,i)=>`<tr><td style="text-align:center;padding:8px;border-bottom:1px solid #eee">${i+1}</td><td style="padding:8px;border-bottom:1px solid #eee">${item.name}</td><td style="text-align:center;padding:8px;border-bottom:1px solid #eee">${item.qty}</td><td style="text-align:right;padding:8px;border-bottom:1px solid #eee">${Number(item.price||0).toLocaleString()}</td><td style="text-align:center;padding:8px;border-bottom:1px solid #eee">${item.discount||0}%</td><td style="text-align:right;padding:8px;border-bottom:1px solid #eee;font-weight:bold">${Number(item.amount||0).toLocaleString()}</td></tr>`).join('');
@@ -1045,42 +1021,23 @@ async function init() {
   }
 
   // 로그인 체크
-  const loginUser = getLoginUser();
-  if(!loginUser) {
+  const {data: {session}} = await _sb.auth.getSession();
+  if(!session) {
     const ls = document.getElementById('login-screen');
     if(ls) ls.style.display='flex';
     return;
   }
   document.getElementById('login-screen').style.display='none';
-  _applyLoginUI(loginUser);
+  _applyLoginUI(session.user);
   await _bootApp();
 }
 
 async function _bootApp() {
-  if(!DB.token) {
-    new bootstrap.Modal(document.getElementById('setupModal')).show();
-    return;
-  }
   document.getElementById('main-content').style.display='block';
   await DB.load();
   showPage('dashboard');
 }
 
-function saveSetup() {
-  const t = document.getElementById('setup-token').value.trim();
-  if(!t){alert('토큰을 입력하세요.');return;}
-  DB.token = t;
-  localStorage.setItem('wt_token', t);
-  bootstrap.Modal.getInstance(document.getElementById('setupModal')).hide();
-  document.getElementById('main-content').style.display='block';
-  DB.load().then(()=>showPage('dashboard'));
-}
-
-function resetToken() {
-  if(!confirm('토큰을 재설정하시겠습니까?'))return;
-  localStorage.removeItem('wt_token');
-  location.reload();
-}
 
 // ── 페이지 전환 ──────────────────────────────────────────────────────
 function showPage(name, el) {
@@ -1479,29 +1436,20 @@ let consMonthlyChart=null, consChartOlig=null, consChartXm=null, consDonutChart=
 const CONS_PW = 'wontech2026'; // ← 비밀번호 변경 시 이 값을 수정하세요
 
 // ── 로그인 ────────────────────────────────────────────────────────────
-const CRM_USERS = [
-  { id: 'pmw0406', pw: '1234', name: 'PMW', displayName: 'PMW' },
-];
-
-function getLoginUser() {
-  try { return JSON.parse(localStorage.getItem('wt_login_user')||'null'); } catch(e) { return null; }
-}
-
-function doLogin() {
-  const id = (document.getElementById('login-id')?.value||'').trim();
+async function doLogin() {
+  const email = (document.getElementById('login-id')?.value||'').trim();
   const pw = (document.getElementById('login-pw')?.value||'').trim();
-  const user = CRM_USERS.find(u => u.id === id && u.pw === pw);
   const errEl = document.getElementById('login-error');
-  if (!user) { if(errEl) errEl.style.display='block'; return; }
+  const {data, error} = await _sb.auth.signInWithPassword({email, password: pw});
+  if(error) { if(errEl) errEl.style.display='block'; return; }
   if(errEl) errEl.style.display='none';
-  localStorage.setItem('wt_login_user', JSON.stringify(user));
   document.getElementById('login-screen').style.display='none';
-  _applyLoginUI(user);
-  _bootApp();
+  _applyLoginUI(data.user);
+  await _bootApp();
 }
 
-function doLogout() {
-  localStorage.removeItem('wt_login_user');
+async function doLogout() {
+  await _sb.auth.signOut();
   document.getElementById('sidebar-user').style.display='none';
   document.getElementById('main-content').style.display='none';
   const ls = document.getElementById('login-screen');
@@ -1511,19 +1459,21 @@ function doLogout() {
 }
 
 function _applyLoginUI(user) {
-  const name = user.displayName || user.name || user.id;
+  const email = user.email || '';
+  const name = email.split('@')[0];
   const el = document.getElementById('sidebar-user');
   if(el) {
     el.style.display='block';
     document.getElementById('sidebar-user-name').textContent = name;
-    document.getElementById('sidebar-user-id').textContent = '@' + user.id;
+    document.getElementById('sidebar-user-id').textContent = email;
     document.getElementById('sidebar-user-avatar').textContent = name.charAt(0).toUpperCase();
   }
 }
 
 function currentUserName() {
-  const u = getLoginUser();
-  return u ? (u.displayName || u.name || u.id) : '';
+  // 동기 접근용 — 세션에서 이메일 앞부분 반환
+  const raw = localStorage.getItem('sb-mhfacbsittfdkknwybhc-auth-token');
+  try { const s = JSON.parse(raw); return (s?.user?.email||'').split('@')[0]; } catch(e) { return ''; }
 }
 
 function consUnlock() {
@@ -1703,37 +1653,12 @@ function consParseExcel(input) {
       CONS.hospitals = hospMap;
       CONS.updatedAt = updatedAt;
 
-      // GitHub에 cons_data.json 저장 (팀 전체 공유)
-      setMsg('GitHub 저장 중...', '팀 전체에 반영 중입니다');
-      const _token = localStorage.getItem('wt_token');
-      if(_token) {
-        const _json = JSON.stringify(CONS);
-        const _b64 = btoa(unescape(encodeURIComponent(_json)));
-        let _sha = null;
-        try {
-          const _sr = await fetch(`https://api.github.com/repos/${REPO}/contents/cons_data.json`,
-            {headers:{Authorization:`token ${_token}`,'User-Agent':'wt-crm'}});
-          if(_sr.ok){ const _sd=await _sr.json(); _sha=_sd.sha; }
-        } catch(e){}
-        const _body = {message:`소모품 데이터 업데이트 ${updatedAt}`,content:_b64,branch:BRANCH};
-        if(_sha) _body.sha=_sha;
-        const _pr = await fetch(`https://api.github.com/repos/${REPO}/contents/cons_data.json`,{
-          method:'PUT',
-          headers:{Authorization:`token ${_token}`,'Content-Type':'application/json','User-Agent':'wt-crm'},
-          body:JSON.stringify(_body)
-        });
-        if(_pr.ok){
-          renderConsumables();
-          setDone('업로드 완료! ✅', `2025년 ${r25.length}건 · 2026년 ${r26.length}건 · 팀 전체 공유됨`);
-        } else {
-          const _e=await _pr.json().catch(()=>({}));
-          throw new Error('GitHub 저장 실패: '+(_e.message||_pr.status));
-        }
-      } else {
-        try { localStorage.setItem('wt_cons_data', JSON.stringify(CONS)); } catch(e){}
-        renderConsumables();
-        setDone('업로드 완료 (로컬)', `토큰 미설정 — 이 기기에만 반영됨`);
-      }
+      // Supabase에 cons_data 저장 (팀 전체 공유)
+      setMsg('저장 중...', '팀 전체에 반영 중입니다');
+      const {error: _err} = await _sb.from('cons_cache').upsert({key:'main', data: CONS});
+      if(_err) throw new Error('저장 실패: ' + _err.message);
+      renderConsumables();
+      setDone('업로드 완료! ✅', `2025년 ${r25.length}건 · 2026년 ${r26.length}건 · 팀 전체 공유됨`);
     } catch(err) {
       document.getElementById('cons-upload-icon').textContent = '❌';
       document.getElementById('cons-upload-icon').style.display = 'block';
