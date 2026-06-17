@@ -191,6 +191,42 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
     </div>
     <div id="login-error" style="font-size:12px;color:#dc2626;margin-bottom:12px;display:none">아이디 또는 비밀번호가 올바르지 않습니다.</div>
     <button class="btn btn-primary w-100" onclick="doLogin()" style="font-weight:700;padding:10px">로그인</button>
+    <div style="text-align:center;margin-top:14px">
+      <a href="#" onclick="showForgotPw(event)" style="font-size:12px;color:#6b7280;text-decoration:none">비밀번호를 잊으셨나요?</a>
+    </div>
+  </div>
+  <!-- 비밀번호 찾기 패널 -->
+  <div id="forgot-pw-box" style="display:none;background:#fff;border-radius:20px;padding:40px 36px;width:340px;box-shadow:0 25px 60px rgba(0,0,0,.4)">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:20px;font-weight:800;color:#111827">비밀번호 재설정</div>
+      <div style="font-size:12px;color:#9ca3af;margin-top:4px">가입한 이메일로 재설정 링크를 보내드립니다</div>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px;display:block">이메일</label>
+      <input id="forgot-email" type="email" class="form-control" placeholder="이메일 입력">
+    </div>
+    <div id="forgot-msg" style="font-size:12px;margin-bottom:12px;display:none"></div>
+    <button class="btn btn-primary w-100" onclick="doForgotPw()" style="font-weight:700;padding:10px">재설정 링크 발송</button>
+    <div style="text-align:center;margin-top:14px">
+      <a href="#" onclick="hideForgotPw(event)" style="font-size:12px;color:#6b7280;text-decoration:none">← 로그인으로 돌아가기</a>
+    </div>
+  </div>
+  <!-- 비밀번호 변경 패널 (재설정 링크 클릭 후) -->
+  <div id="reset-pw-box" style="display:none;background:#fff;border-radius:20px;padding:40px 36px;width:340px;box-shadow:0 25px 60px rgba(0,0,0,.4)">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:20px;font-weight:800;color:#111827">새 비밀번호 설정</div>
+      <div style="font-size:12px;color:#9ca3af;margin-top:4px">새로운 비밀번호를 입력하세요</div>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px;display:block">새 비밀번호</label>
+      <input id="reset-pw-new" type="password" class="form-control" placeholder="새 비밀번호 (6자 이상)">
+    </div>
+    <div style="margin-bottom:20px">
+      <label style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px;display:block">비밀번호 확인</label>
+      <input id="reset-pw-confirm" type="password" class="form-control" placeholder="동일하게 입력" onkeydown="if(event.key==='Enter')doResetPw()">
+    </div>
+    <div id="reset-pw-msg" style="font-size:12px;margin-bottom:12px;display:none"></div>
+    <button class="btn btn-primary w-100" onclick="doResetPw()" style="font-weight:700;padding:10px">비밀번호 변경</button>
   </div>
 </div>
 
@@ -1070,6 +1106,14 @@ function purgeForeignHospitals() {
 }
 
 async function init() {
+  // 비밀번호 재설정 링크 클릭 시 (URL 해시에 type=recovery 포함)
+  const hashParams = new URLSearchParams(location.hash.replace('#',''));
+  if(hashParams.get('type') === 'recovery') {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('login-screen').querySelectorAll(':scope > div').forEach(d=>d.style.display='none');
+    document.getElementById('reset-pw-box').style.display = 'block';
+    return;
+  }
   // 소모품 데이터 복원 (Supabase → localStorage fallback)
   try {
     const {data: cd} = await _sb.from('cons_cache').select('data').eq('key','main').single();
@@ -1566,6 +1610,38 @@ async function doLogout() {
   ls.style.display='flex';
   if(document.getElementById('login-id')) document.getElementById('login-id').value='';
   if(document.getElementById('login-pw')) document.getElementById('login-pw').value='';
+}
+
+function showForgotPw(e) {
+  e.preventDefault();
+  document.getElementById('login-screen').querySelectorAll(':scope > div').forEach(d=>d.style.display='none');
+  document.getElementById('forgot-pw-box').style.display='block';
+  document.getElementById('forgot-email').value = document.getElementById('login-id')?.value||'';
+}
+function hideForgotPw(e) {
+  e.preventDefault();
+  document.getElementById('forgot-pw-box').style.display='none';
+  document.getElementById('login-screen').querySelector('div').style.display='block';
+}
+async function doForgotPw() {
+  const email = (document.getElementById('forgot-email').value||'').trim();
+  const msgEl = document.getElementById('forgot-msg');
+  if(!email) { msgEl.style.display='block'; msgEl.style.color='#dc2626'; msgEl.textContent='이메일을 입력하세요.'; return; }
+  const {error} = await _sb.auth.resetPasswordForEmail(email, {redirectTo: location.origin+location.pathname});
+  if(error) { msgEl.style.display='block'; msgEl.style.color='#dc2626'; msgEl.textContent='오류: '+error.message; return; }
+  msgEl.style.display='block'; msgEl.style.color='#16a34a';
+  msgEl.textContent='재설정 링크를 발송했습니다. 이메일을 확인하세요.';
+}
+async function doResetPw() {
+  const pw1 = document.getElementById('reset-pw-new').value;
+  const pw2 = document.getElementById('reset-pw-confirm').value;
+  const msgEl = document.getElementById('reset-pw-msg');
+  if(pw1.length < 6) { msgEl.style.display='block'; msgEl.style.color='#dc2626'; msgEl.textContent='비밀번호는 6자 이상이어야 합니다.'; return; }
+  if(pw1 !== pw2) { msgEl.style.display='block'; msgEl.style.color='#dc2626'; msgEl.textContent='비밀번호가 일치하지 않습니다.'; return; }
+  const {error} = await _sb.auth.updateUser({password: pw1});
+  if(error) { msgEl.style.display='block'; msgEl.style.color='#dc2626'; msgEl.textContent='오류: '+error.message; return; }
+  msgEl.style.display='block'; msgEl.style.color='#16a34a'; msgEl.textContent='비밀번호가 변경됐습니다. 잠시 후 로그인 화면으로 이동합니다.';
+  setTimeout(async ()=>{ await _sb.auth.signOut(); location.href = location.origin+location.pathname; }, 2000);
 }
 
 function _applyLoginUI(user) {
@@ -3706,13 +3782,22 @@ async function renderAdminUsers() {
       <option value="user" ${p.role!=='admin'?'selected':''} style="background:#1e293b">일반</option>
       <option value="admin" ${p.role==='admin'?'selected':''} style="background:#1e293b">관리자</option>
     </select></td>
-    <td style="padding:12px 16px"><button onclick="deleteUser('${p.id}','${p.email}')" style="background:rgba(220,38,38,.2);border:1px solid rgba(220,38,38,.3);color:#fca5a5;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer">삭제</button></td>
+    <td style="padding:12px 16px;display:flex;gap:6px">
+      <button onclick="sendResetEmail('${p.email}')" style="background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.3);color:#93c5fd;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer">PW재설정</button>
+      <button onclick="deleteUser('${p.id}','${p.email}')" style="background:rgba(220,38,38,.2);border:1px solid rgba(220,38,38,.3);color:#fca5a5;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer">삭제</button>
+    </td>
   </tr>`).join('');
 }
 
 async function updateUserAccess(id, access) {
   await _sb.from('crm_profiles').update({access}).eq('id', id);
   showToast('접근 권한 변경됨', true);
+}
+
+async function sendResetEmail(email) {
+  const {error} = await _sb.auth.resetPasswordForEmail(email, {redirectTo: location.origin+location.pathname});
+  if(error) { showToast('발송 실패: '+error.message, true, true); return; }
+  showToast(email+' 으로 재설정 링크 발송됨', true);
 }
 
 async function renderUsers() { renderAdminUsers(); }
