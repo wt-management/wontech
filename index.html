@@ -643,7 +643,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
           <div class="p-3 border-bottom fw-bold" style="font-size:13px"><i class="bi bi-table me-1"></i>등급별 상세 현황</div>
           <div style="overflow-x:auto">
             <table class="table table-sm mb-0">
-              <thead class="table-light"><tr><th>등급</th><th>기준</th><th class="text-end">병원 수</th><th class="text-end">2025 YTD</th><th class="text-end">2026 YTD</th><th class="text-end">YoY</th><th class="text-end">평균 구매액</th><th>대표 병원</th></tr></thead>
+              <thead class="table-light"><tr><th>등급</th><th>기준</th><th class="text-end">병원 수</th><th class="text-end">2025 전체</th><th class="text-end">2025 동기간</th><th class="text-end">2026 YTD</th><th class="text-end">YoY(동기간比)</th><th class="text-end">평균 구매액</th><th>대표 병원</th></tr></thead>
               <tbody id="grade-detail-table"></tbody>
             </table>
           </div>
@@ -1871,8 +1871,9 @@ function renderGradeTrend() {
   document.getElementById('grade-detail-table').innerHTML=GRADES.map(gr=>{
     const list=hosps.filter(([,h])=>h.y2026>=gr.min&&h.y2026<gr.max);
     const tot26=list.reduce((s,[,h])=>s+h.y2026,0);
-    const tot25=list.reduce((s,[,h])=>s+ytd25(h),0);
-    const yoy=tot25>0?((tot26/tot25-1)*100).toFixed(1):null;
+    const tot25same=list.reduce((s,[,h])=>s+ytd25(h),0);
+    const tot25full=list.reduce((s,[,h])=>s+(h.y2025||0),0);
+    const yoy=tot25same>0?((tot26/tot25same-1)*100).toFixed(1):null;
     const avg=list.length?Math.round(tot26/list.length):0;
     const top=[...list].sort((a,b)=>b[1].y2026-a[1].y2026).slice(0,2).map(([n])=>n).join(', ');
     const yoyC=yoy===null?'#9ca3af':Number(yoy)>=0?'#16a34a':'#dc2626';
@@ -1881,7 +1882,8 @@ function renderGradeTrend() {
       <td><span style="font-size:12px;font-weight:800;color:${gr.c};background:${gr.bg};border-radius:4px;padding:1px 8px">${gr.g}</span></td>
       <td style="font-size:11px;color:#6b7280">${gr.desc}</td>
       <td class="text-end fw-bold"><span style="${clickStyle}" onclick="showGradeDrill('${gr.g}')">${list.length}개</span></td>
-      <td class="text-end"><span style="${clickStyle}" onclick="showGradeDrill('${gr.g}')">${fmtA(tot25)}</span></td>
+      <td class="text-end" style="color:#6b7280">${fmtA(tot25full)}</td>
+      <td class="text-end"><span style="${clickStyle}" onclick="showGradeDrill('${gr.g}')">${fmtA(tot25same)}</span></td>
       <td class="text-end fw-bold"><span style="${clickStyle}" onclick="showGradeDrill('${gr.g}')">${fmtA(tot26)}</span></td>
       <td class="text-end fw-bold" style="color:${yoyC}">${yoy===null?'-':(Number(yoy)>=0?'▲':'▼')+Math.abs(Number(yoy))+'%'}</td>
       <td class="text-end">${fmtA(avg)}</td>
@@ -1911,20 +1913,22 @@ function showGradeDrill(g) {
     `<span style="font-size:12px;font-weight:800;color:${gr.c};background:${gr.bg};border-radius:4px;padding:1px 8px;margin-right:6px">${g}</span>${gr.desc} — 병원 ${list.length}개`;
 
   const rows=list.map(([name,h],i)=>{
-    const e25=ytd25(h);
-    const chg=e25>0&&h.y2026>0?((h.y2026/e25-1)*100).toFixed(0):null;
+    const same25=ytd25(h);
+    const full25=h.y2025||0;
+    const chg=same25>0&&h.y2026>0?((h.y2026/same25-1)*100).toFixed(0):null;
     const chgHtml=chg!==null
       ?`<span style="font-size:10px;font-weight:700;color:${Number(chg)>=0?'#16a34a':'#dc2626'}">${Number(chg)>=0?'▲':'▼'}${Math.abs(chg)}%</span>`
       :'';
     const ds=daysSince(h.lastDate);
     const dsColor=ds===null?'#d1d5db':ds>365?'#dc2626':ds>180?'#d97706':ds>90?'#f59e0b':'#16a34a';
     const safeN=name.replace(/"/g,'&quot;');
-    return`<div style="display:grid;grid-template-columns:1.8fr 0.8fr 0.8fr 0.7fr 0.7fr 1.2fr;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f3f4f6;font-size:11px">
+    return`<div style="display:grid;grid-template-columns:1.8fr 0.7fr 0.7fr 0.7fr 0.6fr 0.6fr 1.1fr;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f3f4f6;font-size:11px">
       <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
         <span style="font-size:10px;color:#9ca3af;margin-right:3px">${i+1}.</span>
         <span style="cursor:pointer;color:#2563eb;font-weight:600;text-decoration:underline dotted" data-name="${safeN}" onclick="showHospitalDetail(this.dataset.name)">${name}</span>
       </div>
-      <div class="text-end" style="color:#6b7280">${fmtA(e25)}</div>
+      <div class="text-end" style="color:#9ca3af">${fmtA(full25)}</div>
+      <div class="text-end" style="color:#6b7280">${fmtA(same25)}</div>
       <div class="text-end fw-bold" style="color:${gr.c}">${fmtA(h.y2026)}</div>
       <div class="text-end">${chgHtml}</div>
       <div class="text-end" style="color:${dsColor}">${ds!==null?ds+'일전':'-'}</div>
@@ -1932,8 +1936,8 @@ function showGradeDrill(g) {
     </div>`;
   }).join('');
 
-  const header=`<div style="display:grid;grid-template-columns:1.8fr 0.8fr 0.8fr 0.7fr 0.7fr 1.2fr;gap:6px;padding:4px 0 6px;border-bottom:2px solid #e5e7eb;font-size:10px;font-weight:600;color:#9ca3af">
-    <div>병원명</div><div class="text-end">2025 YTD</div><div class="text-end">2026 YTD</div><div class="text-end">YoY</div><div class="text-end">최근구매</div><div>주력제품</div>
+  const header=`<div style="display:grid;grid-template-columns:1.8fr 0.7fr 0.7fr 0.7fr 0.6fr 0.6fr 1.1fr;gap:6px;padding:4px 0 6px;border-bottom:2px solid #e5e7eb;font-size:10px;font-weight:600;color:#9ca3af">
+    <div>병원명</div><div class="text-end">2025 전체</div><div class="text-end">2025 동기간</div><div class="text-end">2026 YTD</div><div class="text-end">YoY</div><div class="text-end">최근구매</div><div>주력제품</div>
   </div>`;
 
   document.getElementById('grade-drill-content').innerHTML=list.length
