@@ -3005,7 +3005,7 @@ function showHospitalDetail(name){
   const tlItems = [];
   DB.d.logs.filter(l=>l.custName===name).forEach(l=>tlItems.push({
     date:l.date, type:'log', icon:'bi-journal-text', color:'#2563eb', bg:'#eff6ff',
-    title:`상담 — ${l.type||''}`, sub: l.content||'', extra: l.nextAction?`다음액션: ${l.nextAction}${l.nextDate?' ('+fmtDate(l.nextDate)+')':''}`:''
+    title:`상담 — ${l.type||''}`, sub: l.content||'', sales: l.sales||'', extra: l.nextAction?`다음액션: ${l.nextAction}${l.nextDate?' ('+fmtDate(l.nextDate)+')':''}`:''
   }));
   DB.d.quotes.filter(q=>q.custName===name).forEach(q=>tlItems.push({
     date:q.quoteDate, type:'quote', icon:'bi-file-earmark-text', color:'#7c3aed', bg:'#faf5ff',
@@ -3030,7 +3030,7 @@ function showHospitalDetail(name){
         ${i<tlItems.length-1?`<div style="width:2px;flex:1;background:#e5e7eb;margin:4px 0"></div>`:''}
       </div>
       <div style="flex:1;padding-bottom:20px">
-        <div style="font-size:11px;color:#9ca3af;margin-bottom:2px">${fmtDate(t.date)}</div>
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:2px">${fmtDate(t.date)}${t.sales?` · <span style="color:#6b7280;font-weight:600">${t.sales}</span>`:''}</div>
         <div style="font-size:13px;font-weight:600;color:#111827">${t.title}</div>
         <div style="font-size:12px;color:#6b7280;margin-top:2px">${t.sub}</div>
         ${t.extra?`<div style="font-size:11px;color:#9ca3af;margin-top:2px">${t.extra}</div>`:''}
