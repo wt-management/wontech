@@ -2168,42 +2168,138 @@ function consParseExcel(input) {
         h.prods2026 = Object.fromEntries(Object.entries(h.prods2026).sort((a,b)=>b[1]-a[1]).slice(0,4));
       });
 
-      // 제품(device) 집계
+      // 제품(device) 집계 — 수량·담당자·거래처 포함
       setMsg('제품 데이터 집계 중...');
-      const parseDeviceSheet = (sn) => {
-        const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], {defval:null});
-        return rows.filter(r => r['구분#2'] === '제품군' && r['국내외'] === '국내');
-      };
-      const aggregateDevice = (rows) => {
-        const monthly = {}, products = {}, prodMo = {};
-        rows.forEach(r => {
-          const amt = Number(r[Object.keys(r).find(k=>k.includes('금액'))||''] || 0);
-          if (!amt) return;
-          const mo = monthNum(r['월']);
-          const prod = r['구분#4'];
-          if (mo) monthly[mo] = (monthly[mo]||0) + amt;
-          if (prod) products[prod] = (products[prod]||0) + amt;
-          if (mo && prod) {
-            if (!prodMo[prod]) prodMo[prod] = {};
-            prodMo[prod][mo] = (prodMo[prod][mo]||0) + amt;
-          }
-        });
-        return {monthly, products, prodMo};
-      };
+      const _devAmtKey = k => k.includes('금액');
+      const _devRows = (sn) => XLSX.utils.sheet_to_json(wb.Sheets[sn], {defval:null})
+        .filter(r => r['구분#2'] === '제품군' && r['국내외'] === '국내');
+      const rd25 = _devRows(sheet25name);
+      const rd26 = _devRows(sheet26name);
+
       // 구분#2 고유값 확인
       const _allRows26 = XLSX.utils.sheet_to_json(wb.Sheets[sheet26name], {defval:null});
       const _cats = [...new Set(_allRows26.map(r=>r['구분#2']).filter(Boolean))];
-      const rd25 = parseDeviceSheet(sheet25name);
-      const rd26 = parseDeviceSheet(sheet26name);
-      const ad25 = aggregateDevice(rd25);
-      const ad26 = aggregateDevice(rd26);
-      DEVICE.monthly2025 = ad25.monthly;
-      DEVICE.monthly2026 = ad26.monthly;
-      DEVICE.products2025 = ad25.products;
-      DEVICE.products2026 = ad26.products;
-      DEVICE.prodMo2025 = ad25.prodMo;
-      DEVICE.prodMo2026 = ad26.prodMo;
-      DEVICE.updatedAt = updatedAt;
+
+      const aggregateDeviceFull = (rows25, rows26) => {
+        const monthly={}, products={}, prodMo={}, monthlyQty={}, prodQty={}, prodMoQty={};
+        const monthly25={}, products25={}, prodMo25={}, monthlyQty25={}, prodQty25={}, prodMoQty25={};
+        const devHosp={}, devReps={};
+
+        const processRow = (r, yr) => {
+          const amtKey = Object.keys(r).find(_devAmtKey)||'';
+          const amt = Number(r[amtKey]||0);
+          if (!amt || amt < 0) return;
+          let qty = parseInt(r['수량']||0);
+          if (qty <= 0) qty = 1;
+          const mo   = monthNum(r['월']);
+          const prod = (r['구분#4']||'').trim();
+          const name = (r['거래처명']||'').trim();
+          const sales= (r['담당자']||'').trim();
+          const rawDate = r['날짜'];
+          let ds = '';
+          if (rawDate) {
+            try { ds = (rawDate instanceof Date ? rawDate : new Date(rawDate)).toISOString().slice(0,10); } catch(e){}
+          }
+
+          if (yr === 2026) {
+            if (mo) { monthly[mo]=(monthly[mo]||0)+amt; monthlyQty[mo]=(monthlyQty[mo]||0)+qty; }
+            if (prod) { products[prod]=(products[prod]||0)+amt; prodQty[prod]=(prodQty[prod]||0)+qty; }
+            if (mo && prod) {
+              if (!prodMo[prod]) prodMo[prod]={};
+              prodMo[prod][mo]=(prodMo[prod][mo]||0)+amt;
+              if (!prodMoQty[prod]) prodMoQty[prod]={};
+              prodMoQty[prod][mo]=(prodMoQty[prod][mo]||0)+qty;
+            }
+          } else {
+            if (mo) { monthly25[mo]=(monthly25[mo]||0)+amt; monthlyQty25[mo]=(monthlyQty25[mo]||0)+qty; }
+            if (prod) { products25[prod]=(products25[prod]||0)+amt; prodQty25[prod]=(prodQty25[prod]||0)+qty; }
+            if (mo && prod) {
+              if (!prodMo25[prod]) prodMo25[prod]={};
+              prodMo25[prod][mo]=(prodMo25[prod][mo]||0)+amt;
+              if (!prodMoQty25[prod]) prodMoQty25[prod]={};
+              prodMoQty25[prod][mo]=(prodMoQty25[prod][mo]||0)+qty;
+            }
+          }
+
+          // 거래처별
+          if (name) {
+            if (!devHosp[name]) devHosp[name]={total:0,y2025:0,y2026:0,orders:0,prods:{},prods2025:{},prods2026:{},m2025:{},m2026:{},txns2025:[],txns2026:[],lastDate:'',topProd:'',sales:''};
+            const dh = devHosp[name];
+            dh.total+=amt; dh['y'+yr]=(dh['y'+yr]||0)+amt; dh.orders++;
+            if (prod) { dh.prods[prod]=(dh.prods[prod]||0)+amt; dh['prods'+yr][prod]=(dh['prods'+yr][prod]||0)+amt; }
+            if (mo) dh['m'+yr][mo]=(dh['m'+yr][mo]||0)+amt;
+            if (mo && prod && ds) dh['txns'+yr].push([mo,ds,name,prod,Math.round(amt),qty]);
+            if (ds && ds>dh.lastDate) dh.lastDate=ds;
+            if (sales) dh.sales=sales;
+          }
+
+          // 담당자별
+          if (sales) {
+            if (!devReps[sales]) devReps[sales]={total:0,y2025:0,y2026:0,c25:new Set(),c26:new Set(),prods2025:{},prods2026:{},m2025:{},m2026:{},qty2025:0,qty2026:0};
+            const dr = devReps[sales];
+            dr.total+=amt; dr['y'+yr]=(dr['y'+yr]||0)+amt;
+            dr[(yr===2026?'c26':'c25')].add(name||'?');
+            if (prod) dr['prods'+yr][prod]=(dr['prods'+yr][prod]||0)+amt;
+            if (mo) dr['m'+yr][mo]=(dr['m'+yr][mo]||0)+amt;
+            dr['qty'+yr]=(dr['qty'+yr]||0)+qty;
+          }
+        };
+
+        rows25.forEach(r=>processRow(r,2025));
+        rows26.forEach(r=>processRow(r,2026));
+
+        // 거래처 후처리
+        Object.values(devHosp).forEach(h=>{
+          const sp=Object.entries(h.prods).sort((a,b)=>b[1]-a[1]);
+          h.topProd=sp[0]?.[0]||'';
+          h.prods=Object.fromEntries(sp.slice(0,4));
+          h.prods2025=Object.fromEntries(Object.entries(h.prods2025).sort((a,b)=>b[1]-a[1]).slice(0,4));
+          h.prods2026=Object.fromEntries(Object.entries(h.prods2026).sort((a,b)=>b[1]-a[1]).slice(0,4));
+          h.txns2025.sort((a,b)=>a[1]<b[1]?-1:1);
+          h.txns2026.sort((a,b)=>a[1]<b[1]?-1:1);
+        });
+
+        // 담당자 후처리
+        const repsOut={};
+        Object.entries(devReps).forEach(([s,dr])=>{
+          repsOut[s]={
+            total:Math.round(dr.total), y2025:Math.round(dr.y2025), y2026:Math.round(dr.y2026),
+            cust2025:dr.c25.size, cust2026:dr.c26.size,
+            prods2025:Object.fromEntries(Object.entries(dr.prods2025).sort((a,b)=>b[1]-a[1]).slice(0,6)),
+            prods2026:Object.fromEntries(Object.entries(dr.prods2026).sort((a,b)=>b[1]-a[1]).slice(0,6)),
+            m2025:dr.m2025, m2026:dr.m2026, qty2025:dr.qty2025, qty2026:dr.qty2026,
+          };
+        });
+
+        const topN = (obj,n=12) => Object.fromEntries(Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,n));
+        return {
+          monthly2026:monthly, monthly2025:monthly25,
+          monthlyQty2026:monthlyQty, monthlyQty2025:monthlyQty25,
+          products2026:topN(products), products2025:topN(products25),
+          prodQty2026:topN(prodQty), prodQty2025:topN(prodQty25),
+          prodMo2026:prodMo, prodMo2025:prodMo25,
+          prodMoQty2026:prodMoQty, prodMoQty2025:prodMoQty25,
+          hospitals:devHosp, reps:repsOut,
+        };
+      };
+
+      const devFull = aggregateDeviceFull(rd25, rd26);
+      DEVICE.monthly2025    = devFull.monthly2025;
+      DEVICE.monthly2026    = devFull.monthly2026;
+      DEVICE.monthlyQty2025 = devFull.monthlyQty2025;
+      DEVICE.monthlyQty2026 = devFull.monthlyQty2026;
+      DEVICE.products2025   = devFull.products2025;
+      DEVICE.products2026   = devFull.products2026;
+      DEVICE.prodQty2025    = devFull.prodQty2025;
+      DEVICE.prodQty2026    = devFull.prodQty2026;
+      DEVICE.prodMo2025     = devFull.prodMo2025;
+      DEVICE.prodMo2026     = devFull.prodMo2026;
+      DEVICE.prodMoQty2025  = devFull.prodMoQty2025;
+      DEVICE.prodMoQty2026  = devFull.prodMoQty2026;
+      DEVICE.hospitals      = devFull.hospitals;
+      DEVICE.reps           = devFull.reps;
+      DEVICE.updatedAt      = updatedAt;
+
 
       // CONS 업데이트
       CONS.monthly2025 = a25.monthly;
