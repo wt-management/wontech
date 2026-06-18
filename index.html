@@ -304,7 +304,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
             onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''">
             <span>🇯🇵</span><span style="flex:1">일본법인 관리</span><i class="bi bi-arrow-right" style="font-size:11px"></i>
           </div>
-          <div id="switcher-admin-item" onclick="document.getElementById('site-dropdown').style.display='none';sessionStorage.removeItem('wt_app');document.getElementById('main-content').style.display='none';showAdminPanel();document.getElementById('launcher-screen').style.display='flex';"
+          <div id="switcher-admin-item" onclick="document.getElementById('site-dropdown').style.display='none';sessionStorage.setItem('wt_app','admin');document.getElementById('main-content').style.display='none';showAdminPanel();document.getElementById('launcher-screen').style.display='flex';"
             style="display:none;margin-top:4px;border-radius:6px;padding:9px 12px;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
             onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''">
             <span>⚙️</span><span style="flex:1">관리자 페이지</span><i class="bi bi-arrow-right" style="font-size:11px"></i>
@@ -1196,7 +1196,10 @@ async function _showLauncherOrApp(user) {
   const access = (profile?.access || 'korea').split(',').map(s=>s.trim());
   _currentAccess = access;
   _isAdmin = profile?.role === 'admin';
-  // 새로고침 시 이전에 CRM 선택했으면 런처 건너뜀
+  // 새로고침 시 이전 상태 복원
+  if(sessionStorage.getItem('wt_app') === 'admin' && _isAdmin) {
+    showAdminPanel(); document.getElementById('launcher-screen').style.display='flex'; return;
+  }
   if(sessionStorage.getItem('wt_app') === 'korea' && access.includes('korea')) {
     await _bootApp(access); return;
   }
