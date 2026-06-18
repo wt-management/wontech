@@ -1925,7 +1925,7 @@ function consParseExcel(input) {
       function aggregate(rows) {
         const monthly = {}, products = {}, groups = {}, qtr = {}, oligioMo = {};
         rows.forEach(r => {
-          const amt = Number(r[' 금액 '] || r['금액'] || 0);
+          const amt = Number(r[Object.keys(r).find(k=>k.includes('금액'))||''] || 0);
           if (!amt) return;
           const mo = monthNum(r['월']);
           if (mo) monthly[mo] = (monthly[mo]||0) + amt;
@@ -2019,7 +2019,7 @@ function consParseExcel(input) {
       const aggregateDevice = (rows) => {
         const monthly = {}, products = {}, prodMo = {};
         rows.forEach(r => {
-          const amt = Number(r[' 금액 '] || r['금액'] || 0);
+          const amt = Number(r[Object.keys(r).find(k=>k.includes('금액'))||''] || 0);
           if (!amt) return;
           const mo = monthNum(r['월']);
           const prod = r['구분#4'];
