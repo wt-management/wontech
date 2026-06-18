@@ -2032,8 +2032,13 @@ function consParseExcel(input) {
         });
         return {monthly, products, prodMo};
       };
+      // 디버그: 구분#2 고유값 확인
+      const _allRows26 = XLSX.utils.sheet_to_json(wb.Sheets[sheet26name], {defval:null});
+      const _cats = [...new Set(_allRows26.map(r=>r['구분#2']).filter(Boolean))];
+      console.log('[DEBUG] 구분#2 값 목록:', _cats);
       const rd25 = parseDeviceSheet(sheet25name);
       const rd26 = parseDeviceSheet(sheet26name);
+      console.log('[DEBUG] 제품 rows 2025:', rd25.length, '/ 2026:', rd26.length);
       const ad25 = aggregateDevice(rd25);
       const ad26 = aggregateDevice(rd26);
       DEVICE.monthly2025 = ad25.monthly;
