@@ -1243,6 +1243,11 @@ async function init() {
   } catch(e) {
     try { const sc=localStorage.getItem('wt_cons_data'); if(sc) Object.assign(CONS,JSON.parse(sc)); } catch(e2){}
   }
+  // 제품 데이터 복원
+  try {
+    const {data: dd} = await _sb.from('cons_cache').select('data').eq('key','device').single();
+    if(dd?.data) Object.assign(DEVICE, dd.data);
+  } catch(e) {}
   purgeForeignHospitals();
   // 견적서 공개 링크 처리 (?q=견적번호)
   const qParam = new URLSearchParams(location.search).get('q');
@@ -2052,10 +2057,12 @@ function consParseExcel(input) {
       CONS.hospitals = hospMap;
       CONS.updatedAt = updatedAt;
 
-      // Supabase에 cons_data 저장 (팀 전체 공유)
+      // Supabase에 저장 (팀 전체 공유)
       setMsg('저장 중...', '팀 전체에 반영 중입니다');
       const {error: _err} = await _sb.from('cons_cache').upsert({key:'main', data: CONS});
       if(_err) throw new Error('저장 실패: ' + _err.message);
+      const {error: _derr} = await _sb.from('cons_cache').upsert({key:'device', data: DEVICE});
+      if(_derr) console.warn('제품 데이터 저장 실패:', _derr.message);
       renderConsumables();
       setDone('업로드 완료! ✅', `2025년 ${r25.length}건 · 2026년 ${r26.length}건 · 팀 전체 공유됨`);
     } catch(err) {
