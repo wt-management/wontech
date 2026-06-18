@@ -131,9 +131,19 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 /* 접근권한 카드 */
 .access-card.selected{border-color:#ff4500!important;background:#fff5f2}
 .access-card:hover{border-color:#fdba74!important}
+/* 앱 로딩 오버레이 */
+#app-loading{position:fixed;inset:0;background:#0f172a;z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+#app-loading .spin{width:36px;height:36px;border:3px solid rgba(255,255,255,.15);border-top-color:#ff4500;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
+
+<!-- 앱 로딩 오버레이 -->
+<div id="app-loading">
+  <div class="spin"></div>
+  <div style="color:rgba(255,255,255,.4);font-size:12px">로딩 중...</div>
+</div>
 
 <!-- 런처 화면 -->
 <div id="launcher-screen" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,#0f172a 0%,#1e2140 100%);z-index:9998;align-items:center;justify-content:center;flex-direction:column;overflow-y:auto">
@@ -1079,6 +1089,7 @@ async function init() {
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('login-screen').querySelectorAll(':scope > div').forEach(d=>d.style.display='none');
     document.getElementById('reset-pw-box').style.display = 'block';
+    _hideLoading();
     return;
   }
   // 소모품 데이터 복원 (Supabase → localStorage fallback)
@@ -1109,6 +1120,7 @@ async function init() {
   if(!session) {
     const ls = document.getElementById('login-screen');
     if(ls) ls.style.display='flex';
+    _hideLoading();
     return;
   }
   document.getElementById('login-screen').style.display='none';
@@ -1149,6 +1161,7 @@ async function _showLauncherOrApp(user) {
     document.getElementById('launcher-cards').innerHTML = cards;
     if(_isAdmin) document.getElementById('launcher-admin-btn').style.display = '';
     document.getElementById('launcher-screen').style.display = 'flex';
+    _hideLoading();
   } else if(access.includes('japan')) {
     location.href = 'https://wt-management.github.io/wtj-management/';
   } else {
@@ -1156,11 +1169,17 @@ async function _showLauncherOrApp(user) {
   }
 }
 
+function _hideLoading() {
+  const el = document.getElementById('app-loading');
+  if(el) el.style.display='none';
+}
+
 async function _bootApp() {
   await Promise.all([DB.load(), loadUserRole()]);
   const lastPage = sessionStorage.getItem('wt_page') || 'dashboard';
   showPage(lastPage);
   document.getElementById('main-content').style.display='block';
+  _hideLoading();
 }
 
 
