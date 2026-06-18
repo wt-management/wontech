@@ -1237,16 +1237,17 @@ async function init() {
     return;
   }
   // 소모품 데이터 복원 (Supabase → localStorage fallback)
+  // 하드코딩 데이터가 더 최신이면 Supabase 데이터 무시
   try {
     const {data: cd} = await _sb.from('cons_cache').select('data').eq('key','main').single();
-    if(cd?.data) Object.assign(CONS, cd.data);
+    if(cd?.data && (cd.data.updatedAt||'') >= (CONS.updatedAt||'')) Object.assign(CONS, cd.data);
   } catch(e) {
-    try { const sc=localStorage.getItem('wt_cons_data'); if(sc) Object.assign(CONS,JSON.parse(sc)); } catch(e2){}
+    try { const sc=localStorage.getItem('wt_cons_data'); if(sc){ const sd=JSON.parse(sc); if((sd.updatedAt||'')>=(CONS.updatedAt||'')) Object.assign(CONS,sd); } } catch(e2){}
   }
   // 제품 데이터 복원
   try {
     const {data: dd} = await _sb.from('cons_cache').select('data').eq('key','device').single();
-    if(dd?.data) Object.assign(DEVICE, dd.data);
+    if(dd?.data && (dd.data.updatedAt||'') >= (DEVICE.updatedAt||'')) Object.assign(DEVICE, dd.data);
   } catch(e) {}
   purgeForeignHospitals();
   // 견적서 공개 링크 처리 (?q=견적번호)
