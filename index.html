@@ -4345,11 +4345,14 @@ async function renderAdminUsers() {
         <button onclick="togglePw('${pwId}','${p.temp_pw}')" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:13px;padding:2px" title="비밀번호 보기"><i class="bi bi-eye"></i></button>
       </div>` : `<span style="font-size:11px;color:#475569">-</span>`}
     </td>
-    <td style="padding:12px 16px"><select style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:4px 8px;font-size:12px;color:#fff" onchange="updateUserAccess('${p.id}',this.value)">
-      <option value="korea" ${p.access==='korea'?'selected':''} style="background:#1e293b">🇰🇷 한국만</option>
-      <option value="japan" ${p.access==='japan'?'selected':''} style="background:#1e293b">🇯🇵 일본만</option>
-      <option value="korea,japan" ${p.access==='korea,japan'?'selected':''} style="background:#1e293b">🇰🇷🇯🇵 둘다</option>
-    </select></td>
+    <td style="padding:12px 16px"><div style="display:flex;flex-direction:column;gap:4px">
+      <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#94a3b8;cursor:pointer;white-space:nowrap">
+        <input type="checkbox" ${(p.access||'').includes('korea')?'checked':''} onchange="toggleAccess('${p.id}','korea',this.checked)" style="accent-color:#0891b2"> 한국</label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#94a3b8;cursor:pointer;white-space:nowrap">
+        <input type="checkbox" ${(p.access||'').includes('intl')?'checked':''} onchange="toggleAccess('${p.id}','intl',this.checked)" style="accent-color:#0d9488"> 해외</label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#94a3b8;cursor:pointer;white-space:nowrap">
+        <input type="checkbox" ${(p.access||'').includes('japan')?'checked':''} onchange="toggleAccess('${p.id}','japan',this.checked)" style="accent-color:#f59e0b"> 일본</label>
+    </div></td>
     <td style="padding:12px 16px"><select style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:4px 8px;font-size:12px;color:#fff" onchange="updateUserRole('${p.id}',this.value)">
       <option value="user" ${p.role!=='admin'?'selected':''} style="background:#1e293b">일반</option>
       <option value="admin" ${p.role==='admin'?'selected':''} style="background:#1e293b">관리자</option>
@@ -4362,7 +4365,16 @@ async function renderAdminUsers() {
 }
 
 async function updateUserAccess(id, access) {
-  await _sb.from('crm_profiles').update({access}).eq('id', id);
+  _sb.from('crm_profiles').update({access}).eq('id', id);
+  showToast('접근 권한 변경됨', true);
+}
+async function toggleAccess(id, key, checked) {
+  const {data:p} = await _sb.from('crm_profiles').select('access').eq('id',id).single();
+  const parts = (p?.access||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const set = new Set(parts);
+  if(checked) set.add(key); else set.delete(key);
+  const newAccess = [...set].sort().join(',');
+  await _sb.from('crm_profiles').update({access: newAccess}).eq('id', id);
   showToast('접근 권한 변경됨', true);
 }
 
@@ -4978,6 +4990,11 @@ window.addEventListener('popstate', function(e) {
           style="flex:1;min-width:100px;border:2px solid #e5e7eb;border-radius:10px;padding:10px 12px;cursor:pointer;text-align:center;transition:all .15s">
           <div style="font-size:20px">🇯🇵</div>
           <div style="font-size:12px;font-weight:700;margin-top:4px">일본법인</div>
+        </div>
+        <div class="access-card" data-val="intl" onclick="toggleAccessCard(this)"
+          style="flex:1;min-width:100px;border:2px solid #e5e7eb;border-radius:10px;padding:10px 12px;cursor:pointer;text-align:center;transition:all .15s">
+          <div style="font-size:20px;color:#0d9488"><i class="bi bi-globe-americas"></i></div>
+          <div style="font-size:12px;font-weight:700;margin-top:4px">해외 영업</div>
         </div>
       </div>
       <div id="access-card-error" style="font-size:11px;color:#dc2626;margin-top:4px;display:none">최소 1개 선택하세요</div>
