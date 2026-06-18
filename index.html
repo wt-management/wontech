@@ -1157,7 +1157,7 @@ async function _showLauncherOrApp(user) {
           <div style="font-size:12px;color:#6b7280">영업관리 · 소모품 · 고객사</div>
         </div>` : '',
       access.includes('japan') ? `
-        <div onclick="location.href='https://pmw0406.github.io/wtj-management/'"
+        <div onclick="location.href='https://wt-management.github.io/wtj-management/'"
           style="background:#fff;border-radius:20px;padding:36px 40px;width:220px;text-align:center;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:0 8px 30px rgba(0,0,0,.3)"
           onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 16px 40px rgba(0,0,0,.4)'"
           onmouseout="this.style.transform='';this.style.boxShadow='0 8px 30px rgba(0,0,0,.3)'">
@@ -1170,7 +1170,7 @@ async function _showLauncherOrApp(user) {
     if(_isAdmin) document.getElementById('launcher-admin-btn').style.display = '';
     document.getElementById('launcher-screen').style.display = 'flex';
   } else if(access.includes('japan')) {
-    location.href = 'https://pmw0406.github.io/wtj-management/';
+    location.href = 'https://wt-management.github.io/wtj-management/';
   } else {
     await _bootApp();
   }
