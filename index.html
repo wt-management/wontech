@@ -1120,11 +1120,15 @@ async function _showLauncherOrApp(user) {
   const {data: profile} = await _sb.from('crm_profiles').select('access,role').eq('id', user.id).single();
   const access = (profile?.access || 'korea').split(',').map(s=>s.trim());
   _isAdmin = profile?.role === 'admin';
+  // 새로고침 시 이전에 CRM 선택했으면 런처 건너뜀
+  if(sessionStorage.getItem('wt_app') === 'korea' && access.includes('korea')) {
+    await _bootApp(); return;
+  }
   if(access.length > 1 || _isAdmin) {
     // 여러 법인 접근 가능 or 관리자 → 런처 표시
     const cards = [
       access.includes('korea') ? `
-        <div onclick="history.replaceState({page:'launcher'},'',location.href);document.getElementById('launcher-screen').style.display='none';_bootApp();"
+        <div onclick="sessionStorage.setItem('wt_app','korea');history.replaceState({page:'launcher'},'',location.href);document.getElementById('launcher-screen').style.display='none';_bootApp();"
           style="background:#fff;border-radius:20px;padding:36px 40px;width:220px;text-align:center;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:0 8px 30px rgba(0,0,0,.3)"
           onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 16px 40px rgba(0,0,0,.4)'"
           onmouseout="this.style.transform='';this.style.boxShadow='0 8px 30px rgba(0,0,0,.3)'">
