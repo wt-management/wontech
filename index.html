@@ -625,6 +625,22 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       </div>
     </div>
 
+    <!-- 기간 선택 필터 -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;padding:10px 14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0">
+      <span style="font-size:12px;font-weight:600;color:#374151;white-space:nowrap">📅 조회 기간</span>
+      <select id="cons-year-sel" class="form-select form-select-sm" style="width:84px" onchange="renderConsumables()">
+        <option value="2026" selected>2026년</option>
+        <option value="2025">2025년</option>
+      </select>
+      <select id="cons-from-sel" class="form-select form-select-sm" style="width:70px" onchange="_consPeriodChange()">
+        <option value="1" selected>1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
+      </select>
+      <span style="font-size:13px;color:#9ca3af">~</span>
+      <select id="cons-to-sel" class="form-select form-select-sm" style="width:70px" onchange="_consPeriodChange()">
+        <option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5" selected>5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
+      </select>
+    </div>
+
     <!-- 업로드 비밀번호 모달 -->
     <div class="modal fade" id="consPasswordModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content">
       <div class="modal-header border-0 pb-0"><h6 class="modal-title"><i class="bi bi-shield-lock me-2 text-primary"></i>업로드 권한 확인</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -679,18 +695,18 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       </div>
     </div>
 
-    <!-- ③ Oligio 그룹 YoY 카드 + 제품별 세부 -->
+    <!-- ③ 제품별 세부 분석 — 당월 / 누계 -->
     <div class="row g-3 mb-3">
-      <div class="col-md-8">
+      <div class="col-md-6">
         <div class="card p-3 h-100">
-          <div class="fw-bold mb-2" style="font-size:14px"><i class="bi bi-pie-chart-fill me-1" style="color:#ff4500;font-size:12px"></i>Oligio Tip 제품별 세부 분석 <span style="font-size:11px;font-weight:400;color:#9ca3af">1–5월 누계</span></div>
-          <div id="cons-oligio-detail"></div>
+          <div class="fw-bold mb-2" style="font-size:14px" id="cons-monthly-title"><i class="bi bi-calendar3 me-1" style="color:#2563eb;font-size:12px"></i>당월</div>
+          <div id="cons-detail-monthly"></div>
         </div>
       </div>
-      <div class="col-md-4">
+      <div class="col-md-6">
         <div class="card p-3 h-100">
-          <div class="fw-bold mb-2" style="font-size:14px">그룹별 성과</div>
-          <div id="cons-oligio-group-cards"></div>
+          <div class="fw-bold mb-2" style="font-size:14px" id="cons-ytd-title"><i class="bi bi-pie-chart-fill me-1" style="color:#ff4500;font-size:12px"></i>누계</div>
+          <div id="cons-detail-ytd"></div>
         </div>
       </div>
     </div>
@@ -721,6 +737,22 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
         </select>
         <button class="btn btn-outline-success btn-sm" onclick="consExportAccounts()"><i class="bi bi-file-earmark-excel me-1"></i>내보내기</button>
       </div>
+    </div>
+
+    <!-- 기간 선택 필터 -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;padding:10px 14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0">
+      <span style="font-size:12px;font-weight:600;color:#374151;white-space:nowrap">📅 조회 기간</span>
+      <select id="hosp-year-sel" class="form-select form-select-sm" style="width:84px" onchange="renderConsHospitals()">
+        <option value="2026" selected>2026년</option>
+        <option value="2025">2025년</option>
+      </select>
+      <select id="hosp-from-sel" class="form-select form-select-sm" style="width:70px" onchange="_hospPeriodChange()">
+        <option value="1" selected>1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
+      </select>
+      <span style="font-size:13px;color:#9ca3af">~</span>
+      <select id="hosp-to-sel" class="form-select form-select-sm" style="width:70px" onchange="_hospPeriodChange()">
+        <option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5" selected>5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
+      </select>
     </div>
 
     <!-- KPI -->
@@ -1900,15 +1932,24 @@ function renderConsumables() {
   const chgBadge = (chg, big) => chg===null?'':
     `<span style="font-size:${big?'13':'11'}px;font-weight:700;color:${chg>=0?'#16a34a':'#dc2626'}">${chg>=0?'▲':'▼'} ${Math.abs(chg).toFixed(1)}%</span>`;
 
-  const YTD = [1,2,3,4,5];
+  // 기간 필터 읽기
+  const _consYr = parseInt(document.getElementById('cons-year-sel')?.value||'2026');
+  const _consPrevYr = _consYr - 1;
+  const _allMs = Object.keys(_consYr===2026?CONS.monthly2026:CONS.monthly2025||{}).map(Number).filter(m=>m>=1&&m<=12).sort((a,b)=>a-b);
+  const _defToM = _allMs.length ? _allMs[_allMs.length-1] : 5;
+  const _toSel = document.getElementById('cons-to-sel');
+  if(_toSel && !_toSel.dataset.init){ _toSel.value=_defToM; _toSel.dataset.init='1'; }
+  const _fromM = parseInt(document.getElementById('cons-from-sel')?.value||'1');
+  const _toM   = parseInt(_toSel?.value||_defToM);
+  const _moM   = _toM; // 당월 = 선택 범위 마지막 월
+  const YTD    = Array.from({length:_toM-_fromM+1},(_,i)=>_fromM+i);
+  const ytdMs  = YTD;
+  const ytdLabel = _fromM===_toM ? `${_fromM}월 기준` : `${_fromM}–${_toM}월 기준`;
+
   const total2025    = Object.values(CONS.monthly2025).reduce((s,v)=>s+v,0);
   const total2026ytd = YTD.reduce((s,m)=>s+(CONS.monthly2026[m]||0),0);
   const total2025ytd = YTD.reduce((s,m)=>s+(CONS.monthly2025[m]||0),0);
   const yoy = total2025ytd>0?(total2026ytd/total2025ytd-1)*100:0;
-
-  // 2026에 데이터가 있는 월만 YTD 기준으로 사용 (동기 비교 일관성 확보)
-  const ytdMs = Object.keys(CONS.monthly2026||{}).map(Number).filter(m=>m>=1&&m<=12).sort((a,b)=>a-b);
-  const ytdLabel = ytdMs.length ? `1–${ytdMs[ytdMs.length-1]}월 기준` : 'YTD';
   const oMo25 = CONS.oligioMo2025||{}, oMo26 = CONS.oligioMo2026||{};
   const OLIG = [
     {key:'Oligio Tip [F-4.0]',  label:'F-4.0',  grp:'Oligio',      col:'#2563eb'},
@@ -2023,51 +2064,69 @@ function renderConsumables() {
   document.getElementById('cons-trend-badge').innerHTML =
     `<span style="display:inline-block;background:${ogYoy>=0?'#f0fdf4':'#fef2f2'};color:${ogYoy>=0?'#16a34a':'#dc2626'};font-weight:700;padding:4px 12px;border-radius:20px;font-size:12px">Oligio 전체 YoY ${ogYoy>=0?'+':''}${ogYoy.toFixed(1)}% (1–5월 기준)</span>`;
 
-  const maxProd26 = Math.max(...OLIG.map(p=>CONS.products2026[p.key]||0))||1;
-  document.getElementById('cons-oligio-detail').innerHTML = OLIG.map(p=>{
-    const v26=CONS.products2026[p.key]||0, v25=CONS.products2025[p.key]||0;
-    const chg=v25>0?(v26/v25-1)*100:null;
-    const pct=(v26/oligTotal26*100)||0;
-    const barW=(v26/maxProd26*100)||0;
-    return `<div style="padding:10px 0;border-bottom:1px solid #f3f4f6;cursor:pointer" onclick="showConsDrill(['${p.key}'],'${p.grp} ${p.label} 구매 병원')" title="클릭하여 병원 내역 조회">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="width:10px;height:10px;border-radius:3px;background:${p.col};display:inline-block;flex-shrink:0"></span>
-          <span style="font-size:13px;font-weight:700">${p.grp} <span style="font-weight:400;color:#9ca3af;font-size:11px">${p.label}</span></span>
-          <span style="font-size:10px;color:#9ca3af"><i class="bi bi-search"></i> 병원조회</span>
-        </div>
-        <div style="text-align:right;display:flex;align-items:center;gap:8px">
-          <span style="font-size:13px;font-weight:800">${fmtW(v26)}</span>
-          <span style="font-size:11px;color:#9ca3af">구성 ${pct.toFixed(0)}%</span>
-          ${chgBadge(chg,false)}
-        </div>
-      </div>
-      <div style="display:flex;gap:6px;align-items:center">
-        <div style="flex:1;background:#f3f4f6;border-radius:6px;height:10px;overflow:hidden">
-          <div style="width:${barW.toFixed(1)}%;height:100%;border-radius:6px;background:${p.col}"></div>
-        </div>
-        <span style="font-size:10px;color:#9ca3af;min-width:52px;text-align:right">전년 ${fmtW(v25)}</span>
-      </div>
-    </div>`;
-  }).join('');
+  // 트랜잭션 기반 제품별 기간합계
+  function prodSum(yr, prodKey, months) {
+    const mSet=new Set(months); let tot=0;
+    Object.values(CONS.hospitals||{}).forEach(h=>{
+      ((yr===_consYr?h.txns2026:h.txns2025)||[]).forEach(t=>{
+        if(mSet.has(t[0])&&(!prodKey||t[2]===prodKey)) tot+=t[3];
+      });
+    });
+    return tot;
+  }
 
-  const grpData = [
-    {name:'Oligio',     col:'#2563eb', v26:YTD.reduce((s,m)=>s+(mo26['Oligio']?.[m]||0),0), v25:YTD.reduce((s,m)=>s+(mo25['Oligio']?.[m]||0),0)},
-    {name:'Oligio X/XM',col:'#7c3aed', v26:YTD.reduce((s,m)=>s+(mo26['Oligio X/XM']?.[m]||0),0), v25:YTD.reduce((s,m)=>s+(mo25['Oligio X/XM']?.[m]||0),0)},
-  ];
-  const grpSum26 = grpData.reduce((s,g)=>s+g.v26,0)||1;
-  document.getElementById('cons-oligio-group-cards').innerHTML = grpData.map(g=>{
-    const chg=g.v25>0?(g.v26/g.v25-1)*100:null;
-    return `<div style="background:#f9fafb;border-radius:10px;padding:12px 14px;border-left:3px solid ${g.col};margin-bottom:10px">
-      <div style="font-size:12px;font-weight:700;color:${g.col};margin-bottom:6px">${g.name} · 1–5월</div>
-      <div style="font-size:1.4rem;font-weight:800;line-height:1.1">${fmtB(g.v26)}</div>
-      <div style="margin-top:4px;display:flex;align-items:center;gap:8px">
-        ${chgBadge(chg,true)}
-        <span style="font-size:11px;color:#9ca3af">점유 ${(g.v26/grpSum26*100).toFixed(0)}%</span>
-      </div>
-      <div style="font-size:11px;color:#9ca3af;margin-top:4px">전년 동기 ${fmtB(g.v25)}</div>
-    </div>`;
-  }).join('');
+  function renderDetailCol(months) {
+    const data=OLIG.map(p=>({...p, v26:prodSum(_consYr,p.key,months), v25:prodSum(_consPrevYr,p.key,months)}));
+    const maxV=Math.max(...data.map(p=>p.v26))||1;
+    const groups=[
+      {name:'Oligio',      col:'#2563eb', items:data.filter(p=>p.grp==='Oligio')},
+      {name:'Oligio X/XM', col:'#7c3aed', items:data.filter(p=>p.grp==='Oligio X/XM')},
+    ];
+    return groups.map(g=>{
+      const gv26=g.items.reduce((s,p)=>s+p.v26,0);
+      const gv25=g.items.reduce((s,p)=>s+p.v25,0);
+      const gChg=gv25>0?(gv26/gv25-1)*100:null;
+      return `<div style="margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:${g.col}14;border-radius:8px;margin-bottom:6px">
+          <span style="font-size:12px;font-weight:800;color:${g.col}">${g.name}</span>
+          <span style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:13px;font-weight:800">${fmtW(gv26)}</span>
+            ${chgBadge(gChg,false)}
+          </span>
+        </div>
+        ${g.items.map(p=>{
+          const chg=p.v25>0?(p.v26/p.v25-1)*100:null;
+          const barW=(p.v26/maxV*100)||0;
+          return `<div style="padding:7px 2px;border-bottom:1px solid #f3f4f6;cursor:pointer" onclick="showConsDrill(['${p.key}'],'${p.grp} ${p.label} 구매 병원')" title="클릭하여 병원 내역 조회">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="width:8px;height:8px;border-radius:2px;background:${p.col};display:inline-block;flex-shrink:0"></span>
+                <span style="font-size:12px;font-weight:600">${p.grp} <span style="font-size:10px;font-weight:400;color:#9ca3af">${p.label}</span> <span style="font-size:10px;color:#9ca3af"><i class="bi bi-search"></i></span></span>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:12px;font-weight:800">${fmtW(p.v26)}</span>
+                ${chgBadge(chg,false)}
+              </div>
+            </div>
+            <div style="display:flex;gap:4px;align-items:center">
+              <div style="flex:1;background:#f3f4f6;border-radius:4px;height:6px;overflow:hidden">
+                <div style="width:${barW.toFixed(1)}%;height:100%;border-radius:4px;background:${p.col}"></div>
+              </div>
+              <span style="font-size:10px;color:#9ca3af;min-width:48px;text-align:right">전년 ${fmtW(p.v25)}</span>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('');
+  }
+
+  // 당월 (마지막 선택 월)
+  document.getElementById('cons-monthly-title').innerHTML=`<i class="bi bi-calendar3 me-1" style="color:#2563eb;font-size:12px"></i>당월 <span style="font-size:11px;font-weight:400;color:#9ca3af">${_moM}월</span>`;
+  document.getElementById('cons-detail-monthly').innerHTML=renderDetailCol([_moM]);
+
+  // 누계 (전체 선택 기간)
+  document.getElementById('cons-ytd-title').innerHTML=`<i class="bi bi-pie-chart-fill me-1" style="color:#ff4500;font-size:12px"></i>누계 <span style="font-size:11px;font-weight:400;color:#9ca3af">${_fromM===_toM?_fromM+'월':_fromM+'–'+_toM+'월'}</span>`;
+  document.getElementById('cons-detail-ytd').innerHTML=renderDetailCol(YTD);
 
   if(consDonutChart){consDonutChart.destroy();consDonutChart=null;}
 }
@@ -2335,8 +2394,16 @@ function renderConsHospitals() {
     sl.forEach(s=>{ const o=document.createElement('option'); o.value=o.textContent=s; salesSel.appendChild(o); });
   }
 
-  const ytdMonths = Object.keys(CONS.monthly2026||{}).map(Number).filter(m=>m>=1&&m<=12);
+  const _hospYr   = parseInt(document.getElementById('hosp-year-sel')?.value||'2026');
+  const _allHMs   = Object.keys(CONS.monthly2026||{}).map(Number).filter(m=>m>=1&&m<=12).sort((a,b)=>a-b);
+  const _hDefToM  = _allHMs.length?_allHMs[_allHMs.length-1]:5;
+  const _hToSel   = document.getElementById('hosp-to-sel');
+  if(_hToSel&&!_hToSel.dataset.init){_hToSel.value=_hDefToM;_hToSel.dataset.init='1';}
+  const _hFromM   = parseInt(document.getElementById('hosp-from-sel')?.value||'1');
+  const _hToM     = parseInt(_hToSel?.value||_hDefToM);
+  const ytdMonths = Array.from({length:_hToM-_hFromM+1},(_,i)=>_hFromM+i);
   const ytd25est  = h => ytdMonths.reduce((s,m)=>s+(h.m2025?.[m]||0),0);
+  const ytd26cur  = h => ytdMonths.reduce((s,m)=>s+(h.m2026?.[m]||0),0);
 
   const all = Object.entries(CONS.hospitals).filter(([n,h])=>{
     if(q && !n.toLowerCase().includes(q)) return false;
@@ -2346,10 +2413,10 @@ function renderConsHospitals() {
   });
 
   // KPI
-  const active26=all.filter(([,h])=>h.y2026>0).length;
-  const new26=all.filter(([,h])=>h.y2026>0&&h.y2025<=0).length;
-  const risk=all.filter(([,h])=>h.y2025>0&&h.y2026<=0);
-  const decline=all.filter(([,h])=>h.y2026>0&&h.y2025>0&&h.y2026<ytd25est(h));
+  const active26=all.filter(([,h])=>ytd26cur(h)>0).length;
+  const new26=all.filter(([,h])=>ytd26cur(h)>0&&ytd25est(h)<=0).length;
+  const risk=all.filter(([,h])=>ytd25est(h)>0&&ytd26cur(h)<=0);
+  const decline=all.filter(([,h])=>ytd26cur(h)>0&&ytd25est(h)>0&&ytd26cur(h)<ytd25est(h));
 
   document.getElementById('hosp-kpi').innerHTML=[
     {icon:'bi-building',      color:'#2563eb',label:'2026 활성 병원',value:active26+'개',sub:`전체 ${all.length}개 중`},
@@ -4019,6 +4086,19 @@ async function doChangePw() {
   if(session) await _sb.from('crm_profiles').update({temp_pw: null}).eq('id', session.user.id);
   bootstrap.Modal.getInstance(document.getElementById('changePwModal')).hide();
   showToast('비밀번호가 변경됐습니다', true);
+}
+
+function _consPeriodChange() {
+  const fromM = parseInt(document.getElementById('cons-from-sel').value);
+  const toSel = document.getElementById('cons-to-sel');
+  if(parseInt(toSel.value) < fromM) toSel.value = fromM;
+  renderConsumables();
+}
+function _hospPeriodChange() {
+  const fromM = parseInt(document.getElementById('hosp-from-sel').value);
+  const toSel = document.getElementById('hosp-to-sel');
+  if(parseInt(toSel.value) < fromM) toSel.value = fromM;
+  renderConsHospitals();
 }
 
 document.addEventListener('click', function(e) {
