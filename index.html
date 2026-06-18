@@ -1157,10 +1157,10 @@ async function _showLauncherOrApp(user) {
 }
 
 async function _bootApp() {
-  document.getElementById('main-content').style.display='block';
   await Promise.all([DB.load(), loadUserRole()]);
   const lastPage = sessionStorage.getItem('wt_page') || 'dashboard';
   showPage(lastPage);
+  document.getElementById('main-content').style.display='block';
 }
 
 
