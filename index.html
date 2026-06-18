@@ -2067,7 +2067,9 @@ function consParseExcel(input) {
       const {error: _derr} = await _sb.from('cons_cache').upsert({key:'device', data: DEVICE});
       if(_derr) console.warn('제품 데이터 저장 실패:', _derr.message);
       renderConsumables();
-      setDone('업로드 완료! ✅', `소모품 2025:${r25.length}건 · 2026:${r26.length}건 | 제품 2025:${rd25.length}건 · 2026:${rd26.length}건 | 카테고리: ${_cats.join(', ')}`);
+      const _consTotal26 = Object.values(CONS.monthly2026||{}).reduce((s,v)=>s+v,0);
+      const _devTotal26 = Object.values(DEVICE.monthly2026||{}).reduce((s,v)=>s+v,0);
+      setDone('업로드 완료! ✅', `소모품 2026 합계: ${Math.round(_consTotal26/1e8*10)/10}억 | 제품 2026 합계: ${Math.round(_devTotal26/1e8*10)/10}억 (${rd26.length}건) | 구분: ${_cats.join(', ')}`);
     } catch(err) {
       document.getElementById('cons-upload-icon').textContent = '❌';
       document.getElementById('cons-upload-icon').style.display = 'block';
