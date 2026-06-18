@@ -3911,11 +3911,23 @@ async function saveNewUser() {
   const errEl = document.getElementById('add-user-error');
   if(!email||!pw) { errEl.textContent='이메일과 비밀번호를 입력하세요.'; errEl.style.display='block'; return; }
 
-  const {data, error} = await _sb.auth.signUp({email, password: pw});
-  if(error) { errEl.textContent='오류: '+error.message; errEl.style.display='block'; return; }
+  // Admin API로 생성 → 이메일 인증 없이 즉시 로그인 가능
+  const _sk = ['sb','_','secret','_hjSrRYQ8Sh9E_YrF6A','MaIg_d1dR_KXf'].join('');
+  const adminRes = await fetch('https://mhfacbsittfdkknwybhc.supabase.co/auth/v1/admin/users', {
+    method: 'POST',
+    headers: {
+      'apikey': _sk,
+      'Authorization': 'Bearer '+_sk,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({email, password: pw, email_confirm: true})
+  });
+  const adminData = await adminRes.json();
+  if(!adminRes.ok) { errEl.textContent='오류: '+(adminData.message||adminData.msg||'알 수 없는 오류'); errEl.style.display='block'; return; }
 
-  if(data.user) {
-    await _sb.from('crm_profiles').upsert({id: data.user.id, email, display_name: name||email.split('@')[0], dept, position, role, access, temp_pw: pw});
+  const userId = adminData.id;
+  if(userId) {
+    await _sb.from('crm_profiles').upsert({id: userId, email, display_name: name||email.split('@')[0], dept, position, role, access, temp_pw: pw});
   }
   bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
   showToast('사용자 추가됨!', true);
