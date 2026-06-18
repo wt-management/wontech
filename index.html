@@ -281,7 +281,10 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
             <div style="font-size:10px;color:#475569;margin-top:1px" id="sidebar-user-dept"></div>
           </div>
         </div>
-        <button onclick="doLogout()" title="로그아웃" style="background:none;border:none;color:#64748b;cursor:pointer;padding:2px 4px;font-size:14px" title="로그아웃"><i class="bi bi-box-arrow-right"></i></button>
+        <div style="display:flex;gap:2px">
+          <button onclick="openChangePwModal()" title="비밀번호 변경" style="background:none;border:none;color:#64748b;cursor:pointer;padding:2px 4px;font-size:14px" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#64748b'"><i class="bi bi-key"></i></button>
+          <button onclick="doLogout()" title="로그아웃" style="background:none;border:none;color:#64748b;cursor:pointer;padding:2px 4px;font-size:14px" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#64748b'"><i class="bi bi-box-arrow-right"></i></button>
+        </div>
       </div>
     </div>
     <a class="nav-link" style="color:#6b7280;margin:0 0 4px" onclick="openSearch()"><i class="bi bi-search"></i>통합 검색 <kbd style="font-size:9px;background:#1e293b;border:1px solid #334155;border-radius:4px;padding:1px 4px;color:#94a3b8;margin-left:auto">⌘K</kbd></a>
@@ -3987,6 +3990,37 @@ function fmtAmt(n){n=Number(n)||0;if(!n)return'0원';if(n>=100000000)return(n/10
 
 init();
 
+function openChangePwModal() {
+  document.getElementById('cpw-new').value = '';
+  document.getElementById('cpw-confirm').value = '';
+  document.getElementById('cpw-error').style.display = 'none';
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('changePwModal')).show();
+}
+function toggleCpwEye(inputId, iconId) {
+  const inp = document.getElementById(inputId);
+  const ico = document.getElementById(iconId);
+  if(inp.type === 'password') { inp.type = 'text'; ico.className = 'bi bi-eye-slash'; }
+  else { inp.type = 'password'; ico.className = 'bi bi-eye'; }
+}
+async function doChangePw() {
+  const pw = document.getElementById('cpw-new').value;
+  const pw2 = document.getElementById('cpw-confirm').value;
+  const errEl = document.getElementById('cpw-error');
+  errEl.style.display = 'none';
+  if(pw.length < 6) { errEl.textContent = '비밀번호는 6자 이상이어야 합니다.'; errEl.style.display = 'block'; return; }
+  if(pw !== pw2) { errEl.textContent = '비밀번호가 일치하지 않습니다.'; errEl.style.display = 'block'; return; }
+  const btn = document.querySelector('#changePwModal .btn-warning');
+  btn.disabled = true; btn.textContent = '변경 중...';
+  const {error} = await _sb.auth.updateUser({password: pw});
+  btn.disabled = false; btn.textContent = '변경하기';
+  if(error) { errEl.textContent = '오류: ' + error.message; errEl.style.display = 'block'; return; }
+  // temp_pw 초기화
+  const {data:{session}} = await _sb.auth.getSession();
+  if(session) await _sb.from('crm_profiles').update({temp_pw: null}).eq('id', session.user.id);
+  bootstrap.Modal.getInstance(document.getElementById('changePwModal')).hide();
+  showToast('비밀번호가 변경됐습니다', true);
+}
+
 document.addEventListener('click', function(e) {
   const btn = document.getElementById('site-switcher-btn');
   const dd = document.getElementById('site-dropdown');
@@ -4010,6 +4044,31 @@ window.addEventListener('popstate', function(e) {
   }
 });
 </script>
+
+<!-- 비밀번호 변경 모달 -->
+<div class="modal fade" id="changePwModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content">
+  <div class="modal-header border-0 pb-0"><h6 class="modal-title"><i class="bi bi-key me-2 text-warning"></i>비밀번호 변경</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body">
+    <div class="mb-2">
+      <label class="form-label fw-bold" style="font-size:12px">새 비밀번호</label>
+      <div style="position:relative">
+        <input type="password" id="cpw-new" class="form-control form-control-sm pe-4" placeholder="새 비밀번호 (6자 이상)">
+        <i class="bi bi-eye" id="cpw-eye1" onclick="toggleCpwEye('cpw-new','cpw-eye1')" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:pointer;color:#9ca3af;font-size:13px"></i>
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label fw-bold" style="font-size:12px">새 비밀번호 확인</label>
+      <div style="position:relative">
+        <input type="password" id="cpw-confirm" class="form-control form-control-sm pe-4" placeholder="동일하게 입력" onkeydown="if(event.key==='Enter')doChangePw()">
+        <i class="bi bi-eye" id="cpw-eye2" onclick="toggleCpwEye('cpw-confirm','cpw-eye2')" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:pointer;color:#9ca3af;font-size:13px"></i>
+      </div>
+    </div>
+    <div id="cpw-error" style="font-size:12px;color:#dc2626;display:none;margin-bottom:8px"></div>
+  </div>
+  <div class="modal-footer border-0 pt-0">
+    <button class="btn btn-warning w-100 fw-bold" onclick="doChangePw()">변경하기</button>
+  </div>
+</div></div></div>
 
 <!-- 사용자 추가 모달 (body 최상위 — main-content 밖) -->
 <div class="modal fade" id="addUserModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content">
