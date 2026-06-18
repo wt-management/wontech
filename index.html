@@ -148,8 +148,10 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 .modal{z-index:10000!important}
 .modal-backdrop{z-index:9999!important}
 /* 접근권한 카드 */
-.access-card.selected{border-color:#ff4500!important;background:#fff5f2}
-.access-card:hover{border-color:#fdba74!important}
+.access-card.selected{border-color:#0891b2!important;background:linear-gradient(135deg,rgba(8,145,178,.06),rgba(13,148,136,.06))!important;box-shadow:0 0 0 3px rgba(8,145,178,.15)}
+.access-card[data-val=intl].selected{border-color:#7c3aed!important;background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(8,145,178,.06))!important;box-shadow:0 0 0 3px rgba(124,58,237,.15)}
+.access-card[data-val=japan].selected{border-color:#f59e0b!important;background:linear-gradient(135deg,rgba(245,158,11,.06),rgba(239,68,68,.06))!important;box-shadow:0 0 0 3px rgba(245,158,11,.15)}
+.access-card:hover:not(.selected){border-color:#cbd5e1!important;background:#f8fafc!important}
 /* 앱 로딩 오버레이 */
 #app-loading{position:fixed;inset:0;background:#0f172a;z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px}
 #app-loading .spin{width:36px;height:36px;border:3px solid rgba(255,255,255,.15);border-top-color:#ff4500;border-radius:50%;animation:spin .7s linear infinite}
@@ -4978,21 +4980,30 @@ window.addEventListener('popstate', function(e) {
     </div>
     <div class="mb-3">
       <label class="form-label fw-bold" style="font-size:12px">접근 권한 <span style="font-weight:400;color:#6b7280">(복수 선택 가능)</span></label>
-      <div id="access-cards" style="display:flex;gap:8px;flex-wrap:wrap">
+      <div id="access-cards" style="display:flex;gap:10px;flex-wrap:wrap">
         <div class="access-card" data-val="korea" onclick="toggleAccessCard(this)"
-          style="flex:1;min-width:100px;border:2px solid #e5e7eb;border-radius:10px;padding:10px 12px;cursor:pointer;text-align:center;transition:all .15s">
-          <div style="font-size:20px">🇰🇷</div>
-          <div style="font-size:12px;font-weight:700;margin-top:4px">한국 CRM</div>
-        </div>
-        <div class="access-card" data-val="japan" onclick="toggleAccessCard(this)"
-          style="flex:1;min-width:100px;border:2px solid #e5e7eb;border-radius:10px;padding:10px 12px;cursor:pointer;text-align:center;transition:all .15s">
-          <div style="font-size:20px">🇯🇵</div>
-          <div style="font-size:12px;font-weight:700;margin-top:4px">일본법인</div>
+          style="flex:1;min-width:90px;border:2px solid #e5e7eb;border-radius:14px;padding:14px 10px 12px;cursor:pointer;text-align:center;transition:all .18s;background:#fff">
+          <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#0891b2,#0d9488);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px rgba(8,145,178,.25)">
+            <i class="bi bi-bar-chart-line-fill" style="font-size:18px;color:#fff"></i>
+          </div>
+          <div style="font-size:11px;font-weight:800;color:#1e293b;letter-spacing:-.2px">한국 영업</div>
+          <div style="font-size:10px;color:#94a3b8;margin-top:2px">Korea CRM</div>
         </div>
         <div class="access-card" data-val="intl" onclick="toggleAccessCard(this)"
-          style="flex:1;min-width:100px;border:2px solid #e5e7eb;border-radius:10px;padding:10px 12px;cursor:pointer;text-align:center;transition:all .15s">
-          <div style="font-size:20px;color:#0d9488"><i class="bi bi-globe-americas"></i></div>
-          <div style="font-size:12px;font-weight:700;margin-top:4px">해외 영업</div>
+          style="flex:1;min-width:90px;border:2px solid #e5e7eb;border-radius:14px;padding:14px 10px 12px;cursor:pointer;text-align:center;transition:all .18s;background:#fff">
+          <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#7c3aed,#0891b2);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px rgba(124,58,237,.25)">
+            <i class="bi bi-globe-americas" style="font-size:18px;color:#fff"></i>
+          </div>
+          <div style="font-size:11px;font-weight:800;color:#1e293b;letter-spacing:-.2px">해외 영업</div>
+          <div style="font-size:10px;color:#94a3b8;margin-top:2px">International</div>
+        </div>
+        <div class="access-card" data-val="japan" onclick="toggleAccessCard(this)"
+          style="flex:1;min-width:90px;border:2px solid #e5e7eb;border-radius:14px;padding:14px 10px 12px;cursor:pointer;text-align:center;transition:all .18s;background:#fff">
+          <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px rgba(245,158,11,.25)">
+            <i class="bi bi-building-fill" style="font-size:18px;color:#fff"></i>
+          </div>
+          <div style="font-size:11px;font-weight:800;color:#1e293b;letter-spacing:-.2px">일본법인</div>
+          <div style="font-size:10px;color:#94a3b8;margin-top:2px">Japan</div>
         </div>
       </div>
       <div id="access-card-error" style="font-size:11px;color:#dc2626;margin-top:4px;display:none">최소 1개 선택하세요</div>
