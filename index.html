@@ -173,6 +173,8 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
         <thead><tr style="border-bottom:1px solid rgba(255,255,255,.08)">
           <th style="padding:12px 16px;text-align:left;font-size:11px;color:#64748b;font-weight:600">이메일</th>
           <th style="padding:12px 16px;text-align:left;font-size:11px;color:#64748b;font-weight:600">이름</th>
+          <th style="padding:12px 16px;text-align:left;font-size:11px;color:#64748b;font-weight:600">부서</th>
+          <th style="padding:12px 16px;text-align:left;font-size:11px;color:#64748b;font-weight:600">직급</th>
           <th style="padding:12px 16px;text-align:left;font-size:11px;color:#64748b;font-weight:600">접근 권한</th>
           <th style="padding:12px 16px;text-align:left;font-size:11px;color:#64748b;font-weight:600">역할</th>
           <th style="padding:12px 16px"></th>
@@ -3798,12 +3800,15 @@ function hideAdminPanel() {
 
 async function renderAdminUsers() {
   const el = document.getElementById('admin-user-list');
-  el.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:#64748b">불러오는 중...</td></tr>`;
+  el.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:#64748b">불러오는 중...</td></tr>`;
   const {data: profiles} = await _sb.from('crm_profiles').select('*').order('email');
-  if(!profiles?.length) { el.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:24px;color:#64748b">사용자 없음</td></tr>`; return; }
+  if(!profiles?.length) { el.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:24px;color:#64748b">사용자 없음</td></tr>`; return; }
+  const inputStyle = "background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:4px 8px;font-size:12px;color:#fff;width:90px";
   el.innerHTML = profiles.map(p=>`<tr style="border-bottom:1px solid rgba(255,255,255,.06)">
     <td style="padding:12px 16px;font-size:13px;color:#e2e8f0">${p.email||''}</td>
-    <td style="padding:12px 16px"><input type="text" value="${p.display_name||''}" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:4px 8px;font-size:12px;color:#fff;width:90px" onchange="updateUserName('${p.id}',this.value)"></td>
+    <td style="padding:12px 16px"><input type="text" value="${p.display_name||''}" style="${inputStyle}" onchange="updateUserField('${p.id}','display_name',this.value)"></td>
+    <td style="padding:12px 16px"><input type="text" value="${p.dept||''}" placeholder="부서" style="${inputStyle}" onchange="updateUserField('${p.id}','dept',this.value)"></td>
+    <td style="padding:12px 16px"><input type="text" value="${p.position||''}" placeholder="직급" style="${inputStyle}" onchange="updateUserField('${p.id}','position',this.value)"></td>
     <td style="padding:12px 16px"><select style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:4px 8px;font-size:12px;color:#fff" onchange="updateUserAccess('${p.id}',this.value)">
       <option value="korea" ${p.access==='korea'?'selected':''} style="background:#1e293b">🇰🇷 한국만</option>
       <option value="japan" ${p.access==='japan'?'selected':''} style="background:#1e293b">🇯🇵 일본만</option>
@@ -3833,9 +3838,9 @@ async function sendResetEmail(email) {
 
 async function renderUsers() { renderAdminUsers(); }
 
-async function updateUserName(id, name) {
-  await _sb.from('crm_profiles').update({display_name: name}).eq('id', id);
-  showToast('이름 저장됨', true);
+async function updateUserField(id, field, value) {
+  await _sb.from('crm_profiles').update({[field]: value}).eq('id', id);
+  showToast('저장됨', true);
 }
 
 async function updateUserRole(id, role) {
@@ -3857,7 +3862,7 @@ function getSelectedAccess() {
   return [...document.querySelectorAll('#access-cards .access-card.selected')].map(c=>c.dataset.val).join(',');
 }
 function openAddUserModal() {
-  ['new-user-email','new-user-pw','new-user-name'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['new-user-email','new-user-pw','new-user-name','new-user-dept','new-user-position'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   const roleEl=document.getElementById('new-user-role'); if(roleEl) roleEl.value='user';
   document.querySelectorAll('#access-cards .access-card').forEach(c=>c.classList.remove('selected'));
   const errEl=document.getElementById('add-user-error'); if(errEl) errEl.style.display='none';
@@ -3871,6 +3876,8 @@ async function saveNewUser() {
   const email = document.getElementById('new-user-email').value.trim();
   const pw = document.getElementById('new-user-pw').value.trim();
   const name = document.getElementById('new-user-name').value.trim();
+  const dept = document.getElementById('new-user-dept').value.trim();
+  const position = document.getElementById('new-user-position').value.trim();
   const role = document.getElementById('new-user-role').value;
   const access = getSelectedAccess();
   if(!access) { document.getElementById('access-card-error').style.display='block'; return; }
@@ -3881,7 +3888,7 @@ async function saveNewUser() {
   if(error) { errEl.textContent='오류: '+error.message; errEl.style.display='block'; return; }
 
   if(data.user) {
-    await _sb.from('crm_profiles').upsert({id: data.user.id, email, display_name: name||email.split('@')[0], role, access});
+    await _sb.from('crm_profiles').upsert({id: data.user.id, email, display_name: name||email.split('@')[0], dept, position, role, access});
   }
   bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
   showToast('사용자 추가됨!', true);
@@ -3956,6 +3963,10 @@ window.addEventListener('popstate', function(e) {
     <div class="mb-2"><label class="form-label fw-bold" style="font-size:12px">이메일</label><input type="email" id="new-user-email" class="form-control form-control-sm" placeholder="example@gmail.com"></div>
     <div class="mb-2"><label class="form-label fw-bold" style="font-size:12px">임시 비밀번호</label><input type="text" id="new-user-pw" class="form-control form-control-sm" placeholder="임시 비밀번호"></div>
     <div class="mb-2"><label class="form-label fw-bold" style="font-size:12px">이름</label><input type="text" id="new-user-name" class="form-control form-control-sm" placeholder="홍길동"></div>
+    <div class="mb-2" style="display:flex;gap:8px">
+      <div style="flex:1"><label class="form-label fw-bold" style="font-size:12px">부서</label><input type="text" id="new-user-dept" class="form-control form-control-sm" placeholder="영업팀"></div>
+      <div style="flex:1"><label class="form-label fw-bold" style="font-size:12px">직급</label><input type="text" id="new-user-position" class="form-control form-control-sm" placeholder="과장"></div>
+    </div>
     <div class="mb-3">
       <label class="form-label fw-bold" style="font-size:12px">접근 권한 <span style="font-weight:400;color:#6b7280">(복수 선택 가능)</span></label>
       <div id="access-cards" style="display:flex;gap:8px;flex-wrap:wrap">
