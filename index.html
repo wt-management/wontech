@@ -3796,10 +3796,14 @@ async function deleteUser(id, email) {
 }
 
 function openAddUserModal() {
-  ['new-user-email','new-user-pw','new-user-name'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('new-user-role').value='user';
-  document.getElementById('add-user-error').style.display='none';
-  new bootstrap.Modal(document.getElementById('addUserModal')).show();
+  ['new-user-email','new-user-pw','new-user-name'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  const roleEl=document.getElementById('new-user-role'); if(roleEl) roleEl.value='user';
+  const accessEl=document.getElementById('new-user-access'); if(accessEl) accessEl.value='korea';
+  const errEl=document.getElementById('add-user-error'); if(errEl) errEl.style.display='none';
+  const modalEl=document.getElementById('addUserModal');
+  if(!modalEl){ alert('모달을 찾을 수 없습니다.'); return; }
+  const m = bootstrap.Modal.getOrCreateInstance(modalEl);
+  m.show();
 }
 
 async function saveNewUser() {
