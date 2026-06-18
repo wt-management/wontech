@@ -278,6 +278,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
           <div>
             <div style="font-size:12px;font-weight:700;color:#f1f5f9" id="sidebar-user-name">-</div>
             <div style="font-size:10px;color:#64748b" id="sidebar-user-id">-</div>
+            <div style="font-size:10px;color:#475569;margin-top:1px" id="sidebar-user-dept"></div>
           </div>
         </div>
         <button onclick="doLogout()" title="로그아웃" style="background:none;border:none;color:#64748b;cursor:pointer;padding:2px 4px;font-size:14px" title="로그아웃"><i class="bi bi-box-arrow-right"></i></button>
@@ -3784,8 +3785,23 @@ let _currentAccess = ['korea'];
 async function loadUserRole() {
   const {data:{session}} = await _sb.auth.getSession();
   if(!session) return;
-  const {data} = await _sb.from('crm_profiles').select('role').eq('id', session.user.id).single();
+  const {data} = await _sb.from('crm_profiles').select('role,display_name,position,dept').eq('id', session.user.id).single();
   _isAdmin = data?.role === 'admin';
+  if(data) _updateSidebarProfile(data, session.user.email);
+}
+
+function _updateSidebarProfile(profile, email) {
+  const name = profile.display_name || email?.split('@')[0] || '-';
+  const position = profile.position || '';
+  const dept = profile.dept || '';
+  const nameEl = document.getElementById('sidebar-user-name');
+  const idEl = document.getElementById('sidebar-user-id');
+  const deptEl = document.getElementById('sidebar-user-dept');
+  const avatarEl = document.getElementById('sidebar-user-avatar');
+  if(nameEl) nameEl.textContent = position ? name + ' ' + position : name;
+  if(idEl) idEl.textContent = dept || email || '';
+  if(deptEl) deptEl.style.display = 'none';
+  if(avatarEl) avatarEl.textContent = name.charAt(0).toUpperCase();
 }
 
 function showAdminPanel() {
