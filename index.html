@@ -292,10 +292,15 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
           <div style="background:rgba(255,69,0,.12);border-radius:6px;padding:9px 12px;display:flex;align-items:center;gap:8px;color:#ff4500;font-size:12px;font-weight:700">
             <span>🇰🇷</span><span style="flex:1">한국 CRM</span><i class="bi bi-check2" style="font-size:11px"></i>
           </div>
-          <div onclick="location.href='https://wt-management.github.io/wtj-management/'"
-            style="margin-top:4px;border-radius:6px;padding:9px 12px;display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
+          <div id="switcher-japan-item" onclick="location.href='https://wt-management.github.io/wtj-management/'"
+            style="display:none;margin-top:4px;border-radius:6px;padding:9px 12px;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
             onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''">
             <span>🇯🇵</span><span style="flex:1">일본법인 관리</span><i class="bi bi-arrow-right" style="font-size:11px"></i>
+          </div>
+          <div id="switcher-admin-item" onclick="document.getElementById('site-dropdown').style.display='none';sessionStorage.removeItem('wt_app');document.getElementById('main-content').style.display='none';showAdminPanel();document.getElementById('launcher-screen').style.display='flex';"
+            style="display:none;margin-top:4px;border-radius:6px;padding:9px 12px;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
+            onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''">
+            <span>⚙️</span><span style="flex:1">관리자 페이지</span><i class="bi bi-arrow-right" style="font-size:11px"></i>
           </div>
         </div>
       </div>
@@ -1196,9 +1201,17 @@ function _hideLoading() {
 
 async function _bootApp(access) {
   await Promise.all([DB.load(), loadUserRole()]);
-  // japan 접근권한 있으면 사이트 전환 메뉴 표시
-  if(access?.includes('japan')) {
+  // japan 권한 또는 관리자이면 사이트 전환 메뉴 표시
+  if(access?.includes('japan') || _isAdmin) {
     document.getElementById('site-switcher').style.display='block';
+  }
+  if(access?.includes('japan')) {
+    const ji = document.getElementById('switcher-japan-item');
+    if(ji) { ji.style.display='flex'; }
+  }
+  if(_isAdmin) {
+    const ai = document.getElementById('switcher-admin-item');
+    if(ai) { ai.style.display='flex'; }
   }
   const lastPage = sessionStorage.getItem('wt_page') || 'dashboard';
   showPage(lastPage);
