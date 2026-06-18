@@ -281,15 +281,24 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       </div>
     </div>
     <a class="nav-link" style="color:#6b7280;margin:0 0 4px" onclick="openSearch()"><i class="bi bi-search"></i>통합 검색 <kbd style="font-size:9px;background:#1e293b;border:1px solid #334155;border-radius:4px;padding:1px 4px;color:#94a3b8;margin-left:auto">⌘K</kbd></a>
-    <!-- 사이트 전환 -->
-    <div id="site-switcher" style="display:none;border-top:1px solid #1e293b;margin-top:8px;padding-top:8px">
-      <div style="font-size:10px;color:#475569;font-weight:600;letter-spacing:.5px;padding:0 8px;margin-bottom:6px">SITES</div>
-      <a class="nav-link" style="background:rgba(255,69,0,.12);color:#ff4500;font-weight:700;pointer-events:none">
-        <span style="font-size:13px">🇰🇷</span> 한국 CRM <i class="bi bi-check2" style="margin-left:auto;font-size:12px"></i>
-      </a>
-      <a class="nav-link" style="color:#64748b" onclick="location.href='https://wt-management.github.io/wtj-management/'">
-        <span style="font-size:13px">🇯🇵</span> 일본법인 관리 <i class="bi bi-arrow-right" style="margin-left:auto;font-size:11px"></i>
-      </a>
+    <!-- 사이트 전환 드롭다운 -->
+    <div id="site-switcher" style="display:none;position:relative;padding:8px 8px 0;border-top:1px solid #1e293b;margin-top:8px">
+      <button id="site-switcher-btn" onclick="(function(){var d=document.getElementById('site-dropdown');d.style.display=d.style.display==='block'?'none':'block'})()"
+        style="width:100%;background:rgba(255,255,255,.05);border:1px solid #334155;border-radius:8px;padding:8px 12px;color:#94a3b8;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:8px;text-align:left">
+        <span style="font-size:14px">🌐</span><span style="flex:1;font-weight:600">사이트 전환</span><i class="bi bi-chevron-up" style="font-size:10px;opacity:.6"></i>
+      </button>
+      <div id="site-dropdown" style="display:none;position:absolute;bottom:calc(100% + 4px);left:8px;right:8px;background:#1e293b;border:1px solid #334155;border-radius:10px;overflow:hidden;box-shadow:0 -8px 24px rgba(0,0,0,.5);z-index:200">
+        <div style="padding:6px">
+          <div style="background:rgba(255,69,0,.12);border-radius:6px;padding:9px 12px;display:flex;align-items:center;gap:8px;color:#ff4500;font-size:12px;font-weight:700">
+            <span>🇰🇷</span><span style="flex:1">한국 CRM</span><i class="bi bi-check2" style="font-size:11px"></i>
+          </div>
+          <div onclick="location.href='https://wt-management.github.io/wtj-management/'"
+            style="margin-top:4px;border-radius:6px;padding:9px 12px;display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
+            onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''">
+            <span>🇯🇵</span><span style="flex:1">일본법인 관리</span><i class="bi bi-arrow-right" style="font-size:11px"></i>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </nav>
@@ -3902,6 +3911,12 @@ function fmtDate(d){if(!d)return'';try{return new Date(d).toLocaleDateString('ko
 function fmtAmt(n){n=Number(n)||0;if(!n)return'0원';if(n>=100000000)return(n/100000000).toFixed(1)+'억';if(n>=10000000)return(n/10000000).toFixed(1)+'천만';if(n>=10000)return Math.round(n/10000)+'만';return n.toLocaleString()+'원';}
 
 init();
+
+document.addEventListener('click', function(e) {
+  const btn = document.getElementById('site-switcher-btn');
+  const dd = document.getElementById('site-dropdown');
+  if(dd && btn && !btn.contains(e.target)) dd.style.display = 'none';
+});
 
 window.addEventListener('popstate', function(e) {
   if(e.state?.page === 'launcher') {
