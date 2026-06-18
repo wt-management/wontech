@@ -39,7 +39,17 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 </head>
 <body>
 <div id="main" style="display:none"><div class="sidebar">
-  <div class="brand"><div class="brand-name">WONTECH</div><div class="brand-sub">해외영업</div></div>
+  <div class="brand" style="padding:16px 14px 12px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div style="width:36px;height:36px;background:linear-gradient(135deg,#0d9488,#0891b2);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <span style="color:#fff;font-size:18px;font-weight:900;font-style:italic">W</span>
+    </div>
+    <div>
+      <div class="brand-name">wontech</div>
+      <div class="brand-sub">해외영업</div>
+    </div>
+  </div>
+</div>
   <div class="nav-section">
     <div class="nav-label">매출현황</div>
     <ul class="nav flex-column gap-0">
@@ -98,11 +108,42 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
     <span style="color:#9ca3af">~</span>
     <select id="ct-to" class="form-select form-select-sm" style="width:70px" onchange="_ctPC()"><option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5" selected>5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select>
   </div>
-  <div class="row g-3">
-    <div class="col-md-5"><div class="card p-3" style="max-height:560px;overflow-y:auto"><div class="fw-bold mb-2" style="font-size:13px">국가별 순위 <span style="font-size:11px;font-weight:400;color:#9ca3af">클릭 시 상세</span></div><div id="ct-rank"></div></div></div>
-    <div class="col-md-7">
-      <div class="card p-3 mb-3"><div class="fw-bold mb-2" style="font-size:13px">국가별 비중</div><div style="position:relative;height:220px"><canvas id="ct-pie"></canvas></div></div>
-      <div class="card p-3"><div class="fw-bold mb-2" style="font-size:13px">주요국 월별 추이</div><div style="position:relative;height:200px"><canvas id="ct-trend"></canvas></div></div>
+  <div class="row g-3" style="align-items:flex-start">
+    <!-- 왼쪽: 국가별 순위 (full height) -->
+    <div class="col-md-4">
+      <div class="card p-3" style="height:calc(100vh - 200px);overflow-y:auto">
+        <div class="fw-bold mb-2" style="font-size:13px">국가별 순위 <span style="font-size:11px;font-weight:400;color:#9ca3af">클릭 시 상세</span></div>
+        <div id="ct-rank"></div>
+      </div>
+    </div>
+    <!-- 오른쪽: 국가 선택 차트 + 거래처 + 성장률 -->
+    <div class="col-md-8">
+      <!-- 국가 선택 + YoY 월별 비교 -->
+      <div class="card p-3 mb-3">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+          <div class="fw-bold" style="font-size:13px"><i class="bi bi-graph-up me-1" style="color:#0891b2"></i>월별 전년비교</div>
+          <select id="ct-sel-country" class="form-select form-select-sm" style="width:140px" onchange="renderCtYoY()">
+            <option value="">국가 선택</option>
+          </select>
+        </div>
+        <div style="position:relative;height:200px"><canvas id="ct-yoy-chart"></canvas></div>
+        <div id="ct-yoy-kpi" class="row g-2 mt-2"></div>
+      </div>
+      <!-- 거래처 선택 -->
+      <div class="card p-3 mb-3">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+          <div class="fw-bold" style="font-size:13px"><i class="bi bi-building me-1" style="color:#7c3aed"></i>거래처 현황</div>
+          <select id="ct-sel-client" class="form-select form-select-sm" style="width:220px" onchange="renderCtClient()">
+            <option value="">거래처 선택 (국가 먼저 선택)</option>
+          </select>
+        </div>
+        <div id="ct-client-detail" style="color:#9ca3af;font-size:12px">국가를 먼저 선택하세요</div>
+      </div>
+      <!-- YoY 성장률 랭킹 -->
+      <div class="card p-3">
+        <div class="fw-bold mb-2" style="font-size:13px"><i class="bi bi-bar-chart-steps me-1" style="color:#16a34a"></i>YoY 성장률 순위 <span style="font-size:11px;font-weight:400;color:#9ca3af">전년 동기 대비</span></div>
+        <div id="ct-growth-rank"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -216,21 +257,117 @@ function renderByCountry(){
   const cur=yr===2026?INTL:INTL.data2025, pre=yr===2026?INTL.data2025:null;
   const arr=Object.entries(cur.countries||{}).map(([n,c])=>({n,v:ytd(c.m,f,t),pv:pre?ytd(pre.countries[n]?.m||{},f,t):0,c})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
   const tot=arr.reduce((s,x)=>s+x.v,0)||1;
-  document.getElementById('ct-rank').innerHTML=arr.map((x,i)=>`<div style="padding:8px 4px;border-bottom:1px solid #f3f4f6;cursor:pointer" onclick="showCtDetail('${x.n.replace(/'/g,"\\'")}',${yr},${f},${t})"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-size:11px;color:#9ca3af;width:20px;text-align:right">${i+1}</span><span style="font-size:13px;font-weight:700;flex:1">${x.n}</span><span style="font-size:13px;font-weight:700;color:${C7[i%C7.length]}">${fmtW(x.v)}</span>${bdg(pct(x.v,x.pv))}</div><div style="margin-left:28px"><div style="background:#f3f4f6;border-radius:3px;height:5px;overflow:hidden"><div style="width:${(x.v/tot*100).toFixed(1)}%;height:100%;background:${C7[i%C7.length]};border-radius:3px"></div></div><div style="font-size:10px;color:#9ca3af;margin-top:2px">${(x.v/tot*100).toFixed(1)}% · ${x.c.clients}개사</div></div></div>`).join('');
-  dch('ct-pie');dch('ct-trend');
-  const pie=document.getElementById('ct-pie');
-  if(pie&&arr.length){const top8=arr.slice(0,8),rest=arr.slice(8).reduce((s,x)=>s+x.v,0);const ls=[...top8.map(x=>x.n),...(rest>0?['기타']:[])],vs=[...top8.map(x=>x.v),...(rest>0?[rest]:[])];;_ch['ct-pie']=new Chart(pie,{type:'doughnut',data:{labels:ls,datasets:[{data:vs,backgroundColor:C7.concat(['#94a3b8']),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>c.label+': '+fmtW(c.raw)+' ('+((c.raw/tot)*100).toFixed(1)+'%)'}}}}});}
-  const tr=document.getElementById('ct-trend');
-  if(tr&&arr.length){const top5=arr.slice(0,5);const m12=Array.from({length:12},(_,i)=>i+1);_ch['ct-trend']=new Chart(tr,{type:'line',data:{labels:m12.map(m=>m+'월'),datasets:top5.map((x,i)=>({label:x.n,data:m12.map(m=>Math.round((cur.countries[x.n]?.m[m]||0)/1e4)),borderColor:C7[i],backgroundColor:'transparent',borderWidth:2,pointRadius:3,tension:0.3}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y?.toLocaleString()+'만원'}}},spaces:{y:{ticks:{callback:v=>v+'만'},grid:{color:'#f3f4f6'}}}}});}
+
+  document.getElementById('ct-rank').innerHTML=arr.map((x,i)=>`
+    <div style="padding:8px 4px;border-bottom:1px solid #f3f4f6;cursor:pointer" onclick="selectCountry('${x.n.replace(/'/g,"\\'")}')">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="font-size:11px;color:#9ca3af;width:20px;text-align:right">${i+1}</span>
+        <span style="font-size:13px;font-weight:700;flex:1">${x.n}</span>
+        <span style="font-size:13px;font-weight:700;color:${C7[i%C7.length]}">${fmtW(x.v)}</span>
+        ${bdg(pct(x.v,x.pv))}
+      </div>
+      <div style="margin-left:28px">
+        <div style="background:#f3f4f6;border-radius:3px;height:5px;overflow:hidden">
+          <div style="width:${(x.v/tot*100).toFixed(1)}%;height:100%;background:${C7[i%C7.length]};border-radius:3px"></div>
+        </div>
+        <div style="font-size:10px;color:#9ca3af;margin-top:2px">${(x.v/tot*100).toFixed(1)}% · ${x.c.clients}개사 · 전년 ${fmtW(x.pv)}</div>
+      </div>
+    </div>`).join('');
+
+  const ctSel=document.getElementById('ct-sel-country');
+  const prev=ctSel.value;
+  ctSel.innerHTML='<option value="">국가 선택</option>'+arr.map(x=>`<option value="${x.n}">${x.n} (${fmtW(x.v)})</option>`).join('');
+  if(prev&&arr.find(x=>x.n===prev)) ctSel.value=prev;
+
+  const growthArr=arr.filter(x=>x.pv>0).map(x=>({n:x.n,v:x.v,pv:x.pv,g:((x.v/x.pv-1)*100)})).sort((a,b)=>b.g-a.g);
+  const newArr=arr.filter(x=>x.pv===0);
+  document.getElementById('ct-growth-rank').innerHTML=[
+    ...growthArr.map((x,i)=>{
+      const col=x.g>=0?'#16a34a':'#dc2626', icon=x.g>=0?'bi-arrow-up-circle-fill':'bi-arrow-down-circle-fill';
+      return `<div style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:1px solid #f3f4f6">
+        <span style="font-size:11px;color:#9ca3af;width:18px;text-align:right">${i+1}</span>
+        <i class="bi ${icon}" style="color:${col};font-size:13px"></i>
+        <span style="flex:1;font-size:13px;font-weight:600">${x.n}</span>
+        <span style="font-size:13px;font-weight:700;color:${col}">${x.g>=0?'+':''}${x.g.toFixed(1)}%</span>
+        <span style="font-size:11px;color:#9ca3af">${fmtW(x.pv)} → ${fmtW(x.v)}</span>
+      </div>`;
+    }),
+    ...newArr.map(x=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:1px solid #f3f4f6">
+      <span style="font-size:11px;color:#9ca3af;width:18px"></span>
+      <i class="bi bi-star-fill" style="color:#f59e0b;font-size:13px"></i>
+      <span style="flex:1;font-size:13px;font-weight:600">${x.n}</span>
+      <span style="font-size:11px;color:#f59e0b">신규</span>
+      <span style="font-size:11px;color:#9ca3af">${fmtW(x.v)}</span>
+    </div>`),
+  ].join('')||'<div style="font-size:12px;color:#9ca3af;padding:8px">전년 데이터 없음</div>';
+
+  if(ctSel.value) renderCtYoY(); else { dch('ct-yoy-chart'); document.getElementById('ct-yoy-kpi').innerHTML=''; }
 }
 
-function showCtDetail(n,yr,f,t){
-  const cur=yr===2026?INTL:INTL.data2025, c=cur.countries[n];
-  if(!c) return;
-  const v=ytd(c.m,f,t);
-  document.getElementById('m-title').textContent='🌏 '+n+' · '+yr+'년 '+f+'~'+t+'월';
-  document.getElementById('m-body').innerHTML=`<div class="row g-3 mb-3"><div class="col-6"><div class="kpi-card"><div class="kpi-label">YTD 매출</div><div class="kpi-value" style="font-size:1.2rem">${fmtW(v)}</div></div></div><div class="col-6"><div class="kpi-card"><div class="kpi-label">거래처수</div><div class="kpi-value" style="font-size:1.2rem">${c.clients}개사</div></div></div></div><div class="fw-bold mb-2" style="font-size:13px">주력 제품</div>${pbars(c.prods||{},C7)}`;
-  document.getElementById('d-modal').style.display='flex';
+function selectCountry(n){
+  document.getElementById('ct-sel-country').value=n;
+  renderCtYoY();
+}
+
+function renderCtYoY(){
+  const yr=+document.getElementById('ct-year').value, f=+document.getElementById('ct-from').value, t=+document.getElementById('ct-to').value;
+  const n=document.getElementById('ct-sel-country').value;
+  if(!n){dch('ct-yoy-chart');document.getElementById('ct-yoy-kpi').innerHTML='';document.getElementById('ct-client-detail').innerHTML='<span style="color:#9ca3af;font-size:12px">국가를 선택하세요</span>';return;}
+  const cur=yr===2026?INTL:INTL.data2025, pre=yr===2026?INTL.data2025:null;
+  const c=cur.countries[n]; if(!c)return;
+  const cp=pre?.countries[n];
+  const curV=ytd(c.m,f,t), preV=cp?ytd(cp.m,f,t):0;
+  const yoy=pct(curV,preV);
+  document.getElementById('ct-yoy-kpi').innerHTML=`
+    <div class="col-4"><div class="kpi-card" style="padding:10px 12px"><div class="kpi-label">${yr}년 YTD</div><div class="kpi-value" style="font-size:1.1rem;color:#0891b2">${fmtW(curV)}</div></div></div>
+    <div class="col-4"><div class="kpi-card" style="padding:10px 12px"><div class="kpi-label">${yr-1}년 YTD</div><div class="kpi-value" style="font-size:1.1rem;color:#94a3b8">${fmtW(preV)}</div></div></div>
+    <div class="col-4"><div class="kpi-card" style="padding:10px 12px"><div class="kpi-label">YoY</div><div class="kpi-value" style="font-size:1.1rem;color:${yoy===null?'#6b7280':parseFloat(yoy)>=0?'#16a34a':'#dc2626'}">${yoy===null?'신규':(parseFloat(yoy)>=0?'▲':'▼')+Math.abs(parseFloat(yoy))+'%'}</div></div></div>`;
+  dch('ct-yoy-chart');
+  const ctx=document.getElementById('ct-yoy-chart');
+  const m12=Array.from({length:12},(_,i)=>i+1);
+  if(ctx) _ch['ct-yoy-chart']=new Chart(ctx,{type:'bar',data:{labels:m12.map(m=>m+'월'),datasets:[
+    {label:yr+'년',data:m12.map(m=>Math.round((c.m[m]||0)/1e4)),backgroundColor:'rgba(8,145,178,0.75)',borderRadius:3},
+    ...(cp?[{label:(yr-1)+'년',data:m12.map(m=>Math.round((cp.m[m]||0)/1e4)),type:'line',borderColor:'#94a3b8',backgroundColor:'transparent',borderWidth:2,borderDash:[5,3],pointRadius:3}]:[]),
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y?.toLocaleString()+'만원'}}},scales:{y:{ticks:{callback:v=>v+'만'},grid:{color:'#f3f4f6'}}}}});
+
+  // 거래처 드롭다운 (제품 목록으로)
+  const sel=document.getElementById('ct-sel-client');
+  sel.innerHTML=`<option value="">-- ${n} 전체 제품현황 --</option>`+
+    Object.entries(c.prods||{}).sort((a,b)=>b[1]-a[1]).map(([p,v])=>`<option value="${p}">${p} (${fmtW(v)})</option>`).join('');
+  renderCtClient();
+}
+
+function renderCtClient(){
+  const yr=+document.getElementById('ct-year').value, f=+document.getElementById('ct-from').value, t=+document.getElementById('ct-to').value;
+  const ctName=document.getElementById('ct-sel-country').value;
+  if(!ctName){document.getElementById('ct-client-detail').innerHTML='<span style="color:#9ca3af;font-size:12px">국가를 먼저 선택하세요</span>';return;}
+  const cur=yr===2026?INTL:INTL.data2025, pre=yr===2026?INTL.data2025:null;
+  const c=cur.countries[ctName], cp=pre?.countries[ctName];
+  const curV=ytd(c.m,f,t), preV=cp?ytd(cp.m,f,t):0, yoy=pct(curV,preV);
+  const maxP=Math.max(...Object.values(c.prods||{}))||1;
+  const prodsHtml=Object.entries(c.prods||{}).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([p,v],i)=>{
+    const pv=cp?.prods?.[p]||0, pyoy=pct(v,pv);
+    return `<div style="padding:5px 0;border-bottom:1px solid #f3f4f6">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+        <span style="font-size:12px;font-weight:600">${p}</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span style="font-size:12px;font-weight:700;color:${C7[i%C7.length]}">${fmtW(v)}</span>${bdg(pyoy)}
+        </div>
+      </div>
+      <div style="background:#f3f4f6;border-radius:3px;height:4px">
+        <div style="width:${(v/maxP*100).toFixed(1)}%;height:100%;background:${C7[i%C7.length]};border-radius:3px"></div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('ct-client-detail').innerHTML=`
+    <div class="row g-2 mb-3">
+      <div class="col-3"><div style="background:#f8fafc;border-radius:8px;padding:8px 10px"><div style="font-size:10px;color:#6b7280;font-weight:600">YTD 매출</div><div style="font-size:13px;font-weight:800;color:#0891b2">${fmtW(curV)}</div></div></div>
+      <div class="col-3"><div style="background:#f8fafc;border-radius:8px;padding:8px 10px"><div style="font-size:10px;color:#6b7280;font-weight:600">전년 YTD</div><div style="font-size:13px;font-weight:800;color:#94a3b8">${fmtW(preV)}</div></div></div>
+      <div class="col-3"><div style="background:#f8fafc;border-radius:8px;padding:8px 10px"><div style="font-size:10px;color:#6b7280;font-weight:600">YoY</div><div style="font-size:13px;font-weight:800;color:${yoy===null?'#6b7280':parseFloat(yoy)>=0?'#16a34a':'#dc2626'}">${yoy===null?'신규':(parseFloat(yoy)>=0?'▲':'▼')+Math.abs(parseFloat(yoy))+'%'}</div></div></div>
+      <div class="col-3"><div style="background:#f8fafc;border-radius:8px;padding:8px 10px"><div style="font-size:10px;color:#6b7280;font-weight:600">거래처수</div><div style="font-size:13px;font-weight:800;color:#7c3aed">${c.clients}개사</div></div></div>
+    </div>
+    <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">제품별 실적 (전년 비교)</div>
+    ${prodsHtml}`;
 }
 
 function renderByProduct(){
