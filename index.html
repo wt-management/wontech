@@ -173,7 +173,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       <div style="font-size:24px;font-weight:800;color:#fff;letter-spacing:-.5px">wontech</div>
       <div style="font-size:13px;color:#64748b;margin-top:4px">접속할 시스템을 선택하세요</div>
     </div>
-    <div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center" id="launcher-cards"></div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;max-width:700px" id="launcher-cards"></div>
     <div style="margin-top:32px;display:flex;gap:16px;align-items:center">
       <button id="launcher-admin-btn" onclick="showAdminPanel()" style="display:none;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#94a3b8;font-size:12px;padding:7px 16px;border-radius:8px;cursor:pointer"><i class="bi bi-shield-lock me-1"></i>관리자 페이지</button>
       <button onclick="doLogout()" style="background:none;border:none;color:#475569;font-size:12px;cursor:pointer"><i class="bi bi-box-arrow-right me-1"></i>로그아웃</button>
@@ -1382,33 +1382,51 @@ async function _showLauncherOrApp(user) {
   }
   if(access.length > 1 || _isAdmin) {
     // 여러 법인 접근 가능 or 관리자 → 런처 표시
+    const cardStyle = 'background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(12px);border-radius:20px;width:200px;cursor:pointer;transition:transform .18s,box-shadow .18s,border-color .18s;overflow:hidden';
+    const cardHover = "this.style.transform='translateY(-6px)';this.style.boxShadow='0 24px 48px rgba(0,0,0,.5)';this.style.borderColor='rgba(255,255,255,.25)'";
+    const cardOut   = "this.style.transform='';this.style.boxShadow='';this.style.borderColor='rgba(255,255,255,.1)'";
     const cards = [
       access.includes('korea') ? `
         <div onclick="sessionStorage.setItem('wt_app','korea');history.replaceState({page:'launcher'},'',location.href);document.getElementById('launcher-screen').style.display='none';document.getElementById('app-loading').style.display='flex';_bootApp(_currentAccess);"
-          style="background:#fff;border-radius:20px;padding:36px 40px;width:220px;text-align:center;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:0 8px 30px rgba(0,0,0,.3)"
-          onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 16px 40px rgba(0,0,0,.4)'"
-          onmouseout="this.style.transform='';this.style.boxShadow='0 8px 30px rgba(0,0,0,.3)'">
-          <div style="font-size:36px;margin-bottom:12px">🇰🇷</div>
-          <div style="font-size:16px;font-weight:800;color:#111827;margin-bottom:6px">한국 영업</div>
-          <div style="font-size:12px;color:#6b7280">영업관리 · 소모품 · 고객사</div>
+          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
+          <div style="height:5px;background:linear-gradient(90deg,#0891b2,#0d9488)"></div>
+          <div style="padding:28px 24px">
+            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#0891b2,#0d9488);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(8,145,178,.35)">
+              <i class="bi bi-bar-chart-line-fill" style="font-size:22px;color:#fff"></i>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">한국 영업</div>
+            <div style="font-size:11px;color:#64748b;line-height:1.6">영업관리 · 소모품<br>고객사 현황</div>
+            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#0891b2;font-weight:600">
+              입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
+          </div>
         </div>` : '',
       access.includes('japan') ? `
         <div onclick="location.href='https://wt-management.github.io/wtj-management/'"
-          style="background:#fff;border-radius:20px;padding:36px 40px;width:220px;text-align:center;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:0 8px 30px rgba(0,0,0,.3)"
-          onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 16px 40px rgba(0,0,0,.4)'"
-          onmouseout="this.style.transform='';this.style.boxShadow='0 8px 30px rgba(0,0,0,.3)'">
-          <div style="font-size:36px;margin-bottom:12px">🇯🇵</div>
-          <div style="font-size:16px;font-weight:800;color:#111827;margin-bottom:6px">일본법인 관리</div>
-          <div style="font-size:12px;color:#6b7280">매출 · 수주 · 임금</div>
+          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
+          <div style="height:5px;background:linear-gradient(90deg,#f59e0b,#ef4444)"></div>
+          <div style="padding:28px 24px">
+            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(245,158,11,.35)">
+              <i class="bi bi-building-fill" style="font-size:22px;color:#fff"></i>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">일본법인 관리</div>
+            <div style="font-size:11px;color:#64748b;line-height:1.6">매출 · 수주<br>임금 현황</div>
+            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#f59e0b;font-weight:600">
+              입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
+          </div>
         </div>` : '',
       (access.includes('intl') || access.includes('korea') || _isAdmin) ? `
         <div onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wontech/intl.html';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()"
-          style="background:#fff;border-radius:20px;padding:36px 40px;width:220px;text-align:center;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:0 8px 30px rgba(0,0,0,.3)"
-          onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 16px 40px rgba(0,0,0,.4)'"
-          onmouseout="this.style.transform='';this.style.boxShadow='0 8px 30px rgba(0,0,0,.3)'">
-          <div style="font-size:36px;margin-bottom:12px">🌏</div>
-          <div style="font-size:16px;font-weight:800;color:#111827;margin-bottom:6px">해외 영업</div>
-          <div style="font-size:12px;color:#6b7280">국가별 · 제품별 · 담당자별</div>
+          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
+          <div style="height:5px;background:linear-gradient(90deg,#7c3aed,#0891b2)"></div>
+          <div style="padding:28px 24px">
+            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#0891b2);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(124,58,237,.35)">
+              <i class="bi bi-globe-americas" style="font-size:22px;color:#fff"></i>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">해외 영업</div>
+            <div style="font-size:11px;color:#64748b;line-height:1.6">국가별 · 제품별<br>담당자 현황</div>
+            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#a78bfa;font-weight:600">
+              입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
+          </div>
         </div>` : ''
     ].join('');
     document.getElementById('launcher-cards').innerHTML = cards;
