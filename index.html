@@ -2062,9 +2062,11 @@ function consParseExcel(input) {
 
       // Supabase에 저장 (팀 전체 공유)
       setMsg('저장 중...', '팀 전체에 반영 중입니다');
-      const {error: _err} = await _sb.from('cons_cache').upsert({key:'main', data: CONS});
-      if(_err) throw new Error('저장 실패: ' + _err.message);
-      const {error: _derr} = await _sb.from('cons_cache').upsert({key:'device', data: DEVICE});
+      await _sb.from('cons_cache').delete().eq('key','main');
+      const {error: _err} = await _sb.from('cons_cache').insert({key:'main', data: CONS});
+      if(_err) throw new Error('소모품 저장 실패: ' + _err.message);
+      await _sb.from('cons_cache').delete().eq('key','device');
+      const {error: _derr} = await _sb.from('cons_cache').insert({key:'device', data: DEVICE});
       if(_derr) console.warn('제품 데이터 저장 실패:', _derr.message);
       renderConsumables();
       const _consTotal26 = Object.values(CONS.monthly2026||{}).reduce((s,v)=>s+v,0);
