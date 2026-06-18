@@ -2014,7 +2014,7 @@ function consParseExcel(input) {
       setMsg('제품 데이터 집계 중...');
       const parseDeviceSheet = (sn) => {
         const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], {defval:null});
-        return rows.filter(r => r['구분#2'] === '제품' && r['국내외'] === '국내');
+        return rows.filter(r => r['구분#2'] === '제품군' && r['국내외'] === '국내');
       };
       const aggregateDevice = (rows) => {
         const monthly = {}, products = {}, prodMo = {};
