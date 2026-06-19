@@ -3864,7 +3864,8 @@ function showHospitalDetail(name){
   const ytdMo = Object.keys(CONS.monthly2026||{}).map(Number).filter(m=>m>=1&&m<=12);
   const cons26 = hospCons?.y2026||0, cons25est = hospCons?ytdMo.reduce((s,m)=>s+(hospCons.m2025?.[m]||0),0):0;
   const consChg = cons25est>0?((cons26/cons25est-1)*100).toFixed(1):null;
-  const consProdBars = hospCons?.prods ? Object.entries(hospCons.prods).sort((a,b)=>b[1]-a[1]).map(([p,v])=>{
+  const _EXCL_SUMMARY = new Set(['A/S소모품','의료기기']);
+  const consProdBars = hospCons?.prods ? Object.entries(hospCons.prods).filter(([p])=>!_EXCL_SUMMARY.has(p)).sort((a,b)=>b[1]-a[1]).map(([p,v])=>{
     const pct=(v/Object.values(hospCons.prods).reduce((s,x)=>s+x,0)*100).toFixed(0);
     return `<div style="margin-bottom:4px"><div style="display:flex;justify-content:space-between;font-size:10px;color:#374151;margin-bottom:2px"><span>${p}</span><span style="font-weight:700">${v>=1e4?Math.round(v/1e4).toLocaleString()+'만':v.toLocaleString()}원</span></div><div style="height:5px;background:#f3f4f6;border-radius:3px"><div style="height:5px;width:${pct}%;background:#2563eb;border-radius:3px"></div></div></div>`;
   }).join('') : '<span style="font-size:11px;color:#9ca3af">소모품 구매 이력 없음</span>';
@@ -4004,7 +4005,8 @@ function showHospitalDetail(name){
     }).join('');
 
     // 제품별 비교 테이블 (2025 / 2026 한 화면)
-    const allProds = new Set([...Object.keys(hospCons.prods2025||{}), ...Object.keys(hospCons.prods2026||{})].filter(p=>p!=='A/S소모품'));
+    const _EXCL = new Set(['A/S소모품','의료기기']);
+    const allProds = new Set([...Object.keys(hospCons.prods2025||{}), ...Object.keys(hospCons.prods2026||{})].filter(p=>!_EXCL.has(p)));
     const prodCompRows = [...allProds].map(p=>({p, v25:(hospCons.prods2025||{})[p]||0, v26:(hospCons.prods2026||{})[p]||0}))
       .sort((a,b)=>(b.v26||b.v25)-(a.v26||a.v25))
       .map(({p,v25,v26},i)=>{
