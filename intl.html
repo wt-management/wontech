@@ -665,10 +665,10 @@ async function _afterLogin(user) {
     const btn=document.getElementById('login-btn');btn.disabled=false;btn.textContent='로그인';
     return;
   }
-  _currentUser={email:user.email,name:profile?.display_name||user.email.split('@')[0],access,role:profile?.role||'general'};
+  _currentUser={email:user.email,name:profile?.display_name||user.email.split('@')[0],access,role:profile?.role||'general',position:profile?.position||'',dept:profile?.dept||''};
   document.getElementById('login-screen').style.display='none';
   document.getElementById('main').style.display='block';
-  updateSidebarUser(_currentUser.name, _currentUser.email);
+  updateSidebarUser(_currentUser.name, _currentUser.email, _currentUser.position, _currentUser.dept);
   // Supabase에서 최신 해외 데이터 로드 (업로드한 데이터 팀 전체 공유)
   try {
     const {data:_id} = await _sb.from('cons_cache').select('data').eq('key','intl').single();
@@ -722,12 +722,12 @@ document.addEventListener('click', function(e){
 });
 
 // ── 유저 정보 표시 업데이트 ─────────────────────────────────────
-function updateSidebarUser(name, email) {
+function updateSidebarUser(name, email, position, dept) {
   const nm = document.getElementById('intl-user-name');
   const em = document.getElementById('intl-user-email');
   const av = document.getElementById('intl-user-avatar');
-  if(nm) nm.textContent = name || '-';
-  if(em) em.textContent = email || '-';
+  if(nm) nm.textContent = position ? (name||'-') + ' ' + position : (name||'-');
+  if(em) em.textContent = dept || email || '-';
   if(av) { av.textContent = (name||'?')[0].toUpperCase(); }
 }
 
