@@ -103,7 +103,7 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
   </div>
   <div class="period-bar">
     <span style="font-size:12px;font-weight:600;color:#374151">📅 조회 기간</span>
-    <select id="ov-year" class="form-select form-select-sm" style="width:84px" onchange="renderOverview()">
+    <select id="ov-year" class="form-select form-select-sm" style="width:100px" onchange="renderOverview()">
       <option value="2026" selected>2026년</option><option value="2025">2025년</option>
     </select>
     <select id="ov-from" class="form-select form-select-sm" style="width:70px" onchange="_ovPC()">
@@ -120,15 +120,15 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
     <div style="position:relative;height:220px"><canvas id="ov-chart"></canvas></div>
   </div>
   <div class="row g-3">
-    <div class="col-md-6"><div class="card p-3"><div class="fw-bold mb-2" style="font-size:13px;color:#0891b2"><i class="bi bi-capsule me-1"></i>소모품 Top 제품</div><div id="ov-cons"></div></div></div>
-    <div class="col-md-6"><div class="card p-3"><div class="fw-bold mb-2" style="font-size:13px;color:#7c3aed"><i class="bi bi-box-seam me-1"></i>장비 Top 제품</div><div id="ov-dev"></div></div></div>
+    <div class="col-md-6"><div class="card p-3"><div class="fw-bold mb-2" style="font-size:13px;color:#7c3aed"><i class="bi bi-box-seam me-1"></i>장비 Top 제품 <span style="font-size:10px;font-weight:400;color:#9ca3af">클릭하면 상세</span></div><div id="ov-dev"></div></div></div>
+    <div class="col-md-6"><div class="card p-3"><div class="fw-bold mb-2" style="font-size:13px;color:#0891b2"><i class="bi bi-capsule me-1"></i>소모품 Top 제품 <span style="font-size:10px;font-weight:400;color:#9ca3af">클릭하면 상세</span></div><div id="ov-cons"></div></div></div>
   </div>
 </div>
 
 <div id="page-by-country" class="page">
   <div class="page-header"><h5><i class="bi bi-globe" style="color:#0891b2"></i>국가별 분석</h5></div>
   <div class="period-bar">
-    <select id="ct-year" class="form-select form-select-sm" style="width:84px" onchange="renderByCountry()"><option value="2026" selected>2026년</option><option value="2025">2025년</option></select>
+    <select id="ct-year" class="form-select form-select-sm" style="width:100px" onchange="renderByCountry()"><option value="2026" selected>2026년</option><option value="2025">2025년</option></select>
     <select id="ct-from" class="form-select form-select-sm" style="width:70px" onchange="_ctPC()"><option value="1" selected>1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select>
     <span style="color:#9ca3af">~</span>
     <select id="ct-to" class="form-select form-select-sm" style="width:70px" onchange="_ctPC()"><option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5" selected>5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select>
@@ -172,20 +172,28 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 <div id="page-by-product" class="page">
   <div class="page-header"><h5><i class="bi bi-box-seam" style="color:#7c3aed"></i>제품별 분석</h5></div>
   <div class="period-bar">
-    <select id="pd-year" class="form-select form-select-sm" style="width:84px" onchange="renderByProduct()"><option value="2026" selected>2026년</option><option value="2025">2025년</option></select>
+    <select id="pd-year" class="form-select form-select-sm" style="width:100px" onchange="renderByProduct()"><option value="2026" selected>2026년</option><option value="2025">2025년</option></select>
     <select id="pd-from" class="form-select form-select-sm" style="width:70px" onchange="_pdPC()"><option value="1" selected>1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select>
     <span style="color:#9ca3af">~</span>
     <select id="pd-to" class="form-select form-select-sm" style="width:70px" onchange="_pdPC()"><option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5" selected>5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select>
   </div>
-  <div class="card p-3 mb-3"><div class="fw-bold mb-2" style="font-size:13px">제품별 매출 순위</div><div id="pd-rank"></div></div>
-  <div class="card p-3"><div class="fw-bold mb-2" style="font-size:13px">월별 제품 추이 (Top5)</div><div style="position:relative;height:240px"><canvas id="pd-trend"></canvas></div></div>
+  <div class="card p-3 mb-3"><div class="fw-bold mb-2" style="font-size:13px">장비 매출 순위 <span style="font-size:11px;font-weight:400;color:#9ca3af">클릭 시 상세</span></div><div id="pd-rank"></div></div>
+  <div class="card p-3">
+    <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+      <div class="fw-bold" style="font-size:13px">월별 제품 추이 (전년 대비)</div>
+      <select id="pd-trend-sel" class="form-select form-select-sm" style="max-width:220px" onchange="renderPdTrend()">
+        <option value="">제품 선택</option>
+      </select>
+    </div>
+    <div style="position:relative;height:240px"><canvas id="pd-trend"></canvas></div>
+  </div>
 </div>
 
 
 <div id="page-by-cons" class="page">
   <div class="page-header"><h5><i class="bi bi-capsule" style="color:#0d9488"></i>소모품 분석</h5></div>
   <div class="period-bar">
-    <select id="cs-year" class="form-select form-select-sm" style="width:84px" onchange="renderByCons()"><option value="2026" selected>2026년</option><option value="2025">2025년</option></select>
+    <select id="cs-year" class="form-select form-select-sm" style="width:100px" onchange="renderByCons()"><option value="2026" selected>2026년</option><option value="2025">2025년</option></select>
     <select id="cs-from" class="form-select form-select-sm" style="width:70px" onchange="_csPC()"><option value="1" selected>1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select>
     <span style="color:#9ca3af">~</span>
     <select id="cs-to" class="form-select form-select-sm" style="width:70px" onchange="_csPC()"><option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5" selected>5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select>
@@ -194,7 +202,15 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
     <div class="fw-bold mb-2" style="font-size:13px">소모품 순위 <span style="font-size:11px;font-weight:400;color:#9ca3af">클릭 시 국가별 상세</span></div>
     <div id="cs-rank"></div>
   </div>
-  <div class="card p-3 mb-3"><div class="fw-bold mb-2" style="font-size:13px">월별 소모품 추이 (Top5)</div><div style="position:relative;height:240px"><canvas id="cs-trend"></canvas></div></div>
+  <div class="card p-3 mb-3">
+    <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+      <div class="fw-bold" style="font-size:13px">월별 소모품 추이 (전년 대비)</div>
+      <select id="cs-trend-sel" class="form-select form-select-sm" style="max-width:220px" onchange="renderCsTrend()">
+        <option value="">소모품 선택</option>
+      </select>
+    </div>
+    <div style="position:relative;height:240px"><canvas id="cs-trend"></canvas></div>
+  </div>
   <div class="card p-3">
     <div class="d-flex align-items-center justify-content-between mb-2" style="gap:8px;flex-wrap:wrap">
       <div class="fw-bold" style="font-size:13px">소모품 상세 내역</div>
@@ -207,7 +223,7 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 <div id="page-by-rep" class="page">
   <div class="page-header"><h5><i class="bi bi-person-badge" style="color:#16a34a"></i>담당자별 분석</h5></div>
   <div class="period-bar">
-    <select id="rp-year" class="form-select form-select-sm" style="width:84px" onchange="renderByRep()"><option value="2026" selected>2026년</option><option value="2025">2025년</option></select>
+    <select id="rp-year" class="form-select form-select-sm" style="width:100px" onchange="renderByRep()"><option value="2026" selected>2026년</option><option value="2025">2025년</option></select>
     <select id="rp-from" class="form-select form-select-sm" style="width:70px" onchange="_rpPC()"><option value="1" selected>1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select>
     <span style="color:#9ca3af">~</span>
     <select id="rp-to" class="form-select form-select-sm" style="width:70px" onchange="_rpPC()"><option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5" selected>5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select>
@@ -254,6 +270,22 @@ function _ctPC(){ const f=+document.getElementById('ct-from').value,t=document.g
 function _pdPC(){ const f=+document.getElementById('pd-from').value,t=document.getElementById('pd-to'); if(+t.value<f)t.value=f; renderByProduct(); }
 function _rpPC(){ const f=+document.getElementById('rp-from').value,t=document.getElementById('rp-to'); if(+t.value<f)t.value=f; renderByRep(); }
 
+function pbarsClick(obj, cat, cols){
+  if(!obj||!Object.keys(obj).length) return '<div class="text-muted" style="font-size:12px">데이터 없음</div>';
+  const mx=Math.max(...Object.values(obj))||1;
+  return Object.entries(obj).sort((a,b)=>b[1]-a[1]).map(([n,v],i)=>{
+    const esc=n.replace(/'/g,"\'");
+    return `<div style="padding:5px 0;border-bottom:1px solid #f3f4f6;cursor:pointer" onclick="openProdModal('${esc}','${cat}')">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+        <span style="flex:1;font-size:12px;font-weight:600">${n}</span>
+        <span style="font-size:12px;font-weight:700;color:${(cols||C7)[i%((cols||C7).length)]}">${fmtW(v)}</span>
+      </div>
+      <div style="background:#f3f4f6;border-radius:3px;height:4px">
+        <div style="width:${(v/mx*100).toFixed(1)}%;height:100%;background:${(cols||C7)[i%((cols||C7).length)]};border-radius:3px"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
 function pbars(obj, cols){
   if(!obj||!Object.keys(obj).length) return '<div class="text-muted" style="font-size:12px">데이터 없음</div>';
   const mx=Math.max(...Object.values(obj))||1;
@@ -268,18 +300,31 @@ function renderOverview(){
   const nct=Object.values(cur.countries||{}).filter(c=>Object.keys(c.m||{}).some(m=>+m>=f&&+m<=t&&c.m[m]>0)).length;
   document.getElementById('upd-label').textContent='기준일 '+(INTL.updatedAt||'');
   const pl=f===t?f+'월':f+'~'+t+'월';
+
+  // KPI: USD 환산 → 전년 대비 증감액
+  const diffAmt = tot - ptot;
+  const diffStr = diffAmt>=0 ? '+'+fmtW(diffAmt) : '-'+fmtW(Math.abs(diffAmt));
   document.getElementById('ov-kpi').innerHTML=[
     {l:'해외 합계 ('+pl+')',v:fmtW(tot),s:'전년 '+fmtW(ptot)+' '+bdg(yoy),c:'#111827',i:'bi-currency-won'},
-    {l:'USD 환산',v:fmtU(totU),s:'기간 합계',c:'#2563eb',i:'bi-dollar'},
+    {l:'전년 대비 증감',v:diffStr,s:'동기 증감액',c:diffAmt>=0?'#16a34a':'#dc2626',i:diffAmt>=0?'bi-graph-up-arrow':'bi-graph-down-arrow'},
     {l:'거래 국가수',v:nct+'개국',s:'활성 국가',c:'#0d9488',i:'bi-globe'},
     {l:'YoY',v:yoy===null?'-':((parseFloat(yoy)>=0?'▲':'▼')+Math.abs(parseFloat(yoy))+'%'),s:'전년 동기 대비',c:yoy===null?'#6b7280':parseFloat(yoy)>=0?'#16a34a':'#dc2626',i:'bi-graph-up'},
   ].map(c=>`<div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-label"><i class="bi ${c.i} me-1" style="color:${c.c}"></i>${c.l}</div><div class="kpi-value" style="color:${c.c}">${c.v}</div><div class="kpi-sub">${c.s}</div></div></div>`).join('');
+
   const m12=Array.from({length:12},(_,i)=>i+1);
   dch('ov');
   const ctx=document.getElementById('ov-chart');
-  if(ctx) _ch['ov']=new Chart(ctx,{type:'bar',data:{labels:m12.map(m=>m+'월'),datasets:[{label:yr+'년',data:m12.map(m=>Math.round((cur.monthly[m]||0)/1e4)),backgroundColor:'rgba(13,148,136,0.7)',borderRadius:3},...(pre?[{label:(yr-1)+'년',data:m12.map(m=>Math.round((pre.monthly[m]||0)/1e4)),type:'line',borderColor:'#94a3b8',backgroundColor:'transparent',borderWidth:2,borderDash:[5,3],pointRadius:2}]:[])]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y?.toLocaleString()+'만원'}}},scales:{y:{ticks:{callback:v=>v+'만'},grid:{color:'#f3f4f6'}}}}});
-  document.getElementById('ov-cons').innerHTML=pbars(cur.prods_cons||{},C7);
-  document.getElementById('ov-dev').innerHTML=pbars(cur.prods_dev||{},C7.slice(2));
+  if(ctx) _ch['ov']=new Chart(ctx,{type:'bar',data:{labels:m12.map(m=>m+'월'),datasets:[
+    {label:yr+'년',data:m12.map(m=>+((cur.monthly[m]||0)/1e8).toFixed(2)),backgroundColor:'rgba(13,148,136,0.7)',borderRadius:3},
+    ...(pre?[{label:(yr-1)+'년',data:m12.map(m=>+((pre.monthly[m]||0)/1e8).toFixed(2)),type:'line',borderColor:'#94a3b8',backgroundColor:'transparent',borderWidth:2,borderDash:[5,3],pointRadius:2}]:[])
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},
+      tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y?.toFixed(1)+'억원'}}},
+    scales:{y:{ticks:{callback:v=>v+'억',font:{size:10}},grid:{color:'#f3f4f6'}}}}});
+
+  // 장비 왼쪽, 소모품 오른쪽 + 클릭 시 팝업
+  document.getElementById('ov-dev').innerHTML=pbarsClick(cur.prods_dev||{},'dev',C7);
+  document.getElementById('ov-cons').innerHTML=pbarsClick(cur.prods_cons||{},'cons',C7.slice(2));
 }
 
 function renderByCountry(){
@@ -434,43 +479,57 @@ function renderCtClient(){
 }
 
 
+function renderPdTrend(){
+  const yr=+document.getElementById('pd-year').value;
+  const cur=yr===2026?INTL:INTL.data2025, pre=yr===2026?INTL.data2025:null;
+  const sel=document.getElementById('pd-trend-sel');
+  const prod=sel?.value||'';
+  dch('pd-trend');
+  if(!prod){return;}
+  const m12=Array.from({length:12},(_,i)=>i+1);
+  const pm26=cur.prodMo?.[prod]||{};
+  const pm25=pre?.prodMo?.[prod]||{};
+  const ctx=document.getElementById('pd-trend');
+  if(ctx) _ch['pd-trend']=new Chart(ctx,{type:'bar',data:{labels:m12.map(m=>m+'월'),datasets:[
+    {label:yr+'년',data:m12.map(m=>+((pm26[m]||0)/1e8).toFixed(2)),backgroundColor:'rgba(124,58,237,0.7)',borderRadius:3},
+    ...(pre?[{label:(yr-1)+'년',data:m12.map(m=>+((pm25[m]||0)/1e8).toFixed(2)),type:'line',borderColor:'#94a3b8',backgroundColor:'transparent',borderWidth:2,borderDash:[5,3],pointRadius:3}]:[])
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},
+      tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y?.toFixed(2)+'억원'}}},
+    scales:{y:{ticks:{callback:v=>v+'억',font:{size:9}},grid:{color:'#f3f4f6'}},x:{ticks:{font:{size:9}}}}}});
+}
 function renderByProduct(){
   const yr=+document.getElementById('pd-year').value, f=+document.getElementById('pd-from').value, t=+document.getElementById('pd-to').value;
   const cur=yr===2026?INTL:INTL.data2025, pre=yr===2026?INTL.data2025:null;
 
-  // All products ranked
-  const prods=cur.products||{}, pPre=pre?.products||{};
-  const devs=cur.prods_dev||{}, dPre=pre?.prods_dev||{};
-  const arr=Object.entries(prods).map(([n,v])=>({n,v,pv:pPre[n]||0,isDev:!!devs[n]})).sort((a,b)=>b.v-a.v);
+  // 장비만 표시 (소모품 제외)
+  const devs=cur.prods_dev||{};
+  const arr=Object.entries(devs).map(([n,v])=>({n,v,pv:(pre?.prods_dev||{})[n]||0})).sort((a,b)=>b.v-a.v);
   const maxV=arr[0]?.v||1;
+
+  // 드롭다운 채우기
+  const sel=document.getElementById('pd-trend-sel');
+  const prev=sel?.value||'';
+  if(sel){ sel.innerHTML='<option value="">제품 선택</option>'+arr.map(x=>`<option value="${x.n.replace(/"/g,'&quot;')}">${x.n} (${fmtW(x.v)})</option>`).join(''); if(prev&&arr.find(x=>x.n===prev))sel.value=prev; }
+  renderPdTrend();
 
   document.getElementById('pd-rank').innerHTML=arr.map((x,i)=>{
     const g=pct(x.v,x.pv);
-    const cat=x.isDev?'dev':'cons';
-    const col=x.isDev?'#7c3aed':'#0891b2';
-    return `<div style="padding:7px 4px;border-bottom:1px solid #f3f4f6;cursor:pointer" onclick="openProdModal('${x.n.replace(/'/g,"\\'")}','${cat}')">
+    return `<div style="padding:7px 4px;border-bottom:1px solid #f3f4f6;cursor:pointer" onclick="openProdModal('${x.n.replace(/'/g,"\\'")}','dev')">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
         <span style="font-size:11px;color:#9ca3af;width:20px;text-align:right">${i+1}</span>
         <span style="flex:1;font-size:13px;font-weight:600">${x.n}</span>
-        <span style="font-size:10px;padding:1px 5px;border-radius:3px;background:${x.isDev?'#f3e8ff':'#ecfeff'};color:${col}">${x.isDev?'장비':'소모품'}</span>
-        <span style="font-size:13px;font-weight:700;color:${col}">${fmtW(x.v)}</span>
+        <span style="font-size:13px;font-weight:700;color:#7c3aed">${fmtW(x.v)}</span>
         ${bdg(g)}
       </div>
       <div style="margin-left:28px;background:#f3f4f6;border-radius:3px;height:4px">
-        <div style="width:${(x.v/maxV*100).toFixed(1)}%;height:100%;background:${col};border-radius:3px"></div>
+        <div style="width:${(x.v/maxV*100).toFixed(1)}%;height:100%;background:#7c3aed;border-radius:3px"></div>
       </div>
       <div style="margin-left:28px;font-size:10px;color:#9ca3af;margin-top:2px">전년 ${fmtW(x.pv)}</div>
     </div>`;
   }).join('')||'<div style="color:#9ca3af;font-size:12px">데이터 없음</div>';
 
-  dch('pd-trend');
-  const top5=arr.slice(0,5), m12=Array.from({length:12},(_,i)=>i+1);
-  const ctx=document.getElementById('pd-trend');
-  if(ctx&&top5.length) _ch['pd-trend']=new Chart(ctx,{type:'line',data:{labels:m12.map(m=>m+'월'),datasets:top5.map((x,i)=>({
-    label:x.n,data:m12.map(m=>Math.round((cur.prodMo?.[x.n]?.[m]||0)/1e4)),
-    borderColor:C7[i],backgroundColor:'transparent',borderWidth:2,pointRadius:3
-  }))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}}},scales:{y:{ticks:{callback:v=>v+'만',font:{size:9}},grid:{color:'#f3f4f6'}},x:{ticks:{font:{size:9}}}}}});
-}
+}  // renderByProduct end
 
 function renderByRep(){
   const yr=+document.getElementById('rp-year').value, f=+document.getElementById('rp-from').value, t=+document.getElementById('rp-to').value;
@@ -763,6 +822,25 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeProdModal();do
 
 // ── 소모품 렌더링 ─────────────────────────────────────────────────
 function _csPC(){ renderByCons(); }
+function renderCsTrend(){
+  const yr=+document.getElementById('cs-year').value;
+  const cur=yr===2026?INTL:INTL.data2025, pre=yr===2026?INTL.data2025:null;
+  const sel=document.getElementById('cs-trend-sel');
+  const prod=sel?.value||'';
+  dch('cs-trend');
+  if(!prod) return;
+  const m12=Array.from({length:12},(_,i)=>i+1);
+  const pm26=cur.prodMo?.[prod]||{};
+  const pm25=pre?.prodMo?.[prod]||{};
+  const ctx=document.getElementById('cs-trend');
+  if(ctx) _ch['cs-trend']=new Chart(ctx,{type:'bar',data:{labels:m12.map(m=>m+'월'),datasets:[
+    {label:yr+'년',data:m12.map(m=>+((pm26[m]||0)/1e8).toFixed(3)),backgroundColor:'rgba(13,148,136,0.75)',borderRadius:3},
+    ...(pre?[{label:(yr-1)+'년',data:m12.map(m=>+((pm25[m]||0)/1e8).toFixed(3)),type:'line',borderColor:'#94a3b8',backgroundColor:'transparent',borderWidth:2,borderDash:[5,3],pointRadius:3}]:[])
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},
+      tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y*100).toFixed(0)+'만원'}}},
+    scales:{y:{ticks:{callback:v=>(v*100).toFixed(0)+'만',font:{size:9}},grid:{color:'#f3f4f6'}},x:{ticks:{font:{size:9}}}}}});
+}
 function renderConsDetail(){
   const yr=+document.getElementById('cs-year').value;
   const q=(document.getElementById('cs-search')?.value||'').trim().toLowerCase();
@@ -827,15 +905,11 @@ function renderByCons(){
     </div>`;
   }).join('')||'<div style="color:#9ca3af;font-size:12px">데이터 없음</div>';
 
-  // Trend chart (Top5)
-  dch('cs-trend');
-  const top5 = arr.slice(0,5);
-  const m12  = Array.from({length:12},(_,i)=>i+1);
-  const ctx  = document.getElementById('cs-trend');
-  if(ctx && top5.length) _ch['cs-trend']=new Chart(ctx,{type:'line',data:{labels:m12.map(m=>m+'월'),datasets:top5.map((x,i)=>({
-    label:x.n, data:m12.map(m=>Math.round((cur.prodMo?.[x.n]?.[m]||0)/1e4)),
-    borderColor:C7[i], backgroundColor:'transparent', borderWidth:2, pointRadius:3
-  }))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}}},scales:{y:{ticks:{callback:v=>v+'만',font:{size:9}},grid:{color:'#f3f4f6'}},x:{ticks:{font:{size:9}}}}}});
+  // 드롭다운 채우기
+  const csSel=document.getElementById('cs-trend-sel');
+  const csPrev=csSel?.value||'';
+  if(csSel){ csSel.innerHTML='<option value="">소모품 선택</option>'+arr.map(x=>`<option value="${x.n.replace(/"/g,'&quot;')}">${x.n} (${fmtW(x.v)})</option>`).join(''); if(csPrev&&arr.find(x=>x.n===csPrev))csSel.value=csPrev; }
+  renderCsTrend();
   renderConsDetail();
 }
 
