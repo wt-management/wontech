@@ -2398,10 +2398,47 @@ function consParseExcel(input) {
       await _sb.from('cons_cache').delete().eq('key','device');
       const {error: _derr} = await _sb.from('cons_cache').insert({key:'device', data: DEVICE});
       if(_derr) console.warn('제품 데이터 저장 실패:', _derr.message);
+
+      // ── 해외 데이터 집계 및 저장 ────────────────────────────────
+      setMsg('해외 매출 데이터 집계 중...');
+      const _intlRows = sn => XLSX.utils.sheet_to_json(wb.Sheets[sn], {defval:null}).filter(r => r['국내외'] === '해외');
+      const _ri25 = _intlRows(sheet25name), _ri26 = _intlRows(sheet26name);
+      const _aggIntl = (r25i, r26i) => {
+        const mo={},mu={},mq={},pr={},pc={},pd={},pm={},pmq={},pq={},ct={},rp={};
+        const mo25={},mu25={},mq25={},pr25={},pc25={},pd25={},pm25={},pmq25={},pq25={},ct25={},rp25={};
+        const _moN=v=>{if(!v)return 0;const n=parseInt(String(v).replace(/[^0-9]/g,''));return(n>=1&&n<=12)?n:0;};
+        const _amK=r=>Object.keys(r).find(k=>k.includes('금액'))||'';
+        const _exCt=nm=>{if(!nm||typeof nm!=='string')return'기타';const m=nm.match(/^([가-힣a-zA-Z]+)\s*\//);return m?m[1]:'국내법인';};
+        const proc=(r,yr)=>{
+          const ak=_amK(r),amt=Number(r[ak]||0);if(!amt||amt<0)return;
+          const usd=Number(r['USD']||0);
+          let qty=parseInt(r['수량']||0);if(qty<=0)qty=1;
+          const m=_moN(r['월']),p=(r['구분#4']||'').trim(),cat=(r['구분#2']||'').trim(),nm=(r['거래처명']||'').trim(),sl=(r['담당자']||'').trim(),co=_exCt(nm);
+          const[mm,um,qm,pm2,pcm,pdm,pmm,pmqm,pqm,ctm,rpm]=yr===2026?[mo,mu,mq,pr,pc,pd,pm,pmq,pq,ct,rp]:[mo25,mu25,mq25,pr25,pc25,pd25,pm25,pmq25,pq25,ct25,rp25];
+          if(m){mm[m]=(mm[m]||0)+amt;um[m]=(um[m]||0)+usd;qm[m]=(qm[m]||0)+qty;}
+          if(p){pm2[p]=(pm2[p]||0)+amt;pqm[p]=(pqm[p]||0)+qty;if(cat==='소모품')pcm[p]=(pcm[p]||0)+amt;else if(cat==='제품군')pdm[p]=(pdm[p]||0)+amt;}
+          if(m&&p){if(!pmm[p])pmm[p]={};pmm[p][m]=(pmm[p][m]||0)+amt;if(!pmqm[p])pmqm[p]={};pmqm[p][m]=(pmqm[p][m]||0)+qty;}
+          if(co){if(!ctm[co])ctm[co]={total:0,usd:0,orders:0,clients:new Set(),prods:{},m:{}};const c=ctm[co];c.total+=amt;c.usd+=usd;c.orders++;c.clients.add(nm);if(p)c.prods[p]=(c.prods[p]||0)+amt;if(m)c.m[m]=(c.m[m]||0)+amt;}
+          if(sl){if(!rpm[sl])rpm[sl]={total:0,usd:0,orders:0,clients:new Set(),cset:new Set(),prods:{},m:{}};const s=rpm[sl];s.total+=amt;s.usd+=usd;s.orders++;s.clients.add(nm);s.cset.add(co);if(p)s.prods[p]=(s.prods[p]||0)+amt;if(m)s.m[m]=(s.m[m]||0)+amt;}
+        };
+        r25i.forEach(r=>proc(r,2025));r26i.forEach(r=>proc(r,2026));
+        const tn=(o,n=12)=>Object.fromEntries(Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,n));
+        const fct=m=>Object.fromEntries(Object.entries(m).sort((a,b)=>b[1].total-a[1].total).map(([k,v])=>[k,{total:Math.round(v.total),usd:Math.round(v.usd),orders:v.orders,clients:v.clients.size,prods:tn(v.prods,4),m:v.m}]));
+        const frp=m=>Object.fromEntries(Object.entries(m).sort((a,b)=>b[1].total-a[1].total).map(([k,v])=>[k,{total:Math.round(v.total),usd:Math.round(v.usd),orders:v.orders,countries:v.cset.size,clients:v.clients.size,prods:tn(v.prods,4),m:v.m}]));
+        const mk=(mm,mu,mq,pm2,pc2,pd2,pmm,pmqm,pqm,ctm,rpm)=>({monthly:mm,monthly_usd:mu,monthly_qty:mq,total:Object.values(mm).reduce((s,v)=>s+v,0),total_usd:Object.values(mu).reduce((s,v)=>s+v,0),products:tn(pm2),prods_cons:tn(pc2,10),prods_dev:tn(pd2,10),prodQty:tn(pqm),prodMo:pmm,prodMoQty:pmqm,countries:fct(ctm),reps:frp(rpm)});
+        return{r26:mk(mo,mu,mq,pr,pc,pd,pm,pmq,pq,ct,rp),r25:mk(mo25,mu25,mq25,pr25,pc25,pd25,pm25,pmq25,pq25,ct25,rp25)};
+      };
+      const _intlRes = _aggIntl(_ri25, _ri26);
+      const _intlSaveData = {INTL2026: _intlRes.r26, INTL2025: _intlRes.r25, updatedAt};
+      await _sb.from('cons_cache').delete().eq('key','intl');
+      const {error: _ierr} = await _sb.from('cons_cache').insert({key:'intl', data: _intlSaveData});
+      if(_ierr) console.warn('해외 데이터 저장 실패:', _ierr.message);
+      else console.log('해외 데이터 저장 완료 · 2026년 총합:', Math.round(_intlRes.r26.total/1e4), '만원');
+
       renderConsumables();
       const _sampleRow = r26[0] || _allRows26[0] || {};
       const _colKeys = Object.keys(_sampleRow).join(' / ');
-      setDone('업로드 완료! ✅', `컬럼목록: ${_colKeys}`);
+      setDone('업로드 완료! ✅ (한국+해외)', `컬럼목록: ${_colKeys}`);
     } catch(err) {
       document.getElementById('cons-upload-icon').textContent = '❌';
       document.getElementById('cons-upload-icon').style.display = 'block';
