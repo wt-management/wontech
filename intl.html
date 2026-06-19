@@ -56,33 +56,8 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
       <li><a class="nav-link" onclick="showPage('by-cons',this)"><i class="bi bi-capsule"></i>소모품 분석</a></li>
       <li><a class="nav-link" onclick="showPage('by-rep',this)"><i class="bi bi-person-badge"></i>담당자별 분석</a></li>
     </ul>
-    <div class="nav-label mt-3">데이터</div>
-    <ul class="nav flex-column gap-0">
-      <li><a class="nav-link" onclick="showPage('upload',this)"><i class="bi bi-cloud-upload"></i>엑셀 업로드</a></li>
-    </ul>
-    <!-- 사이트 전환 -->
-    <div style="padding:8px 8px 0;border-top:1px solid #1e293b;margin-top:8px">
-      <div style="position:relative">
-        <button onclick="(()=>{var d=document.getElementById('intl-site-dd');d.style.display=d.style.display==='block'?'none':'block'})()"
-          style="width:100%;background:rgba(255,255,255,.05);border:1px solid #334155;border-radius:8px;padding:7px 10px;color:#94a3b8;font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer">
-          <i class="bi bi-grid-3x3-gap" style="font-size:13px"></i>
-          <span style="flex:1;text-align:left">사이트 이동</span>
-          <i class="bi bi-chevron-up" style="font-size:10px"></i>
-        </button>
-        <div id="intl-site-dd" style="display:none;position:absolute;bottom:110%;left:0;right:0;background:#1e293b;border:1px solid #334155;border-radius:8px;overflow:hidden;z-index:200">
-          <a onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wontech/';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token)+'&app=korea';location.href=u;})()" style="display:flex;align-items:center;gap:8px;padding:9px 12px;color:#94a3b8;font-size:12px;text-decoration:none;border-bottom:1px solid #334155;cursor:pointer" onmouseover="this.style.background='#334155'" onmouseout="this.style.background=''">
-            <i class="bi bi-bar-chart-line" style="color:#0891b2"></i>한국 영업</a>
-          <a onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wtj-management/';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()" style="display:flex;align-items:center;gap:8px;padding:9px 12px;color:#94a3b8;font-size:12px;text-decoration:none;border-bottom:1px solid #334155;cursor:pointer" onmouseover="this.style.background='#334155'" onmouseout="this.style.background=''">
-            <i class="bi bi-shop" style="color:#f59e0b"></i>일본법인 관리</a>
-          <a onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wontech/';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token)+'&app=admin';location.href=u;})()" style="display:flex;align-items:center;gap:8px;padding:9px 12px;color:#94a3b8;font-size:12px;text-decoration:none;border-bottom:1px solid #334155;cursor:pointer" onmouseover="this.style.background='#334155'" onmouseout="this.style.background=''">
-            <i class="bi bi-gear" style="color:#94a3b8"></i>관리자 페이지</a>
-          <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;color:#0d9488;font-size:12px;background:rgba(13,148,136,.1)">
-            <i class="bi bi-globe" style="color:#0d9488"></i>해외 영업 (현재)</div>
-        </div>
-      </div>
-    </div>
-    <!-- 로그인 정보 -->
-    <div style="padding:10px 10px 12px">
+    <!-- 계정 정보 (사이트 이동 위에) -->
+    <div style="padding:10px 10px 8px;border-top:1px solid #1e293b;margin-top:8px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <div id="intl-user-avatar" style="width:30px;height:30px;border-radius:50%;background:#0d9488;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0">?</div>
         <div style="flex:1;min-width:0">
@@ -95,6 +70,35 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
           <i class="bi bi-key"></i> 비밀번호</button>
         <button id="intl-logout-btn" onclick="doLogout()" style="flex:1;background:rgba(255,255,255,.06);border:1px solid #334155;border-radius:6px;padding:5px 0;color:#94a3b8;font-size:11px;cursor:pointer">
           <i class="bi bi-box-arrow-right"></i> 로그아웃</button>
+      </div>
+    </div>
+    <!-- 사이트 이동 (맨 아래) -->
+    <div style="padding:0 8px 8px">
+      <div style="position:relative">
+        <button onclick="(()=>{var d=document.getElementById('intl-site-dd');d.style.display=d.style.display==='block'?'none':'block'})()"
+          style="width:100%;background:rgba(255,255,255,.05);border:1px solid #334155;border-radius:8px;padding:7px 10px;color:#94a3b8;font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer">
+          <i class="bi bi-grid-3x3-gap" style="font-size:13px"></i>
+          <span style="flex:1;text-align:left;font-weight:600">사이트 이동</span>
+          <i class="bi bi-chevron-up" style="font-size:10px"></i>
+        </button>
+        <div id="intl-site-dd" style="display:none;position:absolute;bottom:110%;left:0;right:0;background:#1e293b;border:1px solid #334155;border-radius:10px;overflow:hidden;box-shadow:0 -8px 24px rgba(0,0,0,.5);z-index:200">
+          <div style="padding:6px">
+            <div onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wontech/';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token)+'&app=korea';location.href=u;})()"
+              style="border-radius:6px;padding:9px 12px;display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
+              onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''">
+              <span>🇰🇷</span><span style="flex:1">한국 영업</span><i class="bi bi-arrow-right" style="font-size:11px"></i></div>
+            <div onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wtj-management/';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()"
+              style="margin-top:2px;border-radius:6px;padding:9px 12px;display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
+              onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''">
+              <span>🇯🇵</span><span style="flex:1">일본법인 관리</span><i class="bi bi-arrow-right" style="font-size:11px"></i></div>
+            <div onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wontech/';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token)+'&app=admin';location.href=u;})()"
+              style="margin-top:2px;border-radius:6px;padding:9px 12px;display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
+              onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''">
+              <span>⚙️</span><span style="flex:1">관리자 페이지</span><i class="bi bi-arrow-right" style="font-size:11px"></i></div>
+            <div style="margin-top:2px;border-radius:6px;padding:9px 12px;display:flex;align-items:center;gap:8px;color:#0d9488;font-size:12px;font-weight:700;background:rgba(13,148,136,.12)">
+              <span>🌏</span><span style="flex:1">해외 영업</span><i class="bi bi-check2" style="font-size:11px"></i></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -200,7 +204,14 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
     <div class="fw-bold mb-2" style="font-size:13px">소모품 순위 <span style="font-size:11px;font-weight:400;color:#9ca3af">클릭 시 국가별 상세</span></div>
     <div id="cs-rank"></div>
   </div>
-  <div class="card p-3"><div class="fw-bold mb-2" style="font-size:13px">월별 소모품 추이 (Top5)</div><div style="position:relative;height:240px"><canvas id="cs-trend"></canvas></div></div>
+  <div class="card p-3 mb-3"><div class="fw-bold mb-2" style="font-size:13px">월별 소모품 추이 (Top5)</div><div style="position:relative;height:240px"><canvas id="cs-trend"></canvas></div></div>
+  <div class="card p-3">
+    <div class="d-flex align-items-center justify-content-between mb-2" style="gap:8px;flex-wrap:wrap">
+      <div class="fw-bold" style="font-size:13px">소모품 상세 내역</div>
+      <input type="text" id="cs-search" class="form-control form-control-sm" style="max-width:180px" placeholder="제품명 검색..." oninput="renderConsDetail()">
+    </div>
+    <div id="cs-detail" style="overflow-x:auto"></div>
+  </div>
 </div>
 
 <div id="page-by-rep" class="page">
@@ -703,12 +714,16 @@ function openProdModal(prodName, cat){
   const t  = +(document.getElementById(cat==='cons'?'cs-to':'pd-to')?.value||5);
   const cur= yr===2026?INTL:INTL.data2025, pre=yr===2026?INTL.data2025:null;
 
-  // Aggregate country breakdown for this product
-  const ctArr = Object.entries(cur.countries||{}).map(([ctName,c])=>{
-    const v = c.prods?.[prodName]||0;
-    const pv= pre?.countries?.[ctName]?.prods?.[prodName]||0;
-    return {n:ctName, v, pv};
-  }).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+  // Aggregate country breakdown for this product (merge both years)
+  const allCts = new Set([
+    ...Object.keys(cur.countries||{}),
+    ...Object.keys(pre?.countries||{})
+  ]);
+  const ctArr = [...allCts].map(ctName=>({
+    n: ctName,
+    v:  cur.countries?.[ctName]?.prods?.[prodName]||0,
+    pv: pre?.countries?.[ctName]?.prods?.[prodName]||0
+  })).filter(x=>x.v>0||x.pv>0).sort((a,b)=>b.v-a.v);
 
   const tot26 = ctArr.reduce((s,x)=>s+x.v,0);
   // Get product monthly data from prodMo
@@ -762,6 +777,47 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeProdModal();do
 
 // ── 소모품 렌더링 ─────────────────────────────────────────────────
 function _csPC(){ renderByCons(); }
+function renderConsDetail(){
+  const yr=+document.getElementById('cs-year').value;
+  const q=(document.getElementById('cs-search')?.value||'').trim().toLowerCase();
+  const cur=yr===2026?INTL:INTL.data2025;
+  const pm = cur.prodMo||{};
+  const m12=Array.from({length:12},(_,i)=>i+1);
+  let rows = Object.entries(pm)
+    .filter(([n])=>n && (!q||n.toLowerCase().includes(q)))
+    .sort((a,b)=>{
+      const ta=Object.values(a[1]).reduce((s,v)=>s+v,0);
+      const tb=Object.values(b[1]).reduce((s,v)=>s+v,0);
+      return tb-ta;
+    });
+  // filter to cons products only
+  const consProds = new Set(Object.keys(cur.prods_cons||{}));
+  rows = rows.filter(([n])=>consProds.has(n));
+  if(!rows.length){document.getElementById('cs-detail').innerHTML='<div style="color:#9ca3af;font-size:12px;padding:8px">데이터 없음</div>';return;}
+  const totals = rows.map(([,mo])=>Object.values(mo).reduce((s,v)=>s+v,0));
+  let tbl=`<table class="table table-sm" style="font-size:11px;min-width:900px"><thead class="table-light"><tr>
+    <th style="width:160px">제품명</th>
+    ${m12.map(m=>`<th style="text-align:right">${m}월</th>`).join('')}
+    <th style="text-align:right;color:#0d9488">합계</th>
+  </tr></thead><tbody>`;
+  rows.forEach(([name,mo],i)=>{
+    const tot=totals[i];
+    tbl+=`<tr><td style="font-weight:600">${name}</td>`;
+    m12.forEach(m=>{
+      const v=mo[m]||0;
+      tbl+=`<td style="text-align:right;color:${v?'#0d9488':'#e5e7eb'}">${v?Math.round(v/1e4)+'만':'-'}</td>`;
+    });
+    tbl+=`<td style="text-align:right;font-weight:700;color:#0d9488">${Math.round(tot/1e4).toLocaleString()}만</td></tr>`;
+  });
+  // 합계 행
+  const colSums = m12.map(m=>rows.reduce((s,[,mo])=>s+(mo[m]||0),0));
+  const grandTotal = colSums.reduce((s,v)=>s+v,0);
+  tbl+=`<tr style="background:#f0fdfa;font-weight:700"><td>합 계</td>`;
+  colSums.forEach(v=>{ tbl+=`<td style="text-align:right">${v?Math.round(v/1e4)+'만':'-'}</td>`; });
+  tbl+=`<td style="text-align:right;color:#0d9488">${Math.round(grandTotal/1e4).toLocaleString()}만</td></tr>`;
+  tbl+='</tbody></table>';
+  document.getElementById('cs-detail').innerHTML=tbl;
+}
 function renderByCons(){
   const yr=+document.getElementById('cs-year').value, f=+document.getElementById('cs-from').value, t=+document.getElementById('cs-to').value;
   const cur=yr===2026?INTL:INTL.data2025, pre=yr===2026?INTL.data2025:null;
@@ -794,6 +850,7 @@ function renderByCons(){
     label:x.n, data:m12.map(m=>Math.round((cur.prodMo?.[x.n]?.[m]||0)/1e4)),
     borderColor:C7[i], backgroundColor:'transparent', borderWidth:2, pointRadius:3
   }))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}}},scales:{y:{ticks:{callback:v=>v+'만',font:{size:9}},grid:{color:'#f3f4f6'}},x:{ticks:{font:{size:9}}}}}});
+  renderConsDetail();
 }
 
 // ── 제품별 renderByProduct: 클릭으로 팝업 ─────────────────────────
