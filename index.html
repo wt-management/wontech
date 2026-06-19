@@ -327,7 +327,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
           <div style="background:rgba(255,69,0,.12);border-radius:6px;padding:9px 12px;display:flex;align-items:center;gap:8px;color:#ff4500;font-size:12px;font-weight:700">
             <span>🇰🇷</span><span style="flex:1">한국 영업</span><i class="bi bi-check2" style="font-size:11px"></i>
           </div>
-          <div id="switcher-japan-item" onclick="location.href='https://wt-management.github.io/wtj-management/'"
+          <div id="switcher-japan-item" onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wtj-management/';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()""
             style="display:none;margin-top:4px;border-radius:6px;padding:9px 12px;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
             onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''">
             <span>🇯🇵</span><span style="flex:1">일본법인 관리</span><i class="bi bi-arrow-right" style="font-size:11px"></i>
