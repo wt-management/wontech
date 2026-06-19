@@ -3944,7 +3944,7 @@ function showHospitalDetail(name){
     const hc = CONS.hospitals?.[window._hospDetailName]; if(!hc) return;
     const fmtMl = v => v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만원':v?v.toLocaleString()+'원':'-';
     const txns = yr===2025 ? (hc.txns2025||[]) : (hc.txns2026||[]);
-    const EXCL_PROD_DETAIL = ['A/S소모품'];
+    const EXCL_PROD_DETAIL = ['A/S소모품','의료기기'];
     let filtered = txns.filter(t=>t[2] && !EXCL_PROD_DETAIL.includes(t[2]));
     if(filterType==='mo') filtered = filtered.filter(t=>t[0]===filterVal);
     if(filterType==='prod') filtered = filtered.filter(t=>t[2]===filterVal);
@@ -3970,7 +3970,7 @@ function showHospitalDetail(name){
   };
 
   // 표시 제외 제품 (월별/합계/패턴 모두 동일 기준 적용)
-  const EXCL_DISP = ['A/S소모품'];
+  const EXCL_DISP = ['A/S소모품','의료기기'];
   const txnsFiltered25 = (hospCons?.txns2025||[]).filter(t=>t[2]&&!EXCL_DISP.includes(t[2]));
   const txnsFiltered26 = (hospCons?.txns2026||[]).filter(t=>t[2]&&!EXCL_DISP.includes(t[2]));
   const mAmt25 = {}; txnsFiltered25.forEach(t=>{mAmt25[t[0]]=(mAmt25[t[0]]||0)+t[3];});
