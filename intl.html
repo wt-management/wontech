@@ -655,7 +655,7 @@ async function doLogin() {
 }
 
 async function _afterLogin(user) {
-  const {data:profile} = await _sb.from('crm_profiles').select('display_name,access,role').eq('id',user.id).maybeSingle();
+  const {data:profile} = await _sb.from('crm_profiles').select('display_name,access,role,position,dept').eq('id',user.id).maybeSingle();
   const access = profile?.access||'';
   const allowed = access.includes('korea')||access.includes('intl')||profile?.role==='admin';
   if(!allowed){
