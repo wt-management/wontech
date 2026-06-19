@@ -56,38 +56,38 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
       <li><a class="nav-link" onclick="showPage('by-cons',this)"><i class="bi bi-capsule"></i>소모품 분석</a></li>
       <li><a class="nav-link" onclick="showPage('by-rep',this)"><i class="bi bi-person-badge"></i>담당자별 분석</a></li>
     </ul>
-    <!-- 계정 정보 (사이트 이동 위에) -->
-    <div style="padding:10px 10px 8px;border-top:1px solid #1e293b;margin-top:auto">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <div id="intl-user-avatar" style="width:30px;height:30px;border-radius:50%;background:#0d9488;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0">?</div>
-        <div style="flex:1;min-width:0">
-          <div id="intl-user-name" style="font-size:12px;font-weight:700;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">-</div>
-          <div id="intl-user-email" style="font-size:10px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">-</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:4px">
-        <button onclick="showPwModal()" style="flex:1;background:rgba(255,255,255,.06);border:1px solid #334155;border-radius:6px;padding:5px 0;color:#94a3b8;font-size:11px;cursor:pointer">
-          <i class="bi bi-key"></i> 비밀번호</button>
-        <button id="intl-logout-btn" onclick="doLogout()" style="flex:1;background:rgba(255,255,255,.06);border:1px solid #334155;border-radius:6px;padding:5px 0;color:#94a3b8;font-size:11px;cursor:pointer">
-          <i class="bi bi-box-arrow-right"></i> 로그아웃</button>
+  </div>
+  <!-- 계정 정보 (사이트 이동 위에) -->
+  <div style="padding:10px 10px 8px;border-top:1px solid #1e293b;margin-top:auto">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <div id="intl-user-avatar" style="width:30px;height:30px;border-radius:50%;background:#0d9488;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0">?</div>
+      <div style="flex:1;min-width:0">
+        <div id="intl-user-name" style="font-size:12px;font-weight:700;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">-</div>
+        <div id="intl-user-email" style="font-size:10px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">-</div>
       </div>
     </div>
-    <!-- 사이트 이동 (맨 아래) -->
-    <div style="padding:0 8px 8px">
-      <div style="position:relative">
-        <button onclick="(()=>{var d=document.getElementById('intl-site-dd');d.style.display=d.style.display==='block'?'none':'block'})()"
-          style="width:100%;background:rgba(255,255,255,.05);border:1px solid #334155;border-radius:8px;padding:7px 10px;color:#94a3b8;font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer">
-          <i class="bi bi-grid-3x3-gap" style="font-size:13px"></i>
-          <span style="flex:1;text-align:left;font-weight:600">사이트 이동</span>
-          <i class="bi bi-chevron-up" style="font-size:10px"></i>
-        </button>
-        <div id="intl-site-dd" style="display:none;position:absolute;bottom:110%;left:0;right:0;background:#1e293b;border:1px solid #334155;border-radius:10px;overflow:hidden;box-shadow:0 -8px 24px rgba(0,0,0,.5);z-index:200">
-          <div style="padding:6px">
-            <div onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wontech/';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token)+'&app=korea';location.href=u;})()" style="border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#0891b2;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">KR</span><span style="flex:1">한국 영업</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i></div>
-            <div style="margin-top:2px"><div onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wtj-management/';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()" style="border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#f59e0b;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">JP</span><span style="flex:1">일본법인 관리</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i></div></div>
-            <div style="margin-top:2px"><div onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wontech/';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token)+'&app=admin';location.href=u;})()" style="border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#6b7280;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">ADM</span><span style="flex:1">관리자 페이지</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i></div></div>
-            <div style="margin-top:2px"><div style="border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:#0d9488;font-size:12px;font-weight:700;background:rgba(13,148,136,.12)"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#0d9488;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">INT</span><span style="flex:1">해외 영업</span><i class="bi bi-check2" style="font-size:12px"></i></div></div>
-          </div>
+    <div style="display:flex;gap:4px">
+      <button onclick="showPwModal()" style="flex:1;background:rgba(255,255,255,.06);border:1px solid #334155;border-radius:6px;padding:5px 0;color:#94a3b8;font-size:11px;cursor:pointer">
+        <i class="bi bi-key"></i> 비밀번호</button>
+      <button id="intl-logout-btn" onclick="doLogout()" style="flex:1;background:rgba(255,255,255,.06);border:1px solid #334155;border-radius:6px;padding:5px 0;color:#94a3b8;font-size:11px;cursor:pointer">
+        <i class="bi bi-box-arrow-right"></i> 로그아웃</button>
+    </div>
+  </div>
+  <!-- 사이트 이동 (맨 아래) -->
+  <div style="padding:0 8px 8px">
+    <div style="position:relative">
+      <button onclick="(()=>{var d=document.getElementById('intl-site-dd');d.style.display=d.style.display==='block'?'none':'block'})()"
+        style="width:100%;background:rgba(255,255,255,.05);border:1px solid #334155;border-radius:8px;padding:7px 10px;color:#94a3b8;font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer">
+        <i class="bi bi-grid-3x3-gap" style="font-size:13px"></i>
+        <span style="flex:1;text-align:left;font-weight:600">사이트 이동</span>
+        <i class="bi bi-chevron-up" style="font-size:10px"></i>
+      </button>
+      <div id="intl-site-dd" style="display:none;position:absolute;bottom:110%;left:0;right:0;background:#1e293b;border:1px solid #334155;border-radius:10px;overflow:hidden;box-shadow:0 -8px 24px rgba(0,0,0,.5);z-index:200">
+        <div style="padding:6px">
+          <div onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wontech/';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token)+'&app=korea';location.href=u;})()" style="border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#0891b2;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">KR</span><span style="flex:1">한국 영업</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i></div>
+          <div style="margin-top:2px"><div onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wtj-management/';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()" style="border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#f59e0b;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">JP</span><span style="flex:1">일본법인 관리</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i></div></div>
+          <div style="margin-top:2px"><div onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wontech/';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token)+'&app=admin';location.href=u;})()" style="border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#6b7280;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">ADM</span><span style="flex:1">관리자 페이지</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i></div></div>
+          <div style="margin-top:2px"><div style="border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:#0d9488;font-size:12px;font-weight:700;background:rgba(13,148,136,.12)"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#0d9488;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">INT</span><span style="flex:1">해외 영업</span><i class="bi bi-check2" style="font-size:12px"></i></div></div>
         </div>
       </div>
     </div>
