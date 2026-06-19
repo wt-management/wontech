@@ -1320,6 +1320,8 @@ function purgeForeignHospitals() {
 async function init() {
   // 비밀번호 재설정 링크 클릭 시 (URL 해시에 type=recovery 포함)
   const hashParams = new URLSearchParams(location.hash.replace('#',''));
+  // 외부 사이트에서 app= 파라미터로 바로 진입
+  if(hashParams.get('app')) sessionStorage.setItem('wt_app', hashParams.get('app'));
   if(hashParams.get('type') === 'recovery') {
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('login-screen').querySelectorAll(':scope > div').forEach(d=>d.style.display='none');
