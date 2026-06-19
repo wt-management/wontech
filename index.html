@@ -294,7 +294,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
     <ul class="nav flex-column gap-0">
       <li><a class="nav-link" onclick="showPage('customers',this)"><i class="bi bi-building"></i>고객사</a></li>
       <li><a class="nav-link" onclick="showPage('equipments',this)"><i class="bi bi-cpu"></i>장비</a></li>
-      <li><a class="nav-link" onclick="showPage('logs',this)"><i class="bi bi-journal-text"></i>상담일지</a></li>
+
       <li><a class="nav-link" onclick="showPage('products',this)"><i class="bi bi-box-seam"></i>제품</a></li>
     </ul>
   </div>
@@ -557,12 +557,12 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
     <div class="page-header">
       <h5><i class="bi bi-kanban me-2"></i>영업관리</h5>
       <div class="d-flex gap-2 align-items-center">
-        <div class="d-flex gap-1">
+        <div class="d-flex gap-1" id="sales-period-btns">
           <button class="dash-period-btn on" id="pp-month"   onclick="setPerfPeriod('month',this)">이번달</button>
           <button class="dash-period-btn"    id="pp-quarter" onclick="setPerfPeriod('quarter',this)">이번분기</button>
           <button class="dash-period-btn"    id="pp-year"    onclick="setPerfPeriod('year',this)">올해</button>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="openModal('pipeline')"><i class="bi bi-plus-lg me-1"></i>딜 추가</button>
+        <button class="btn btn-primary btn-sm" id="sales-add-btn" onclick="openModal('pipeline')"><i class="bi bi-plus-lg me-1"></i>딜 추가</button>
       </div>
     </div>
     <!-- KPI 카드 -->
@@ -571,6 +571,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
     <ul class="nav nav-tabs mb-3" id="sales-tabs">
       <li class="nav-item"><a class="nav-link active" style="cursor:pointer" onclick="salesTab('pipeline',this)"><i class="bi bi-kanban me-1"></i>파이프라인</a></li>
       <li class="nav-item"><a class="nav-link" style="cursor:pointer" onclick="salesTab('analysis',this)"><i class="bi bi-bar-chart-line me-1"></i>실적 분석</a></li>
+      <li class="nav-item"><a class="nav-link" style="cursor:pointer" id="sales-tab-logs-btn" onclick="salesTab('logs',this)"><i class="bi bi-journal-text me-1"></i>상담일지</a></li>
     </ul>
     <!-- 파이프라인 탭 -->
     <div id="sales-tab-pipeline">
@@ -665,14 +666,18 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
   </div>
 
   <!-- 상담일지 -->
-  <div id="page-logs" class="page">
-    <div class="page-header"><h5>상담일지</h5><button class="btn btn-primary btn-sm" onclick="openModal('log')"><i class="bi bi-plus-lg me-1"></i>일지 추가</button></div>
-    <div class="mb-2"><input type="text" id="search-log" class="form-control form-control-sm" placeholder="병원명, 내용, 담당자 검색..." oninput="renderLogs()"></div>
-    <div class="card"><div class="card-body p-0"><table class="table table-hover mb-0">
-      <thead class="table-light"><tr><th>일자</th><th>병원명</th><th>유형</th><th>내용</th><th>관심제품</th><th>다음액션</th><th>담당</th><th></th></tr></thead>
-      <tbody id="log-list"></tbody>
-    </table></div></div>
-  </div>
+    <!-- 상담일지 탭 패널 -->
+    <div id="sales-tab-logs" style="display:none">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <input type="text" id="search-log" class="form-control form-control-sm" style="max-width:320px" placeholder="병원명, 내용, 담당자 검색..." oninput="renderLogs()">
+        <button class="btn btn-primary btn-sm" onclick="openModal('log')"><i class="bi bi-plus-lg me-1"></i>일지 추가</button>
+      </div>
+      <div class="card"><div class="card-body p-0"><table class="table table-hover mb-0">
+        <thead class="table-light"><tr><th>일자</th><th>병원명</th><th>유형</th><th>내용</th><th>관심제품</th><th>다음액션</th><th>담당</th><th></th></tr></thead>
+        <tbody id="log-list"></tbody>
+      </table></div></div>
+    </div>
+
 
   <!-- 제품 -->
   <div id="page-products" class="page">
@@ -1512,7 +1517,7 @@ function showPage(name, el, noPush) {
   else if(name==='quotes') renderQuotes();
   else if(name==='customers') renderCustomers();
   else if(name==='equipments') initEquip();
-  else if(name==='logs') renderLogs();
+  else if(name==='logs') { showPage('sales'); const tb=document.getElementById('sales-tab-logs-btn'); salesTab('logs',tb); return; }
   else if(name==='products') renderProducts();
   else if(name==='users') { if(_isAdmin) renderUsers(); }
   else if(name==='consumables') renderConsumables();
@@ -1539,8 +1544,24 @@ function salesTab(tab, el) {
   if(el) el.classList.add('active');
   document.getElementById('sales-tab-pipeline').style.display = tab==='pipeline' ? '' : 'none';
   document.getElementById('sales-tab-analysis').style.display = tab==='analysis' ? '' : 'none';
+  const logsEl = document.getElementById('sales-tab-logs');
+  if(logsEl) logsEl.style.display = tab==='logs' ? '' : 'none';
   document.getElementById('perf-drill-panel').style.display = 'none';
+  // 헤더 버튼 / 기간 필터 탭별 전환
+  const addBtn = document.getElementById('sales-add-btn');
+  const periodBtns = document.getElementById('sales-period-btns');
+  if(addBtn) {
+    if(tab==='logs') {
+      addBtn.innerHTML = '<i class="bi bi-plus-lg me-1"></i>일지 추가';
+      addBtn.onclick = () => openModal('log');
+    } else {
+      addBtn.innerHTML = '<i class="bi bi-plus-lg me-1"></i>딜 추가';
+      addBtn.onclick = () => openModal('pipeline');
+    }
+  }
+  if(periodBtns) periodBtns.style.display = tab==='logs' ? 'none' : '';
   if(tab==='analysis' && perfChart) { perfChart.resize(); }
+  if(tab==='logs') renderLogs();
 }
 
 // ── 토스트 ──────────────────────────────────────────────────────
