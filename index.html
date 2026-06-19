@@ -904,14 +904,14 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
           <div class="card p-3" style="border-left:4px solid #dc2626">
             <div class="fw-bold mb-1" style="font-size:13px;color:#dc2626"><i class="bi bi-x-circle-fill me-1"></i>이탈 — 2025 거래 있으나 2026 미구매</div>
             <div style="font-size:11px;color:#9ca3af;margin-bottom:8px">전년 실적 기준 내림차순 · 클릭시 파이프라인 생성</div>
-            <div id="hosp-risk-list" style="max-height:340px;overflow-y:auto"></div>
+            <div id="hosp-risk-list" style="max-height:calc(100vh - 320px);overflow-y:auto"></div>
           </div>
         </div>
         <div class="col-md-6">
           <div class="card p-3" style="border-left:4px solid #f59e0b">
             <div class="fw-bold mb-1" style="font-size:13px;color:#d97706"><i class="bi bi-dash-circle-fill me-1"></i>감소 — 동기간 대비 매출 하락 (거래는 유지)</div>
             <div style="font-size:11px;color:#9ca3af;margin-bottom:8px">2025년 1–5월 vs 2026년 1–5월 기준</div>
-            <div id="hosp-decline-list" style="max-height:340px;overflow-y:auto"></div>
+            <div id="hosp-decline-list" style="max-height:calc(100vh - 320px);overflow-y:auto"></div>
           </div>
         </div>
       </div>
@@ -924,14 +924,14 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
           <div class="card p-3" style="border-left:4px solid #16a34a">
             <div class="fw-bold mb-1" style="font-size:13px;color:#16a34a"><i class="bi bi-arrow-up-circle-fill me-1"></i>성장 병원 — 동기간 YoY 증가</div>
             <div style="font-size:11px;color:#9ca3af;margin-bottom:8px">2025년 1–5월 대비 2026년 1–5월 증가율 상위</div>
-            <div id="hosp-growth-list" style="max-height:380px;overflow-y:auto"></div>
+            <div id="hosp-growth-list" style="max-height:calc(100vh - 300px);overflow-y:auto"></div>
           </div>
         </div>
         <div class="col-md-6">
           <div class="card p-3" style="border-left:4px solid #7c3aed">
             <div class="fw-bold mb-1" style="font-size:13px;color:#7c3aed"><i class="bi bi-star-fill me-1"></i>신규 거래처 — 2026년 첫 거래</div>
             <div style="font-size:11px;color:#9ca3af;margin-bottom:8px">2025년 이전 거래 없는 신규 병원</div>
-            <div id="hosp-new-list" style="max-height:380px;overflow-y:auto"></div>
+            <div id="hosp-new-list" style="max-height:calc(100vh - 300px);overflow-y:auto"></div>
           </div>
         </div>
       </div>
