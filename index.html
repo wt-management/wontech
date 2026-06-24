@@ -1481,7 +1481,7 @@ async function _bootApp(access) {
     const rm = document.getElementById('nav-device-reps');
     if(rm) rm.style.display='';
   }
-  const lastPage = sessionStorage.getItem('wt_page') || 'sales-overview';
+  const lastPage = (location.hash.includes('at=') ? null : sessionStorage.getItem('wt_page')) || 'sales-overview';
   showPage(lastPage);
   document.getElementById('main-content').style.display='block';
   _hideLoading();
