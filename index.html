@@ -336,6 +336,10 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
             style="display:none;margin-top:2px;border-radius:6px;padding:8px 12px;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
             onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#0d9488;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">INT</span><span style="flex:1">해외 영업</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i>
           </div>
+          <div id="switcher-cons-item" onclick="location.href='https://wt-management.github.io/wt-consumables/'"
+            style="display:none;margin-top:2px;border-radius:6px;padding:8px 12px;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
+            onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#16a34a;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">일보</span><span style="flex:1">일일매출보고</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i>
+          </div>
           <div id="switcher-admin-item" onclick="document.getElementById('site-dropdown').style.display='none';sessionStorage.setItem('wt_app','admin');document.getElementById('main-content').style.display='none';showAdminPanel();document.getElementById('launcher-screen').style.display='flex';"
             style="display:none;margin-top:2px;border-radius:6px;padding:8px 12px;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
             onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#6b7280;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">ADM</span><span style="flex:1">관리자 페이지</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i>
@@ -1426,6 +1430,19 @@ async function _showLauncherOrApp(user) {
               입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
           </div>
         </div>` : '',
+      (access.includes('korea') || _isAdmin) ? `
+        <div onclick="location.href='https://wt-management.github.io/wt-consumables/'"
+          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
+          <div style="height:5px;background:linear-gradient(90deg,#16a34a,#0d9488)"></div>
+          <div style="padding:28px 24px">
+            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#16a34a,#0d9488);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(22,163,74,.35)">
+              <i class="bi bi-clipboard-data-fill" style="font-size:22px;color:#fff"></i>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">일일매출보고</div>
+            <div style="font-size:11px;color:#64748b;line-height:1.6">소모품 일일<br>매출 현황</div>
+            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#16a34a;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
+          </div>
+        </div>` : '',
     ].join('');
     document.getElementById('launcher-cards').innerHTML = cards;
     if(_isAdmin) document.getElementById('launcher-admin-btn').style.display = '';
@@ -1468,7 +1485,7 @@ async function _bootApp(access) {
   showPage(lastPage);
   await Promise.all([DB.load(), loadUserRole()]);
   // japan 권한 또는 관리자이면 사이트 전환 메뉴 표시
-  if(access?.includes('japan') || access?.includes('intl') || _isAdmin) {
+  if(access?.includes('japan') || access?.includes('intl') || access?.includes('korea') || _isAdmin) {
     document.getElementById('site-switcher').style.display='block';
   }
   if(access?.includes('japan')) {
@@ -1479,6 +1496,7 @@ async function _bootApp(access) {
     const ii = document.getElementById('switcher-intl-item');
     if(ii) { ii.style.display='flex'; }
   }
+  { const ci = document.getElementById('switcher-cons-item'); if(ci) ci.style.display='flex'; }
   if(_isAdmin) {
     const ai = document.getElementById('switcher-admin-item');
     if(ai) { ai.style.display='flex'; }
@@ -4465,6 +4483,19 @@ function _renderLauncherCards(access) {
           <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#f59e0b;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
         </div>
       </div>` : '',
+      (access.includes('korea') || _isAdmin) ? `
+        <div onclick="location.href='https://wt-management.github.io/wt-consumables/'"
+          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
+          <div style="height:5px;background:linear-gradient(90deg,#16a34a,#0d9488)"></div>
+          <div style="padding:28px 24px">
+            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#16a34a,#0d9488);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(22,163,74,.35)">
+              <i class="bi bi-clipboard-data-fill" style="font-size:22px;color:#fff"></i>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">일일매출보고</div>
+            <div style="font-size:11px;color:#64748b;line-height:1.6">소모품 일일<br>매출 현황</div>
+            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#16a34a;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
+          </div>
+        </div>` : '',
   ].join('');
   document.getElementById('launcher-cards').innerHTML = cards;
   if(_isAdmin) document.getElementById('launcher-admin-btn').style.display = '';
