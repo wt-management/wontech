@@ -1459,6 +1459,9 @@ function _hideLoading() {
 }
 
 async function _bootApp(access) {
+  // 저장된 페이지 즉시 적용 (깜빡임 방지)
+  const lastPage = (location.hash.includes('at=') ? null : sessionStorage.getItem('wt_page')) || 'sales-overview';
+  showPage(lastPage);
   await Promise.all([DB.load(), loadUserRole()]);
   // japan 권한 또는 관리자이면 사이트 전환 메뉴 표시
   if(access?.includes('japan') || access?.includes('intl') || _isAdmin) {
@@ -1481,8 +1484,6 @@ async function _bootApp(access) {
     const rm = document.getElementById('nav-device-reps');
     if(rm) rm.style.display='';
   }
-  const lastPage = (location.hash.includes('at=') ? null : sessionStorage.getItem('wt_page')) || 'sales-overview';
-  showPage(lastPage);
   document.getElementById('main-content').style.display='block';
   _hideLoading();
 }
