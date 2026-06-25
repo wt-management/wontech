@@ -267,6 +267,18 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
     </table>
     <div id="pend-empty" style="display:none" class="text-center text-muted py-5">등록된 해외 예정분이 없습니다.</div>
   </div>
+  <!-- ilbo pending view -->
+  <div class="card p-0 mt-3" style="overflow-x:auto">
+    <div style="padding:10px 13px;background:#f0fdfa;border-bottom:1px solid #ccfbf1;font-size:13px;font-weight:700;color:#0f766e">
+      <i class="bi bi-eye me-1"></i>일매출일보 미반영분 (해외) · 조회 <span id="ilbo-pend-sum" style="font-weight:400;color:#6b7280;font-size:12px"></span>
+    </div>
+    <table class="table table-sm mb-0 align-middle" style="font-size:13px;min-width:680px">
+      <thead><tr style="background:#f8fafc;font-size:12px;color:#6b7280">
+        <th style="padding:9px 12px">거래처</th><th>제품</th><th style="text-align:center">수량</th><th style="text-align:right">금액</th><th style="text-align:center">예정일</th>
+      </tr></thead><tbody id="ilbo-pend-tbody"></tbody>
+    </table>
+    <div id="ilbo-pend-empty" style="display:none;font-size:12px" class="text-center text-muted py-4">일매출일보에 입력된 해외 미반영분이 없습니다.</div>
+  </div>
 </div>
 
 <!-- 해외 예정분 입력 모달 (커스텀, bootstrap JS 미사용) -->
@@ -746,6 +758,7 @@ async function _afterLogin(user) {
     }
   } catch(_e) { console.log('해외 데이터 로드 실패 (내장 데이터 사용):', _e.message); }
   await _loadIntlPending();   // 해외 예정분(미반영) 로드
+  _loadIlboPending();
   var _sameDoc=false; try{ _sameDoc = !!document.referrer && new URL(document.referrer).pathname===location.pathname; }catch(e){ _sameDoc=false; }
   // 다른 사이트/페이지에서 진입(또는 토큰 해시)하면 종합현황, intl 자체 새로고침이면 마지막 페이지 유지
   var _saved = (location.hash.includes('at=') || !_sameDoc) ? 'overview' : (sessionStorage.getItem('intl_page') || 'overview');
@@ -937,6 +950,21 @@ async function _markPend(id,status){
 })();
 
 
+
+// ilbo pending view (read-only)
+async function _loadIlboPending(){
+  try{
+    const {data}=await _sb.from('cons_cache').select('data').eq('key','ilbo_pending').maybeSingle();
+    const rows=((data&&data.data&&data.data.rows)||[]).filter(function(p){return p.region==='해외'&&p.status!=='반영됨'&&p.status!=='취소';});
+    var tb=document.getElementById('ilbo-pend-tbody'),emp=document.getElementById('ilbo-pend-empty'),sum=document.getElementById('ilbo-pend-sum');
+    if(!tb) return;
+    if(!rows.length){ tb.innerHTML=''; if(emp) emp.style.display='block'; if(sum) sum.textContent='· 0건'; return; }
+    if(emp) emp.style.display='none';
+    var total=0;
+    tb.innerHTML=rows.map(function(p){ total+=Number(p.amount)||0; var e=function(x){return String(x==null?'':x).replace(/</g,'&lt;');}; return '<tr><td style="padding:8px 12px">'+e(p.customer)+'</td><td>'+e(p.product)+'</td><td style="text-align:center">'+(p.qty||'')+'</td><td style="text-align:right">'+(Number(p.amount)||0).toLocaleString()+'</td><td style="text-align:center">'+(p.expectedDate||'')+'</td></tr>'; }).join('');
+    if(sum) sum.textContent='· '+rows.length+'건 · '+total.toLocaleString()+'원';
+  }catch(e){ console.warn('ilbo pending load',e); }
+}
 
 // ── 사이트 드롭다운 외부 클릭 닫기 ─────────────────────────────
 document.addEventListener('click', function(e){
