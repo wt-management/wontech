@@ -1558,7 +1558,7 @@ async function _showLauncherOrApp(user) {
         </div>` : '',
       (_isAdmin || (access.includes('korea') && access.includes('intl'))) ? `
         <div onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wontech/total.html';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()"
-          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
+          style="${cardStyle};order:-1" onmouseover="${cardHover}" onmouseout="${cardOut}">
           <div style="height:5px;background:linear-gradient(90deg,#4f46e5,#7c3aed)"></div>
           <div style="padding:28px 24px">
             <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(79,70,229,.35)">
@@ -4952,7 +4952,7 @@ function _renderLauncherCards(access) {
         </div>` : '',
       (_isAdmin || (access.includes('korea') && access.includes('intl'))) ? `
         <div onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wontech/total.html';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()"
-          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
+          style="${cardStyle};order:-1" onmouseover="${cardHover}" onmouseout="${cardOut}">
           <div style="height:5px;background:linear-gradient(90deg,#4f46e5,#7c3aed)"></div>
           <div style="padding:28px 24px">
             <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(79,70,229,.35)">
