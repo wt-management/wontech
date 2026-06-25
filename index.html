@@ -1550,6 +1550,19 @@ async function _showLauncherOrApp(user) {
             <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#16a34a;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
           </div>
         </div>` : '',
+      (_isAdmin || (access.includes('korea') && access.includes('intl'))) ? `
+        <div onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wontech/total.html';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()"
+          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
+          <div style="height:5px;background:linear-gradient(90deg,#4f46e5,#7c3aed)"></div>
+          <div style="padding:28px 24px">
+            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(79,70,229,.35)">
+              <i class="bi bi-buildings-fill" style="font-size:22px;color:#fff"></i>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">전사 종합</div>
+            <div style="font-size:11px;color:#64748b;line-height:1.6">국내+해외 통합<br>경영 현황</div>
+            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#818cf8;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
+          </div>
+        </div>` : '',
     ].join('');
     document.getElementById('launcher-cards').innerHTML = cards;
     if(_isAdmin) document.getElementById('launcher-admin-btn').style.display = '';
