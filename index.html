@@ -4767,6 +4767,9 @@ function _updateSidebarProfile(profile, email) {
 function showAdminPanel() {
   document.getElementById('launcher-main').style.display = 'none';
   document.getElementById('launcher-admin').style.display = 'block';
+  // 패널이 화면보다 길어도 위쪽이 잘리지 않도록 상단 정렬 + 맨 위로 스크롤
+  const ls = document.getElementById('launcher-screen');
+  if(ls){ ls.style.justifyContent = 'flex-start'; ls.scrollTop = 0; }
   renderAdminUsers();
 }
 
@@ -4774,6 +4777,8 @@ function hideAdminPanel() {
   sessionStorage.removeItem('wt_app');
   document.getElementById('launcher-admin').style.display = 'none';
   document.getElementById('launcher-main').style.display = 'flex';
+  const ls = document.getElementById('launcher-screen');
+  if(ls) ls.style.justifyContent = 'center';   // 메인 런처는 다시 중앙 정렬
   // 카드가 비어 있으면 재렌더링 (사이트 전환에서 바로 들어온 경우)
   if(!document.getElementById('launcher-cards').innerHTML.trim()) {
     _renderLauncherCards(_currentAccess);
@@ -4870,9 +4875,14 @@ async function renderAdminUsers() {
 }
 
 const WT_SITES = [['korea','한국','#0891b2'],['intl','해외','#0d9488'],['japan','일본','#f59e0b'],['total','종합','#4f46e5'],['daily','일보','#16a34a']];
-function _siteChecks(p, field, fn) {
-  const cur = (p[field]||'').split(',').map(s=>s.trim());
-  return WT_SITES.map(([k,lbl,col])=>`<label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#94a3b8;cursor:pointer;white-space:nowrap"><input type="checkbox" ${cur.includes(k)?'checked':''} onchange="${fn}('${p.id}','${k}',this.checked)" style="accent-color:${col}"> ${lbl}</label>`).join('');
+function _permMatrix(p) {
+  const head = WT_SITES.map(([k,lbl])=>`<th style="font-size:10px;font-weight:600;color:#94a3b8;padding:0 7px 3px;text-align:center">${lbl}</th>`).join('');
+  const row = (field, fn, rowLbl) => {
+    const cur = (p[field]||'').split(',').map(s=>s.trim());
+    const cells = WT_SITES.map(([k,lbl,col])=>`<td style="text-align:center;padding:2px 7px"><input type="checkbox" ${cur.includes(k)?'checked':''} onchange="${fn}('${p.id}','${k}',this.checked)" style="accent-color:${col};cursor:pointer;margin:0"></td>`).join('');
+    return `<tr><td style="font-size:10px;font-weight:700;color:#64748b;padding:2px 10px 2px 0;white-space:nowrap">${rowLbl}</td>${cells}</tr>`;
+  };
+  return `<table style="border-collapse:collapse"><thead><tr><td></td>${head}</tr></thead><tbody>${row('access','toggleAccess','접근')}${row('upload','toggleUpload','업로드')}</tbody></table>`;
 }
 function _adminUserRow(p, iS) {
     const pwId = 'pw_'+p.id.replace(/-/g,'');
@@ -4888,10 +4898,7 @@ function _adminUserRow(p, iS) {
         <button onclick="togglePw('${pwId}','${p.temp_pw}')" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:13px;padding:2px" title="비밀번호 보기"><i class="bi bi-eye"></i></button>
       </div>` : `<span style="font-size:11px;color:#475569">-</span>`}
     </td>
-    <td style="padding:12px 16px"><div style="display:flex;gap:18px">
-      <div><div style="font-size:10px;color:#64748b;font-weight:700;margin-bottom:4px;letter-spacing:.03em">접근</div><div style="display:flex;flex-direction:column;gap:3px">${_siteChecks(p,'access','toggleAccess')}</div></div>
-      <div><div style="font-size:10px;color:#64748b;font-weight:700;margin-bottom:4px;letter-spacing:.03em">업로드</div><div style="display:flex;flex-direction:column;gap:3px">${_siteChecks(p,'upload','toggleUpload')}</div></div>
-    </div></td>
+    <td style="padding:8px 12px">${_permMatrix(p)}</td>
     <td style="padding:12px 16px"><select style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:4px 8px;font-size:12px;color:#fff" onchange="updateUserRole('${p.id}',this.value)">
       <option value="user"    ${(!p.role||p.role==='user')?'selected':''}    style="background:#1e293b">팀원</option>
       <option value="manager" ${p.role==='manager'?'selected':''} style="background:#1e293b">팀/파트장</option>
