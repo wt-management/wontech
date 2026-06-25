@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>원텍 한국영업</title>
+<title>wontech</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
@@ -1634,6 +1634,19 @@ async function _bootApp(access) {
     const ai = document.getElementById('switcher-admin-item');
     if(ai) { ai.style.display='flex'; }
   }
+  // 사이트 이동 순서·표시 통일: 전사종합/한국/해외/일본/일보/관리자 (관리자만 관리자페이지)
+  (function(){
+    var box=document.querySelector('#site-dropdown > div'); if(!box) return;
+    var kr=box.querySelector('div[style*="rgba(8,145,178"]');
+    var ids=['switcher-total-item',null,'switcher-intl-item','switcher-japan-item','switcher-cons-item','switcher-admin-item'];
+    ids.forEach(function(id,idx){
+      var el = id ? document.getElementById(id) : kr;
+      if(!el) return;
+      if(id!=='switcher-admin-item') el.style.display='flex';
+      el.style.marginTop = idx===0 ? '0' : '2px';
+      box.appendChild(el);
+    });
+  })();
   // 팀장/관리자만 담당자별 분석 메뉴 표시
   if(_isMgr) {
     const rm = document.getElementById('nav-device-reps');
