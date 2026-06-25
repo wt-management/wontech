@@ -51,7 +51,7 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#eef2f7;color
 .etbl{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
 .etbl caption{caption-side:top;font-size:13px;font-weight:800;color:#0f172a;text-align:left;padding:0 0 9px}
 .etbl caption .lv{color:#0f766e}
-.etbl th{background:#e8eef6;color:#334155;font-weight:700;padding:6px 9px;border:1px solid #d4dde8;font-size:11.5px}
+.etbl th{background:#e8eef6;color:#334155;font-weight:700;padding:6px 9px;border:1px solid #d4dde8;font-size:11.5px;height:46px;vertical-align:middle;line-height:1.25}
 .etbl td{padding:5px 9px;border:1px solid #e6ebf1;text-align:right}
 .etbl td.mon{text-align:center;color:#475569}
 .etbl tr.sub td{background:#f1f5f9;font-weight:700}
@@ -124,8 +124,10 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#eef2f7;color
 
     <div class="bar">
       <div class="fld"><label>적용 환율 (₩/$)</label><input id="in-rate" type="number" step="1" oninput="onRate()"></div>
-      <div class="fld"><label id="prov-lbl">미확정월 수출 원화금액</label><input id="in-provkrw" type="number" step="1000000" oninput="onRate()" placeholder="예) 10,000,000,000"></div>
-      <div class="prov">→ <span id="prov-month" class="muted"></span> 잠정 환산액 <b id="prov-usd">$0</b> <span class="muted" style="font-size:11px">(확정 전)</span></div>
+      <div class="fld"><label>회계 매출 (원화)</label><input id="in-acckrw" type="number" step="1000000" oninput="onRate()" placeholder="0"></div>
+      <div class="fld"><label>미반영 (원화)</label><input id="in-pendkrw" type="number" step="1000000" oninput="onRate()" placeholder="0"></div>
+      <div class="fld"><label id="ov-lbl">조정값 ($)</label><input id="in-override" type="number" step="10000" oninput="onRate()" placeholder="자동"></div>
+      <div class="prov">→ <span id="prov-month" class="muted"></span> 잠정 <b id="prov-usd">$0</b> <span class="muted" id="prov-calc" style="font-size:11px"></span></div>
     </div>
 
     <div class="grid2">
@@ -171,8 +173,10 @@ let _user=null, DATA=null, _chCum=null, _chMon=null;
 // ── 기본 데이터 (이미지 보고 기준, 6월 미확정) ───────────────
 const DEFAULT_DATA = {
   rate: 1380,
-  provKRW: 0,            // 미확정월 수출 원화금액(매출데이터). 0이면 잠정 미산출
-  provMonth: '2026-06',  // 잠정 환산 대상 월
+  provAccKRW: 0,         // 미확정월 회계 매출(원화)
+  provPendKRW: 0,        // 미확정월 미반영(원화)
+  provOverrideUSD: '',   // 수기 조정값(USD). 입력 시 환산값 대신 사용
+  provMonth: '2026-06',  // 잠정 환산 대상 월(현 7천만불 차수 진행월)
   cycles: [
     { id:'c2025', target:50000000, label:'5천만불', title:'2025년 수출의 탑', start:'2024-07',
       months:{'2024-07':3872001,'2024-08':3505889,'2024-09':2794583,'2024-10':6382241,'2024-11':4716373,'2024-12':5603880,
@@ -180,9 +184,8 @@ const DEFAULT_DATA = {
     { id:'c2026_70', target:70000000, label:'7천만불', title:'2026년 수출의 탑', start:'2025-07',
       months:{'2025-07':4644186,'2025-08':4849782,'2025-09':5594369,'2025-10':5305392,'2025-11':7473981,'2025-12':9637651,
               '2026-01':4180164,'2026-02':7361304,'2026-03':11758593,'2026-04':8195711,'2026-05':109124} },
-    { id:'c2026_100', target:100000000, label:'1억불', title:'2026년 수출의 탑', start:'2025-07',
-      months:{'2025-07':4644186,'2025-08':4849782,'2025-09':5594369,'2025-10':5305392,'2025-11':7473981,'2025-12':9637651,
-              '2026-01':4180164,'2026-02':7361304,'2026-03':11758593,'2026-04':7016810,'2026-05':109124} }
+    { id:'c2026_100', target:100000000, label:'1억불', title:'2027년 수출의 탑', start:'2026-07',
+      months:{} }
   ],
   kita: [ {year:'2024', amount:53670859}, {year:'2025', amount:74055678}, {year:'2026', amount:31604896} ]
 };
@@ -199,7 +202,11 @@ const monLabel = key => { const [y,m]=key.split('-'); return y.slice(2)+'년 '+N
 const prevYearKey = key => { const [y,m]=key.split('-'); return (Number(y)-1)+'-'+m; };
 
 // 잠정 환산액 (미확정월)
-function provUSD(){ const r=Number(DATA.rate)||0, k=Number(DATA.provKRW)||0; return r>0?k/r:0; }
+function provUSD(){
+  if(DATA.provOverrideUSD!=null && DATA.provOverrideUSD!=='') return Number(DATA.provOverrideUSD)||0;
+  const r=Number(DATA.rate)||0, k=(Number(DATA.provAccKRW)||0)+(Number(DATA.provPendKRW)||0);
+  return r>0?k/r:0;
+}
 // 차수의 한 월 값: 확정값 우선, 없고 잠정월이면 환산액
 function monVal(cyc,key){
   const v=cyc.months[key];
@@ -216,25 +223,34 @@ function cycleTotal(cyc){ return cycleMonths(cyc.start).reduce((s,k)=>s+monVal(c
 // ── 렌더 ─────────────────────────────────────────────────
 function render(){
   document.getElementById('in-rate').value=DATA.rate;
-  document.getElementById('in-provkrw').value=DATA.provKRW||'';
+  document.getElementById('in-acckrw').value=DATA.provAccKRW||'';
+  document.getElementById('in-pendkrw').value=DATA.provPendKRW||'';
+  document.getElementById('in-override').value=(DATA.provOverrideUSD??'');
+  document.getElementById('ov-lbl').textContent=monLabel(DATA.provMonth)+' 조정값 ($)';
   document.getElementById('prov-month').textContent=monLabel(DATA.provMonth);
-  document.getElementById('prov-lbl').textContent=monLabel(DATA.provMonth)+' 수출 원화금액';
-  document.getElementById('prov-usd').textContent=usd(provUSD());
+  updateProvDisplay();
   renderKPI(); renderTables(); renderKITA(); renderCharts();
+}
+function updateProvDisplay(){
+  document.getElementById('prov-usd').textContent=usd(provUSD());
+  const ov=(DATA.provOverrideUSD!=null&&DATA.provOverrideUSD!=='');
+  const acc=Number(DATA.provAccKRW)||0, pend=Number(DATA.provPendKRW)||0, r=Number(DATA.rate)||0;
+  document.getElementById('prov-calc').textContent= ov?'(수기 조정)':('(회계+미반영 '+(acc+pend).toLocaleString()+'원 ÷ '+r.toLocaleString()+')');
 }
 
 function renderKPI(){
   const el=document.getElementById('kpi-row'); el.innerHTML='';
   const colors=['#0891b2','#0f766e','#6366f1'];
   DATA.cycles.forEach((cyc,i)=>{
-    const tot=cycleTotal(cyc), rate=tot/cyc.target*100, diff=tot-cyc.target, done=diff>=0;
+    const tot=cycleTotal(cyc), rate=tot/cyc.target*100, diff=tot-cyc.target, done=diff>=0, empty=tot<=0;
+    const startLbl=monLabel(cycleMonths(cyc.start)[0]);
     el.insertAdjacentHTML('beforeend',`
-      <div class="kpi ${done?'done':''}">
+      <div class="kpi ${done&&!empty?'done':''}">
         <div><span class="tag">${cyc.title}</span><span class="tgt">${cyc.label}</span></div>
-        <div class="rate" style="color:${done?'#dc2626':colors[i]}">${rate.toFixed(0)}<span style="font-size:1.1rem">%</span></div>
+        <div class="rate" style="color:${empty?'#94a3b8':done?'#dc2626':colors[i]}">${empty?'—':rate.toFixed(0)}${empty?'':'<span style="font-size:1.1rem">%</span>'}</div>
         <div class="amt">실적 ${usd(tot)} / 목표 ${usd(cyc.target)}</div>
-        <div class="sub" style="color:${done?'#dc2626':'#2563eb'}">${done?'초과분 '+usd(diff):'과부족 -'+usd(Math.abs(diff))}</div>
-        <div class="gauge"><div style="width:${Math.min(rate,100)}%;background:${done?'#dc2626':colors[i]}"></div></div>
+        <div class="sub" style="color:${empty?'#94a3b8':done?'#dc2626':'#2563eb'}">${empty?(startLbl+' 시작'):(done?'초과분 '+usd(diff):'과부족 -'+usd(Math.abs(diff)))}</div>
+        <div class="gauge"><div style="width:${empty?0:Math.min(rate,100)}%;background:${done?'#dc2626':colors[i]}"></div></div>
       </div>`);
   });
 }
@@ -320,8 +336,11 @@ function renderCharts(){
 // ── 환율/잠정 입력 ───────────────────────────────────────
 function onRate(){
   DATA.rate=Number(document.getElementById('in-rate').value)||0;
-  DATA.provKRW=Number(document.getElementById('in-provkrw').value)||0;
-  document.getElementById('prov-usd').textContent=usd(provUSD());
+  DATA.provAccKRW=Number(document.getElementById('in-acckrw').value)||0;
+  DATA.provPendKRW=Number(document.getElementById('in-pendkrw').value)||0;
+  const ovv=document.getElementById('in-override').value.trim();
+  DATA.provOverrideUSD = ovv===''?'':Number(ovv);
+  updateProvDisplay();
   renderKPI(); renderTables(); renderCharts(); persist();
 }
 
@@ -354,13 +373,24 @@ function persist(){
   });
 }
 async function loadData(){
-  let loaded=null;
-  try{ const {data,error}=await _sb.from('export_tower').select('data').eq('key','main').maybeSingle(); if(!error&&data&&data.data) loaded=data.data; }catch(_){}
-  if(!loaded){ try{ const ls=localStorage.getItem(LS_KEY); if(ls) loaded=JSON.parse(ls); }catch(_){} }
-  DATA=loaded||JSON.parse(JSON.stringify(DEFAULT_DATA));
-  // 누락 필드 보정
-  if(DATA.rate==null) DATA.rate=DEFAULT_DATA.rate;
-  if(!DATA.provMonth) DATA.provMonth=DEFAULT_DATA.provMonth;
+  let saved=null;
+  try{ const {data,error}=await _sb.from('export_tower').select('data').eq('key','main').maybeSingle(); if(!error&&data&&data.data) saved=data.data; }catch(_){}
+  if(!saved){ try{ const ls=localStorage.getItem(LS_KEY); if(ls) saved=JSON.parse(ls); }catch(_){} }
+  // 차수 구조(기간·목표)는 항상 코드(DEFAULT_DATA) 기준, 저장본은 월별수치·환율·잠정값만 덮어씀
+  const base=JSON.parse(JSON.stringify(DEFAULT_DATA));
+  if(saved){
+    if(saved.rate!=null) base.rate=saved.rate;
+    if(saved.provMonth) base.provMonth=saved.provMonth;
+    base.provAccKRW   = saved.provAccKRW ?? saved.provKRW ?? base.provAccKRW;   // 구버전 provKRW 마이그레이션
+    base.provPendKRW  = saved.provPendKRW ?? base.provPendKRW;
+    base.provOverrideUSD = saved.provOverrideUSD ?? base.provOverrideUSD;
+    if(Array.isArray(saved.kita)) base.kita=saved.kita;
+    if(Array.isArray(saved.cycles)) saved.cycles.forEach(sc=>{
+      const bc=base.cycles.find(c=>c.id===sc.id);
+      if(bc && sc.months) bc.months=sc.months;
+    });
+  }
+  DATA=base;
 }
 
 // ── 로그인 ───────────────────────────────────────────────
