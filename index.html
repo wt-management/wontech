@@ -1630,8 +1630,7 @@ async function _bootApp(access) {
   }
   await _loadPending();
   await _loadIlboPending();
-  const lastPage = sessionStorage.getItem('wt_page') || 'sales-overview';
-  showPage(lastPage);
+  showPage('sales-overview');   // 진입 시 항상 종합현황(첫 메뉴)
   document.getElementById('main-content').style.display='block';
   _hideLoading();
 }
@@ -2536,6 +2535,7 @@ async function doLogin() {
   const {data, error} = await _sb.auth.signInWithPassword({email, password: pw});
   if(error) { if(errEl) errEl.style.display='block'; return; }
   if(errEl) errEl.style.display='none';
+  sessionStorage.removeItem('wt_app');   // 로그인 시 이전 앱 상태 무시 → 런처부터
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-loading').style.display='flex';
   await _showLauncherOrApp(data.user);

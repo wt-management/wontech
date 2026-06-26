@@ -761,7 +761,7 @@ async function _afterLogin(user) {
   await _loadIlboPending();
   var _sameDoc=false; try{ _sameDoc = !!document.referrer && new URL(document.referrer).pathname===location.pathname; }catch(e){ _sameDoc=false; }
   // 다른 사이트/페이지에서 진입(또는 토큰 해시)하면 종합현황, intl 자체 새로고침이면 마지막 페이지 유지
-  var _saved = (location.hash.includes('at=') || !_sameDoc) ? 'overview' : (sessionStorage.getItem('intl_page') || 'overview');
+  var _saved = 'overview';   // 진입 시 항상 종합현황(첫 메뉴)
   showPage(_saved);
   var veil = document.getElementById('__page_veil');
   if(veil) veil.style.display = 'none';
