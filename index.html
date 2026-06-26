@@ -2659,8 +2659,12 @@ function consParseExcel(input) {
       setMsg('엑셀 파싱 중...', '잠시만 기다려 주세요');
       const wb = XLSX.read(e.target.result, {type:'array', cellDates:true});
 
-      const sheet25name = wb.SheetNames.find(n => n.includes('2025'));
-      const sheet26name = wb.SheetNames.find(n => n.includes('2026'));
+      // raw 데이터 시트 우선 선택(부서별/실적 pivot 시트 제외) — 회계파일에 pivot 시트가 먼저 와도 안전
+      const _pickSheet = yr => wb.SheetNames.find(n => n.includes(yr) && /raw/i.test(n))
+        || wb.SheetNames.find(n => n.includes(yr) && !/부서별|실적|요약|pivot|summary/i.test(n))
+        || wb.SheetNames.find(n => n.includes(yr));
+      const sheet25name = _pickSheet('2025');
+      const sheet26name = _pickSheet('2026');
       if (!sheet25name || !sheet26name) throw new Error('2025년/2026년 시트를 찾을 수 없습니다.');
 
       setMsg('데이터 집계 중...', '소모품 국내 필터링');
