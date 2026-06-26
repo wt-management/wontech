@@ -392,14 +392,14 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       <select id="ov-to-sel" class="form-select form-select-sm" style="width:70px" onchange="_ovPeriodChange()">
         <option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6" selected>6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
       </select>
-      <span style="margin-left:auto;font-size:11px;color:#9ca3af;white-space:nowrap"><i class="bi bi-info-circle me-1"></i>KPI는 <b style="color:#6b7280">회계반영</b> / <b style="color:#7c3aed">미반영 포함</b> 두 값을 함께 표시</span>
     </div>
     <!-- KPI 카드 -->
     <div class="row g-3 mb-3" id="ov-kpi"></div>
     <!-- 월별 통합 차트 -->
     <div class="card p-3 mb-3">
-      <div class="fw-bold mb-2" style="font-size:13px"><i class="bi bi-graph-up-arrow me-1" style="color:#374151"></i>월별 매출 추이 <span style="font-size:11px;font-weight:400;color:#9ca3af">점선=전년 · 파랑=소모품 · 초록=제품</span></div>
+      <div class="fw-bold mb-2" style="font-size:13px"><i class="bi bi-graph-up-arrow me-1" style="color:#374151"></i>월별 매출 추이 <span style="font-size:11px;font-weight:400;color:#9ca3af">막대=소모품·제품·미반영 · 점선=작년 합계 · 단위 억원</span></div>
       <div style="position:relative;height:220px"><canvas id="ov-chart-monthly"></canvas></div>
+      <div id="ov-month-table" class="mt-3"></div>
     </div>
     <!-- 소모품 / 제품 나란히 -->
     <div class="row g-3">
@@ -1854,7 +1854,7 @@ function renderSalesOverview() {
   const _kpiDual = c => '<div class="col-6 col-md-3"><div class="kpi-card"'+(c.click?' onclick="'+c.click+'" style="cursor:pointer" title="클릭하면 전체 품목 랭킹 조회"':'')+'>'+_kpiHead(c)
     +'<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px">'
       +'<div><div style="font-size:10px;color:#9ca3af;margin-bottom:1px;font-weight:600">회계반영</div><div class="kpi-value" style="color:'+c.col+';font-size:1.4rem;line-height:1.1">'+c.mainVal+'</div><div class="kpi-sub" style="margin-top:3px">'+c.mainSub+'</div></div>'
-      +'<div style="text-align:right;border-left:1px solid #eef2f7;padding-left:11px"><div style="font-size:10px;color:#7c3aed;margin-bottom:1px;font-weight:600">미반영 포함</div><div style="font-size:1.1rem;font-weight:800;color:#4b5563;line-height:1.1">'+c.rightVal+'</div><div style="font-size:10px;color:#9ca3af;margin-top:3px">예정 +'+c.pendStr+'</div></div>'
+      +'<div style="text-align:right;border-left:1px solid #eef2f7;padding-left:11px"><div style="font-size:10px;color:#7c3aed;margin-bottom:1px;font-weight:600">미반영 포함</div><div style="font-size:1.32rem;font-weight:800;color:#374151;line-height:1.1">'+c.rightVal+'</div><div style="font-size:10px;color:#9ca3af;margin-top:3px">예정 +'+c.pendStr+'</div></div>'
     +'</div></div></div>';
   const _kpiSingle = c => '<div class="col-6 col-md-3"><div class="kpi-card">'+_kpiHead(c)+'<div class="kpi-value" style="color:'+c.col+';font-size:1.45rem">'+c.mainVal+'</div><div class="kpi-sub">'+c.mainSub+'</div></div></div>';
   const kpis = [
@@ -1866,36 +1866,44 @@ function renderSalesOverview() {
   document.getElementById('ov-kpi').innerHTML = kpis.map(c=>c.dual?_kpiDual(c):_kpiSingle(c)).join('');
 
   const months12 = Array.from({length:12},(_,i)=>i+1);
-  const consVals   = months12.map(m=>Math.round((consCurMo[m]||0)/1e4));
-  const devVals    = months12.map(m=>Math.round((devCurMo[m]||0)/1e4));
-  const consPendVals = months12.map(m=>Math.round((consPendMo[m]||0)/1e4));
-  const devPendVals  = months12.map(m=>Math.round((devPendMo[m]||0)/1e4));
-  const consPrVals = months12.map(m=>Math.round((consPrMo[m]||0)/1e4));
-  const devPrVals  = months12.map(m=>Math.round((devPrMo[m]||0)/1e4));
+  const _eok = v => Math.round((v||0)/1e6)/100;   // 억(소수 2자리)
+  const consVals   = months12.map(m=>_eok(consCurMo[m]));
+  const devVals    = months12.map(m=>_eok(devCurMo[m]));
+  const pendVals    = months12.map(m=>_eok((consPendMo[m]||0)+(devPendMo[m]||0)));
+  const prevTotVals = months12.map(m=>_eok((consPrMo[m]||0)+(devPrMo[m]||0)));
   if (_ovChart) { _ovChart.destroy(); _ovChart=null; }
   const ctx = document.getElementById('ov-chart-monthly');
   if (ctx) {
     _ovChart = new Chart(ctx, {
       type:'bar',
       data:{labels:months12.map(m=>m+'월'), datasets:[
-        {label:'소모품 '+yr,   data:consVals,   backgroundColor:'rgba(37,99,235,0.7)',  borderRadius:3, stack:'cur', yAxisID:'y'},
-        {label:'제품 '+yr,     data:devVals,    backgroundColor:'rgba(22,163,74,0.7)',  borderRadius:3, stack:'cur', yAxisID:'y'},
-        ...(incPend?[
-          {label:'소모품 예정', data:consPendVals, backgroundColor:'rgba(37,99,235,0.30)', borderColor:'rgba(37,99,235,0.6)', borderWidth:1, borderRadius:3, stack:'cur', yAxisID:'y'},
-          {label:'제품 예정',   data:devPendVals,  backgroundColor:'rgba(22,163,74,0.30)', borderColor:'rgba(22,163,74,0.6)', borderWidth:1, borderRadius:3, stack:'cur', yAxisID:'y'},
-        ]:[]),
-        {label:'소모품 '+prev, data:consPrVals, type:'line', borderColor:'rgba(37,99,235,0.45)', backgroundColor:'transparent', borderWidth:1.5, borderDash:[5,3], pointRadius:2, yAxisID:'y'},
-        {label:'제품 '+prev,   data:devPrVals,  type:'line', borderColor:'rgba(22,163,74,0.45)',  backgroundColor:'transparent', borderWidth:1.5, borderDash:[5,3], pointRadius:2, yAxisID:'y'},
+        {label:'소모품', data:consVals, backgroundColor:'#2563eb', borderRadius:3, stack:'cur', yAxisID:'y'},
+        {label:'제품',   data:devVals,  backgroundColor:'#16a34a', borderRadius:3, stack:'cur', yAxisID:'y'},
+        ...(incPend?[{label:'미반영(예정)', data:pendVals, backgroundColor:'#a78bfa', borderRadius:3, stack:'cur', yAxisID:'y'}]:[]),
+        {label:prev+' 합계', data:prevTotVals, type:'line', borderColor:'#94a3b8', backgroundColor:'transparent', borderWidth:1.8, borderDash:[5,3], pointRadius:2, tension:0, yAxisID:'y'},
       ]},
       options:{responsive:true, maintainAspectRatio:false,
         onClick:(e,els)=>{ if(els&&els.length) openOvMonth(els[0].index+1); },
         onHover:(e,els)=>{ e.native.target.style.cursor = els&&els.length?'pointer':'default'; },
         plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},
-          tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y?.toLocaleString()+'만원',
+          tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y||0)+'억',
             footer:()=>'클릭하면 그 달 상세'}}},
-        scales:{y:{ticks:{callback:v=>v+'만'}, grid:{color:'#f3f4f6'}}}
+        scales:{y:{ticks:{callback:v=>v+'억'}, grid:{color:'#f3f4f6'}}}
       }
     });
+  }
+  // 월별 상세 표 (선택 기간)
+  const _mt = document.getElementById('ov-month-table');
+  if (_mt) {
+    let rows='', tC=0,tD=0,tP=0,tPr=0;
+    YTD.forEach(m=>{
+      const c=consCurMo[m]||0, dv=devCurMo[m]||0, pe=(consPendMo[m]||0)+(devPendMo[m]||0), pr=(consPrMo[m]||0)+(devPrMo[m]||0);
+      tC+=c;tD+=dv;tP+=pe;tPr+=pr; const sum=c+dv+pe, chg=pr>0?(((c+dv)/pr-1)*100):null;
+      rows+='<tr style="border-bottom:1px solid #f3f4f6"><td style="padding:5px 8px">'+m+'월</td><td style="text-align:right;color:#2563eb">'+fmtW(c)+'</td><td style="text-align:right;color:#16a34a">'+fmtW(dv)+'</td><td style="text-align:right;color:#7c3aed">'+(pe?fmtW(pe):'-')+'</td><td style="text-align:right;font-weight:700">'+fmtW(sum)+'</td><td style="text-align:right;color:#9ca3af">'+(pr?fmtW(pr):'-')+'</td><td style="text-align:right;padding-right:8px">'+(chg===null?'-':'<span style="color:'+(chg>=0?'#16a34a':'#dc2626')+'">'+(chg>=0?'▲':'▼')+Math.abs(chg).toFixed(0)+'%</span>')+'</td></tr>';
+    });
+    const sumAll=tC+tD+tP, chgAll=tPr>0?(((tC+tD)/tPr-1)*100):null;
+    rows+='<tr style="border-top:2px solid #e5e7eb;font-weight:700;background:#f8fafc"><td style="padding:6px 8px">합계</td><td style="text-align:right;color:#2563eb">'+fmtW(tC)+'</td><td style="text-align:right;color:#16a34a">'+fmtW(tD)+'</td><td style="text-align:right;color:#7c3aed">'+(tP?fmtW(tP):'-')+'</td><td style="text-align:right">'+fmtW(sumAll)+'</td><td style="text-align:right;color:#9ca3af">'+(tPr?fmtW(tPr):'-')+'</td><td style="text-align:right;padding-right:8px">'+(chgAll===null?'-':'<span style="color:'+(chgAll>=0?'#16a34a':'#dc2626')+'">'+(chgAll>=0?'▲':'▼')+Math.abs(chgAll).toFixed(0)+'%</span>')+'</td></tr>';
+    _mt.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:480px"><thead><tr style="color:#6b7280;font-size:11px;border-bottom:1px solid #e5e7eb"><th style="text-align:left;padding:5px 8px">월</th><th style="text-align:right;padding:5px 8px">소모품</th><th style="text-align:right">제품</th><th style="text-align:right">미반영</th><th style="text-align:right">합계</th><th style="text-align:right">작년</th><th style="text-align:right;padding-right:8px">증감</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
   }
 
   const COLS  = ['#2563eb','#7c3aed','#0891b2','#16a34a','#ea580c','#dc2626','#64748b'];
