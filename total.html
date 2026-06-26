@@ -67,6 +67,14 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .ov-table td:first-child{text-align:left;font-weight:600}
 .ov-table tr.total-row td{font-weight:800;border-top:2px solid #e2e8f0;border-bottom:none;background:#f8fafc}
 .ov-chip{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;vertical-align:middle}
+.ov-table tbody tr:hover{background:#f8fafc}
+.ov-clk{cursor:pointer;color:#0f766e;text-decoration:underline;text-decoration-color:#cbd5e1;text-underline-offset:2px}
+.ov-clk:hover{background:#f0fdfa;color:#0e7490;font-weight:700}
+.ovd-modal{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px}
+.ovd-box{background:#fff;border-radius:14px;width:440px;max-width:100%;max-height:85vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.ovd-head{display:flex;justify-content:space-between;align-items:center;padding:15px 18px;border-bottom:1px solid #eef2f7;font-weight:700;font-size:14px}
+.ovd-x{cursor:pointer;font-size:22px;color:#94a3b8;line-height:1}
+.ovd-body{padding:14px 18px}
 /* 이번달 관리 카드 */
 .tm-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .tm-box{background:#fff;border-radius:12px;padding:14px 16px;border:1px solid #e2e8f0}
@@ -186,8 +194,16 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
     </div>
 
     <div class="card p-3 mb-3">
-      <div class="fw-bold mb-2" style="font-size:13px"><i class="bi bi-table me-1" style="color:#2563eb"></i>국내·해외 매출 <span style="font-weight:500;color:#94a3b8">(회계반영 기준)</span></div>
+      <div class="fw-bold mb-2" style="font-size:13px"><i class="bi bi-table me-1" style="color:#2563eb"></i>국내·해외 월별 매출 <span style="font-weight:500;color:#94a3b8">(지난달 회계반영 · 당월 미반영 포함 · <span style="color:#0f766e">숫자 클릭 시 내역</span>)</span></div>
       <div style="overflow-x:auto"><table class="ov-table" id="ov-table"></table></div>
+    </div>
+
+    <!-- 월별 매출 내역 모달 -->
+    <div id="ovDetailModal" class="ovd-modal" style="display:none" onclick="if(event.target===this)closeOvDetail()">
+      <div class="ovd-box">
+        <div class="ovd-head"><span id="ovd-title">내역</span><span class="ovd-x" onclick="closeOvDetail()">&times;</span></div>
+        <div class="ovd-body" id="ovd-body"></div>
+      </div>
     </div>
 
     <div class="card p-3 mb-3">
@@ -487,8 +503,8 @@ function renderOverview(){
       scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:'#f3f4f6'},ticks:{callback:v=>v+'억'}}}}
   });
 
-  // 국내·해외 표 (도넛/장비소모품 대체)
-  renderOvTable({domC,domI,domPend,domPrev,intl,intlI,intlPrev,totalC,totalI,totalPrev});
+  // 국내·해외 월별 표 (클릭 시 내역)
+  renderOvMonthly();
 
   // 제품 통합 Top (회계반영 기준)
   renderOvProds(f,t,null);
@@ -496,29 +512,62 @@ function renderOverview(){
   // 이번달 회계+예정
   renderThisMonth();
 }
-function renderOvTable(d){
-  const row=(label,col,conf,inc,prev,base,showPend)=>{
-    const share=base>0?(conf/base*100):0, y=pct(conf,prev);
-    return '<tr>'+
-      '<td><span class="ov-chip" style="background:'+col+'"></span>'+label+'</td>'+
-      '<td>'+fmtW(conf)+'</td>'+
-      '<td>'+share.toFixed(1)+'%</td>'+
-      '<td style="color:#0e7490">'+((showPend&&inc>conf)?fmtW(inc):'<span style="color:#cbd5e1">—</span>')+'</td>'+
-      '<td style="color:#64748b">'+fmtW(prev)+'</td>'+
+function _curMonth(){ const n=new Date(); return n.getFullYear()===2026?(n.getMonth()+1):12; }
+let _ovRegMo={};
+// 국내·해외 월별 표 — 지난달=회계반영, 당월=미반영 포함. 숫자 클릭 시 내역.
+function renderOvMonthly(){
+  const pend=_pendingAgg(2026), cur=_curMonth();
+  _ovRegMo=_intlRegionMonthly(INTL);
+  let rows='', yd=0,yi=0,yp=0;
+  for(let m=1;m<=cur;m++){
+    const isCur=(m===cur);
+    const domConf=(CONS.monthly2026&&CONS.monthly2026[m]||0)+(DEVICE.monthly2026&&DEVICE.monthly2026[m]||0);
+    const intlConf=(INTL.monthly&&INTL.monthly[m]||0);
+    const dom=domConf+(isCur?((pend.consMonthly[m]||0)+(pend.devMonthly[m]||0)):0);
+    const intl=intlConf+(isCur?(pend.intlMonthly[m]||0):0);
+    const tot=dom+intl;
+    const prev=(CONS.monthly2025&&CONS.monthly2025[m]||0)+(DEVICE.monthly2025&&DEVICE.monthly2025[m]||0)+((INTL.data2025&&INTL.data2025.monthly&&INTL.data2025.monthly[m])||0);
+    const y=pct(tot,prev); yd+=dom; yi+=intl; yp+=prev;
+    const star=isCur?'<span title="미반영 포함" style="color:#0e7490;font-weight:700"> *</span>':'';
+    rows+='<tr><td>'+m+'월'+star+'</td>'+
+      '<td class="ov-clk" onclick="openOvDetail('+m+',\'dom\')">'+(dom?fmtW(dom):'-')+'</td>'+
+      '<td class="ov-clk" onclick="openOvDetail('+m+',\'intl\')">'+(intl?fmtW(intl):'-')+'</td>'+
+      '<td class="ov-clk" style="font-weight:700" onclick="openOvDetail('+m+',\'total\')">'+(tot?fmtW(tot):'-')+'</td>'+
+      '<td style="color:#64748b">'+(prev?fmtW(prev):'-')+'</td>'+
       '<td>'+(y===null?'-':badge(y))+'</td></tr>';
-  };
-  const ty=pct(d.totalC,d.totalPrev);
+  }
+  const yt=pct(yd+yi,yp);
   document.getElementById('ov-table').innerHTML=
-    '<thead><tr><th>구분</th><th>매출(회계반영)</th><th>비중</th><th>미반영 포함</th><th>전년</th><th>전년대비</th></tr></thead>'+
-    '<tbody>'+
-      row('국내',DOM_BLUE,d.domC,d.domI,d.domPrev,d.totalC,true)+
-      row('해외',INTL_TEAL,d.intl,d.intlI,d.intlPrev,d.totalC,true)+
-    '</tbody>'+
-    '<tfoot><tr class="total-row"><td>전사 합계</td><td>'+fmtW(d.totalC)+'</td><td>100.0%</td>'+
-      '<td style="color:#0e7490">'+(d.totalI>d.totalC?fmtW(d.totalI):'<span style="color:#cbd5e1">—</span>')+'</td>'+
-      '<td style="color:#64748b">'+fmtW(d.totalPrev)+'</td>'+
-      '<td>'+(ty===null?'-':badge(ty))+'</td></tr></tfoot>';
+    '<thead><tr><th>월</th><th>국내</th><th>해외</th><th>합계</th><th>전년</th><th>전년대비</th></tr></thead>'+
+    '<tbody>'+rows+'</tbody>'+
+    '<tfoot><tr class="total-row"><td>합계</td><td>'+fmtW(yd)+'</td><td>'+fmtW(yi)+'</td><td>'+fmtW(yd+yi)+'</td>'+
+      '<td style="color:#64748b">'+fmtW(yp)+'</td><td>'+(yt===null?'-':badge(yt))+'</td></tr></tfoot>';
 }
+function openOvDetail(m,type){
+  const pend=_pendingAgg(2026), isCur=(m===_curMonth()), rows=[];
+  const add=(label,v,col)=>{ if(v) rows.push({label,v,col}); };
+  if(type==='dom'||type==='total'){
+    add('국내 소모품',(CONS.monthly2026&&CONS.monthly2026[m]||0),CONS_CYAN);
+    add('국내 제품',(DEVICE.monthly2026&&DEVICE.monthly2026[m]||0),DEV_PURPLE);
+    if(isCur){ add('국내 미반영·소모품',(pend.consMonthly[m]||0),'#0891b2'); add('국내 미반영·제품',(pend.devMonthly[m]||0),'#7c3aed'); }
+  }
+  if(type==='intl'||type==='total'){
+    const REGS=['동남아','중화','중동','유럽','미주','태국법인','미국법인','일본법인','기타'];
+    REGS.forEach(r=>add('해외 '+r,(_ovRegMo[r]&&_ovRegMo[r][m])||0,INTL_TEAL));
+    if(isCur){ const ip=_pendForReport().intl; REGS.forEach(r=>add('해외 미반영·'+r,(ip[r]&&ip[r][m])||0,'#0d9488')); }
+  }
+  const sum=rows.reduce((s,x)=>s+x.v,0), den=sum||1;
+  document.getElementById('ovd-title').textContent=m+'월 '+(type==='dom'?'국내':type==='intl'?'해외':'전사')+' 내역 '+(isCur?'(미반영 포함)':'(회계반영)');
+  document.getElementById('ovd-body').innerHTML=
+    (rows.sort((a,b)=>b.v-a.v).map(x=>'<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f1f5f9;font-size:13px">'+
+      '<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:'+x.col+'"></span>'+
+      '<span style="flex:1">'+x.label+'</span><span style="font-weight:700">'+fmtW(x.v)+'</span>'+
+      '<span style="width:48px;text-align:right;color:#94a3b8;font-size:11px">'+(x.v/den*100).toFixed(1)+'%</span></div>').join('')
+      ||'<div style="color:#94a3b8;font-size:13px;padding:10px">내역 없음</div>')+
+    '<div style="display:flex;justify-content:space-between;padding:10px 0 2px;font-weight:800;font-size:14px;border-top:2px solid #e2e8f0;margin-top:4px"><span>합계</span><span>'+fmtW(sum)+'</span></div>';
+  document.getElementById('ovDetailModal').style.display='flex';
+}
+function closeOvDetail(){ document.getElementById('ovDetailModal').style.display='none'; }
 function _scale(o,f,t){ const full=sumMo(o,1,12); return full>0?sumMo(o,f,t)/full:0; }
 
 function renderOvProds(f,t,pend){
