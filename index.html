@@ -287,7 +287,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       <li><a class="nav-link" onclick="showPage('cons-hospitals',this)"><i class="bi bi-building-check"></i>병원별 분석</a></li>
       <li><a class="nav-link" onclick="showPage('device-sales',this)"><i class="bi bi-box-seam"></i>제품 매출</a></li>
       <li id="nav-device-reps" style="display:none"><a class="nav-link" onclick="showPage('device-reps',this)"><i class="bi bi-person-badge"></i>담당자별 분석</a></li>
-      <li><a class="nav-link" onclick="showPage('pending',this)"><i class="bi bi-hourglass-split"></i>예정분 관리</a></li>
+      <li><a class="nav-link" onclick="showPage('pending',this)"><i class="bi bi-hourglass-split"></i>회계 미반영 매출</a></li>
     </ul>
     <div class="nav-label mt-3">영업</div>
     <ul class="nav flex-column gap-0">
@@ -421,29 +421,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
   <!-- 예정분 관리 (회계 미반영 매출) -->
   <div id="page-pending" class="page">
     <div class="page-header">
-      <h5><i class="bi bi-hourglass-split me-2"></i>예정분 관리 <span style="font-size:12px;font-weight:400;color:#9ca3af">회계 미반영 매출</span></h5>
-      <button class="btn btn-primary btn-sm" onclick="openPendingForm()"><i class="bi bi-plus-lg me-1"></i>예정분 추가</button>
-    </div>
-    <div style="padding:9px 13px;background:#eff6ff;border:1px solid #dbeafe;border-radius:9px;font-size:12px;color:#2563eb;margin-bottom:14px">
-      <i class="bi bi-info-circle me-1"></i>예정분은 종합현황에 합산되고, 회계자료를 새로 올리면 <b>거래처+품명+금액(+수량)</b>이 일치하는 거래가 회계에 잡혔는지 자동 대조합니다. 정확히 맞으면 <b>자동 반영(합산 제외)</b>, 비슷하면 <b>🔔 확인필요</b>로 표시되니 같은 건이면 「반영처리」를 눌러주세요.
-    </div>
-    <div class="row g-2 mb-3" id="pending-summary"></div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-      <select id="pend-filter-cat" class="form-select form-select-sm" style="width:120px" onchange="renderPending()">
-        <option value="">전체 구분</option><option value="소모품">소모품</option><option value="제품">제품</option>
-      </select>
-      <input type="text" id="pend-filter-kw" class="form-control form-control-sm" style="width:190px" placeholder="병원·제품 검색" oninput="renderPending()">
-      <label style="font-size:12px;color:#6b7280;display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap"><input type="checkbox" id="pend-filter-mine" onchange="renderPending()" style="width:14px;height:14px"> 내 입력만</label>
-    </div>
-    <div class="card p-0" style="overflow-x:auto">
-      <table class="table table-sm table-hover mb-0 align-middle" style="font-size:13px;min-width:900px">
-        <thead><tr style="background:#f8fafc;font-size:12px;color:#6b7280">
-          <th style="padding:9px 12px">예정일</th><th>구분</th><th>제품</th><th>병원/거래처</th>
-          <th style="text-align:right">금액</th><th style="text-align:center">수량</th><th style="text-align:center">상태</th><th>담당</th><th style="text-align:center">관리</th>
-        </tr></thead>
-        <tbody id="pending-tbody"></tbody>
-      </table>
-      <div id="pending-empty" style="display:none" class="text-center text-muted py-5">등록된 예정분이 없습니다.</div>
+      <h5><i class="bi bi-hourglass-split me-2"></i>회계 미반영 매출 <span style="font-size:12px;font-weight:400;color:#9ca3af">일매출일보 기준</span></h5>
     </div>
     <!-- ilbo pending view -->
     <div class="card p-0 mt-3" style="overflow-x:auto">
@@ -1404,6 +1382,7 @@ const DB = {
 let stageChart=null, salesChart=null, perfChart=null, custPerfChart=null;
 let qItemCount=0;
 let PENDING = [];   // 예정분(회계 미반영 매출)
+let ILBO_PEND = []; // 일매출일보 미반영분(국내) — 종합 KPI에 금액 합산
 
 // 해외 병원명 접두사 목록
 const FOREIGN_PFX = ['미국/','일본/','중국/','태국/','영국/','독일/','호주/','싱가포르/','베트남/','인도/','프랑스/','이탈리아/','스페인/','캐나다/','브라질/','말레이시아/','인도네시아/','필리핀/','홍콩/','대만/'];
@@ -1650,7 +1629,7 @@ async function _bootApp(access) {
     if(rm) rm.style.display='';
   }
   await _loadPending();
-  _loadIlboPending();
+  await _loadIlboPending();
   const lastPage = sessionStorage.getItem('wt_page') || 'sales-overview';
   showPage(lastPage);
   document.getElementById('main-content').style.display='block';
@@ -1663,6 +1642,7 @@ async function _loadIlboPending(){
   try{
     const {data}=await _sb.from('cons_cache').select('data').eq('key','ilbo_pending').maybeSingle();
     const rows=((data&&data.data&&data.data.rows)||[]).filter(function(p){return p.region==='국내'&&p.status!=='반영됨'&&p.status!=='취소';});
+    ILBO_PEND = rows;
     var tb=document.getElementById('ilbo-pend-tbody'),emp=document.getElementById('ilbo-pend-empty'),sum=document.getElementById('ilbo-pend-sum');
     if(!tb) return;
     if(!rows.length){ tb.innerHTML=''; if(emp) emp.style.display='block'; if(sum) sum.textContent='· 0건'; return; }
@@ -1671,6 +1651,16 @@ async function _loadIlboPending(){
     tb.innerHTML=rows.map(function(p){ total+=Number(p.amount)||0; var e=function(x){return String(x==null?'':x).replace(/</g,'&lt;');}; return '<tr><td style="padding:8px 12px">'+e(p.customer)+'</td><td>'+e(p.product)+'</td><td style="text-align:center">'+(p.qty||'')+'</td><td style="text-align:right">'+(Number(p.amount)||0).toLocaleString()+'</td><td style="text-align:center">'+(p.expectedDate||'')+'</td></tr>'; }).join('');
     if(sum) sum.textContent='· '+rows.length+'건 · '+total.toLocaleString()+'원';
   }catch(e){ console.warn('ilbo pending load',e); }
+}
+// 일매출일보 미반영분 — 월별 금액 맵(2026). 종합 KPI '미반영 포함' 합계에 합산(소/제 구분 없음)
+function _ilboMonthMap(){
+  const mo={};
+  (ILBO_PEND||[]).forEach(function(r){
+    var d=String(r.expectedDate||''); if(d.slice(0,4)!=='2026') return;
+    var m=parseInt(d.slice(5,7),10); if(!m) return;
+    mo[m]=(mo[m]||0)+(Number(r.amount)||0);
+  });
+  return mo;
 }
 
 // ── 페이지 전환 ──────────────────────────────────────────────────────
@@ -1694,7 +1684,7 @@ function showPage(name, el, noPush) {
   if(el) el.classList.add('active');
   else { const links = document.querySelectorAll('.nav-link');
     links.forEach(l=>{ if(l.textContent.trim().includes(
-      {'sales-overview':'종합',dashboard:'현황판',sales:'수주관리',quotes:'견적서',customers:'고객사',equipments:'장비',logs:'상담일지',products:'제품',consumables:'소모품 매출','cons-hospitals':'병원별','device-sales':'제품 매출','device-reps':'담당자별',pending:'예정분 관리','cons-accounts':'거래처'}[name]||''
+      {'sales-overview':'종합',dashboard:'현황판',sales:'수주관리',quotes:'견적서',customers:'고객사',equipments:'장비',logs:'상담일지',products:'제품',consumables:'소모품 매출','cons-hospitals':'병원별','device-sales':'제품 매출','device-reps':'담당자별',pending:'회계 미반영 매출','cons-accounts':'거래처'}[name]||''
     )) l.classList.add('active'); }); }
   if(name==='sales-overview') renderSalesOverview();
   else if(name==='dashboard') renderDashboard();
@@ -1710,7 +1700,7 @@ function showPage(name, el, noPush) {
   else if(name==='cons-hospitals') renderConsHospitals();
   else if(name==='device-reps') renderDevReps();
   else if(name==='cons-accounts') renderConsAccounts();
-  else if(name==='pending') renderPending();
+  else if(name==='pending') _loadIlboPending();
 }
 
 function renderSalesPage(hint) {
@@ -1829,6 +1819,8 @@ function renderSalesOverview() {
   const incPend = yr===2026;
   const pend = incPend ? _pendingView(yr).agg : null;
   const consPendMo = pend?pend.consMonthly:{}, devPendMo = pend?pend.devMonthly:{};
+  const ilboMo = incPend ? _ilboMonthMap() : {};
+  const ilboPendYtd = YTD.reduce((s,m)=>s+(ilboMo[m]||0),0);
 
   // 회계반영(C) / 미반영포함(I)
   const consYtdC = YTD.reduce((s,m)=>s+(consCurMo[m]||0),0);
@@ -1858,7 +1850,7 @@ function renderSalesOverview() {
     +'</div></div></div>';
   const _kpiSingle = c => '<div class="col-6 col-md-3"><div class="kpi-card">'+_kpiHead(c)+'<div class="kpi-value" style="color:'+c.col+';font-size:1.45rem">'+c.mainVal+'</div><div class="kpi-sub">'+c.mainSub+'</div></div></div>';
   const kpis = [
-    {dual:incPend, label:'합계 YTD ('+periodLbl+')', icon:'bi-currency-won', col:'#111827', mainVal:fmtW(totalC), mainSub:'국내 소모품+제품 '+badge(yoy), rightVal:fmtW(totalI), pendStr:fmtW(totalPend)},
+    {dual:incPend, label:'합계 YTD ('+periodLbl+')', icon:'bi-currency-won', col:'#111827', mainVal:fmtW(totalC), mainSub:'국내 소모품+제품 '+badge(yoy), rightVal:fmtW(totalI+ilboPendYtd), pendStr:fmtW(totalPend+ilboPendYtd)},
     {dual:incPend, label:'소모품 YTD', icon:'bi-capsule', col:'#2563eb', click:"openOvCategory('cons')", mainVal:fmtW(consYtdC), mainSub:'전년 '+fmtW(consPrev)+' '+badge(consYoy), rightVal:fmtW(consYtdI), pendStr:fmtW(consPendYtd)},
     {dual:incPend, label:'제품 YTD', icon:'bi-box-seam', col:'#16a34a', click:"openOvCategory('dev')", mainVal:fmtW(devYtdC), mainSub:'전년 '+fmtW(devPrev)+' '+badge(devYoy), rightVal:fmtW(devYtdI), pendStr:fmtW(devPendYtd)},
     {dual:false, label:'YoY 성장률', icon:'bi-graph-up', col:yoy===null?'#6b7280':yoy>=0?'#16a34a':'#dc2626', mainVal:yoy===null?'-':((yoy>=0?'▲':'▼')+Math.abs(yoy).toFixed(1)+'%'), mainSub:'전년 동기 회계 대비'},
@@ -1869,7 +1861,7 @@ function renderSalesOverview() {
   const _eok = v => Math.round((v||0)/1e6)/100;   // 억(소수 2자리)
   const consVals   = months12.map(m=>_eok(consCurMo[m]));
   const devVals    = months12.map(m=>_eok(devCurMo[m]));
-  const pendVals    = months12.map(m=>_eok((consPendMo[m]||0)+(devPendMo[m]||0)));
+  const pendVals    = months12.map(m=>_eok((consPendMo[m]||0)+(devPendMo[m]||0)+(ilboMo[m]||0)));
   const prevTotVals = months12.map(m=>_eok((consPrMo[m]||0)+(devPrMo[m]||0)));
   if (_ovChart) { _ovChart.destroy(); _ovChart=null; }
   const ctx = document.getElementById('ov-chart-monthly');
@@ -1897,7 +1889,7 @@ function renderSalesOverview() {
   if (_mt) {
     let rows='', tC=0,tD=0,tP=0,tPr=0;
     YTD.forEach(m=>{
-      const c=consCurMo[m]||0, dv=devCurMo[m]||0, pe=(consPendMo[m]||0)+(devPendMo[m]||0), pr=(consPrMo[m]||0)+(devPrMo[m]||0);
+      const c=consCurMo[m]||0, dv=devCurMo[m]||0, pe=(consPendMo[m]||0)+(devPendMo[m]||0)+(ilboMo[m]||0), pr=(consPrMo[m]||0)+(devPrMo[m]||0);
       tC+=c;tD+=dv;tP+=pe;tPr+=pr; const sum=c+dv+pe, chg=pr>0?(((c+dv)/pr-1)*100):null;
       rows+='<tr style="border-bottom:1px solid #f3f4f6"><td style="padding:5px 8px">'+m+'월</td><td style="text-align:right;color:#2563eb">'+fmtW(c)+'</td><td style="text-align:right;color:#16a34a">'+fmtW(dv)+'</td><td style="text-align:right;color:#7c3aed">'+(pe?fmtW(pe):'-')+'</td><td style="text-align:right;font-weight:700">'+fmtW(sum)+'</td><td style="text-align:right;color:#9ca3af">'+(pr?fmtW(pr):'-')+'</td><td style="text-align:right;padding-right:8px">'+(chg===null?'-':'<span style="color:'+(chg>=0?'#16a34a':'#dc2626')+'">'+(chg>=0?'▲':'▼')+Math.abs(chg).toFixed(0)+'%</span>')+'</td></tr>';
     });
