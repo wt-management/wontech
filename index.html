@@ -3847,7 +3847,8 @@ async function dropDeal(e, newStage) {
   DB.d.pipeline[idx] = {
     ...prev,
     stage: newStage,
-    stageUpdatedAt: new Date().toISOString()
+    stageUpdatedAt: new Date().toISOString(),
+    history: (prev.history||[]).concat([{at:new Date().toISOString(),from:prev.stage,to:newStage}])
   };
   _dragId = null;
   renderPipeline();
@@ -3873,11 +3874,21 @@ function closeDealDrawer(){
 async function setDealStage(id,stage){
   const idx=DB.d.pipeline.findIndex(d=>d.id===id); if(idx<0)return;
   const prev=DB.d.pipeline[idx]; if(prev.stage===stage)return;
-  DB.d.pipeline[idx]={...prev,stage,stageUpdatedAt:new Date().toISOString(),prob:stage==='계약완료'?100:prev.prob};
+  const hist=(prev.history||[]).concat([{at:new Date().toISOString(),from:prev.stage,to:stage}]);
+  DB.d.pipeline[idx]={...prev,stage,stageUpdatedAt:new Date().toISOString(),history:hist,prob:stage==='계약완료'?100:prev.prob};
   renderPipeline();
   document.getElementById('deal-drawer').innerHTML=dealDrawerHtml(DB.d.pipeline[idx]);
   showToast(`${prev.custName||'딜'} → ${stage} 저장 중...`);
   await DB.save('pipeline'); showToast('저장 완료');
+}
+async function addDealLog(id){
+  const d=DB.d.pipeline.find(x=>x.id===id); if(!d)return;
+  const inp=document.getElementById('deal-log-input'); const v=(inp&&inp.value||'').trim(); if(!v)return;
+  const log={id:uid(),date:new Date().toISOString().slice(0,10),custName:d.custName,type:'메모',content:v,product:d.model||'',nextAction:'',nextDate:'',sales:d.sales||''};
+  DB.d.logs.push(log);
+  document.getElementById('deal-drawer').innerHTML=dealDrawerHtml(d);
+  showToast('상담 기록 추가, 저장 중...');
+  await DB.save('logs'); showToast('저장 완료');
 }
 function dealDrawerHtml(d){
   const esc=s=>(s==null?'':String(s)).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
@@ -3886,12 +3897,23 @@ function dealDrawerHtml(d){
   const days=d.stageUpdatedAt?Math.floor((Date.now()-new Date(d.stageUpdatedAt))/864e5):null;
   const stageBtns=STAGES.map(s=>`<button onclick="setDealStage('${d.id}','${s}')" style="flex:1;min-width:0;padding:7px 3px;border-radius:7px;border:1px solid ${d.stage===s?SC[s]:'#e5e7eb'};background:${d.stage===s?SC[s]:'#fff'};color:${d.stage===s?'#fff':'#6b7280'};font-size:11px;font-weight:700;cursor:pointer">${s}</button>`).join('');
   const info=[['제품',esc(d.model)||'-'],['예상 금액',fmtAmt(Number(d.amount||0))],['성공확률',(d.prob||0)+'%'],['담당',esc(d.sales)||'-'],['마감 예정',d.expectedDate?fmtDate(d.expectedDate):'-'],['단계 경과',days!=null?days+'일째':'-']];
-  const acts=logs.length?logs.map(l=>`<div style="position:relative;padding:0 0 14px 18px">
-      <div style="position:absolute;left:0;top:3px;width:9px;height:9px;border-radius:50%;background:#2563eb;border:2px solid #fff;box-shadow:0 0 0 1px #2563eb"></div>
-      <div style="font-size:11px;color:#9ca3af">${fmtDate(l.date)}${l.sales?' · '+esc(l.sales):''}${l.type?' · '+esc(l.type):''}</div>
-      <div style="font-size:13px;margin-top:1px;color:#374151">${esc(l.content)||'-'}</div>
-      ${l.nextAction?`<div style="font-size:11px;color:#059669;margin-top:2px">다음: ${esc(l.nextAction)}${l.nextDate?' ('+fmtDate(l.nextDate)+')':''}</div>`:''}
-    </div>`).join(''):'<div style="text-align:center;color:#9ca3af;padding:16px;font-size:13px">상담 기록 없음</div>';
+  const events=[];
+  (d.history||[]).forEach(h=>events.push({date:h.at,kind:'stage',from:h.from,to:h.to}));
+  logs.forEach(l=>events.push({date:l.date,kind:'log',sales:l.sales,type:l.type,content:l.content,nextAction:l.nextAction,nextDate:l.nextDate}));
+  if(d.createdAt)events.push({date:d.createdAt,kind:'created'});
+  events.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+  const dotC={stage:'#6f42c1',log:'#2563eb',created:'#9ca3af'};
+  const acts=events.length?events.map(ev=>{
+    let body;
+    if(ev.kind==='stage')body=`단계 변경: <b>${esc(ev.from)||'?'}</b> → <b style="color:${SC[ev.to]||'#374151'}">${esc(ev.to)}</b>`;
+    else if(ev.kind==='created')body='딜 등록';
+    else body=`${esc(ev.content)||'-'}${ev.nextAction?`<div style="font-size:11px;color:#059669;margin-top:2px">다음: ${esc(ev.nextAction)}${ev.nextDate?' ('+fmtDate(ev.nextDate)+')':''}</div>`:''}`;
+    return `<div style="position:relative;padding:0 0 14px 18px">
+      <div style="position:absolute;left:0;top:3px;width:9px;height:9px;border-radius:50%;background:${dotC[ev.kind]};border:2px solid #fff;box-shadow:0 0 0 1px ${dotC[ev.kind]}"></div>
+      <div style="font-size:11px;color:#9ca3af">${fmtDate(String(ev.date||'').slice(0,10))}${ev.sales?' · '+esc(ev.sales):''}${ev.type?' · '+esc(ev.type):''}</div>
+      <div style="font-size:13px;margin-top:1px;color:#374151">${body}</div>
+    </div>`;
+  }).join(''):'<div style="text-align:center;color:#9ca3af;padding:16px;font-size:13px">기록 없음</div>';
   const custLine=[cust.doctor&&('원장 '+esc(cust.doctor)),esc(cust.region),esc(cust.contact)].filter(Boolean).join(' · ')||'-';
   return `<div style="padding:18px 22px;border-bottom:1px solid #e5e7eb">
     <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -3910,7 +3932,11 @@ function dealDrawerHtml(d){
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:13px;font-weight:700">🏥 거래처</div><span onclick="closeDealDrawer();showHospitalDetail('${esc(cust.name).replace(/'/g,"&#39;")}')" style="font-size:12px;color:#2563eb;cursor:pointer;font-weight:600">거래처 상세 ↗</span></div>
         <div style="font-size:12px;color:#6b7280">${custLine}</div></div>`:''}
       <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px">
-        <div style="font-size:13px;font-weight:700;margin-bottom:12px">🕑 상담 활동 <span style="color:#9ca3af;font-weight:400">${logs.length}건</span></div>${acts}</div></div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px">🕑 활동 타임라인 <span style="color:#9ca3af;font-weight:400">상담 ${logs.length}건</span></div>${acts}
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input id="deal-log-input" placeholder="상담/메모 입력 후 Enter" onkeydown="if(event.key==='Enter')addDealLog('${d.id}')" style="flex:1;padding:8px 11px;border:1px solid #e5e7eb;border-radius:9px;font-size:13px">
+          <button onclick="addDealLog('${d.id}')" style="border:0;background:#2563eb;color:#fff;border-radius:9px;padding:8px 14px;font-weight:600;font-size:13px;cursor:pointer">기록</button>
+        </div></div></div>
     <div style="padding:14px 22px;border-top:1px solid #e5e7eb;display:flex;gap:8px;justify-content:flex-end">
       <button onclick="closeDealDrawer()" style="border:1px solid #e5e7eb;background:#fff;border-radius:9px;padding:8px 14px;font-weight:600;font-size:13px;cursor:pointer">닫기</button>
       <button onclick="closeDealDrawer();editPipeline('${d.id}')" style="border:0;background:#2563eb;color:#fff;border-radius:9px;padding:8px 14px;font-weight:600;font-size:13px;cursor:pointer"><i class="bi bi-pencil"></i> 정보 수정</button></div>`;
