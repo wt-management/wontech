@@ -1390,7 +1390,14 @@ function exPendUSD(){ const cur=exCurKey(); let krw=0;
   const r=Number(EXPORT.rate)||0; return r>0?krw/r:0; }
 function exMonVal(cyc,key){ const ov=cyc.months[key]; if(ov!=null&&ov!=='') return Number(ov); const acc=exAccUSD(key); let v=acc!=null?acc:0; if(key===exCurKey()) v+=exPendUSD(); return v; }
 function exIsProv(cyc,key){ const ov=cyc.months[key]; return (ov==null||ov==='')&&key===exCurKey()&&exMonVal(cyc,key)>0; }
-function exCycleTotal(cyc){ return exCycleMonths(cyc.start).reduce((s,k)=>s+exMonVal(cyc,k),0); }
+function exCycleOwn(cyc){ return exCycleMonths(cyc.start).reduce((s,k)=>s+exMonVal(cyc,k),0); }
+// 수출의 탑은 누계 이어가기: 최종(현재 추진) 차수는 직전 차수 누계를 이월 베이스로 + 자기 월별
+function exCarryBase(cyc){
+  const s=EXPORT.cycles.slice().sort(function(a,b){return a.start<b.start?-1:1;});
+  if(s.length>1 && cyc.id===s[s.length-1].id) return exCycleOwn(s[s.length-2]);
+  return 0;
+}
+function exCycleTotal(cyc){ return exCarryBase(cyc)+exCycleOwn(cyc); }
 function exProvUSD(){ const c=EXPORT.cycles.find(x=>x.id===exCurCycleId()); return c?exMonVal(c,exCurKey()):0; }
 function exPct(v,p){ return p>0?(v/p-1)*100:null; }
 
@@ -1417,11 +1424,13 @@ function exRenderKPI(){
     const col=colors[i%colors.length];
     const tot=exCycleTotal(cyc), rate=cyc.target>0?tot/cyc.target*100:0, diff=tot-cyc.target, done=diff>=0, empty=tot<=0;
     const keys=exCycleMonths(cyc.start), startLbl=exMonLabel(keys[0]);
+    const carry=exCarryBase(cyc);
     const isCur=(cyc.id===curId), elapsed=exElapsed(cyc), pacePos=Math.min(elapsed/12*100,100);
     const remain=Math.max(12-elapsed,0), needAvg=remain>0?(cyc.target-tot)/remain:0;
     let foot='';
     if(empty) foot='';
-    else if(done) foot='목표 달성 ✓ ('+elapsed+'개월)';
+    else if(done) foot='목표 달성 ✓'+(elapsed>0?' ('+elapsed+'개월)':'');
+    else if(carry>0&&elapsed<=0) foot='전 차수 이월 '+exUsd(carry)+' + 7월부터 누적';
     else if(remain<=0) foot='차수 종료 · 달성 '+rate.toFixed(0)+'%';
     else foot=elapsed+'/12개월 · 남은 '+remain+'개월 월 '+exUsd(needAvg)+' 필요';
     el.insertAdjacentHTML('beforeend',
@@ -1430,7 +1439,7 @@ function exRenderKPI(){
         '<div class="rate" style="color:'+(empty?'#94a3b8':done?'#dc2626':col)+'">'+(empty?'—':rate.toFixed(0)+'<span style="font-size:1.05rem">%</span>')+'</div>'+
         '<div class="amt">실적 '+exUsd(tot)+' / 목표 '+exUsd(cyc.target)+'</div>'+
         '<div class="sub" style="color:'+(empty?'#94a3b8':done?'#dc2626':'#2563eb')+'">'+(empty?(startLbl+' 시작 예정'):(done?'초과 '+exUsd(diff):'잔여 '+exUsd(Math.abs(diff))))+'</div>'+
-        '<div class="ex-gauge"><div class="fill" style="width:'+(empty?0:Math.min(rate,100))+'%;background:'+(done?'#dc2626':col)+'"></div>'+((!empty&&!done&&elapsed<12)?'<div class="pace" style="left:'+pacePos+'%" title="현재 경과 페이스"></div>':'')+'</div>'+
+        '<div class="ex-gauge"><div class="fill" style="width:'+(empty?0:Math.min(rate,100))+'%;background:'+(done?'#dc2626':col)+'"></div>'+((!empty&&!done&&elapsed<12&&!carry)?'<div class="pace" style="left:'+pacePos+'%" title="현재 경과 페이스"></div>':'')+'</div>'+
         (foot?'<div class="ex-pace-lbl">'+foot+'</div>':'')+
       '</div>');
   });
@@ -1443,10 +1452,11 @@ function exRenderTables(){
     const keys=exCycleMonths(cyc.start);
     const h1=keys.slice(0,6).reduce((s,k)=>s+exMonVal(cyc,k),0);
     const h2=keys.slice(6).reduce((s,k)=>s+exMonVal(cyc,k),0);
-    const tot=h1+h2, diff=tot-cyc.target, done=diff>=0, showYoY=(cyc.id===curId && !!yoyPrev);
+    const carry=exCarryBase(cyc), tot=h1+h2+carry, diff=tot-cyc.target, done=diff>=0, showYoY=(cyc.id===curId && !!yoyPrev);
     let rows='';
-    const rowFor=k=>{ const prov=exIsProv(cyc,k); let yoy=''; if(showYoY){ const pv=exMonVal(yoyPrev,exPrevYearKey(k)); yoy=exYoyCells(exMonVal(cyc,k)-pv,exPct(exMonVal(cyc,k),pv)); }
-      return '<tr class="'+(prov?'prov':'')+'"><td class="mon">'+exMonLabel(k)+(prov?' <span style="font-size:9px">잠정</span>':'')+'</td><td>'+exUsd(exMonVal(cyc,k))+'</td>'+(showYoY?yoy:'')+'</tr>'; };
+    if(carry>0) rows+='<tr class="sub"><td class="mon">전 차수 이월</td><td>'+exUsd(carry)+'</td>'+(showYoY?'<td></td><td></td>':'')+'</tr>';
+    const rowFor=k=>{ const prov=exIsProv(cyc,k); const vv=exMonVal(cyc,k); const fut=(k>exCurKey()&&vv===0); let yoy=''; if(showYoY){ const pv=exMonVal(yoyPrev,exPrevYearKey(k)); yoy=exYoyCells(vv-pv,exPct(vv,pv)); }
+      return '<tr class="'+(prov?'prov':'')+'"><td class="mon">'+exMonLabel(k)+(prov?' <span style="font-size:9px">잠정</span>':'')+'</td><td>'+(fut?'<span class="muted">-</span>':exUsd(vv))+'</td>'+(showYoY?yoy:'')+'</tr>'; };
     const subRow=(label,val,prevVal)=>{ let yoy=''; if(showYoY) yoy=exYoyCells(val-prevVal,exPct(val,prevVal)); return '<tr class="sub"><td class="mon">'+label+'</td><td>'+exUsd(val)+'</td>'+(showYoY?yoy:'')+'</tr>'; };
     keys.slice(0,6).forEach(k=>rows+=rowFor(k));
     const p1=yoyPrev?exCycleMonths(yoyPrev.start).slice(0,6).reduce((s,k)=>s+exMonVal(yoyPrev,k),0):0;
