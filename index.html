@@ -1578,19 +1578,19 @@ async function _showLauncherOrApp(user) {
             <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#818cf8;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
           </div>
         </div>` : '',
-      (_isAdmin || access.includes('intl')) ? `
-        <div onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wontech/total.html';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token)+'&p=export';else u+='#p=export';location.href=u;})()"
-          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
-          <div style="height:5px;background:linear-gradient(90deg,#ca8a04,#f59e0b)"></div>
+      // ▼▼ 신규 사이트 자리 — 준비되면 이 placeholder를 새 카드로 교체 (수출의 탑은 전사 종합 export 탭으로 이전됨) ▼▼
+      `
+        <div style="${cardStyle};cursor:default;opacity:.4" title="신규 시스템 예정">
+          <div style="height:5px;background:linear-gradient(90deg,#475569,#64748b)"></div>
           <div style="padding:28px 24px">
-            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#ca8a04,#f59e0b);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(202,138,4,.35)">
-              <i class="bi bi-trophy-fill" style="font-size:22px;color:#fff"></i>
+            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#475569,#64748b);display:flex;align-items:center;justify-content:center;margin-bottom:16px">
+              <i class="bi bi-plus-lg" style="font-size:22px;color:#fff"></i>
             </div>
-            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">수출의 탑</div>
-            <div style="font-size:11px;color:#64748b;line-height:1.6">수출 목표<br>진행 현황</div>
-            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#fbbf24;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
+            <div style="font-size:15px;font-weight:800;color:#cbd5e1;margin-bottom:6px;letter-spacing:-.3px">준비 중</div>
+            <div style="font-size:11px;color:#64748b;line-height:1.6">신규 시스템<br>예정</div>
+            <div style="margin-top:16px;font-size:11px;color:#64748b;font-weight:600">Coming soon</div>
           </div>
-        </div>` : '',
+        </div>`,
     ].join('');
     document.getElementById('launcher-cards').innerHTML = cards;
     if(_isAdmin) document.getElementById('launcher-admin-btn').style.display = '';
@@ -5114,19 +5114,19 @@ function _renderLauncherCards(access) {
             <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#818cf8;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
           </div>
         </div>` : '',
-      (_isAdmin || access.includes('intl')) ? `
-        <div onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wontech/total.html';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token)+'&p=export';else u+='#p=export';location.href=u;})()"
-          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
-          <div style="height:5px;background:linear-gradient(90deg,#ca8a04,#f59e0b)"></div>
+      // ▼▼ 신규 사이트 자리 — 준비되면 이 placeholder를 새 카드로 교체 (수출의 탑은 전사 종합 export 탭으로 이전됨) ▼▼
+      `
+        <div style="${cardStyle};cursor:default;opacity:.4" title="신규 시스템 예정">
+          <div style="height:5px;background:linear-gradient(90deg,#475569,#64748b)"></div>
           <div style="padding:28px 24px">
-            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#ca8a04,#f59e0b);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(202,138,4,.35)">
-              <i class="bi bi-trophy-fill" style="font-size:22px;color:#fff"></i>
+            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#475569,#64748b);display:flex;align-items:center;justify-content:center;margin-bottom:16px">
+              <i class="bi bi-plus-lg" style="font-size:22px;color:#fff"></i>
             </div>
-            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">수출의 탑</div>
-            <div style="font-size:11px;color:#64748b;line-height:1.6">수출 목표<br>진행 현황</div>
-            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#fbbf24;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
+            <div style="font-size:15px;font-weight:800;color:#cbd5e1;margin-bottom:6px;letter-spacing:-.3px">준비 중</div>
+            <div style="font-size:11px;color:#64748b;line-height:1.6">신규 시스템<br>예정</div>
+            <div style="margin-top:16px;font-size:11px;color:#64748b;font-weight:600">Coming soon</div>
           </div>
-        </div>` : '',
+        </div>`,
   ].join('');
   document.getElementById('launcher-cards').innerHTML = cards;
   if(_isAdmin) document.getElementById('launcher-admin-btn').style.display = '';
