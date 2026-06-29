@@ -203,6 +203,7 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
       <div class="user-av" id="u-av">?</div>
       <div><div class="user-nm" id="u-nm">-</div><div class="user-em" id="u-em">-</div></div>
     </div>
+    <button class="btn btn-sm w-100 mb-2" style="background:#1e293b;color:#cbd5e1;border:none;font-size:12px" onclick="wtChangePw()"><i class="bi bi-key me-1"></i>비밀번호 변경</button>
     <button class="btn btn-sm w-100 mb-2" style="background:#1e293b;color:#cbd5e1;border:none;font-size:12px" onclick="doLogout()"><i class="bi bi-box-arrow-right me-1"></i>로그아웃</button>
     <div style="position:relative">
       <button onclick="(function(){var d=document.getElementById('site-dropdown');d.style.display=d.style.display==='block'?'none':'block'})(); event.stopPropagation()"
@@ -412,6 +413,15 @@ async function doLogin(){
 async function doLogout(){
   try{ await _sb.auth.signOut(); }catch(e){}
   location.href='https://wt-management.github.io/wontech/';
+}
+async function wtChangePw(){
+  const np=prompt('새 비밀번호를 입력하세요 (6자 이상)');
+  if(np===null) return;
+  if((np||'').length<6){ alert('비밀번호는 6자 이상이어야 합니다.'); return; }
+  if(prompt('확인을 위해 새 비밀번호를 다시 입력하세요')!==np){ alert('비밀번호가 일치하지 않습니다.'); return; }
+  const r=await _sb.auth.updateUser({password:np});
+  if(r.error){ alert('변경 실패: '+r.error.message); return; }
+  alert('비밀번호가 변경되었습니다.');
 }
 // 사이트 이동 — 세션 토큰 전달(SSO)
 async function goSite(base,extra){
