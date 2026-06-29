@@ -3105,11 +3105,12 @@ function renderConsumables() {
     {key:'Oligio Tip [XE-0.25]',label:'XE-0.25', grp:'Oligio X/XM', col:'#a78bfa'},
   ];
 
-  // oligioMo 그룹별 YTD 합계 (동기)
-  const oligFe26 = ytdMs.reduce((s,m)=>s+((oMo26['Oligio']||{})[m]||0),0);
-  const oligFe25 = ytdMs.reduce((s,m)=>s+((oMo25['Oligio']||{})[m]||0),0);
-  const oligXm26 = ytdMs.reduce((s,m)=>s+((oMo26['Oligio X/XM']||{})[m]||0),0);
-  const oligXm25 = ytdMs.reduce((s,m)=>s+((oMo25['Oligio X/XM']||{})[m]||0),0);
+  // 그룹별 YTD 합계 — 트랜잭션(txns) 기준으로 계산 (oligioMo/products 캐시가 비어도 정확, 아래 당월/누계와 동일 소스)
+  const grpSum=(yr,grp,months)=>OLIG.filter(p=>p.grp===grp).reduce((s,p)=>s+prodSum(yr,p.key,months),0);
+  const oligFe26 = grpSum(2026,'Oligio',ytdMs);
+  const oligFe25 = grpSum(2025,'Oligio',ytdMs);
+  const oligXm26 = grpSum(2026,'Oligio X/XM',ytdMs);
+  const oligXm25 = grpSum(2025,'Oligio X/XM',ytdMs);
   const oligTotal26 = oligFe26 + oligXm26;
   const oligTotal25 = oligFe25 + oligXm25;
 
@@ -3143,16 +3144,14 @@ function renderConsumables() {
   window._consKpiDrill = i => _consKpiDrills[i]&&_consKpiDrills[i]();
 
   function getOligioMonthly() {
-    if (CONS.oligioMo2025 && Object.keys(CONS.oligioMo2025).length) return {mo25:CONS.oligioMo2025, mo26:CONS.oligioMo2026};
-    const tot25=Object.values(CONS.monthly2025).reduce((s,v)=>s+v,0)||1;
-    const tot26=Object.values(CONS.monthly2026).reduce((s,v)=>s+v,0)||1;
-    const og25=(CONS.products2025['Oligio Tip [F-4.0]']||0)+(CONS.products2025['Oligio Tip [E-0.25]']||0);
-    const xm25=(CONS.products2025['Oligio Tip [XF-4.0]']||0)+(CONS.products2025['Oligio Tip [XE-0.25]']||0);
-    const og26=(CONS.products2026['Oligio Tip [F-4.0]']||0)+(CONS.products2026['Oligio Tip [E-0.25]']||0);
-    const xm26=(CONS.products2026['Oligio Tip [XF-4.0]']||0)+(CONS.products2026['Oligio Tip [XE-0.25]']||0);
+    // 트랜잭션(txns) 기준 월별 집계 — KPI·당월/누계와 동일 소스라 항상 일치
     const mo25={'Oligio':{},'Oligio X/XM':{}}, mo26={'Oligio':{},'Oligio X/XM':{}};
-    Object.entries(CONS.monthly2025).forEach(([m,v])=>{const r=v/tot25; mo25['Oligio'][m]=Math.round(og25*r); mo25['Oligio X/XM'][m]=Math.round(xm25*r);});
-    Object.entries(CONS.monthly2026).forEach(([m,v])=>{const r=v/tot26; mo26['Oligio'][m]=Math.round(og26*r); mo26['Oligio X/XM'][m]=Math.round(xm26*r);});
+    let maxM26=0;
+    for(let m=1;m<=12;m++){ if(grpSum(2026,'Oligio',[m])+grpSum(2026,'Oligio X/XM',[m])>0) maxM26=m; }
+    for(let m=1;m<=12;m++){
+      mo25['Oligio'][m]=grpSum(2025,'Oligio',[m]); mo25['Oligio X/XM'][m]=grpSum(2025,'Oligio X/XM',[m]);
+      if(m<=maxM26){ mo26['Oligio'][m]=grpSum(2026,'Oligio',[m]); mo26['Oligio X/XM'][m]=grpSum(2026,'Oligio X/XM',[m]); }
+    }
     return {mo25, mo26};
   }
   const {mo25, mo26} = getOligioMonthly();
