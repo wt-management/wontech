@@ -392,12 +392,13 @@ function renderOverview(){
   dch('ov');
   const ctx=document.getElementById('ov-chart');
   if(ctx) _ch['ov']=new Chart(ctx,{type:'bar',data:{labels:m12.map(m=>m+'월'),datasets:[
-    {label:yr+'년',data:m12.map(m=>+((cur.monthly[m]||0)/1e8).toFixed(2)),backgroundColor:'rgba(13,148,136,0.7)',borderRadius:3},
+    {label:yr+'년',data:m12.map(m=>+((cur.monthly[m]||0)/1e8).toFixed(2)),backgroundColor:'rgba(13,148,136,0.7)',borderRadius:3,stack:'ov'},
+    ...(yr===2026?[{label:'미반영',data:m12.map(m=>+(((pAgg.monthly&&pAgg.monthly[m])||0)/1e8).toFixed(2)),backgroundColor:'rgba(124,58,237,0.45)',borderRadius:3,stack:'ov'}]:[]),
     ...(pre?[{label:(yr-1)+'년',data:m12.map(m=>+((pre.monthly[m]||0)/1e8).toFixed(2)),type:'line',borderColor:'#94a3b8',backgroundColor:'transparent',borderWidth:2,borderDash:[5,3],pointRadius:2}]:[])
   ]},options:{responsive:true,maintainAspectRatio:false,
     plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},
       tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y?.toFixed(1)+'억원'}}},
-    scales:{y:{ticks:{callback:v=>v+'억',font:{size:10}},grid:{color:'#f3f4f6'}}}}});
+    scales:{x:{stacked:true},y:{stacked:true,ticks:{callback:v=>v+'억',font:{size:10}},grid:{color:'#f3f4f6'}}}}});
 
   // 장비 왼쪽, 소모품 오른쪽 + 클릭 시 팝업
   document.getElementById('ov-dev').innerHTML=pbarsClick(cur.prods_dev||{},'dev',C7);
@@ -461,9 +462,9 @@ function renderCtYoY(){
   const ctx=document.getElementById('ct-yoy-chart');
   const m12=Array.from({length:12},(_,i)=>i+1);
   if(ctx) _ch['ct-yoy-chart']=new Chart(ctx,{type:'bar',data:{labels:m12.map(m=>m+'월'),datasets:[
-    {label:yr+'년',data:m12.map(m=>Math.round((c.m[m]||0)/1e4)),backgroundColor:'rgba(8,145,178,0.75)',borderRadius:3},
-    ...(cp?[{label:(yr-1)+'년',data:m12.map(m=>Math.round((cp.m[m]||0)/1e4)),type:'line',borderColor:'#94a3b8',backgroundColor:'transparent',borderWidth:2,borderDash:[5,3],pointRadius:3}]:[]),
-  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y?.toLocaleString()+'만원'}}},scales:{y:{ticks:{callback:v=>v+'만'},grid:{color:'#f3f4f6'}}}}});
+    {label:yr+'년',data:m12.map(m=>+((c.m[m]||0)/1e8).toFixed(2)),backgroundColor:'rgba(8,145,178,0.75)',borderRadius:3},
+    ...(cp?[{label:(yr-1)+'년',data:m12.map(m=>+((cp.m[m]||0)/1e8).toFixed(2)),type:'line',borderColor:'#94a3b8',backgroundColor:'transparent',borderWidth:2,borderDash:[5,3],pointRadius:3}]:[]),
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y?.toFixed(2)+'억원'}}},scales:{y:{ticks:{callback:v=>v+'억'},grid:{color:'#f3f4f6'}}}}});
 
   // 거래처 드롭다운 (clientList 사용)
   const sel=document.getElementById('ct-sel-client');
@@ -555,9 +556,9 @@ function renderCtClient(){
   if(_ch[chartId]) _ch[chartId].destroy();
   const ctx=document.getElementById(chartId);
   if(ctx) _ch[chartId]=new Chart(ctx,{type:'bar',data:{labels:m12.map(m=>m+'월'),datasets:[
-    {label:yr+'년',data:m12.map(m=>Math.round((cd.m[m]||0)/1e4)),backgroundColor:'rgba(8,145,178,0.8)',borderRadius:3},
-    ...(cdp?[{label:(yr-1)+'년',data:m12.map(m=>Math.round((cdp.m[m]||0)/1e4)),type:'line',borderColor:'#94a3b8',backgroundColor:'transparent',borderWidth:1.5,borderDash:[4,3],pointRadius:2}]:[]),
-  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:8,font:{size:9}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y?.toLocaleString()+'만원'}}},scales:{y:{ticks:{callback:v=>v+'만',font:{size:9}},grid:{color:'#f3f4f6'}},x:{ticks:{font:{size:9}}}}}});
+    {label:yr+'년',data:m12.map(m=>+((cd.m[m]||0)/1e8).toFixed(2)),backgroundColor:'rgba(8,145,178,0.8)',borderRadius:3},
+    ...(cdp?[{label:(yr-1)+'년',data:m12.map(m=>+((cdp.m[m]||0)/1e8).toFixed(2)),type:'line',borderColor:'#94a3b8',backgroundColor:'transparent',borderWidth:1.5,borderDash:[4,3],pointRadius:2}]:[]),
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:8,font:{size:9}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y?.toFixed(2)+'억원'}}},scales:{y:{ticks:{callback:v=>v+'억',font:{size:9}},grid:{color:'#f3f4f6'}},x:{ticks:{font:{size:9}}}}}});
 }
 
 
@@ -630,7 +631,7 @@ function showRepDetail(n,yr,f,t){
   document.getElementById('d-modal').style.display='flex';
   if(_rch){_rch.destroy();_rch=null;}
   const pre=yr===2026?INTL.data2025:null, m12=Array.from({length:12},(_,i)=>i+1);
-  requestAnimationFrame(()=>{const c=document.getElementById(cid);if(!c)return;_rch=new Chart(c,{type:'bar',data:{labels:m12.map(m=>m+'월'),datasets:[{label:yr+'년',data:m12.map(m=>Math.round((r.m[m]||0)/1e4)),backgroundColor:'rgba(13,148,136,0.7)',borderRadius:3},...(pre&&pre.reps[n]?[{label:(yr-1)+'년',data:m12.map(m=>Math.round((pre.reps[n].m[m]||0)/1e4)),type:'line',borderColor:'#94a3b8',backgroundColor:'transparent',borderWidth:2,borderDash:[5,3],pointRadius:2}]:[])]},...{options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}}},scales:{y:{ticks:{callback:v=>v+'만'},grid:{color:'#f3f4f6'}}}}}});});
+  requestAnimationFrame(()=>{const c=document.getElementById(cid);if(!c)return;_rch=new Chart(c,{type:'bar',data:{labels:m12.map(m=>m+'월'),datasets:[{label:yr+'년',data:m12.map(m=>+((r.m[m]||0)/1e8).toFixed(2)),backgroundColor:'rgba(13,148,136,0.7)',borderRadius:3},...(pre&&pre.reps[n]?[{label:(yr-1)+'년',data:m12.map(m=>+((pre.reps[n].m[m]||0)/1e8).toFixed(2)),type:'line',borderColor:'#94a3b8',backgroundColor:'transparent',borderWidth:2,borderDash:[5,3],pointRadius:2}]:[])]},...{options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}}},scales:{y:{ticks:{callback:v=>v+'억'},grid:{color:'#f3f4f6'}}}}}});});
 }
 
 function handleUpload(file){
@@ -1058,9 +1059,9 @@ function openProdModal(prodName, cat){
   const ctx = document.getElementById('prod-modal-chart');
   const m12 = Array.from({length:12},(_,i)=>i+1);
   if(ctx) _ch['prod-modal-chart']=new Chart(ctx,{type:'bar',data:{labels:m12.map(m=>m+'월'),datasets:[
-    {label:yr+'년',data:m12.map(m=>Math.round((pm26[m]||0)/1e4)),backgroundColor:'rgba(8,145,178,0.8)',borderRadius:3},
-    {label:(yr-1)+'년',data:m12.map(m=>Math.round((pm25[m]||0)/1e4)),type:'line',borderColor:'#94a3b8',backgroundColor:'transparent',borderWidth:1.5,borderDash:[4,3],pointRadius:2},
-  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:8,font:{size:10}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y?.toLocaleString()+'만원'}}},scales:{y:{ticks:{callback:v=>v+'만',font:{size:9}},grid:{color:'#f3f4f6'}},x:{ticks:{font:{size:9}}}}}});
+    {label:yr+'년',data:m12.map(m=>+((pm26[m]||0)/1e8).toFixed(2)),backgroundColor:'rgba(8,145,178,0.8)',borderRadius:3},
+    {label:(yr-1)+'년',data:m12.map(m=>+((pm25[m]||0)/1e8).toFixed(2)),type:'line',borderColor:'#94a3b8',backgroundColor:'transparent',borderWidth:1.5,borderDash:[4,3],pointRadius:2},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:8,font:{size:10}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y?.toFixed(2)+'억원'}}},scales:{y:{ticks:{callback:v=>v+'억',font:{size:9}},grid:{color:'#f3f4f6'}},x:{ticks:{font:{size:9}}}}}});
 
   // Country breakdown
   const maxV = ctArr[0]?.v||1;
