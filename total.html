@@ -134,6 +134,7 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
     <a class="nav-link active" id="nav-overview" onclick="showPage('overview',this)"><i class="bi bi-grid-1x2"></i>전사 종합</a>
     <a class="nav-link" id="nav-query" onclick="showPage('query',this)"><i class="bi bi-zoom-in"></i>상세 조회</a>
     <a class="nav-link" id="nav-report" onclick="showPage('report',this)"><i class="bi bi-table"></i>글로벌영업 매출현황</a>
+    <a class="nav-link" id="nav-export" onclick="goSite('https://wt-management.github.io/wontech/export.html','')"><i class="bi bi-trophy"></i>수출의 탑</a>
   </div>
   <div class="sidebar-foot">
     <div class="user-box">
@@ -179,6 +180,11 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
     </div>
 
     <div class="row g-2 mb-3" id="ov-kpi"></div>
+
+    <div class="row g-2 mb-3">
+      <div class="col-md-6"><div class="card p-3 h-100"><div class="fw-bold mb-2" style="font-size:13px"><i class="bi bi-pie-chart me-1" style="color:#2563eb"></i>채널 구성 (국내/해외)</div><div id="ov-mix-ch"></div></div></div>
+      <div class="col-md-6"><div class="card p-3 h-100"><div class="fw-bold mb-2" style="font-size:13px"><i class="bi bi-boxes me-1" style="color:#7c3aed"></i>장비 vs 소모품 (전사)</div><div id="ov-mix-cat"></div></div></div>
+    </div>
 
     <div class="card p-3 mb-3" id="tm-card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:12px">
@@ -511,6 +517,7 @@ function renderOverview(){
       scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:'#f3f4f6'},ticks:{callback:v=>v+'억'}}}}
   });
 
+  renderChannelMix(f,t);
   // 국내·해외 월별 표 (클릭 시 내역)
   renderOvMonthly();
 
@@ -519,6 +526,17 @@ function renderOverview(){
 
   // 이번달 회계+예정
   renderThisMonth();
+}
+function renderChannelMix(f,t){
+  const domCons=sumMo(CONS.monthly2026,f,t), domDev=sumMo(DEVICE.monthly2026,f,t);
+  const dom=domCons+domDev, intl=sumMo(INTL.monthly,f,t), tot=dom+intl||1;
+  const rc=Object.values(INTL.prods_cons||{}).reduce((a,v)=>a+(Number(v)||0),0);
+  const rd=Object.values(INTL.prods_dev||{}).reduce((a,v)=>a+(Number(v)||0),0);
+  const rs=rc+rd, intlCons=rs>0?intl*rc/rs:0, intlDev=rs>0?intl*rd/rs:intl;
+  const cons=domCons+intlCons, dev=domDev+intlDev, cd=cons+dev||1;
+  const bar=(label,v,den,col)=>'<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>'+label+'</span><span style="color:#64748b">'+fmtW(v)+' \u00b7 '+Math.round(v/den*100)+'%</span></div><div style="height:10px;background:#f1f5f9;border-radius:5px;overflow:hidden;margin-bottom:12px"><div style="width:'+Math.round(v/den*100)+'%;height:100%;background:'+col+'"></div></div>';
+  const ch=document.getElementById('ov-mix-ch'); if(ch) ch.innerHTML=bar('국내',dom,tot,'#2563eb')+bar('해외',intl,tot,'#0d9488');
+  const ct=document.getElementById('ov-mix-cat'); if(ct) ct.innerHTML=bar('장비',dev,cd,'#7c3aed')+bar('소모품',cons,cd,'#0891b2')+'<div style="font-size:11px;color:#9ca3af;margin-top:2px">국내 실데이터 \u00b7 해외 제품군 비율 환산</div>';
 }
 function _curMonth(){ const n=new Date(); return n.getFullYear()===2026?(n.getMonth()+1):12; }
 let _ovRegMo={};
