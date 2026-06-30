@@ -201,7 +201,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       <div style="font-size:18px;font-weight:700;color:#fff"><i class="bi bi-shield-lock me-2 text-warning"></i>사용자 관리</div>
       <button onclick="openAddUserModal()" style="margin-left:auto;background:#ff4500;border:none;color:#fff;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><i class="bi bi-person-plus me-1"></i>사용자 추가</button>
     </div>
-    <div style="max-width:1200px;margin:0 auto;padding:32px 32px 40px">
+    <div style="max-width:1640px;margin:0 auto;padding:24px 28px 40px">
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
       <input id="user-search" oninput="_paintUsers()" placeholder="🔍 이름·이메일·부서·직급 검색" style="flex:1;min-width:220px;max-width:360px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 12px;font-size:13px;color:#fff">
       <select id="user-role-filter" onchange="_paintUsers()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 10px;font-size:13px;color:#fff">
@@ -5631,7 +5631,7 @@ function _paintUsers(){
     return [p.email,p.display_name,p.dept,p.position].some(v=>(v||'').toLowerCase().includes(q));
   });
   if(!list.length){ el.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:#64748b">해당 사용자 없음</td></tr>`; return; }
-  const iS = "background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:4px 8px;font-size:12px;color:#fff;width:84px";
+  const iS = "background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:4px 8px;font-size:12px;color:#fff;width:96px";
   const groups = {};
   list.forEach(p => { const d=p.dept?.trim()||'(부서 미지정)'; (groups[d]=groups[d]||[]).push(p); });
   const deptOrder = Object.keys(groups).sort((a,b)=>a==='(부서 미지정)'?1:b==='(부서 미지정)'?-1:a.localeCompare(b,'ko'));
@@ -5696,7 +5696,7 @@ function _adminUserRow(p, iS, hidden) {
   return `<tr style="border-bottom:1px solid rgba(255,255,255,.06)${hidden?';display:none':''}">
     <td style="padding:10px 16px;font-size:12px;color:#e2e8f0;white-space:nowrap">${p.email||''}</td>
     <td style="padding:10px 8px"><input type="text" value="${p.display_name||''}" style="${iS}" onchange="updateUserField('${p.id}','display_name',this.value)"></td>
-    <td style="padding:10px 8px"><input type="text" value="${p.dept||''}" placeholder="부서" style="${iS}" onchange="updateUserField('${p.id}','dept',this.value)"></td>
+    <td style="padding:10px 8px"><input type="text" value="${p.dept||''}" placeholder="부서" style="${iS};width:140px" onchange="updateUserField('${p.id}','dept',this.value)"></td>
     <td style="padding:10px 8px"><input type="text" value="${p.position||''}" placeholder="직급" style="${iS};width:62px" onchange="updateUserField('${p.id}','position',this.value)"></td>
     <td style="padding:10px 8px;white-space:nowrap">
       <select onchange="applyPreset('${p.id}',this.value)" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:4px 6px;font-size:12px;color:#fff;max-width:170px">${opts}</select>
