@@ -1247,16 +1247,23 @@ function renderQuery(){
   else if(qState.tab==='geo') items=_qGeo();
   else items=_qReps();
 
-  const tot=items.reduce((s,x)=>s+x.val,0), totPrev=items.reduce((s,x)=>s+(x.prev||0),0);
+  // 헤드라인 = 회계+미반영(보고기준) — 종합/매출현황과 통일. 성장률은 회계 like-for-like. (아래 분해표 items는 회계 기준)
+  const _f=qState.f,_t=qState.t,_pg=_pendingAgg(2026);
+  const _incC=qState.cat==='all'||qState.cat==='소모품',_incD=qState.cat==='all'||qState.cat==='장비';
+  const _iSplit=function(mo){ var v=sumMo(mo,_f,_t); if(qState.cat==='all') return v; var rc=Object.values(INTL.prods_cons||{}).reduce(function(a,x){return a+(+x||0);},0),rd=Object.values(INTL.prods_dev||{}).reduce(function(a,x){return a+(+x||0);},0),rs=rc+rd; if(rs<=0) return qState.cat==='장비'?v:0; return v*((qState.cat==='장비'?rd:rc)/rs); };
+  let _accF=0,_accP=0,_pendF=0;
+  if(qState.ch!=='intl'){ if(_incC){_accF+=sumMo(CONS.monthly2026,_f,_t);_accP+=sumMo(CONS.monthly2025,_f,_t);_pendF+=sumMo(_pg.consMonthly,_f,_t);} if(_incD){_accF+=sumMo(DEVICE.monthly2026,_f,_t);_accP+=sumMo(DEVICE.monthly2025,_f,_t);_pendF+=sumMo(_pg.devMonthly,_f,_t);} }
+  if(qState.ch!=='dom'){ _accF+=_iSplit(INTL.monthly);_accP+=_iSplit((INTL.data2025||{}).monthly);_pendF+=_iSplit(_pg.intlMonthly); }
+  const tot=_accF+_pendF, totPrev=_accP;
   const chName=qState.ch==='dom'?'국내':qState.ch==='intl'?'해외':'전사';
-  const totDelta=tot-totPrev, totY=pct(tot,totPrev);
+  const totDelta=_accF-_accP, totY=pct(_accF,_accP);
   const G=items.map(x=>Object.assign({},x,{d:x.val-(x.prev||0),y:pct(x.val,x.prev)}));
   const grewN=G.filter(x=>x.d>0).length, surge=G.filter(x=>x.y!=null&&x.y>=30).length, plunge=G.filter(x=>x.y!=null&&x.y<=-20).length;
   const ratio=items.length?Math.round(grewN/items.length*100):0, totGrowth=G.filter(x=>x.d>0).reduce((s,x)=>s+x.d,0)||1;
   const tabLbl=qState.tab==='prod'?'제품별':qState.tab==='geo'?'지역별':'담당자별';
   document.getElementById('q-head').innerHTML='<div class="eh-l">'+chName+' '+tabLbl+' <span style="font-weight:500;color:#94a3b8">· '+qState.f+'~'+qState.t+'월 누적</span></div>'+
     '<div class="eh-v">'+fmtW(tot)+' <span style="font-size:1rem">'+(totY===null?'':badge(totY))+'</span> <span style="font-size:1rem;color:'+(totDelta>=0?'#86efac':'#fca5a5')+'">'+fmtD(totDelta)+'</span></div>'+
-    '<div class="eh-l" style="color:#94a3b8;font-weight:500">전년 동기 '+fmtW(totPrev)+'</div>'+
+    '<div class="eh-l" style="color:#94a3b8;font-weight:500">전년 동기 '+fmtW(totPrev)+' · 회계 '+fmtW(_accF)+' + 미반영 '+fmtW(_pendF)+' <span style="color:#cbd5e1">· 아래 분해는 회계 확정 기준</span></div>'+
     execNarr(G.map(x=>({name:x.name,delta:x.d,val:x.val,prev:x.prev})));
   document.getElementById('q-kpi').innerHTML=[
     {l:'전년 동기 대비 순증감',v:fmtD(totDelta),c:_yoyCol(totY)},
