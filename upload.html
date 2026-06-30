@@ -207,7 +207,7 @@ function reconcilePending(rows, ilboAcc){
       else if(prodEq&&pa>0&&Math.abs(la-pa)<=pa*0.1){ if(!hit) hit=l; }    // 거래처+제품 일치+금액±10% → 자동
       else if(pa>0&&Math.abs(la-pa)<=pa*0.1){ cand++; }                    // 제품명 다름·금액근접 → 추정
     });
-    if(hit){ p.status='반영됨'; p.reflectedDate=(ilboAcc.reportDate||''); p.matchAmt=Math.round(hit.amount); p.matchAuto=true; auto++; autoAmt+=pa; }
+    if(hit){ p.status='반영됨'; p.reflectedDate=(ilboAcc.reportDate||''); p.matchAmt=Math.round(hit.amount); p.matchAuto=true; p.matchLines=[{d:hit.date,c:hit.customer,p:hit.product,q:hit.qty,a:hit.amount}]; auto++; autoAmt+=pa; }
     else if(cand){ near++; }
   });
   return {auto:auto, near:near, autoAmt:autoAmt};
