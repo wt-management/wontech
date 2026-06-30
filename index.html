@@ -1021,8 +1021,13 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
         <div class="col-md-6">
           <div class="card p-3" style="border-left:4px solid #dc2626">
             <div class="fw-bold mb-1" style="font-size:13px;color:#dc2626"><i class="bi bi-x-circle-fill me-1"></i>이탈 — 2025 거래 있으나 2026 미구매</div>
-            <div style="font-size:11px;color:#9ca3af;margin-bottom:8px">전년 실적 기준 내림차순 · 클릭시 파이프라인 생성</div>
-            <div id="hosp-risk-list" style="max-height:calc(100vh - 320px);overflow-y:auto"></div>
+            <div style="font-size:11px;color:#9ca3af;margin-bottom:8px">우선순위 점수(매출·재구매시점·미연락) · 클릭시 상세</div>
+            <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+              <select id="risk-mgr-filter" class="form-select form-select-sm" style="max-width:210px" onchange="renderConsHospitals()"><option value="">👥 전체 조회</option></select>
+              <button class="btn btn-sm btn-outline-danger" style="font-size:11px" onclick="_riskMine()"><i class="bi bi-person-check me-1"></i>내 거래처</button>
+              <span id="risk-filter-cnt" style="font-size:11px;color:#9ca3af"></span>
+            </div>
+            <div id="hosp-risk-list" style="max-height:calc(100vh - 360px);overflow-y:auto"></div>
           </div>
         </div>
         <div class="col-md-6">
@@ -1486,6 +1491,22 @@ function purgeForeignHospitals() {
     if(INTERNAL_KW.some(k => nm.includes(k))) delete CONS.hospitals[nm];
   });
 }
+// 담당자명 앞 코드번호("55.드림메드"→"드림메드") 제거 — 표시용 일괄
+function _sN(s){ return String(s==null?'':s).replace(/^\s*\d+\s*[\.\-]\s*/,''); }
+function _stripSalesPrefixes(){
+  [CONS.hospitals, DEVICE.hospitals].forEach(hm=>{ if(hm) Object.values(hm).forEach(h=>{ if(h&&h.sales) h.sales=_sN(h.sales); }); });
+  if(DEVICE.reps){ const nr={}; Object.keys(DEVICE.reps).forEach(k=>{ const nk=_sN(k); nr[nk]=DEVICE.reps[k]; }); DEVICE.reps=nr; }
+}
+// 이탈위험 '내 거래처' — 로그인 담당자명으로 필터 자동선택
+function _riskMine(){
+  const sel=document.getElementById('risk-mgr-filter'); if(!sel) return;
+  const me=(typeof currentUserName==='function'?currentUserName():(typeof _meName!=='undefined'?_meName:'')||'').trim();
+  if(!me){ alert('로그인 정보가 없습니다.'); return; }
+  let hit='';
+  for(const o of sel.options){ if(o.value && (o.value.includes(me)||me.includes(o.value))){ hit=o.value; break; } }
+  if(!hit){ alert('"'+me+'" 담당으로 등록된 이탈위험 거래처를 찾지 못했어요.'); return; }
+  sel.value=hit; renderConsHospitals();
+}
 
 // cons_cache 캐시 로드 — 버전(updatedAt)만 먼저 조회해 안 바뀌었으면 localStorage에서 복원(대역폭 절약)
 async function _loadConsCacheCached(key, target) {
@@ -1534,6 +1555,7 @@ async function init() {
     _loadConsCacheCached('device', DEVICE),
   ]);
   purgeForeignHospitals();
+  _stripSalesPrefixes();
   // 견적서 공개 링크 처리 (?q=견적번호)
   const qParam = new URLSearchParams(location.search).get('q');
   if(qParam) {
@@ -3791,7 +3813,14 @@ function renderConsHospitals() {
     if(p25&&p25.avgGap&&pd!=null&&pd>p25.avgGap*1.2){ mult*=1.2; reasons.push('재구매주기 도래'); }
     return {name,h,lc,ldDays,pd,p25,score:(h.y2025||0)*mult,reason:reasons.slice(0,2).join(' · ')||'관리필요'};
   }).sort((a,b)=>b.score-a.score);
-  const TOPN=20, top=scored.slice(0,TOPN), rest=scored.slice(TOPN);
+  // 담당자별 조회 (담당영업 mgr 우선, 없으면 거래담당)
+  const _riskDut=x=>((HOSP_INFO[x.name]||{}).mgr)||x.h.sales||'';
+  const _rf=document.getElementById('risk-mgr-filter');
+  if(_rf && !_rf.dataset.filled){ const ns=[...new Set(scored.map(_riskDut).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko')); _rf.insertAdjacentHTML('beforeend', ns.map(n=>'<option value="'+n.replace(/"/g,'&quot;')+'">'+n+'</option>').join('')); _rf.dataset.filled='1'; }
+  const _rfv=(_rf&&_rf.value)||'';
+  const scoredF = _rfv ? scored.filter(x=>_riskDut(x)===_rfv) : scored;
+  const _rfc=document.getElementById('risk-filter-cnt'); if(_rfc) _rfc.textContent=_rfv?('· '+_rfv+' '+scoredF.length+'곳'):'';
+  const TOPN=20, top=scoredF.slice(0,TOPN), rest=scoredF.slice(TOPN);
   const riskCard=(x,pri)=>{ const {name,h,lc,ldDays,pd,p25,reason}=x; const safeN=name.replace(/"/g,'&quot;'); const _mgr=(HOSP_INFO[name]||{}).mgr||'';
     const ldStr=ldDays!=null?`상담 ${lc}회 · 마지막 ${ldDays}일전`:`<span style="color:#fca5a5">상담 이력 없음</span>`;
     const lastPurch=pd!=null?`마지막 구매 <strong>${pd}일전</strong>`:'구매이력없음';
@@ -3814,8 +3843,8 @@ function renderConsHospitals() {
       </div>
       <div style="font-size:10px;color:#9ca3af;margin-top:3px">${ldStr}</div>
     </div>`; };
-  document.getElementById('hosp-risk-list').innerHTML = scored.length ? (
-    '<div style="font-size:11px;margin-bottom:8px;padding:8px 11px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;color:#9a3412">🎯 <b>이번주 우선 관리 '+top.length+'곳</b> <span style="color:#c2410c">— 이탈위험 '+scored.length+'곳 중 매출·재구매시점·미연락 기준 선별</span></div>'
+  document.getElementById('hosp-risk-list').innerHTML = scoredF.length ? (
+    '<div style="font-size:11px;margin-bottom:8px;padding:8px 11px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;color:#9a3412">🎯 <b>이번주 우선 관리 '+top.length+'곳</b> <span style="color:#c2410c">— '+(_rfv?_rfv+' 담당 ':'')+'이탈위험 '+scoredF.length+'곳 중 매출·재구매시점·미연락 기준 선별</span></div>'
     + top.map(x=>riskCard(x,true)).join('')
     + (rest.length?('<div style="margin-top:10px"><a onclick="var n=this.nextElementSibling;n.style.display=n.style.display===\'none\'?\'\':\'none\';this.querySelector(\'i\').className=n.style.display===\'none\'?\'bi bi-chevron-down\':\'bi bi-chevron-up\'" style="cursor:pointer;font-size:12px;color:#2563eb;font-weight:600;display:inline-flex;align-items:center;gap:4px">그 외 이탈위험 '+rest.length+'곳 <i class="bi bi-chevron-down"></i></a><div style="display:none;margin-top:6px">'+rest.map(x=>riskCard(x,false)).join('')+'</div></div>'):'')
   ) : '<div style="font-size:12px;color:#9ca3af;padding:16px 0;text-align:center">해당 병원 없음</div>';
