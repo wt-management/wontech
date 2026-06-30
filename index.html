@@ -2004,8 +2004,8 @@ function renderSalesOverview() {
   const _kpiHead = c => '<div class="kpi-label"><i class="bi '+c.icon+' me-1" style="color:'+c.col+'"></i>'+c.label+(c.click?' <i class="bi bi-search" style="font-size:9px;color:#cbd5e1"></i>':'')+'</div>';
   const _kpiDual = c => '<div class="col-12 col-md-4"><div class="kpi-card"'+(c.click?' onclick="'+c.click+'" style="cursor:pointer" title="클릭하면 전체 품목 랭킹 조회"':'')+'>'+_kpiHead(c)
     +'<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px">'
-      +'<div><div style="font-size:10px;color:#9ca3af;margin-bottom:1px;font-weight:600">회계반영</div><div class="kpi-value" style="color:'+c.col+';font-size:1.4rem;line-height:1.1">'+c.mainVal+'</div><div class="kpi-sub" style="margin-top:3px">'+c.mainSub+'</div></div>'
-      +'<div style="text-align:right;border-left:1px solid #eef2f7;padding-left:11px"><div style="font-size:10px;color:#7c3aed;margin-bottom:1px;font-weight:600">미반영 포함</div><div style="font-size:1.32rem;font-weight:800;color:#374151;line-height:1.1">'+c.rightVal+'</div><div style="font-size:10px;color:#9ca3af;margin-top:3px">+ '+c.pendStr+'</div></div>'
+      +'<div><div style="font-size:10px;color:#7c3aed;margin-bottom:1px;font-weight:700">미반영 포함 <span style="color:#cbd5e1;font-weight:500">· 보고기준</span></div><div class="kpi-value" style="color:'+c.col+';font-size:1.4rem;line-height:1.1">'+c.rightVal+'</div><div class="kpi-sub" style="margin-top:3px">'+c.mainSub+'</div></div>'
+      +'<div style="text-align:right;border-left:1px solid #eef2f7;padding-left:11px"><div style="font-size:10px;color:#9ca3af;margin-bottom:1px;font-weight:600">회계반영</div><div style="font-size:1.32rem;font-weight:800;color:#374151;line-height:1.1">'+c.mainVal+'</div><div style="font-size:10px;color:#9ca3af;margin-top:3px">+ '+c.pendStr+'</div></div>'
     +'</div></div></div>';
   const _kpiSingle = c => '<div class="col-6 col-md-3"><div class="kpi-card">'+_kpiHead(c)+'<div class="kpi-value" style="color:'+c.col+';font-size:1.45rem">'+c.mainVal+'</div><div class="kpi-sub">'+c.mainSub+'</div></div></div>';
   const kpis = [
