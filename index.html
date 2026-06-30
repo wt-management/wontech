@@ -495,8 +495,9 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       <span id="reg-info" style="margin-left:auto;font-size:11px;color:#9ca3af;white-space:nowrap"></span>
     </div>
     <div class="row g-3 mb-3" id="reg-kpi"></div>
+    <div class="row g-3 mb-3" id="reg-insight"></div>
     <div class="card p-3">
-      <div class="fw-bold mb-2" style="font-size:13px"><i class="bi bi-bar-chart-line me-1" style="color:#374151"></i>시도별 매출 <span style="font-size:11px;font-weight:400;color:#9ca3af">클릭하면 구군·병원 상세 조회</span></div>
+      <div class="fw-bold mb-2" style="font-size:13px"><i class="bi bi-bar-chart-line me-1" style="color:#374151"></i>시도별 매출·성장 분석 <span style="font-size:11px;font-weight:400;color:#9ca3af">행 클릭 → 구군 → 병원까지 상세 조회</span></div>
       <div id="reg-list"></div>
     </div>
   </div>
@@ -2267,60 +2268,113 @@ async function deletePending() {
 }
 
 // ── 지역별 분석 ───────────────────────────────────────────────────
-let HOSP_REGION = {};  // 정규화 병원명 → [시도, 구군] (cons_cache.hospital_regions)
+let HOSP_REGION = {regions:{}, kw:{}};  // cons_cache.hospital_regions = {regions:{정규화명:[시도,구군]}, kw:{키워드:[시도,구군]}}
+let _KW_SORTED = null;
 async function _loadHospRegions(){
   try{
     const {data}=await _sb.from('cons_cache').select('data').eq('key','hospital_regions').maybeSingle();
-    if(data&&data.data&&data.data.regions) HOSP_REGION=data.data.regions;
+    if(data&&data.data){ HOSP_REGION = data.data.regions ? data.data : {regions:data.data, kw:{}}; _KW_SORTED=null; }
   }catch(e){ console.warn('hosp regions load',e); }
 }
 function _rNorm(s){ return String(s||'').replace(/\s+/g,'').toLowerCase(); }
-function _regionAgg(yr,fromM,toM){
-  const ms=[]; for(let m=fromM;m<=toM;m++) ms.push(m);
+// 병원명 → [시도,구군]: 정확매칭 우선, 실패 시 이름 속 지역 키워드 추론
+function _hospRegion(name){
+  const reg=HOSP_REGION.regions||{}; const ex=reg[_rNorm(name)];
+  if(ex && ex[0]) return ex;
+  const kw=HOSP_REGION.kw||{};
+  if(!_KW_SORTED) _KW_SORTED=Object.keys(kw).sort((a,b)=>b.length-a.length);
+  const nm=String(name||'');
+  for(let i=0;i<_KW_SORTED.length;i++){ if(nm.indexOf(_KW_SORTED[i])>=0) return kw[_KW_SORTED[i]]; }
+  return null;
+}
+function _grPct(v26,v25){ return v25>0?((v26/v25-1)*100):null; }
+function _grBadge(v26,v25){ if(!v25) return v26>0?'<span style="color:#7c3aed;font-weight:700">신규</span>':'<span style="color:#9ca3af">-</span>'; const p=(v26/v25-1)*100; return '<span style="color:'+(p>=0?'#16a34a':'#dc2626')+';font-weight:700">'+(p>=0?'▲':'▼')+Math.abs(p).toFixed(0)+'%</span>'; }
+function _cntNewLost(hosps){ let nw=0,lost=0; Object.values(hosps).forEach(o=>{ if(o.v26>0&&!o.v25) nw++; else if(!o.v26&&o.v25>0) lost++; }); return {nw,lost}; }
+// 병원별 기간 매출(2026/2025) + 담당자/주력제품 (CONS+DEVICE 합산)
+function _hospPeriodVals(fromM,toM){
   const byName={};
-  const addH=hmap=>Object.entries(hmap||{}).forEach(function(e){ const name=e[0],h=e[1]; const mo=yr===2026?(h.m2026||{}):(h.m2025||{}); let v=0; ms.forEach(m=>v+=Number(mo[m]||0)); if(v) byName[name]=(byName[name]||0)+v; });
+  const addH=hmap=>Object.entries(hmap||{}).forEach(function(e){ const name=e[0],h=e[1];
+    let v26=0,v25=0; for(let m=fromM;m<=toM;m++){ v26+=Number((h.m2026||{})[m]||0); v25+=Number((h.m2025||{})[m]||0); }
+    if(!v26&&!v25) return;
+    if(!byName[name]) byName[name]={v26:0,v25:0,sales:'',prod:''};
+    byName[name].v26+=v26; byName[name].v25+=v25;
+    if(h.sales&&!byName[name].sales) byName[name].sales=h.sales;
+    const pr=h.prods2026||h.prods; if(pr&&!byName[name].prod){ const t=Object.entries(pr).sort((a,b)=>b[1]-a[1])[0]; if(t) byName[name].prod=t[0]; }
+  });
   addH(CONS.hospitals); addH(DEVICE.hospitals);
+  return byName;
+}
+function _regionAgg(fromM,toM){
+  const byName=_hospPeriodVals(fromM,toM);
   const sido={};
-  Object.entries(byName).forEach(function(e){ const name=e[0],v=e[1];
-    const r=HOSP_REGION[_rNorm(name)]; const s=(r&&r[0])?r[0]:'미분류', g=(r&&r[1])?r[1]:'(미상)';
-    if(!sido[s]) sido[s]={total:0,gugun:{},hosps:{}};
-    sido[s].total+=v; sido[s].hosps[name]=(sido[s].hosps[name]||0)+v;
-    if(!sido[s].gugun[g]) sido[s].gugun[g]={total:0,hosps:{}};
-    sido[s].gugun[g].total+=v; sido[s].gugun[g].hosps[name]=(sido[s].gugun[g].hosps[name]||0)+v;
+  Object.entries(byName).forEach(function(e){ const name=e[0],o=e[1];
+    const r=_hospRegion(name); const s=(r&&r[0])?r[0]:'미분류', g=(r&&r[1])?r[1]:'(미상)';
+    if(!sido[s]) sido[s]={v26:0,v25:0,gugun:{},hosps:{}};
+    sido[s].v26+=o.v26; sido[s].v25+=o.v25; sido[s].hosps[name]=o;
+    if(!sido[s].gugun[g]) sido[s].gugun[g]={v26:0,v25:0,hosps:{}};
+    sido[s].gugun[g].v26+=o.v26; sido[s].gugun[g].v25+=o.v25; sido[s].gugun[g].hosps[name]=o;
   });
   return {sido, byName};
 }
-function _regSel(){ return {yr:parseInt(document.getElementById('reg-year-sel')?.value||'2026'), fromM:parseInt(document.getElementById('reg-from-sel')?.value||'1'), toM:parseInt(document.getElementById('reg-to-sel')?.value||'6')}; }
+function _regSel(){ return {fromM:parseInt(document.getElementById('reg-from-sel')?.value||'1'), toM:parseInt(document.getElementById('reg-to-sel')?.value||'6')}; }
 function renderRegion(){
-  const s=_regSel(); const {sido,byName}=_regionAgg(s.yr,s.fromM,s.toM);
-  const entries=Object.entries(sido).sort((a,b)=>b[1].total-a[1].total);
-  const grand=entries.reduce((a,[,o])=>a+o.total,0)||1;
-  const nHosp=Object.keys(byName).length;
-  const unmatched=sido['미분류']?Object.keys(sido['미분류'].hosps).length:0;
+  const s=_regSel(); const {sido,byName}=_regionAgg(s.fromM,s.toM);
+  const entries=Object.entries(sido).filter(([,o])=>o.v26>0||o.v25>0);
+  const named=entries.filter(([x])=>x!=='미분류');
+  const grand=entries.reduce((a,[,o])=>a+o.v26,0)||1;
+  const nHosp=Object.values(byName).filter(o=>o.v26>0).length;
+  const un=sido['미분류']; const unCnt=un?Object.values(un.hosps).filter(o=>o.v26>0).length:0; const unAmt=un?un.v26:0;
   document.getElementById('reg-kpi').innerHTML=[
-    {l:'총 매출',v:_ovFmt(grand),c:'#111827'},
-    {l:'거래처 수',v:nHosp.toLocaleString()+'곳',c:'#2563eb'},
-    {l:'지역(시도) 수',v:entries.filter(([x])=>x!=='미분류').length+'개',c:'#16a34a'},
-    {l:'미분류',v:unmatched.toLocaleString()+'곳',c:unmatched?'#d97706':'#9ca3af'},
-  ].map(c=>'<div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-label">'+c.l+'</div><div class="kpi-value" style="color:'+c.c+';font-size:1.4rem">'+c.v+'</div></div></div>').join('');
-  const maxV=entries.length?entries[0][1].total:1;
-  const COLS=['#2563eb','#0891b2','#16a34a','#7c3aed','#ea580c','#dc2626','#0d9488','#d97706','#db2777','#64748b'];
-  document.getElementById('reg-list').innerHTML=entries.map(function(e,i){ const x=e[0],o=e[1];
-    const col=x==='미분류'?'#94a3b8':COLS[i%COLS.length]; const pct=(o.total/grand*100).toFixed(1);
-    return '<div onclick="openRegionDetail(this.getAttribute(\'data-s\'))" data-s="'+String(x).replace(/"/g,'&quot;')+'" title="클릭하면 구군·병원 상세" style="padding:8px 6px;border-bottom:1px solid #f3f4f6;cursor:pointer;border-radius:6px;transition:background .12s" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:13px;font-weight:700">'+(i+1)+'. '+_ovEsc(x)+' <span style="font-size:11px;color:#9ca3af;font-weight:400">'+Object.keys(o.hosps).length+'곳</span> <i class="bi bi-search" style="font-size:9px;color:#cbd5e1"></i></span><div style="display:flex;gap:8px;align-items:center"><span style="font-size:13px;font-weight:700;color:'+col+'">'+_ovFmt(o.total)+'</span><span style="font-size:11px;color:#9ca3af;min-width:38px;text-align:right">'+pct+'%</span></div></div><div style="background:#f3f4f6;border-radius:3px;height:6px;overflow:hidden"><div style="width:'+(o.total/maxV*100).toFixed(1)+'%;height:100%;background:'+col+';border-radius:3px"></div></div></div>';
-  }).join('')||'<div class="text-muted" style="font-size:12px;padding:10px">데이터 없음 — 지역 매핑(SQL)을 먼저 적재하세요.</div>';
-  const info=document.getElementById('reg-info'); if(info) info.textContent=(CONS.updatedAt?'기준일 '+CONS.updatedAt:'')+(Object.keys(HOSP_REGION).length?'':' · ⚠ 지역매핑 미적재');
+    {l:'총 매출(2026)',v:_ovFmt(grand),c:'#111827',sub:''},
+    {l:'거래처 수',v:nHosp.toLocaleString()+'곳',c:'#2563eb',sub:''},
+    {l:'지역(시도) 수',v:named.length+'개',c:'#16a34a',sub:''},
+    {l:'미분류',v:unCnt.toLocaleString()+'곳',c:unCnt?'#d97706':'#9ca3af',sub:_ovFmt(unAmt)+' ('+(unAmt/grand*100).toFixed(0)+'%)'},
+  ].map(c=>'<div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-label">'+c.l+'</div><div class="kpi-value" style="color:'+c.c+';font-size:1.4rem">'+c.v+'</div>'+(c.sub?'<div class="kpi-sub">'+c.sub+'</div>':'')+'</div></div>').join('');
+  // 인사이트: 성장/하락 TOP3 (전년 1억↑)
+  const grow=named.filter(([,o])=>o.v25>=1e8).map(([x,o])=>({x,p:(o.v26/o.v25-1)*100,v:o.v26}));
+  const up=grow.slice().sort((a,b)=>b.p-a.p).slice(0,3), down=grow.slice().sort((a,b)=>a.p-b.p).slice(0,3);
+  const chip=(arr,pos)=>arr.map(o=>'<span style="display:inline-flex;align-items:center;gap:5px;background:'+(pos?'#f0fdf4':'#fef2f2')+';border:1px solid '+(pos?'#bbf7d0':'#fecaca')+';border-radius:8px;padding:4px 10px;font-size:12px;margin:2px"><b>'+_ovEsc(o.x)+'</b><span style="color:'+(pos?'#16a34a':'#dc2626')+';font-weight:700">'+(o.p>=0?'▲':'▼')+Math.abs(o.p).toFixed(0)+'%</span><span style="color:#9ca3af">'+_ovFmt(o.v)+'</span></span>').join('')||'<span style="font-size:12px;color:#9ca3af">데이터 부족</span>';
+  document.getElementById('reg-insight').innerHTML=
+    '<div class="col-md-6"><div class="card p-3 h-100"><div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:6px"><i class="bi bi-arrow-up-right-circle me-1"></i>성장 지역 TOP3 <span style="font-size:10px;font-weight:400;color:#9ca3af">전년比</span></div>'+chip(up,1)+'</div></div>'
+    +'<div class="col-md-6"><div class="card p-3 h-100"><div style="font-size:12px;font-weight:700;color:#dc2626;margin-bottom:6px"><i class="bi bi-arrow-down-right-circle me-1"></i>하락 지역 TOP3 <span style="font-size:10px;font-weight:400;color:#9ca3af">전년比</span></div>'+chip(down,0)+'</div></div>';
+  const sorted=entries.sort((a,b)=>b[1].v26-a[1].v26); const maxV=sorted.length?sorted[0][1].v26:1;
+  const rows=sorted.map(function(e,i){ const x=e[0],o=e[1]; const nl=_cntNewLost(o.hosps); const hc=Object.values(o.hosps).filter(h=>h.v26>0).length; const col=x==='미분류'?'#94a3b8':'#2563eb';
+    return '<tr data-s="'+String(x).replace(/"/g,'&quot;')+'" onclick="openRegionDetail(this.getAttribute(\'data-s\'))" style="cursor:pointer;border-bottom:1px solid #f3f4f6" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'"><td style="padding:7px 10px;color:#9ca3af">'+(i+1)+'</td><td style="font-weight:700">'+_ovEsc(x)+' <i class="bi bi-search" style="font-size:9px;color:#cbd5e1"></i></td><td style="text-align:right;font-weight:700;color:'+col+'">'+_ovFmt(o.v26)+'</td><td style="text-align:right;color:#9ca3af">'+(o.v25?_ovFmt(o.v25):'-')+'</td><td style="text-align:right">'+_grBadge(o.v26,o.v25)+'</td><td style="text-align:center">'+hc+'</td><td style="text-align:center;font-size:11px"><span style="color:#7c3aed">+'+nl.nw+'</span>/<span style="color:#dc2626">-'+nl.lost+'</span></td><td style="min-width:80px"><div style="background:#f3f4f6;border-radius:3px;height:6px"><div style="width:'+(o.v26/maxV*100).toFixed(1)+'%;height:100%;background:'+col+';border-radius:3px"></div></div></td><td style="text-align:right;color:#9ca3af;font-size:11px">'+(o.v26/grand*100).toFixed(1)+'%</td></tr>';
+  }).join('');
+  document.getElementById('reg-list').innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:700px"><thead><tr style="color:#6b7280;font-size:11px;border-bottom:2px solid #e5e7eb"><th style="padding:7px 10px;text-align:left">#</th><th style="text-align:left">시도</th><th style="text-align:right">매출</th><th style="text-align:right">전년</th><th style="text-align:right">성장률</th><th style="text-align:center">거래처</th><th style="text-align:center">신규/이탈</th><th>비중</th><th style="text-align:right">%</th></tr></thead><tbody>'+(rows||'<tr><td colspan="9" style="text-align:center;color:#9ca3af;padding:14px">데이터 없음 — 지역 매핑 SQL을 먼저 적재하세요</td></tr>')+'</tbody></table></div>';
+  const info=document.getElementById('reg-info'); if(info) info.textContent=(CONS.updatedAt?'기준일 '+CONS.updatedAt:'')+((HOSP_REGION.regions&&Object.keys(HOSP_REGION.regions).length)?'':' · ⚠ 지역매핑 미적재');
+}
+function _hospRow(name,o,maxH){
+  return '<div data-h="'+String(name).replace(/"/g,'&quot;')+'" onclick="_ovToHosp(this.getAttribute(\'data-h\'))" title="클릭하면 거래처 상세" style="padding:5px 6px;cursor:pointer;border-radius:5px;border-bottom:1px solid #f6f8fa" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'"><div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:2px"><span style="font-weight:600">'+_ovEsc(name)+' <i class="bi bi-box-arrow-up-right" style="font-size:8px;color:#cbd5e1"></i>'+(o.sales?' <span style="color:#9ca3af;font-weight:400">·'+_ovEsc(o.sales)+'</span>':'')+(o.prod?' <span style="color:#cbd5e1;font-weight:400">'+_ovEsc(o.prod)+'</span>':'')+'</span><span style="display:flex;gap:6px;align-items:center"><span style="font-weight:700">'+_ovFmt(o.v26)+'</span>'+_grBadge(o.v26,o.v25)+'</span></div><div style="background:#f3f4f6;border-radius:3px;height:4px"><div style="width:'+(o.v26/maxH*100).toFixed(1)+'%;height:100%;background:#2563eb;border-radius:3px"></div></div></div>';
 }
 function openRegionDetail(sidoName){
-  const s=_regSel(); const {sido}=_regionAgg(s.yr,s.fromM,s.toM); const o=sido[sidoName]; if(!o) return;
-  const guEntries=Object.entries(o.gugun).sort((a,b)=>b[1].total-a[1].total);
-  const body=guEntries.map(function(ge){ const g=ge[0],go=ge[1];
-    const hosps=Object.entries(go.hosps).sort((a,b)=>b[1]-a[1]); const maxH=hosps.length?hosps[0][1]:1;
-    return '<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:#374151;margin-bottom:6px;border-bottom:2px solid #f1f5f9;padding-bottom:3px"><span><i class="bi bi-geo me-1" style="color:#2563eb"></i>'+_ovEsc(g)+' <span style="font-size:11px;color:#9ca3af;font-weight:400">'+hosps.length+'곳</span></span><span style="color:#2563eb">'+_ovFmt(go.total)+'</span></div>'
-      +hosps.map(function(he){ const h=he[0],v=he[1]; return '<div data-h="'+String(h).replace(/"/g,'&quot;')+'" onclick="_ovToHosp(this.getAttribute(\'data-h\'))" title="클릭하면 거래처 상세" style="padding:4px 6px;cursor:pointer;border-radius:5px" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px"><span>'+_ovEsc(h)+' <i class="bi bi-box-arrow-up-right" style="font-size:8px;color:#cbd5e1"></i></span><span style="font-weight:700">'+_ovFmt(v)+'</span></div><div style="background:#f3f4f6;border-radius:3px;height:4px"><div style="width:'+(v/maxH*100).toFixed(1)+'%;height:100%;background:#2563eb;border-radius:3px"></div></div></div>'; }).join('')+'</div>';
+  const s=_regSel(); const {sido}=_regionAgg(s.fromM,s.toM); const o=sido[sidoName]; if(!o) return;
+  const nl=_cntNewLost(o.hosps); const hc=Object.values(o.hosps).filter(h=>h.v26>0).length;
+  const hospArr=Object.entries(o.hosps).filter(([,h])=>h.v26>0||h.v25>0);
+  const movers=hospArr.filter(([,h])=>h.v25>0&&h.v26>0).map(([n,h])=>({n,h,p:(h.v26/h.v25-1)*100}));
+  const top=movers.slice().sort((a,b)=>b.p-a.p).slice(0,5), bot=movers.slice().sort((a,b)=>a.p-b.p).slice(0,5);
+  const news=hospArr.filter(([,h])=>h.v26>0&&!h.v25).sort((a,b)=>b[1].v26-a[1].v26).slice(0,8);
+  const lost=hospArr.filter(([,h])=>!h.v26&&h.v25>0).sort((a,b)=>b[1].v25-a[1].v25).slice(0,8);
+  const moverRow=(arr,pos)=>arr.map(o2=>'<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid #f6f8fa"><span>'+_ovEsc(o2.n)+'</span><span><b>'+_ovFmt(o2.h.v26)+'</b> <span style="color:'+(pos?'#16a34a':'#dc2626')+';font-weight:700">'+(o2.p>=0?'▲':'▼')+Math.abs(o2.p).toFixed(0)+'%</span></span></div>').join('')||'<div style="font-size:11px;color:#9ca3af">없음</div>';
+  const nameList=(arr,k)=>arr.map(([n,h])=>'<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid #f6f8fa"><span>'+_ovEsc(n)+'</span><span style="font-weight:700">'+_ovFmt(k==='v25'?h.v25:h.v26)+'</span></div>').join('')||'<div style="font-size:11px;color:#9ca3af">없음</div>';
+  const guEntries=Object.entries(o.gugun).sort((a,b)=>b[1].v26-a[1].v26);
+  const guRows=guEntries.map(function(ge){ const g=ge[0],go=ge[1]; const ghc=Object.values(go.hosps).filter(h=>h.v26>0).length;
+    return '<tr data-g="'+String(g).replace(/"/g,'&quot;')+'" data-s2="'+String(sidoName).replace(/"/g,'&quot;')+'" onclick="openGugunDetail(this.getAttribute(\'data-s2\'),this.getAttribute(\'data-g\'))" style="cursor:pointer;border-bottom:1px solid #f3f4f6" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'"><td style="padding:5px 8px;font-weight:600">'+_ovEsc(g)+' <i class="bi bi-search" style="font-size:8px;color:#cbd5e1"></i></td><td style="text-align:right;font-weight:700;color:#2563eb">'+_ovFmt(go.v26)+'</td><td style="text-align:right;color:#9ca3af">'+(go.v25?_ovFmt(go.v25):'-')+'</td><td style="text-align:right">'+_grBadge(go.v26,go.v25)+'</td><td style="text-align:center">'+ghc+'</td></tr>';
   }).join('');
-  const head='<div style="display:flex;gap:8px;margin-bottom:14px"><div style="flex:1;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 11px"><div style="font-size:10px;color:#6b7280">총 매출</div><div style="font-size:15px;font-weight:800">'+_ovFmt(o.total)+'</div></div><div style="flex:1;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 11px"><div style="font-size:10px;color:#6b7280">거래처 수</div><div style="font-size:15px;font-weight:800">'+Object.keys(o.hosps).length+'곳</div></div></div>';
-  _ovShowModal(_ovEsc(sidoName)+' <span style="font-size:12px;color:#9ca3af">구군별 상세</span>', head+body);
+  const head='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'+_ovKpiBox('매출',_ovFmt(o.v26),'#2563eb')+_ovKpiBox('전년',_ovFmt(o.v25),'#6b7280')+_ovKpiBox('성장률',_grBadge(o.v26,o.v25),'#111827')+_ovKpiBox('거래처',hc+'곳','#111827')+_ovKpiBox('신규/이탈','<span style="color:#7c3aed">+'+nl.nw+'</span> / <span style="color:#dc2626">-'+nl.lost+'</span>','#111827')+'</div>';
+  const body=head
+    +'<div style="font-size:12px;font-weight:700;color:#374151;margin:2px 0 4px"><i class="bi bi-geo me-1"></i>구군별 <span style="font-size:10px;font-weight:400;color:#9ca3af">클릭하면 병원 목록</span></div>'
+    +'<div style="overflow-x:auto;margin-bottom:16px"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:420px"><thead><tr style="color:#6b7280;font-size:11px;border-bottom:1px solid #e5e7eb"><th style="text-align:left;padding:5px 8px">구군</th><th style="text-align:right">매출</th><th style="text-align:right">전년</th><th style="text-align:right">성장률</th><th style="text-align:center">거래처</th></tr></thead><tbody>'+guRows+'</tbody></table></div>'
+    +'<div class="row g-3"><div class="col-md-6"><div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:4px"><i class="bi bi-graph-up-arrow me-1"></i>성장 병원 TOP5</div>'+moverRow(top,1)+'</div><div class="col-md-6"><div style="font-size:12px;font-weight:700;color:#dc2626;margin-bottom:4px"><i class="bi bi-graph-down-arrow me-1"></i>하락 병원 TOP5</div>'+moverRow(bot,0)+'</div></div>'
+    +'<div class="row g-3 mt-1"><div class="col-md-6"><div style="font-size:12px;font-weight:700;color:#7c3aed;margin-bottom:4px"><i class="bi bi-plus-circle me-1"></i>신규 거래처(2026)</div>'+nameList(news,'v26')+'</div><div class="col-md-6"><div style="font-size:12px;font-weight:700;color:#dc2626;margin-bottom:4px"><i class="bi bi-dash-circle me-1"></i>이탈 거래처(작년만)</div>'+nameList(lost,'v25')+'</div></div>';
+  _ovShowModal('<i class="bi bi-geo-alt me-1" style="color:#2563eb"></i>'+_ovEsc(sidoName)+' <span style="font-size:12px;color:#9ca3af">지역 상세</span>', body);
+}
+function openGugunDetail(sidoName,gugun){
+  const s=_regSel(); const {sido}=_regionAgg(s.fromM,s.toM); const o=sido[sidoName]; if(!o||!o.gugun[gugun]) return;
+  const go=o.gugun[gugun]; const hosps=Object.entries(go.hosps).filter(([,h])=>h.v26>0||h.v25>0).sort((a,b)=>b[1].v26-a[1].v26); const maxH=hosps.length?(hosps[0][1].v26||1):1;
+  const back='<button onclick="openRegionDetail(this.getAttribute(\'data-s\'))" data-s="'+String(sidoName).replace(/"/g,'&quot;')+'" style="background:none;border:none;color:#2563eb;font-size:12px;cursor:pointer;padding:0;margin-bottom:10px"><i class="bi bi-arrow-left me-1"></i>'+_ovEsc(sidoName)+'로 돌아가기</button>';
+  const head='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'+_ovKpiBox('매출',_ovFmt(go.v26),'#2563eb')+_ovKpiBox('전년',_ovFmt(go.v25),'#6b7280')+_ovKpiBox('성장률',_grBadge(go.v26,go.v25),'#111827')+_ovKpiBox('거래처',hosps.filter(([,h])=>h.v26>0).length+'곳','#111827')+'</div>';
+  _ovShowModal('<i class="bi bi-geo me-1" style="color:#2563eb"></i>'+_ovEsc(sidoName)+' › '+_ovEsc(gugun)+' <span style="font-size:12px;color:#9ca3af">병원별</span>', back+head+hosps.map(([n,h])=>_hospRow(n,h,maxH)).join(''));
 }
 
 function renderDashboard() {
