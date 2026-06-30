@@ -199,14 +199,15 @@ function reconcilePending(rows, ilboAcc){
     if((p.status&&p.status!=='대기')||p.lock) return;
     var pc=_upNorm(p.customer),pp=_upNorm(p.product),pa=Math.round(Number(p.amount)||0),pq=Number(p.qty)||0;
     if(!pc) return;
-    var exact=null, cand=0;
+    var hit=null, cand=0;
     lines.forEach(function(l){
       if(_upNorm(l.customer)!==pc) return;
-      var la=Math.round(l.amount), lq=Number(l.qty)||0;
-      if(pp&&_upNorm(l.product)===pp&&la===pa&&(pq===0||lq===pq)){ if(!exact) exact=l; }
-      else if(pa>0&&Math.abs(la-pa)<=pa*0.1){ cand++; }
+      var la=Math.round(l.amount), lq=Number(l.qty)||0, prodEq=pp&&_upNorm(l.product)===pp;
+      if(prodEq&&la===pa&&(pq===0||lq===pq)){ if(!hit) hit=l; }            // 거래처+제품+금액 정확 → 자동
+      else if(prodEq&&pa>0&&Math.abs(la-pa)<=pa*0.1){ if(!hit) hit=l; }    // 거래처+제품 일치+금액±10% → 자동
+      else if(pa>0&&Math.abs(la-pa)<=pa*0.1){ cand++; }                    // 제품명 다름·금액근접 → 추정
     });
-    if(exact){ p.status='반영됨'; p.reflectedDate=(ilboAcc.reportDate||''); p.matchAmt=Math.round(exact.amount); p.matchAuto=true; auto++; autoAmt+=pa; }
+    if(hit){ p.status='반영됨'; p.reflectedDate=(ilboAcc.reportDate||''); p.matchAmt=Math.round(hit.amount); p.matchAuto=true; auto++; autoAmt+=pa; }
     else if(cand){ near++; }
   });
   return {auto:auto, near:near, autoAmt:autoAmt};
