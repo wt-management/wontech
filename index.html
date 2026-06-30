@@ -940,7 +940,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
     <!-- 기간 선택 필터 -->
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;padding:10px 14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0">
       <span style="font-size:12px;font-weight:600;color:#374151;white-space:nowrap">📅 조회 기간</span>
-      <span id="dev-simple" style="display:inline-flex;align-items:center;gap:8px">
+      <span id="dev-simple" style="display:none">
       <select id="dev-year-sel" class="form-select form-select-sm" style="width:84px" onchange="renderDeviceSales()">
         <option value="2026" selected>2026년</option>
         <option value="2025">2025년</option>
@@ -1911,10 +1911,8 @@ function _dataMaxMonth(){ const ms=[].concat(Object.keys(CONS.monthly2026||{}),O
 function _renderPrefix(p){ const fn=window[_RENDERFN[p]]; if(fn) fn(); }
 function _gvN(id,d){ const e=document.getElementById(id); return e?(parseInt(e.value)||d):d; }
 function _normPeriod(sy,sm,ey,em){ if(ey<sy||(ey===sy&&em<sm)){ let t; t=sy;sy=ey;ey=t; t=sm;sm=em;em=t; } const cross=(sy!==ey); const lab=cross?(String(sy).slice(2)+'.'+sm+'~'+String(ey).slice(2)+'.'+em):(sm===em?sm+'월':sm+'-'+em+'월'); return {sy:sy,sm:sm,ey:ey,em:em,cross:cross,label:lab}; }
-function _getPeriod(prefix){
-  const st=_PDST[prefix]||{mode:'simple'};
-  if(st.mode==='custom') return _normPeriod(_gvN(prefix+'-csy',2025),_gvN(prefix+'-csm',1),_gvN(prefix+'-cey',2026),_gvN(prefix+'-cem',_dataMaxMonth()));
-  const y=_gvN(prefix+'-year-sel',2026); return _normPeriod(y,_gvN(prefix+'-from-sel',1),y,_gvN(prefix+'-to-sel',_dataMaxMonth()));
+function _getPeriod(prefix){  // 단일 출처: 4개 커스텀 셀렉터(프리셋이 값을 채움)
+  return _normPeriod(_gvN(prefix+'-csy',2026),_gvN(prefix+'-csm',1),_gvN(prefix+'-cey',2026),_gvN(prefix+'-cem',_dataMaxMonth()));
 }
 function _spanMonths(p){ const o=[]; for(let y=p.sy;y<=p.ey;y++){ const lo=(y===p.sy?p.sm:1), hi=(y===p.ey?p.em:12); for(let m=lo;m<=hi;m++) o.push({y:y,m:m}); } return o; }
 function _prevSpan(p){ const len=_spanMonths(p).length; let ey=p.sy, em=p.sm-1; if(em<1){em=12;ey--;} let sy=ey, sm=em-len+1; while(sm<1){sm+=12;sy--;} return _normPeriod(sy,sm,ey,em); }
@@ -1927,33 +1925,44 @@ function _periodUIMode(prefix,custom){ const sb=document.getElementById(prefix+'
 function _periodPreset(prefix,type,btn){
   const mx=_dataMaxMonth();
   document.querySelectorAll('.pp-'+prefix).forEach(b=>b.classList.remove('pp-on')); if(btn) btn.classList.add('pp-on');
-  if(type==='olhae'){ _PDST[prefix]={mode:'simple'}; _periodUIMode(prefix,false); _setSimpleSel(prefix,2026,1,mx); }
-  else if(type==='y2025'){ _PDST[prefix]={mode:'simple'}; _periodUIMode(prefix,false); _setSimpleSel(prefix,2025,1,12); }
-  else if(type==='last12'){ _PDST[prefix]={mode:'custom'}; let sy=2026,sm=mx-11; while(sm<1){sm+=12;sy--;} _setCustomSel(prefix,sy,sm,2026,mx); _periodUIMode(prefix,true); }
-  else if(type==='all'){ _PDST[prefix]={mode:'custom'}; _setCustomSel(prefix,2025,1,2026,mx); _periodUIMode(prefix,true); }
-  else if(type==='custom'){ _PDST[prefix]={mode:'custom'}; _periodUIMode(prefix,true); }
+  const cust=document.getElementById(prefix+'-custom');
+  if(type==='olhae'){ _setCustomSel(prefix,2026,1,2026,mx); if(cust)cust.style.display='none'; }
+  else if(type==='y2025'){ _setCustomSel(prefix,2025,1,2025,12); if(cust)cust.style.display='none'; }
+  else if(type==='last12'){ let sy=2026,sm=mx-11; while(sm<1){sm+=12;sy--;} _setCustomSel(prefix,sy,sm,2026,mx); if(cust)cust.style.display='none'; }
+  else if(type==='all'){ _setCustomSel(prefix,2025,1,2026,mx); if(cust)cust.style.display='none'; }
+  else if(type==='custom'){ if(cust)cust.style.display='inline-flex'; }  // 직접설정: 인풋 노출(현재 값 유지)
   _renderPrefix(prefix);
 }
-function _periodCustomChange(prefix){ _PDST[prefix]={mode:'custom'}; _renderPrefix(prefix); }
-// 조회기간 줄에 삽입할 프리셋+직접설정 컨트롤 HTML
+function _periodCustomChange(prefix){  // 인풋 직접 변경 → 직접설정 활성표시
+  document.querySelectorAll('.pp-'+prefix).forEach(b=>b.classList.remove('pp-on'));
+  const cb=document.querySelector('.pp-'+prefix+'[data-t="custom"]'); if(cb) cb.classList.add('pp-on');
+  _renderPrefix(prefix);
+}
+// 조회기간 컨트롤 HTML (칩만, 직접설정 시 범위 인풋 노출)
 function _periodCtrl(prefix){
-  const yrOpt=[2025,2026].map(y=>'<option value="'+y+'">'+y+'</option>').join('');
+  const yrOpt=[2025,2026].map(y=>'<option value="'+y+'">'+y+'년</option>').join('');
   const moOpt=Array.from({length:12},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+'월</option>').join('');
-  const chip='display:inline-block;padding:3px 10px;border-radius:16px;font-size:11px;font-weight:600;border:1px solid #e5e7eb;background:#fff;color:#6b7280;cursor:pointer';
-  return '<span class="period-presets" style="display:inline-flex;gap:5px;flex-wrap:wrap;align-items:center;margin-left:6px">'
-    +['olhae:올해','y2025:2025년','last12:최근 12개월','all:2025~현재'].map(o=>{const[t,l]=o.split(':');return '<span class="pp-'+prefix+'" style="'+chip+'" onclick="_periodPreset(\''+prefix+'\',\''+t+'\',this)">'+l+'</span>';}).join('')
-    +'<span class="pp-'+prefix+'" style="'+chip+';border-color:#c7d2fe;color:#4f46e5" onclick="_periodPreset(\''+prefix+'\',\'custom\',this)"><i class="bi bi-sliders me-1"></i>직접설정</span>'
-    +'</span>'
-    +'<span id="'+prefix+'-custom" style="display:none;align-items:center;gap:4px;margin-left:6px">'
-    +'<select id="'+prefix+'-csy" class="form-select form-select-sm" style="width:78px" onchange="_periodCustomChange(\''+prefix+'\')">'+yrOpt+'</select>'
-    +'<select id="'+prefix+'-csm" class="form-select form-select-sm" style="width:62px" onchange="_periodCustomChange(\''+prefix+'\')">'+moOpt+'</select>'
+  const presets=[['olhae','올해'],['y2025','2025년'],['last12','최근 12개월'],['all','2025~현재'],['custom','<i class=\"bi bi-sliders me-1\"></i>직접설정']];
+  const chips=presets.map(o=>'<button type="button" class="pp-chip pp-'+prefix+'" data-t="'+o[0]+'" onclick="_periodPreset(\''+prefix+'\',\''+o[0]+'\',this)">'+o[1]+'</button>').join('');
+  return '<span style="display:inline-flex;gap:5px;flex-wrap:wrap;align-items:center">'+chips+'</span>'
+    +'<span id="'+prefix+'-custom" style="display:none;align-items:center;gap:4px;margin-left:8px;padding-left:8px;border-left:1px solid #e5e7eb">'
+    +'<select id="'+prefix+'-csy" class="form-select form-select-sm" style="width:82px" onchange="_periodCustomChange(\''+prefix+'\')">'+yrOpt+'</select>'
+    +'<select id="'+prefix+'-csm" class="form-select form-select-sm" style="width:66px" onchange="_periodCustomChange(\''+prefix+'\')">'+moOpt+'</select>'
     +'<span style="color:#9ca3af">~</span>'
-    +'<select id="'+prefix+'-cey" class="form-select form-select-sm" style="width:78px" onchange="_periodCustomChange(\''+prefix+'\')">'+yrOpt+'</select>'
-    +'<select id="'+prefix+'-cem" class="form-select form-select-sm" style="width:62px" onchange="_periodCustomChange(\''+prefix+'\')">'+moOpt+'</select>'
+    +'<select id="'+prefix+'-cey" class="form-select form-select-sm" style="width:82px" onchange="_periodCustomChange(\''+prefix+'\')">'+yrOpt+'</select>'
+    +'<select id="'+prefix+'-cem" class="form-select form-select-sm" style="width:66px" onchange="_periodCustomChange(\''+prefix+'\')">'+moOpt+'</select>'
     +'</span>';
 }
-// 페이지별 조회기간 컨테이너에 컨트롤 주입(1회)
-function _injectPeriodCtrl(prefix){ const host=document.getElementById(prefix+'-period-host'); if(host && !host.dataset.init){ host.innerHTML=_periodCtrl(prefix); host.dataset.init='1'; const cm=document.getElementById(prefix+'-cem'); if(cm) cm.value=_dataMaxMonth(); const cy=document.getElementById(prefix+'-cey'); if(cy) cy.value=2026; } }
+// 페이지별 조회기간 컨테이너에 컨트롤 주입(1회) + 기본 '올해' 활성
+function _injectPeriodCtrl(prefix){
+  if(!document.getElementById('pp-style')){ const s=document.createElement('style'); s.id='pp-style'; s.textContent='.pp-chip{padding:5px 13px;border-radius:18px;font-size:12px;font-weight:600;border:1px solid #e5e7eb;background:#fff;color:#6b7280;cursor:pointer;transition:.12s;line-height:1.2}.pp-chip:hover{border-color:#c7d2fe;color:#4f46e5}.pp-chip.pp-on{background:#2563eb;border-color:#2563eb;color:#fff}'; document.head.appendChild(s); }
+  const host=document.getElementById(prefix+'-period-host');
+  if(host && !host.dataset.init){
+    host.innerHTML=_periodCtrl(prefix); host.dataset.init='1';
+    _setCustomSel(prefix,2026,1,2026,_dataMaxMonth());
+    const c=document.querySelector('.pp-'+prefix+'[data-t="olhae"]'); if(c) c.classList.add('pp-on');
+  }
+}
 
 function _ovPeriodChange() {
   const f = parseInt(document.getElementById('ov-from-sel').value);
