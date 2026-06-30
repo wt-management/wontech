@@ -85,18 +85,42 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .tm-prog{height:6px;background:#e2e8f0;border-radius:4px;overflow:hidden;margin-top:9px}
 .tm-prog>div{height:100%;background:#0f766e;border-radius:4px}
 /* 글로벌영업 매출현황 표 */
-.rpt-table{border-collapse:collapse;font-size:12px;width:100%;white-space:nowrap;font-variant-numeric:tabular-nums}
-.rpt-table th,.rpt-table td{border:1px solid #e5e7eb;padding:5px 9px;text-align:right}
-.rpt-table thead th{background:#f1f5f9;color:#334155;text-align:center;font-weight:700;font-size:11px}
+.rpt-table{border-collapse:separate;border-spacing:0;font-size:12px;width:100%;white-space:nowrap;font-variant-numeric:tabular-nums}
+.rpt-table th,.rpt-table td{padding:7px 11px;text-align:right;border-bottom:1px solid #eef2f6}
+.rpt-table thead th{background:#f8fafc;color:#475569;text-align:center;font-weight:700;font-size:11px;border-bottom:1px solid #e2e8f0}
+.rpt-table thead tr:first-child th{padding:8px 11px;font-size:11.5px;letter-spacing:.02em}
+.rpt-table thead th.grp-q{background:#eef2ff;color:#4338ca}
+.rpt-table thead th.grp-h{background:#e0e7ff;color:#3730a3}
+.rpt-table thead th.grp-m{background:#ccfbf1;color:#0f766e}
 .rpt-table td.lbl,.rpt-table th.lbl{text-align:left;font-weight:600;position:sticky;left:0;background:#fff;z-index:1}
-.rpt-table thead th.lbl{background:#f1f5f9}
-.rpt-table tr.grp td{background:#f8fafc;font-weight:700}
-.rpt-table tr.grp td.lbl{background:#f8fafc}
-.rpt-table tr.tot td{background:#eef2ff;font-weight:800}
-.rpt-table tr.tot td.lbl{background:#eef2ff}
-.rpt-table .gsep{border-left:2px solid #cbd5e1}
-.rpt-cell-low{background:#fef9c3}
-.rpt-cell-neg{background:#dbeafe}
+.rpt-table thead th.lbl{background:#f8fafc}
+.rpt-table td.dept{color:#0f172a;font-weight:700}
+.rpt-table td.sub{color:#64748b;font-weight:500}
+.rpt-table td.rpt-tgt{color:#94a3b8}
+.rpt-table td.rpt-act{font-weight:700;color:#0f172a}
+.rpt-na{color:#cbd5e1}
+.rpt-table tbody tr:hover td,.rpt-table tbody tr:hover td.lbl{background:#f8fbff}
+.rpt-table tr.grp td,.rpt-table tr.grp td.lbl{background:#f1f5f9;font-weight:700}
+.rpt-table tr.grp:hover td{background:#e9eef5}
+.rpt-table tr.tot td,.rpt-table tr.tot td.lbl{background:#1e293b;color:#fff;font-weight:800}
+.rpt-table tr.tot.tot2 td,.rpt-table tr.tot.tot2 td.lbl{background:#4f46e5}
+.rpt-table tr.tot td.dept,.rpt-table tr.tot td.sub,.rpt-table tr.tot td.rpt-act{color:#fff}
+.rpt-table tr.tot td.rpt-tgt{color:rgba(255,255,255,.6)}
+.rpt-table tr.tot .rpt-na{color:rgba(255,255,255,.45)}
+.rpt-table tr.tot:hover td{filter:brightness(1.1)}
+.rpt-table .gsep{border-left:2px solid #e5e9f0}
+.rpt-table tr.tot .gsep{border-left:2px solid rgba(255,255,255,.22)}
+.rpt-ach{display:inline-block;min-width:48px;padding:2px 8px;border-radius:20px;font-weight:700;font-size:11px;text-align:center}
+.rpt-ach-low{background:#fee2e2;color:#b91c1c}
+.rpt-ach-mid{background:#fef3c7;color:#b45309}
+.rpt-ach-ok{background:#e0f2fe;color:#0369a1}
+.rpt-ach-over{background:#dcfce7;color:#15803d}
+.rpt-ach-na{background:transparent;color:#cbd5e1;min-width:0}
+.rpt-table tr.tot .rpt-ach{background:rgba(255,255,255,.2);color:#fff}
+.rpt-grw-up{color:#16a34a;font-weight:700}
+.rpt-grw-dn{color:#dc2626;font-weight:700}
+.rpt-grw-na{color:#cbd5e1}
+.rpt-table tr.tot .rpt-grw-up{color:#86efac}.rpt-table tr.tot .rpt-grw-dn{color:#fca5a5}.rpt-table tr.tot .rpt-grw-na{color:rgba(255,255,255,.5)}
 @media(max-width:680px){.kpi-card.kpi-dual{flex-direction:column;gap:8px}.kpi-side{border-left:none;border-top:1px dashed #e5e7eb;padding-left:0;padding-top:8px;text-align:left}.tm-wrap{grid-template-columns:1fr}}
 #app-loading{position:fixed;inset:0;background:#f0f4f8;display:flex;align-items:center;justify-content:center;z-index:300;font-size:14px;color:#64748b}
 #login-screen{position:fixed;inset:0;background:#0f172a;display:none;align-items:center;justify-content:center;z-index:200}
@@ -389,8 +413,8 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
       </div>
       <div style="overflow-x:auto"><table class="rpt-table" id="report-table"></table></div>
       <div style="font-size:11px;color:#94a3b8;margin-top:10px;line-height:1.7">
-        <span style="display:inline-block;width:11px;height:11px;background:#fef9c3;border:1px solid #fde68a;vertical-align:middle;margin-right:3px"></span>달성률 60% 미만
-        &nbsp;&nbsp;<span style="display:inline-block;width:11px;height:11px;background:#dbeafe;border:1px solid #bfdbfe;vertical-align:middle;margin-right:3px"></span>성장률 -20% 이하
+        <b>달성률</b> <span class="rpt-ach rpt-ach-low">60↓</span> <span class="rpt-ach rpt-ach-mid">80↓</span> <span class="rpt-ach rpt-ach-ok">100↓</span> <span class="rpt-ach rpt-ach-over">100↑</span>
+        &nbsp;&nbsp;<b>성장률</b> <span class="rpt-grw-up">▲증가</span> <span class="rpt-grw-dn">▼감소</span> (전년 동기 대비)
         <br><i class="bi bi-info-circle me-1"></i>해외 지역/법인은 <b>거래처→지역 매핑</b> 기준 집계. 서지컬·B2C·고객만족은 데이터 연동 전이라 '—'로 두고 합계에서 제외(연동 시 자동 반영).
       </div>
     </div>
@@ -928,22 +952,18 @@ function _sumV(list){
 }
 const _fM = v => Math.round((Number(v)||0)/1e6).toLocaleString();
 function _rptRow(n1,n2,v,cls){
-  const num=x=>(x==null?'-':_fM(x));
-  const ach=x=>(x==null?'-':x.toFixed(1)+'%');
-  const grw=x=>(x==null?'-':(x>=0?'+':'')+x.toFixed(1)+'%');
-  const lowC=x=>(x!=null&&x<60)?' rpt-cell-low':'';
-  const negC=x=>(x!=null&&x<=-20)?' rpt-cell-neg':'';
-  const gcol=x=>x==null?'#94a3b8':(x>=0?'#16a34a':'#dc2626');
-  const grp=(p,withGrw)=>'<td class="gsep">'+num(p.tgt)+'</td><td>'+num(p.act)+'</td>'+
-    '<td class="'+lowC(p.ach).trim()+'">'+ach(p.ach)+'</td>'+
-    (withGrw?'<td class="'+negC(p.grw).trim()+'" style="color:'+gcol(p.grw)+'">'+grw(p.grw)+'</td>':'');
-  return '<tr class="'+(cls||'')+'"><td class="lbl">'+n1+'</td><td class="lbl" style="font-weight:500">'+n2+'</td>'+
+  const num=x=>(x==null?'<span class="rpt-na">-</span>':_fM(x));
+  const achChip=x=>{ if(x==null) return '<span class="rpt-ach rpt-ach-na">-</span>'; const lv=x<60?'low':x<80?'mid':x<100?'ok':'over'; return '<span class="rpt-ach rpt-ach-'+lv+'">'+x.toFixed(1)+'%</span>'; };
+  const grwS=x=>{ if(x==null) return '<span class="rpt-grw-na">-</span>'; const up=x>=0; return '<span class="rpt-grw-'+(up?'up':'dn')+'">'+(up?'▲':'▼')+Math.abs(x).toFixed(1)+'%</span>'; };
+  const grp=(p,withGrw)=>'<td class="gsep rpt-tgt">'+num(p.tgt)+'</td><td class="rpt-act">'+num(p.act)+'</td>'+
+    '<td>'+achChip(p.ach)+'</td>'+(withGrw?'<td>'+grwS(p.grw)+'</td>':'');
+  return '<tr class="'+(cls||'')+'"><td class="lbl dept">'+n1+'</td><td class="lbl sub">'+n2+'</td>'+
     grp(v.q2,true)+grp(v.h1,true)+grp(v.m6,false)+'</tr>';
 }
 function _rptBlank(n1,n2){
-  const d='<td>—</td>';
-  return '<tr><td class="lbl">'+n1+'</td><td class="lbl" style="font-weight:500;color:#9ca3af">'+n2+'</td>'+
-    '<td class="gsep">—</td>'+d+d+d+'<td class="gsep">—</td>'+d+d+d+'<td class="gsep">—</td>'+d+d+'</tr>';
+  const d='<td class="rpt-na">—</td>';
+  return '<tr><td class="lbl dept" style="color:#cbd5e1">'+n1+'</td><td class="lbl sub" style="color:#cbd5e1">'+n2+'</td>'+
+    '<td class="gsep rpt-na">—</td>'+d+d+d+'<td class="gsep rpt-na">—</td>'+d+d+d+'<td class="gsep rpt-na">—</td>'+d+d+'</tr>';
 }
 function renderReport(){
   const tbl=document.getElementById('report-table');
@@ -960,12 +980,12 @@ function renderReport(){
   const globalSum=_sumV([kSum,ovSum]);              // 글로벌영업실 합계 (서지컬 제외)
   const totalSum=globalSum;                          // Wontech Total (B2C·고객만족 제외 — 현재 동일)
   let h='<thead><tr><th class="lbl" rowspan="2">사업부</th><th class="lbl" rowspan="2">구분</th>'+
-    '<th class="gsep" colspan="4">2분기</th><th class="gsep" colspan="4">상반기</th><th class="gsep" colspan="3">2026년 6월</th></tr>'+
+    '<th class="gsep grp-q" colspan="4">2분기</th><th class="gsep grp-h" colspan="4">상반기</th><th class="gsep grp-m" colspan="3">2026년 6월</th></tr>'+
     '<tr><th class="gsep">목표</th><th>실적</th><th>달성률</th><th>성장률</th>'+
     '<th class="gsep">목표</th><th>실적</th><th>달성률</th><th>성장률</th>'+
     '<th class="gsep">목표</th><th>예상</th><th>달성률</th></tr></thead><tbody>';
   h+=_rptRow('Wontech Total','전사',totalSum,'tot');
-  h+=_rptRow('글로벌영업실','합계',globalSum,'tot');
+  h+=_rptRow('글로벌영업실','합계',globalSum,'tot tot2');
   h+=_rptRow('한국영업','제품',kProd);
   h+=_rptRow('한국영업','소모품',kCons);
   h+=_rptRow('한국영업','합계',kSum,'grp');
