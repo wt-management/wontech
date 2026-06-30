@@ -3792,14 +3792,15 @@ function renderConsHospitals() {
     return {name,h,lc,ldDays,pd,p25,score:(h.y2025||0)*mult,reason:reasons.slice(0,2).join(' · ')||'관리필요'};
   }).sort((a,b)=>b.score-a.score);
   const TOPN=20, top=scored.slice(0,TOPN), rest=scored.slice(TOPN);
-  const riskCard=(x,pri)=>{ const {name,h,lc,ldDays,pd,p25,reason}=x; const safeN=name.replace(/"/g,'&quot;');
+  const riskCard=(x,pri)=>{ const {name,h,lc,ldDays,pd,p25,reason}=x; const safeN=name.replace(/"/g,'&quot;'); const _mgr=(HOSP_INFO[name]||{}).mgr||'';
     const ldStr=ldDays!=null?`상담 ${lc}회 · 마지막 ${ldDays}일전`:`<span style="color:#fca5a5">상담 이력 없음</span>`;
     const lastPurch=pd!=null?`마지막 구매 <strong>${pd}일전</strong>`:'구매이력없음';
     return`<div style="padding:8px 10px;border-bottom:1px solid #fecaca;${pri?'background:#fffbf7;border-left:3px solid #f97316':''}">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
         ${pri?'<span style="flex-shrink:0;font-size:9px;font-weight:800;color:#c2410c;background:#ffedd5;border-radius:4px;padding:1px 5px">우선</span>':''}
         <div style="flex:1;min-width:0;cursor:pointer" data-name="${safeN}" onclick="showHospitalDetail(this.dataset.name)">
-          <span style="font-size:12px;font-weight:700">${gradeBadge(h)}<span style="color:#dc2626;text-decoration:underline dotted">${name}</span>${h.sales?`<span style="font-size:10px;color:#9ca3af;margin-left:5px">${h.sales}</span>`:''}</span>
+          <span style="font-size:12px;font-weight:700">${gradeBadge(h)}<span style="color:#dc2626;text-decoration:underline dotted">${name}</span></span>
+          ${_mgr?`<span style="font-size:10px;font-weight:700;color:#2563eb;margin-left:5px;white-space:nowrap"><i class="bi bi-person-badge"></i> ${_mgr}</span>`:'<span style="font-size:10px;color:#d1d5db;margin-left:5px">담당 미배정</span>'}${h.sales&&h.sales!==_mgr?`<span style="font-size:9px;color:#cbd5e1;margin-left:4px">${h.sales}</span>`:''}
           <span style="font-size:10px;color:#9a3412;margin-left:4px">· ${reason}</span>
         </div>
         <span style="font-size:12px;font-weight:800;color:#dc2626;flex-shrink:0">${fmtW(h.y2025)}</span>
