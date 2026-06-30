@@ -130,7 +130,7 @@ async function handleFile(file){
     const sheets=wb.SheetNames.map(sn=>({name:sn,rows:XLSX.utils.sheet_to_json(wb.Sheets[sn],{defval:null})}));
     log('시트: '+wb.SheetNames.join(', '));
     log('기존 cons_cache 조회(2025 머지·분류 기준)...');
-    const [main,device,intl,sp,ilboAcc]=await Promise.all(['main','device','intl','sales_portfolio','ilbo_acc'].map(async k=>{
+    const [main,device,intl,sp,ilboAcc,ilboPend]=await Promise.all(['main','device','intl','sales_portfolio','ilbo_acc','ilbo_pending'].map(async k=>{
       const {data}=await _sb.from('cons_cache').select('data').eq('key',k).maybeSingle(); return data?data.data:{};
     }));
     log('변환·집계 중...');
@@ -150,6 +150,18 @@ async function handleFile(file){
       BUILT.summary.ilboMonth=_ic; BUILT.summary.ilbo26=Math.round(_it/100/1e6*10)/10; // 억(당월)
       log('일일보고 집계 OK ('+_ic+'월 전사 '+BUILT.summary.ilbo26+'억)');
     }catch(e){ log('일일보고 집계 경고: '+e.message); BUILT.ilbo=null; }
+    // 미반영 자동대조 — 새 회계에 정확히 잡힌 미반영 건 자동 반영처리(제외). 기존 미반영 없으면 건너뜀(안전).
+    BUILT.ilboPending=null;
+    try{
+      const _ipRows=(ilboPend&&ilboPend.rows&&ilboPend.rows.length)?JSON.parse(JSON.stringify(ilboPend.rows)):null;
+      if(_ipRows && BUILT.ilbo){
+        const rec=reconcilePending(_ipRows, BUILT.ilbo);
+        BUILT.ilboPending={rows:_ipRows, updatedAt:(BUILT.ilbo.reportDate||'')};
+        BUILT.summary.pendAuto=rec.auto; BUILT.summary.pendNear=rec.near; BUILT.summary.pendAutoAmt=Math.round(rec.autoAmt/1e8*10)/10;
+        BUILT.summary.pendTotal=_ipRows.length;
+        log('미반영 자동대조: 정확일치 '+rec.auto+'건 반영처리, 확인필요 '+rec.near+'건 (총 '+_ipRows.length+'건)');
+      }
+    }catch(e){ log('미반영 대조 경고: '+e.message); BUILT.ilboPending=null; }
     fi.textContent='📄 '+file.name+' — 변환 완료';
     renderPreview(BUILT.summary);
     log('완료. 검증값 확인 후 확정하세요.');
@@ -167,6 +179,7 @@ function renderPreview(s){
     ['Sales Portfolio (회계 2026)', (s.portfolio26!=null?s.portfolio26+'억':'-'), '제품 포트폴리오 자동집계 (미반영 별도)'],
     ['일일매출일보 ('+(s.ilboMonth||'')+'월 전사)', (s.ilbo26!=null?s.ilbo26+'억':'-'), '일일보고 자동집계 (ilbo_acc)'],
   ];
+  if(s.pendAuto!=null) rows.push(['미반영 자동대조', s.pendAuto+'건 자동 반영처리', '확인필요 '+s.pendNear+'건 · 미반영 관리에서 검토 (전체 '+s.pendTotal+'건)']);
   document.getElementById('sumBody').innerHTML=rows.map(r=>'<tr><td>'+r[0]+'</td><td class="mono">'+r[1]+(r[2]?' <span style="color:#94a3b8;font-weight:400">'+r[2]+'</span>':'')+'</td></tr>').join('');
   const dp=document.getElementById('dermakPill');
   dp.innerHTML = s.dermakInDomestic
@@ -178,6 +191,26 @@ function renderPreview(s){
   document.getElementById('previewBox').style.display='block';
 }
 
+// 미반영(ilbo_pending) ↔ 새 회계(ilbo_acc.lines) 정확일치 대조 → 반영처리(자동 제외). ilbo.html flagMatches 동일 규칙.
+function _upNorm(s){ return String(s==null?'':s).replace(/[\s()（）\[\]·.,_\/\-]/g,'').toLowerCase(); }
+function reconcilePending(rows, ilboAcc){
+  var lines=(ilboAcc&&ilboAcc.lines)||[]; var auto=0,near=0,autoAmt=0;
+  rows.forEach(function(p){
+    if((p.status&&p.status!=='대기')||p.lock) return;
+    var pc=_upNorm(p.customer),pp=_upNorm(p.product),pa=Math.round(Number(p.amount)||0),pq=Number(p.qty)||0;
+    if(!pc) return;
+    var exact=null, cand=0;
+    lines.forEach(function(l){
+      if(_upNorm(l.customer)!==pc) return;
+      var la=Math.round(l.amount), lq=Number(l.qty)||0;
+      if(pp&&_upNorm(l.product)===pp&&la===pa&&(pq===0||lq===pq)){ if(!exact) exact=l; }
+      else if(pa>0&&Math.abs(la-pa)<=pa*0.1){ cand++; }
+    });
+    if(exact){ p.status='반영됨'; p.reflectedDate=(ilboAcc.reportDate||''); p.matchAmt=Math.round(exact.amount); p.matchAuto=true; auto++; autoAmt+=pa; }
+    else if(cand){ near++; }
+  });
+  return {auto:auto, near:near, autoAmt:autoAmt};
+}
 async function doWrite(){
   if(!BUILT){ log('빌드 결과 없음'); return; }
   const btn=document.getElementById('confirmBtn'); btn.disabled=true; btn.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span>적재 중...';
@@ -185,6 +218,7 @@ async function doWrite(){
     const writes=[['main',BUILT.main],['device',BUILT.device],['intl',BUILT.intl]];
     if(BUILT.sp) writes.push(['sales_portfolio',BUILT.sp]);
     if(BUILT.ilbo) writes.push(['ilbo_acc',BUILT.ilbo]);
+    if(BUILT.ilboPending) writes.push(['ilbo_pending',BUILT.ilboPending]);
     for(const [k,data] of writes){
       await _sb.from('cons_cache').delete().eq('key',k);
       const {error}=await _sb.from('cons_cache').insert({key:k,data});
