@@ -2298,6 +2298,10 @@ function _hospRegion(name){
   if(!_KW_SORTED) _KW_SORTED=Object.keys(kw).sort((a,b)=>b.length-a.length);
   const nm=String(name||'');
   for(let i=0;i<_KW_SORTED.length;i++){ if(nm.indexOf(_KW_SORTED[i])>=0) return kw[_KW_SORTED[i]]; }
+  // 회사/유통(주식회사·메디칼·랩 등, 임상기관 아님) → '유통·기타'
+  const base=nm.replace(/[\(（].*$/,'');
+  if(/주식회사|\(주\)|（주\)|^\(의\)|^\(재\)/.test(nm) || (/(메디칼|메디컬|메드|랩스|랩|상사|코리아|홀딩스|컴퍼니|그룹|산업|플랫폼|메디코|바이오|케어)$/.test(base) && !/의원|병원|피부과|외과|내과|비뇨|산부인과|한의원|이비인후과|정형|치과|안과|클리닉|의학과|의료원/.test(nm)))
+    return ['유통·기타',''];
   return null;
 }
 function _grPct(v26,v25){ return v25>0?((v26/v25-1)*100):null; }
@@ -2333,7 +2337,7 @@ function _regSel(){ return {fromM:parseInt(document.getElementById('reg-from-sel
 function renderRegion(){
   const s=_regSel(); const {sido,byName}=_regionAgg(s.fromM,s.toM);
   const entries=Object.entries(sido).filter(([,o])=>o.v26>0||o.v25>0);
-  const named=entries.filter(([x])=>x!=='미분류');
+  const named=entries.filter(([x])=>x!=='미분류'&&x!=='유통·기타');
   const grand=entries.reduce((a,[,o])=>a+o.v26,0)||1;
   const nHosp=Object.values(byName).filter(o=>o.v26>0).length;
   const un=sido['미분류']; const unCnt=un?Object.values(un.hosps).filter(o=>o.v26>0).length:0; const unAmt=un?un.v26:0;
