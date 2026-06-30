@@ -143,6 +143,30 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 }
 /* ── 임원 리포트 공통 ── */
 .muted{color:#94a3b8}
+.exec-narr{font-size:12.5px;color:#cbd5e1;margin-top:9px;line-height:1.5;font-weight:600}
+.exec-narr b.up{color:#86efac;font-weight:800}.exec-narr b.dn{color:#fca5a5;font-weight:800}
+.dual-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:1100px){.dual-grid{grid-template-columns:1fr}}
+.dl-h{font-size:12.5px;font-weight:800;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #f1f5f9}
+.dl-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid #f5f7fa;font-size:12.5px}
+.dl-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.dl-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.dl-d{font-variant-numeric:tabular-nums;font-weight:800;width:78px;text-align:right;flex-shrink:0}
+.dl-sub{font-size:11px;color:#94a3b8;white-space:nowrap}
+.divbar{position:relative;height:7px;background:#f1f5f9;border-radius:4px;width:78px;flex-shrink:0;overflow:hidden}
+.divbar .dz{position:absolute;left:50%;top:0;width:1px;height:100%;background:#cbd5e1;z-index:1}
+.divbar .dfill{position:absolute;top:0;height:100%;border-radius:3px}
+.qfilter-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;background:#fff;border:1px solid #eef2f7;border-radius:12px;padding:10px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px}
+.qfilter-bar .fchip{font-size:11.5px;font-weight:700;color:#94a3b8}
+.qpreset{font-size:12px;font-weight:700;color:#475569;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:5px 11px;cursor:pointer}
+.qpreset.on{background:#0d9488;color:#fff;border-color:#0d9488}
+.heat-cell{padding:5px 9px;border-radius:6px;font-weight:800;font-variant-numeric:tabular-nums;text-align:center;font-size:12px}
+.exec-chip{display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:20px}
+.acc-card{border-left:4px solid #cbd5e1}
+.exec-hero{background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;border-radius:14px;padding:17px 22px;margin-bottom:14px}
+.exec-hero .eh-l{font-size:13px;color:#cbd5e1;font-weight:700}
+.exec-hero .eh-v{font-size:1.95rem;font-weight:800;line-height:1.05;margin:3px 0}
+.exec-ins{font-size:12px;color:#475569;margin-top:10px;background:#fffbeb;border:1px solid #fef3c7;border-radius:9px;padding:9px 13px;line-height:1.5}
 /* P1 목표 달성률 */
 #page-goals .g-hero{display:flex;justify-content:space-between;align-items:center;gap:16px;background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;border-radius:14px;padding:18px 22px;margin-bottom:14px}
 #page-goals .g-hl{font-size:13px;color:#cbd5e1;font-weight:700}
@@ -392,18 +416,20 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 
   <!-- ===== 상세 조회 ===== -->
   <div id="page-query" class="page">
-    <div class="card p-3 mb-3" style="display:flex;flex-wrap:wrap;gap:16px;align-items:center">
-      <div style="display:flex;align-items:center;gap:7px">
-        <span style="font-size:12px;color:#64748b">기간</span>
-        <select id="q-from" class="form-select form-select-sm" style="width:auto" onchange="qState.f=+this.value;syncQ();renderQuery()"></select>
-        <span class="text-muted">~</span>
-        <select id="q-to" class="form-select form-select-sm" style="width:auto" onchange="qState.t=+this.value;syncQ();renderQuery()"></select>
-      </div>
-      <div style="display:flex;align-items:center;gap:7px"><span style="font-size:12px;color:#64748b">채널</span><div class="seg" id="q-ch"></div></div>
-      <div style="display:flex;align-items:center;gap:7px"><span style="font-size:12px;color:#64748b">구분</span><div class="seg" id="q-cat"></div></div>
+    <div class="qfilter-bar">
+      <span class="fchip">기간</span>
+      <select id="q-from" class="form-select form-select-sm" style="width:auto" onchange="qState.f=+this.value;syncQ();renderQuery()"></select>
+      <span class="text-muted">~</span>
+      <select id="q-to" class="form-select form-select-sm" style="width:auto" onchange="qState.t=+this.value;syncQ();renderQuery()"></select>
+      <span style="width:1px;height:18px;background:#e2e8f0;margin:0 3px"></span>
+      <span class="fchip">채널</span><div class="seg" id="q-ch"></div>
+      <span style="width:1px;height:18px;background:#e2e8f0;margin:0 3px"></span>
+      <span class="fchip">구분</span><div class="seg" id="q-cat"></div>
     </div>
 
+    <div class="exec-hero" id="q-head"></div>
     <div class="row g-2 mb-3" id="q-kpi"></div>
+    <div class="card p-3 mb-3"><div style="font-size:13.5px;font-weight:800;margin-bottom:10px"><i class="bi bi-arrow-left-right me-1" style="color:#4f46e5"></i>성장 ↔ 하락 <span style="font-weight:500;color:#94a3b8;font-size:11.5px">· 전년 동기 대비 증감액 상위</span></div><div id="q-dual"></div></div>
 
     <div class="card">
       <div style="display:flex;gap:6px;padding:6px 12px 0;border-bottom:1px solid #f1f5f9">
@@ -416,6 +442,7 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
       </div>
       <div id="q-rows"></div>
     </div>
+    <div class="exec-ins" id="q-insight"></div>
     <div style="font-size:11px;color:#94a3b8;margin-top:8px"><i class="bi bi-info-circle me-1"></i>국내 제품·담당자는 월 분포 데이터가 없어 기간 비중으로 환산 표시됩니다. 월별 합계·해외 항목은 실제 월 데이터 기준입니다.</div>
   </div>
 
@@ -489,8 +516,10 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 
   <!-- ===== 담당자 리더보드 ===== -->
   <div id="page-leaderboard" class="page">
+    <div class="exec-hero" id="lb-head"></div>
+    <div id="lb-mvp" class="mb-3"></div>
     <div class="row g-3">
-      <div class="col-lg-7"><div class="card p-3"><div style="font-size:13.5px;font-weight:800;margin-bottom:8px"><i class="bi bi-person-badge me-1" style="color:#7c3aed"></i>국내 제품 담당자</div><div id="lb-dom"></div></div></div>
+      <div class="col-lg-7"><div class="card p-3"><div style="font-size:13.5px;font-weight:800;margin-bottom:8px"><i class="bi bi-person-badge me-1" style="color:#7c3aed"></i>국내 제품 담당자 <span style="font-weight:500;color:#94a3b8;font-size:11px">· 증감액 순</span></div><div id="lb-dom"></div></div></div>
       <div class="col-lg-5"><div class="card p-3"><div style="font-size:13.5px;font-weight:800;margin-bottom:8px"><i class="bi bi-globe-americas me-1" style="color:#0d9488"></i>해외 담당자</div><div id="lb-intl"></div></div></div>
     </div>
     <div class="muted" style="font-size:11px;margin-top:8px">매출=1~당월 누적(국내 제품+해외). 대수는 국내 제품 기준. ※국내 소모품 담당자 데이터는 회계에 담당자 매핑이 없어 제외.</div>
@@ -1069,25 +1098,38 @@ function renderQuery(){
 
   const tot=items.reduce((s,x)=>s+x.val,0), totPrev=items.reduce((s,x)=>s+(x.prev||0),0);
   const chName=qState.ch==='dom'?'국내':qState.ch==='intl'?'해외':'전사';
+  const totDelta=tot-totPrev, totY=pct(tot,totPrev);
+  const G=items.map(x=>Object.assign({},x,{d:x.val-(x.prev||0),y:pct(x.val,x.prev)}));
+  const grewN=G.filter(x=>x.d>0).length, surge=G.filter(x=>x.y!=null&&x.y>=30).length, plunge=G.filter(x=>x.y!=null&&x.y<=-20).length;
+  const ratio=items.length?Math.round(grewN/items.length*100):0, totGrowth=G.filter(x=>x.d>0).reduce((s,x)=>s+x.d,0)||1;
+  const tabLbl=qState.tab==='prod'?'제품별':qState.tab==='geo'?'지역별':'담당자별';
+  document.getElementById('q-head').innerHTML='<div class="eh-l">'+chName+' '+tabLbl+' <span style="font-weight:500;color:#94a3b8">· '+qState.f+'~'+qState.t+'월 누적</span></div>'+
+    '<div class="eh-v">'+fmtW(tot)+' <span style="font-size:1rem">'+(totY===null?'':badge(totY))+'</span> <span style="font-size:1rem;color:'+(totDelta>=0?'#86efac':'#fca5a5')+'">'+fmtD(totDelta)+'</span></div>'+
+    '<div class="eh-l" style="color:#94a3b8;font-weight:500">전년 동기 '+fmtW(totPrev)+'</div>'+
+    execNarr(G.map(x=>({name:x.name,delta:x.d,val:x.val,prev:x.prev})));
   document.getElementById('q-kpi').innerHTML=[
-    {l:chName+' 합계',v:fmtW(tot),c:'#0f172a'},
-    {l:'전년 동기',v:fmtW(totPrev),c:'#64748b'},
-    {l:'YoY',v:arrow(pct(tot,totPrev)),c:pct(tot,totPrev)>=0?'#16a34a':'#dc2626'},
+    {l:'전년 동기 대비 순증감',v:fmtD(totDelta),c:_yoyCol(totY)},
+    {l:'급성장 / 급락 항목',v:'<span style="color:#15803d">'+surge+'</span> / <span style="color:#b91c1c">'+plunge+'</span>',c:'#0f172a'},
+    {l:'성장 항목 비율',v:ratio+'%',c:ratio>=50?'#16a34a':'#f59e0b'},
     {l:'조회 항목',v:items.length+'개',c:'#7c3aed'},
-  ].map(c=>'<div class="col-6 col-md-3"><div class="kpi-card" style="padding:12px 14px"><div class="kpi-label">'+c.l+'</div><div class="kpi-value" style="font-size:1.15rem;color:'+c.c+'">'+c.v+'</div></div></div>').join('');
-
-  const max=items.length?Math.max(...items.map(x=>x.val)):1;
-  document.getElementById('q-rows').innerHTML=items.map((x,idx)=>{
-    const y=pct(x.val,x.prev);
-    const bar='<div style="height:5px;background:#f1f5f9;border-radius:3px;margin-top:4px;overflow:hidden"><div style="width:'+(max>0?x.val/max*100:0).toFixed(1)+'%;height:100%;background:'+(x.color||'#0f766e')+'"></div></div>';
+  ].map(c=>'<div class="col-6 col-md-3"><div class="kpi-card acc-card" style="padding:13px 15px;border-left-color:'+c.c+'"><div class="kpi-label">'+c.l+'</div><div class="kpi-value" style="font-size:1.2rem;color:'+c.c+'">'+c.v+'</div></div></div>').join('');
+  const maxAbs=Math.max(1,...G.map(x=>Math.abs(x.d)));
+  const top=G.filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,5), bot=G.filter(x=>x.d<0).sort((a,b)=>a.d-b.d).slice(0,5);
+  const drow=x=>'<div class="dl-row"><span class="dl-dot" style="background:'+_yoyCol(x.y)+'"></span><span class="dl-name">'+x.name+'</span>'+divBar(x.d,maxAbs)+'<span class="dl-d" style="color:'+_yoyCol(x.y)+'">'+fmtD(x.d)+'</span><span class="dl-sub">'+(x.y===null?'신규':arrow(x.y))+'</span></div>';
+  document.getElementById('q-dual').innerHTML=dualList(top,bot,drow);
+  document.getElementById('q-rows').innerHTML=G.map((x,idx)=>{
+    const contrib=x.d>0?Math.round(x.d/totGrowth*100):0;
     const row='<div class="drow" onclick="qToggle('+idx+')">'+
-      '<span><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:'+(x.color||'#0f766e')+';margin-right:6px"></span>'+x.name+(x.tag?' <span style="font-size:10px;color:#94a3b8">'+x.tag+'</span>':'')+bar+'</span>'+
+      '<span><span class="dl-dot" style="display:inline-block;margin-right:6px;background:'+_yoyCol(x.y)+'"></span>'+x.name+(x.tag?' <span style="font-size:10px;color:#94a3b8">'+x.tag+'</span>':'')+
+        '<div style="display:flex;align-items:center;gap:8px;margin-top:5px">'+divBar(x.d,maxAbs)+(x.d>0?'<span style="font-size:10px;color:#94a3b8">성장기여 '+contrib+'%</span>':'')+'</div></span>'+
       '<span style="text-align:right;font-weight:700">'+fmtW(x.val)+'</span>'+
       '<span style="text-align:right;color:#64748b">'+fmtW(x.prev||0)+'</span>'+
-      '<span style="text-align:right;color:'+(y===null?'#94a3b8':y>=0?'#16a34a':'#dc2626')+'">'+arrow(y)+'</span>'+
+      '<span style="text-align:right;color:'+_yoyCol(x.y)+';font-weight:700">'+(x.y===null?'신규':arrow(x.y))+'</span>'+
     '</div>';
     return row+(qState.open[idx]?'<div class="det">'+(x.detail||'상세 없음')+'</div>':'');
   }).join('')||'<div class="text-muted" style="font-size:12px;padding:14px">데이터 없음</div>';
+  const top3=G.filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,3).reduce((s,x)=>s+x.d,0);
+  document.getElementById('q-insight').innerHTML='<i class="bi bi-lightbulb-fill me-1" style="color:#f59e0b"></i>조회 '+items.length+'개 중 <b>'+grewN+'개 성장</b> · 성장의 <b>'+Math.round(top3/totGrowth*100)+'%</b>가 상위 3개에서 발생'+(bot.length?(' · <b style="color:#dc2626">'+bot[0].name+(bot[1]?' · '+bot[1].name:'')+'</b> 역성장 → 점검'):'');
   _qItems=items;
 }
 let _qItems=[];
@@ -1215,7 +1257,7 @@ function _repAcc(reps,moRef,f,t){
   const sc=_scale(moRef,f,t);
   return Object.entries(reps).map(([n,r])=>{
     const v=r&&r.m?sumMo(r.m,f,t):((r&&r.total||0)*sc);
-    return {n,v,prods:(r&&r.prods)||{}};
+    return {n:_repBase(n),v,prods:(r&&r.prods)||{}};
   });
 }
 function _mergeProds(dst,src){ if(!src) return; for(const k in src) dst[k]=(dst[k]||0)+Number(src[k]||0); }
@@ -1228,6 +1270,33 @@ function miniBar(label,v,max,col){
 const EXEC_REGS=['동남아','중화','중동','유럽','미주','태국법인','미국법인','일본법인'];
 function _execT(){ return _curMonth(); }
 const _achCol=r=> r==null?'#94a3b8' : r>=100?'#16a34a' : r>=80?'#0d9488' : r>=60?'#f59e0b':'#dc2626';
+// 성장률 RAG 색 (급성장~급락)
+const _yoyCol=v=> v==null?'#94a3b8' : v>=30?'#15803d' : v>=5?'#16a34a' : v>=-5?'#94a3b8' : v>=-20?'#f59e0b':'#b91c1c';
+// 증감액 포맷(부호+억) — fmtW는 양수만 처리 → 음수는 절대값으로
+function fmtD(v){ return (v<0?'-':'+')+fmtW(Math.abs(Number(v)||0)); }
+// 담당자명 코드접두 제거("244.김한결"→"김한결") — 연도별 키 불일치 매칭/병합용
+function _repBase(n){ return String(n||'').replace(/^\s*\d+\.\s*/,'').trim(); }
+// 0기준 발산막대(증감)
+function divBar(delta,maxAbs){ const w=maxAbs>0?Math.min(Math.abs(delta)/maxAbs*50,50):0, pos=delta>=0;
+  return '<div class="divbar"><div class="dz"></div><div class="dfill" style="'+(pos?'left:50%':'right:50%')+';width:'+w.toFixed(1)+'%;background:'+(pos?'#16a34a':'#dc2626')+'"></div></div>'; }
+// 승자/패자 2열 듀얼리스트
+function dualList(top,bottom,renderRow,titles){
+  titles=titles||['🟢 성장 Top','🔴 하락 Top'];
+  const col=(t,arr,c)=>'<div><div class="dl-h" style="color:'+c+'">'+t+'</div>'+(arr.length?arr.map(renderRow).join(''):'<div class="muted" style="font-size:12px;padding:10px 4px">해당 없음</div>')+'</div>';
+  return '<div class="dual-grid">'+col(titles[0],top,'#15803d')+col(titles[1],bottom,'#b91c1c')+'</div>';
+}
+// 헤드라인 내러티브(승부처/위협 1줄) — items에 {name,val,prev} 또는 {label,delta}
+function execNarr(items,unit){
+  unit=unit||'';
+  const arr=items.map(x=>({n:x.name||x.label,d:(x.delta!=null?x.delta:(x.val||0)-(x.prev||0)),v:x.val,p:x.prev})).filter(x=>x.n);
+  if(!arr.length) return '';
+  const up=arr.slice().sort((a,b)=>b.d-a.d)[0], dn=arr.slice().sort((a,b)=>a.d-b.d)[0];
+  const g=x=>x.p!=null?arrow(pct(x.v,x.p)):'';
+  let h='';
+  if(up&&up.d>0) h+='<b class="up">'+up.n+' '+fmtD(up.d)+(g(up)?' '+g(up):'')+'</b> 견인';
+  if(dn&&dn.d<0) h+=(h?' · ':'')+'<b class="dn">'+dn.n+' '+fmtD(dn.d)+(g(dn)?' '+g(dn):'')+'</b> 부진';
+  return h?('<div class="exec-narr">'+h+'</div>'):'';
+}
 const _num=v=>Math.round(Number(v)||0).toLocaleString();
 
 // ── P1 목표 달성률 종합 ──
@@ -1330,21 +1399,52 @@ function renderQuarters(){
 // ── P4 담당자·팀 리더보드 ──
 function renderLeaderboard(){
   const f=1,t=_execT();
-  const rowsD=Object.entries(DEVICE.reps||{}).map(([n,r])=>{
-    const v=sumMo(r.m2026,f,t)||r.y2026||0, pv=sumMo(r.m2025,f,t)||r.y2025||0;
-    const tp=Object.entries(r.prods2026||{}).sort((a,b)=>b[1]-a[1])[0];
-    return {n,team:'국내제품',v,yoy:pct(v,pv),cust:r.cust2026||0,qty:r.qty2026||0,top:tp?tp[0]:''};
+  // 연도별 담당자 키 불일치("118.welo"↔"welo") 보정: base명으로 병합해 정확한 YoY 산출
+  const dm={};
+  Object.entries(DEVICE.reps||{}).forEach(([n,r])=>{ const b=_repBase(n); if(!b) return;
+    const o=dm[b]||(dm[b]={n:b,m26:{},m25:{},y26:0,y25:0,cust:0,cust25:0,qty:0,prods:{}});
+    for(const k in(r.m2026||{})) o.m26[k]=(o.m26[k]||0)+(+r.m2026[k]||0);
+    for(const k in(r.m2025||{})) o.m25[k]=(o.m25[k]||0)+(+r.m2025[k]||0);
+    o.y26+=r.y2026||0; o.y25+=r.y2025||0; o.cust+=r.cust2026||0; o.cust25+=r.cust2025||0; o.qty+=r.qty2026||0;
+    for(const k in(r.prods2026||{})) o.prods[k]=(o.prods[k]||0)+(+r.prods2026[k]||0);
   });
-  const rowsI=Object.entries(INTL.reps||{}).map(([n,r])=>{
-    const v=sumMo(r.m,f,t)||r.total||0; const i25=(INTL.data2025||{}).reps||{}; const pr=i25[n]; const pv=pr?(sumMo(pr.m,f,t)||pr.total||0):0;
-    const tp=Object.entries(r.prods||{}).sort((a,b)=>b[1]-a[1])[0];
-    return {n,team:'해외',v,yoy:pct(v,pv),cust:r.clients||0,qty:null,top:tp?tp[0]:'',ctry:r.countries||0};
+  const rowsD=Object.values(dm).map(o=>{ const v=sumMo(o.m26,f,t)||o.y26||0, pv=sumMo(o.m25,f,t)||o.y25||0;
+    const tp=Object.entries(o.prods).sort((a,b)=>b[1]-a[1])[0];
+    return {n:o.n,team:'국내',v,pv,d:v-pv,yoy:pct(v,pv),cust:o.cust,cust25:o.cust25,qty:o.qty,top:tp?tp[0]:''};
   });
-  const mk=(rows,hasQty)=>{ rows=rows.filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
-    const head='<tr><th>#</th><th>담당자</th><th class="r">매출</th><th class="r">전년比</th><th class="r">거래처</th>'+(hasQty?'<th class="r">대수</th>':'<th class="r">담당국가</th>')+'<th>주력제품</th></tr>';
-    const body=rows.map((x,i)=>'<tr><td class="muted">'+(i+1)+'</td><td style="font-weight:700">'+x.n+'</td><td class="r" style="font-weight:700">'+fmtW(x.v)+'</td>'+
-      '<td class="r">'+(x.yoy===null?'-':badge(x.yoy))+'</td><td class="r">'+x.cust+'개</td>'+
-      (hasQty?'<td class="r">'+_num(x.qty)+'대</td>':'<td class="r">'+(x.ctry||0)+'개국</td>')+'<td class="muted" style="font-size:11px">'+(x.top||'')+'</td></tr>').join('');
+  const im={};
+  const iadd=(reps,yr)=>{ Object.entries(reps||{}).forEach(([n,r])=>{ const b=_repBase(n); if(!b) return;
+    const o=im[b]||(im[b]={n:b,m26:{},m25:{},tot26:0,tot25:0,cust:0,cust25:0,ctry:0,prods:{}});
+    const mt=yr===26?'m26':'m25';
+    for(const k in(r.m||{})) o[mt][k]=(o[mt][k]||0)+(+r.m[k]||0);
+    if(yr===26){ o.tot26+=r.total||0; o.cust+=r.clients||0; o.ctry=Math.max(o.ctry,r.countries||0); for(const k in(r.prods||{})) o.prods[k]=(o.prods[k]||0)+(+r.prods[k]||0); }
+    else { o.tot25+=r.total||0; o.cust25+=r.clients||0; }
+  }); };
+  iadd(INTL.reps,26); iadd((INTL.data2025||{}).reps,25);
+  const rowsI=Object.values(im).map(o=>{ const v=sumMo(o.m26,f,t)||o.tot26||0, pv=sumMo(o.m25,f,t)||o.tot25||0;
+    const tp=Object.entries(o.prods).sort((a,b)=>b[1]-a[1])[0];
+    return {n:o.n,team:'해외',v,pv,d:v-pv,yoy:pct(v,pv),cust:o.cust,cust25:o.cust25,qty:null,top:tp?tp[0]:'',ctry:o.ctry};
+  });
+  const all=rowsD.concat(rowsI).filter(x=>x.v>0);
+  const grew=all.filter(x=>x.yoy!=null&&x.yoy>=5).length, decl=all.filter(x=>x.yoy!=null&&x.yoy<=-5).length;
+  const mvp=all.slice().sort((a,b)=>b.d-a.d)[0], watch=all.slice().sort((a,b)=>a.d-b.d)[0];
+  document.getElementById('lb-head').innerHTML='<div class="eh-l">담당자 성과 <span style="font-weight:500;color:#94a3b8">· 1~'+t+'월 누적 (국내 제품 + 해외)</span></div>'+
+    '<div class="eh-v">'+all.length+'명 <span style="font-size:1rem;color:#86efac">↑성장 '+grew+'</span> <span style="font-size:1rem;color:#fca5a5">↓역성장 '+decl+'</span></div>'+
+    execNarr(all.map(x=>({name:x.n,delta:x.d,val:x.v,prev:x.pv})));
+  const card=(x,kind)=>{ if(!x) return '<div class="card p-3"><div class="muted" style="padding:6px">해당 없음</div></div>'; const col=kind==='mvp'?'#16a34a':'#dc2626', cd=x.cust-x.cust25;
+    return '<div class="card acc-card p-3" style="border-left-color:'+col+'"><div style="font-size:11px;font-weight:800;color:'+col+'">'+(kind==='mvp'?'🏆 성장 MVP':'⚠️ 점검 대상')+'</div>'+
+      '<div style="font-size:1.3rem;font-weight:800;margin:3px 0">'+x.n+' <span style="font-size:11px;color:#94a3b8">'+x.team+'</span></div>'+
+      '<div style="font-size:12.5px">매출 '+fmtW(x.v)+' · <b style="color:'+col+'">'+fmtD(x.d)+'</b> '+(x.yoy===null?'(신규)':badge(x.yoy))+'</div>'+
+      '<div style="font-size:11.5px;color:#64748b;margin-top:3px">거래처 '+x.cust+'개 ('+(cd>=0?'+':'')+cd+') · 주력 '+(x.top||'-')+'</div></div>'; };
+  document.getElementById('lb-mvp').innerHTML='<div class="dual-grid">'+card(mvp,'mvp')+card(watch,'watch')+'</div>';
+  const mk=(rows,hasQty)=>{ rows=rows.filter(x=>x.v>0).sort((a,b)=>b.d-a.d); const maxAbs=Math.max(1,...rows.map(x=>Math.abs(x.d)));
+    const head='<tr><th></th><th>담당자</th><th class="r">매출</th><th class="r">전년比(Δ)</th><th class="r">거래처</th>'+(hasQty?'<th class="r">대수</th>':'<th class="r">담당국가</th>')+'<th>주력제품</th></tr>';
+    const body=rows.map(x=>{ const cd=x.cust-x.cust25;
+      return '<tr><td style="width:14px"><span class="dl-dot" style="display:inline-block;background:'+_yoyCol(x.yoy)+'"></span></td><td style="font-weight:700">'+x.n+'</td>'+
+      '<td class="r" style="font-weight:700">'+fmtW(x.v)+'</td>'+
+      '<td class="r"><span style="display:inline-flex;align-items:center;gap:6px">'+divBar(x.d,maxAbs)+'<span style="color:'+_yoyCol(x.yoy)+';font-weight:700;min-width:48px;text-align:right">'+(x.yoy===null?'신규':arrow(x.yoy))+'</span></span></td>'+
+      '<td class="r">'+x.cust+'개'+(cd?' <span style="font-size:10px;color:'+(cd>0?'#16a34a':'#dc2626')+'">'+(cd>0?'+':'')+cd+'</span>':'')+'</td>'+
+      (hasQty?'<td class="r">'+_num(x.qty)+'대</td>':'<td class="r">'+(x.ctry||0)+'개국</td>')+'<td class="muted" style="font-size:11px">'+(x.top||'')+'</td></tr>'; }).join('');
     return '<table class="lb-table">'+head+body+'</table>'; };
   document.getElementById('lb-dom').innerHTML=mk(rowsD,true);
   document.getElementById('lb-intl').innerHTML=mk(rowsI,false);
