@@ -1492,9 +1492,9 @@ async function _loadConsCacheCached(key, target) {
   const LS_DATA = 'wt_cc_'+key, LS_VER = 'wt_cc_'+key+'_v';
   let remoteVer = '';
   try {
-    // 1) 가벼운 버전 조회: data 전체(~MB) 대신 updatedAt 값만(~수십 바이트)
-    const {data: meta} = await _sb.from('cons_cache').select('v:data->>updatedAt').eq('key', key).single();
-    remoteVer = meta?.v || '';
+    // 1) 가벼운 버전 조회: data 전체(~MB) 대신 rev(내용해시)·updatedAt 값만(~수십 바이트). rev 우선(같은날 재기록도 감지)
+    const {data: meta} = await _sb.from('cons_cache').select('v:data->>rev, u:data->>updatedAt').eq('key', key).single();
+    remoteVer = (meta?.v || meta?.u) || '';
   } catch(e) { remoteVer = ''; }   // 버전 조회 실패 → 전체 다운로드로 진행
   try {
     let blob = null;
@@ -1507,7 +1507,7 @@ async function _loadConsCacheCached(key, target) {
       // 3) 캐시 없음/구버전 → 전체 1회 다운로드 후 캐시에 저장
       const {data: cd} = await _sb.from('cons_cache').select('data').eq('key', key).single();
       blob = cd?.data || null;
-      if(blob) { try { localStorage.setItem(LS_DATA, JSON.stringify(blob)); localStorage.setItem(LS_VER, blob.updatedAt||remoteVer||''); } catch(e){} }  // 용량 초과 시 캐시 생략(앱은 정상)
+      if(blob) { try { localStorage.setItem(LS_DATA, JSON.stringify(blob)); localStorage.setItem(LS_VER, blob.rev||blob.updatedAt||remoteVer||''); } catch(e){} }  // 용량 초과 시 캐시 생략(앱은 정상)
     }
     if(blob && (blob.updatedAt||'') >= (target.updatedAt||'')) Object.assign(target, blob);
   } catch(e) {

@@ -282,6 +282,9 @@ function build(sheets, existing){
     dermakInDomestic:dermak,
     monConsT:a26.monthly, monDevT:d26.monthly2026, monIntlT:i26.monthly,
     rows26:rows26.length };
+  // rev=내용해시 → 같은날 재기록해도 클라이언트 캐시 자동갱신(updatedAt 표시용 유지)
+  var _hash=function(s){ var h=5381,i=s.length; while(i) h=(h*33)^s.charCodeAt(--i); return (h>>>0).toString(36); };
+  [CONS,DEVICE,INTL].forEach(function(o){ delete o.rev; o.rev=updatedAt+'#'+_hash(JSON.stringify(o)); });
   return {main:CONS, device:DEVICE, intl:INTL, summary:summary};
 }
 
