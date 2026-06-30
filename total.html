@@ -89,9 +89,9 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .rpt-table th,.rpt-table td{padding:7px 11px;text-align:right;border-bottom:1px solid #eef2f6}
 .rpt-table thead th{background:#f8fafc;color:#475569;text-align:center;font-weight:700;font-size:11px;border-bottom:1px solid #e2e8f0}
 .rpt-table thead tr:first-child th{padding:8px 11px;font-size:11.5px;letter-spacing:.02em}
-.rpt-table thead th.grp-q{background:#eef2ff;color:#4338ca}
-.rpt-table thead th.grp-h{background:#e0e7ff;color:#3730a3}
-.rpt-table thead th.grp-m{background:#ccfbf1;color:#0f766e}
+.rpt-table thead th.grp-q{background:#f3f5f8;color:#475569}
+.rpt-table thead th.grp-h{background:#eef1f5;color:#475569}
+.rpt-table thead th.grp-m{background:#f3f5f8;color:#475569}
 .rpt-table td.lbl,.rpt-table th.lbl{text-align:left;font-weight:600;position:sticky;left:0;background:#fff;z-index:1}
 .rpt-table thead th.lbl{background:#f8fafc}
 .rpt-table td.dept{color:#0f172a;font-weight:700}
@@ -103,22 +103,22 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .rpt-table tr.grp td,.rpt-table tr.grp td.lbl{background:#f1f5f9;font-weight:700}
 .rpt-table tr.grp:hover td{background:#e9eef5}
 .rpt-table tr.tot td,.rpt-table tr.tot td.lbl{background:#1e293b;color:#fff;font-weight:800}
-.rpt-table tr.tot.tot2 td,.rpt-table tr.tot.tot2 td.lbl{background:#4f46e5}
+.rpt-table tr.tot.tot2 td,.rpt-table tr.tot.tot2 td.lbl{background:#475569}
 .rpt-table tr.tot td.dept,.rpt-table tr.tot td.sub,.rpt-table tr.tot td.rpt-act{color:#fff}
 .rpt-table tr.tot td.rpt-tgt{color:rgba(255,255,255,.6)}
 .rpt-table tr.tot .rpt-na{color:rgba(255,255,255,.45)}
 .rpt-table tr.tot:hover td{filter:brightness(1.1)}
 .rpt-table .gsep{border-left:2px solid #e5e9f0}
 .rpt-table tr.tot .gsep{border-left:2px solid rgba(255,255,255,.22)}
-.rpt-ach{display:inline-block;min-width:48px;padding:2px 8px;border-radius:20px;font-weight:700;font-size:11px;text-align:center}
-.rpt-ach-low{background:#fee2e2;color:#b91c1c}
-.rpt-ach-mid{background:#fef3c7;color:#b45309}
-.rpt-ach-ok{background:#e0f2fe;color:#0369a1}
-.rpt-ach-over{background:#dcfce7;color:#15803d}
-.rpt-ach-na{background:transparent;color:#cbd5e1;min-width:0}
-.rpt-table tr.tot .rpt-ach{background:rgba(255,255,255,.2);color:#fff}
-.rpt-grw-up{color:#16a34a;font-weight:700}
-.rpt-grw-dn{color:#dc2626;font-weight:700}
+.rpt-ach{display:inline-block;font-weight:600;font-size:11.5px}
+.rpt-ach-low{color:#b91c1c}
+.rpt-ach-mid{color:#b45309}
+.rpt-ach-ok{color:#64748b}
+.rpt-ach-over{color:#15803d}
+.rpt-ach-na{color:#cbd5e1}
+.rpt-table tr.tot .rpt-ach{color:#fff}
+.rpt-grw-up{color:#15803d;font-weight:600}
+.rpt-grw-dn{color:#b91c1c;font-weight:600}
 .rpt-grw-na{color:#cbd5e1}
 .rpt-table tr.tot .rpt-grw-up{color:#86efac}.rpt-table tr.tot .rpt-grw-dn{color:#fca5a5}.rpt-table tr.tot .rpt-grw-na{color:rgba(255,255,255,.5)}
 @media(max-width:680px){.kpi-card.kpi-dual{flex-direction:column;gap:8px}.kpi-side{border-left:none;border-top:1px dashed #e5e7eb;padding-left:0;padding-top:8px;text-align:left}.tm-wrap{grid-template-columns:1fr}}
@@ -126,14 +126,16 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 #login-screen{position:fixed;inset:0;background:#0f172a;display:none;align-items:center;justify-content:center;z-index:200}
 .login-box{background:#fff;border-radius:16px;padding:34px 30px;width:340px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
 @media(max-width:820px){.sidebar{display:none}.main{margin-left:0;padding:14px}}
-/* ── 수출의 탑 PDF 인쇄 ── */
+/* ── 전역 PDF 추출 + 인쇄 ── */
+#pdf-fab{position:fixed;bottom:18px;right:18px;z-index:90;background:#475569;color:#fff;border:0;border-radius:22px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(15,23,42,.28)}
+#pdf-fab:hover{background:#334155}
 @media print{
   @page{size:A4 landscape;margin:9mm}
   body{background:#fff}
   .sidebar{display:none!important}
   .main{margin-left:0!important;padding:0!important}
   #site-dropdown,#page-subtitle{display:none!important}
-  #page-export .ex-bar .btn,#ex-pdf-btn{display:none!important}
+  #page-export .ex-bar .btn,#pdf-fab,#ex-edit-modal,#ovDetailModal,#login-screen,#app-loading{display:none!important}
   #page-export .ex-bar input{border:none;background:transparent;padding:0;width:auto}
   .card,.ex-kpi,#page-export .ex-etbl,#page-export .ex-insight,#page-export .ex-kita .k{break-inside:avoid}
   #page-export .row{display:flex!important}
@@ -439,7 +441,6 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
       <div class="fld"><label>적용 환율 ₩/$</label><input id="ex-rate" type="number" step="1" oninput="exOnRate()"></div>
       <div class="fld"><label>현 차수</label><span id="ex-cyc-name" style="font-size:13px;font-weight:800;color:#0d9488"></span></div>
       <button class="btn btn-sm" style="background:#0d9488;color:#fff;font-weight:700;font-size:12px" onclick="exOpenEdit()"><i class="bi bi-pencil-square me-1"></i>데이터 편집</button>
-      <button id="ex-pdf-btn" class="btn btn-sm" style="background:#475569;color:#fff;font-weight:700;font-size:12px" onclick="exPrint()"><i class="bi bi-filetype-pdf me-1"></i>PDF 추출</button>
       <div class="prov">당월(<span id="ex-prov-month" style="font-weight:700"></span>) 잠정 <b id="ex-prov-usd">$0</b> <span id="ex-prov-calc" style="font-size:11px;color:#94a3b8"></span></div>
     </div>
 
@@ -732,6 +733,7 @@ function showPage(name,el){
   if(name==='units') renderUnits();
   if(name==='leaderboard') renderLeaderboard();
   if(name==='customers') renderCustomers();
+  try{ sessionStorage.setItem('total_page', name); }catch(_){}
 }
 
 // ── 전사 종합 ────────────────────────────────────────────
@@ -950,13 +952,19 @@ function _pendForReport(){   // 국내(제품/소모품) + 해외(지역별) 미
   });
   return {kr,intl};
 }
+function _rptPeriods(){
+  // 시간 흐름에 따라 분기·반기·월 자동 변경 (회계연도 2026, _curMonth=진행월)
+  const mo=_curMonth(), Q=Math.ceil(mo/3), fh=mo<=6;
+  return {mo,Q,qf:(Q-1)*3+1,qt:Q*3,hf:fh?1:7,ht:fh?6:12,qLbl:Q+'분기',hLbl:fh?'상반기':'하반기',mLbl:'2026년 '+mo+'월'};
+}
 function _rowVals(act,pend,prev,dept,item){
   const sm=(o,f,t)=>{let s=0;for(let m=f;m<=t;m++)s+=Number((o&&o[m])||0);return s;};
   const per=(f,t)=>{
     const tg=_tgt(dept,item,f,t), ac=sm(act,f,t)+sm(pend,f,t), pv=sm(prev,f,t);
     return {tgt:tg, act:ac, prev:pv, ach:tg>0?ac/tg*100:null, grw:pv>0?(ac/pv-1)*100:null};
   };
-  return {q2:per(4,6), h1:per(1,6), m6:per(6,6)};
+  const _P=_rptPeriods();
+  return {q2:per(_P.qf,_P.qt), h1:per(_P.hf,_P.ht), m6:per(_P.mo,_P.mo)};
 }
 function _sumV(list){
   const z=()=>({tgt:0,act:0,prev:0}), o={q2:z(),h1:z(),m6:z()};
@@ -993,8 +1001,9 @@ function renderReport(){
   const ovSum=_sumV([regSum,corpSum]);              // 해외영업 합계
   const globalSum=_sumV([kSum,ovSum]);              // 글로벌영업실 합계 (서지컬 제외)
   const totalSum=globalSum;                          // Wontech Total (B2C·고객만족 제외 — 현재 동일)
+  const P=_rptPeriods();
   let h='<thead><tr><th class="lbl" rowspan="2">사업부</th><th class="lbl" rowspan="2">구분</th>'+
-    '<th class="gsep grp-q" colspan="4">2분기</th><th class="gsep grp-h" colspan="4">상반기</th><th class="gsep grp-m" colspan="3">2026년 6월</th></tr>'+
+    '<th class="gsep grp-q" colspan="4">'+P.qLbl+'</th><th class="gsep grp-h" colspan="4">'+P.hLbl+'</th><th class="gsep grp-m" colspan="3">'+P.mLbl+'</th></tr>'+
     '<tr><th class="gsep">목표</th><th>실적</th><th>달성률</th><th>성장률</th>'+
     '<th class="gsep">목표</th><th>실적</th><th>달성률</th><th>성장률</th>'+
     '<th class="gsep">목표</th><th>예상</th><th>달성률</th></tr></thead><tbody>';
@@ -1517,9 +1526,9 @@ function exRenderYearly(){
   draw('ex-yacc',acc,'#f0a868'); draw('ex-yexp',exp,'#2a8a8a');
   const ins=document.getElementById('ex-insight'); if(ins) ins.innerHTML=y.insight?('<b>Insight</b>'+y.insight):'';
 }
-function exPrint(){
-  var ot=document.title;
-  document.title='원텍 수출의 탑 진행현황';
+function printPDF(){
+  var ot=document.title, pt=document.getElementById('page-title');
+  document.title='원텍 '+(pt?pt.textContent:'전사 종합');
   var restore=function(){ document.title=ot; window.removeEventListener('afterprint',restore); };
   window.addEventListener('afterprint',restore);
   window.print();
@@ -1575,17 +1584,25 @@ document.addEventListener('click',function(e){ const m=document.getElementById('
   }
   const {data:{session}}=await _sb.auth.getSession();
   document.getElementById('app-loading').style.display='none';
-  if(session){ await afterLogin(session.user); if(_initPage==='export') showPage('export',document.getElementById('nav-export')); }
+  if(session){
+    await afterLogin(session.user);
+    const _nav=(performance.getEntriesByType('navigation')[0]||{}).type;   // reload=새로고침 / navigate=신규진입
+    let _t=_initPage||((_nav==='reload')?(sessionStorage.getItem('total_page')||''):'');   // #p(외부) 우선·새로고침이면 머문 페이지·신규는 첫메뉴
+    if(_t && _t!=='overview' && document.getElementById('page-'+_t)) showPage(_t, document.getElementById('nav-'+_t));
+  }
   else location.href='https://wt-management.github.io/wontech/';
 })();
 
-// bfcache(뒤로/앞으로 캐시) 복원 시 전사 종합으로 리셋 — 떠나기 전 페이지가 그대로 뜨는 문제 방지
+// bfcache(뒤로/앞으로 캐시) 복원 시에도 머물던 페이지 유지
 window.addEventListener('pageshow', function(e){
   if(!e.persisted) return;
   if(document.getElementById('login-screen').style.display!=='none') return;
-  showPage('overview', document.getElementById('nav-overview'));
-  try{ renderOverview(); }catch(_){}
+  var p=sessionStorage.getItem('total_page')||'overview';
+  if(!document.getElementById('page-'+p)) p='overview';
+  showPage(p, document.getElementById('nav-'+p));
+  if(p==='overview'){ try{ renderOverview(); }catch(_){} }
 });
 </script>
+<button id="pdf-fab" onclick="printPDF()" title="이 페이지를 PDF로 추출"><i class="bi bi-filetype-pdf me-1"></i>PDF</button>
 </body>
 </html>
