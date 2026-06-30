@@ -158,6 +158,16 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 #app-loading{position:fixed;inset:0;background:#0f172a;z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px}
 #app-loading .spin{width:36px;height:36px;border:3px solid rgba(255,255,255,.15);border-top-color:#ff4500;border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+#pdf-fab{position:fixed;bottom:18px;right:18px;z-index:90;background:#475569;color:#fff;border:0;border-radius:22px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(15,23,42,.28)}
+#pdf-fab:hover{background:#334155}
+@media print{
+  @page{size:A4 landscape;margin:9mm}
+  body{background:#fff!important}
+  .sidebar,.hamburger,#site-dropdown,#launcher-screen,#login-screen,#app-loading,.saving-toast,#pdf-fab{display:none!important}
+  .main,#main-content{margin-left:0!important;padding:0!important}
+  .card,table{break-inside:avoid}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+}
 </style>
 </head>
 <body>
@@ -1660,7 +1670,10 @@ async function _bootApp(access) {
   await _loadPending();
   await _loadIlboPending();
   await _loadHospRegions();
-  showPage('sales-overview');   // 진입 시 항상 종합현황(첫 메뉴)
+  var _nav=(performance.getEntriesByType('navigation')[0]||{}).type;   // reload=새로고침 / navigate=신규진입
+  var _sv=sessionStorage.getItem('wt_page');
+  var _t=(_nav==='reload' && _sv && document.getElementById('page-'+_sv)) ? _sv : 'sales-overview';
+  showPage(_t);   // 새로고침=머문 페이지, 신규진입=종합현황(첫 메뉴)
   document.getElementById('main-content').style.display='block';
   _hideLoading();
 }
@@ -6030,5 +6043,7 @@ window.addEventListener('popstate', function(e) {
     <button class="btn btn-primary w-100" onclick="saveNewUser()">추가</button>
   </div>
 </div></div></div>
+<script>function printPDF(){var t=document.title;var r=function(){document.title=t;window.removeEventListener('afterprint',r);};window.addEventListener('afterprint',r);window.print();}</script>
+<button id="pdf-fab" onclick="printPDF()" title="이 페이지를 PDF로 추출">📄 PDF</button>
 </body>
 </html>
