@@ -755,7 +755,8 @@ function _pendingAgg(yr){
     var ds=p.expectedDate||p.expected_date||''; var d=ds?new Date(ds+'T00:00:00'):null;
     if(!(d&&!isNaN(d)&&d.getFullYear()===yr)) return;
     var mo=d.getMonth()+1, amt=Number(p.amount||0);
-    agg.intlMonthly[mo]=(agg.intlMonthly[mo]||0)+amt; agg.intlTotal+=amt; agg.intlCount++;
+    if(p.region==='해외'){ agg.intlMonthly[mo]=(agg.intlMonthly[mo]||0)+amt; agg.intlTotal+=amt; agg.intlCount++; }
+    else { var it=_pendKrItem(p.product); if(it==='소모품'){ agg.consMonthly[mo]=(agg.consMonthly[mo]||0)+amt; if(p.product) agg.consProducts[p.product]=(agg.consProducts[p.product]||0)+amt; } else { agg.devMonthly[mo]=(agg.devMonthly[mo]||0)+amt; if(p.product) agg.devProducts[p.product]=(agg.devProducts[p.product]||0)+amt; } agg.total+=amt; agg.count++; }
   });
   return agg;
 }
@@ -827,20 +828,18 @@ function renderOverview(){
   // KPI — 회계반영(메인) / 미반영 포함(우측)
   const kpis=[
     {l:'전사 매출 ('+periodLbl+')',i:'bi-currency-won',c:'#0f172a',conf:totalC,inc:totalI,prev:totalPrev,pend:allPend,hasPend:true},
-    {l:'국내 매출',i:'bi-hospital',c:DOM_BLUE,conf:domC,inc:domI,prev:domPrev,pend:domPend,hasPend:true,share:totalC>0?Math.round(domC/totalC*100):0},
-    {l:'해외 매출',i:'bi-globe-americas',c:INTL_TEAL,conf:intl,inc:intlI,prev:intlPrev,pend:intlPend,hasPend:true,share:totalC>0?Math.round(intl/totalC*100):0},
+    {l:'국내 매출',i:'bi-hospital',c:DOM_BLUE,conf:domC,inc:domI,prev:domPrev,pend:domPend,hasPend:true,share:totalI>0?Math.round(domI/totalI*100):0},
+    {l:'해외 매출',i:'bi-globe-americas',c:INTL_TEAL,conf:intl,inc:intlI,prev:intlPrev,pend:intlPend,hasPend:true,share:totalI>0?Math.round(intlI/totalI*100):0},
     {l:'월 평균 (전사)',i:'bi-graph-up',c:'#7c3aed',conf:totalC/months,inc:totalI/months,prev:totalPrev/months,pend:allPend/months,hasPend:true,avg:true},
   ];
   document.getElementById('ov-kpi').innerHTML=kpis.map(c=>{
-    const y=pct(c.conf,c.prev);
-    const sub=(c.share!=null)?('전체의 '+c.share+'%'):(c.avg?(months+'개월 평균'):('전년 '+fmtW(c.prev)));
-    const sideVal=c.hasPend?fmtW(c.inc):fmtW(c.inc);
-    const sideColor=c.hasPend?'#0e7490':'#94a3b8';
-    const sideSub=c.hasPend?(c.pend>0?'예정 +'+fmtW(c.pend):'예정분 없음'):'해외 예정분 없음';
-    const side='<div class="kpi-side"><div class="kpi-side-label">미반영 포함</div><div class="kpi-side-value" style="color:'+sideColor+'">'+sideVal+'</div><div class="kpi-side-sub">'+sideSub+'</div></div>';
+    const y=pct(c.conf,c.prev);   // 성장률=회계 like-for-like(보고와 동일 기준)
+    const sub=(c.share!=null)?('전체의 '+c.share+'%'):(c.avg?(months+'개월 평균'):'보고 기준');
+    const sideSub=c.pend>0?('+미반영 '+fmtW(c.pend)):'미반영 없음';
+    const side='<div class="kpi-side"><div class="kpi-side-label">회계 기준</div><div class="kpi-side-value" style="color:#64748b">'+fmtW(c.conf)+'</div><div class="kpi-side-sub">'+sideSub+'</div></div>';
     return '<div class="col-12 col-md-6 col-xl-3"><div class="kpi-card kpi-dual">'+
       '<div class="kpi-main"><div class="kpi-label"><i class="bi '+c.i+' me-1" style="color:'+c.c+'"></i>'+c.l+'</div>'+
-      '<div class="kpi-value" style="color:'+c.c+';font-size:1.4rem">'+fmtW(c.conf)+'</div>'+
+      '<div class="kpi-value" style="color:'+c.c+';font-size:1.4rem">'+fmtW(c.inc)+'</div>'+
       '<div class="kpi-sub">'+sub+' '+badge(y)+'</div></div>'+side+'</div></div>';
   }).join('');
 
@@ -875,8 +874,9 @@ function renderOverview(){
   renderThisMonth();
 }
 function renderChannelMix(f,t){
-  const domCons=sumMo(CONS.monthly2026,f,t), domDev=sumMo(DEVICE.monthly2026,f,t);
-  const dom=domCons+domDev, intl=sumMo(INTL.monthly,f,t), tot=dom+intl||1;
+  const pend=_pendingAgg(2026);
+  const domCons=sumMo(CONS.monthly2026,f,t)+sumMo(pend.consMonthly,f,t), domDev=sumMo(DEVICE.monthly2026,f,t)+sumMo(pend.devMonthly,f,t);
+  const dom=domCons+domDev, intl=sumMo(INTL.monthly,f,t)+sumMo(pend.intlMonthly,f,t), tot=dom+intl||1;
   const rc=Object.values(INTL.prods_cons||{}).reduce((a,v)=>a+(Number(v)||0),0);
   const rd=Object.values(INTL.prods_dev||{}).reduce((a,v)=>a+(Number(v)||0),0);
   const rs=rc+rd, intlCons=rs>0?intl*rc/rs:0, intlDev=rs>0?intl*rd/rs:intl;
