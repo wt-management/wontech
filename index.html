@@ -1033,8 +1033,13 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
         <div class="col-md-6">
           <div class="card p-3" style="border-left:4px solid #f59e0b">
             <div class="fw-bold mb-1" style="font-size:13px;color:#d97706"><i class="bi bi-dash-circle-fill me-1"></i>감소 — 동기간 대비 매출 하락 (거래는 유지)</div>
-            <div style="font-size:11px;color:#9ca3af;margin-bottom:8px">2025년 1–5월 vs 2026년 1–5월 기준</div>
-            <div id="hosp-decline-list" style="max-height:calc(100vh - 320px);overflow-y:auto"></div>
+            <div style="font-size:11px;color:#9ca3af;margin-bottom:8px">동기간 대비 매출 하락 · 클릭시 상세</div>
+            <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+              <select id="decline-mgr-filter" class="form-select form-select-sm" style="max-width:210px" onchange="renderConsHospitals()"><option value="">👥 전체 조회</option></select>
+              <button class="btn btn-sm btn-outline-warning" style="font-size:11px" onclick="_declineMine()"><i class="bi bi-person-check me-1"></i>내 거래처</button>
+              <span id="decline-filter-cnt" style="font-size:11px;color:#9ca3af"></span>
+            </div>
+            <div id="hosp-decline-list" style="max-height:calc(100vh - 360px);overflow-y:auto"></div>
           </div>
         </div>
       </div>
@@ -1505,6 +1510,15 @@ function _riskMine(){
   let hit='';
   for(const o of sel.options){ if(o.value && (o.value.includes(me)||me.includes(o.value))){ hit=o.value; break; } }
   if(!hit){ alert('"'+me+'" 담당으로 등록된 이탈위험 거래처를 찾지 못했어요.'); return; }
+  sel.value=hit; renderConsHospitals();
+}
+function _declineMine(){
+  const sel=document.getElementById('decline-mgr-filter'); if(!sel) return;
+  const me=(typeof currentUserName==='function'?currentUserName():(typeof _meName!=='undefined'?_meName:'')||'').trim();
+  if(!me){ alert('로그인 정보가 없습니다.'); return; }
+  let hit='';
+  for(const o of sel.options){ if(o.value && (o.value.includes(me)||me.includes(o.value))){ hit=o.value; break; } }
+  if(!hit){ alert('"'+me+'" 담당으로 등록된 감소 거래처를 찾지 못했어요.'); return; }
   sel.value=hit; renderConsHospitals();
 }
 
@@ -3850,10 +3864,18 @@ function renderConsHospitals() {
   ) : '<div style="font-size:12px;color:#9ca3af;padding:16px 0;text-align:center">해당 병원 없음</div>';
 
   // ── 감소 ──
-  document.getElementById('hosp-decline-list').innerHTML=[...decline].sort((a,b)=>{
+  // 감소 담당자별 조회 (담당영업 mgr 우선, 없으면 거래담당)
+  const _decDut=e=>((HOSP_INFO[e[0]]||{}).mgr)||e[1].sales||'';
+  const _df=document.getElementById('decline-mgr-filter');
+  if(_df && !_df.dataset.filled){ const dns=[...new Set(decline.map(_decDut).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko')); _df.insertAdjacentHTML('beforeend', dns.map(n=>'<option value="'+n.replace(/"/g,'&quot;')+'">'+n+'</option>').join('')); _df.dataset.filled='1'; }
+  const _dfv=(_df&&_df.value)||'';
+  const declineF = _dfv ? decline.filter(e=>_decDut(e)===_dfv) : decline;
+  const _dfc=document.getElementById('decline-filter-cnt'); if(_dfc) _dfc.textContent=_dfv?('· '+_dfv+' '+declineF.length+'곳'):'';
+  document.getElementById('hosp-decline-list').innerHTML=[...declineF].sort((a,b)=>{
     const ea=ytd25est(a[1]),eb=ytd25est(b[1]);
     return (ea>0?a[1].y2026/ea:0)-(eb>0?b[1].y2026/eb:0);
   }).map(([name,h])=>{
+    const _mgr=(HOSP_INFO[name]||{}).mgr||'';
     const est25=ytd25est(h),chg=est25>0?(h.y2026/est25-1)*100:null;
     const p25=calcPat(h.txns2025||[]), p26=calcPat(h.txns2026||[]);
     const safeN=name.replace(/"/g,'&quot;');
@@ -3863,7 +3885,8 @@ function renderConsHospitals() {
     return`<div style="padding:8px 0;border-bottom:1px solid #fef3c7">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
         <div style="flex:1;min-width:0;cursor:pointer" data-name="${safeN}" onclick="showHospitalDetail(this.dataset.name)">
-          <span style="font-size:12px;font-weight:700">${gradeBadge(h)}<span style="color:#b45309;text-decoration:underline dotted">${name}</span>${h.sales?`<span style="font-size:10px;color:#9ca3af;margin-left:5px">${h.sales}</span>`:''}</span>
+          <span style="font-size:12px;font-weight:700">${gradeBadge(h)}<span style="color:#b45309;text-decoration:underline dotted">${name}</span></span>
+          ${_mgr?`<span style="font-size:10px;font-weight:700;color:#2563eb;margin-left:5px;white-space:nowrap"><i class="bi bi-person-badge"></i> ${_mgr}</span>`:'<span style="font-size:10px;color:#d1d5db;margin-left:5px">담당 미배정</span>'}${h.sales&&h.sales!==_mgr?`<span style="font-size:9px;color:#cbd5e1;margin-left:4px">${h.sales}</span>`:''}
         </div>
         <span style="font-size:11px;color:#6b7280;flex-shrink:0">${fmtS(h.y2026)} <span style="color:#9ca3af">vs</span> ${fmtS(est25)}</span>
         ${pctBadge(chg)}
