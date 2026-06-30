@@ -126,6 +126,19 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 #login-screen{position:fixed;inset:0;background:#0f172a;display:none;align-items:center;justify-content:center;z-index:200}
 .login-box{background:#fff;border-radius:16px;padding:34px 30px;width:340px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
 @media(max-width:820px){.sidebar{display:none}.main{margin-left:0;padding:14px}}
+/* ── 수출의 탑 PDF 인쇄 ── */
+@media print{
+  @page{size:A4 landscape;margin:9mm}
+  body{background:#fff}
+  .sidebar{display:none!important}
+  .main{margin-left:0!important;padding:0!important}
+  #site-dropdown,#page-subtitle{display:none!important}
+  #page-export .ex-bar .btn,#ex-pdf-btn{display:none!important}
+  #page-export .ex-bar input{border:none;background:transparent;padding:0;width:auto}
+  .card,.ex-kpi,#page-export .ex-etbl,#page-export .ex-insight,#page-export .ex-kita .k{break-inside:avoid}
+  #page-export .row{display:flex!important}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+}
 /* ── 임원 리포트 공통 ── */
 .muted{color:#94a3b8}
 /* P1 목표 달성률 */
@@ -322,7 +335,7 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
   <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;margin-bottom:14px">
     <div>
       <h5 style="font-weight:800;margin:0"><i class="bi bi-building-fill-gear me-2" style="color:#0f766e"></i><span id="page-title">전사 종합 경영현황</span></h5>
-      <div style="font-size:12px;color:#94a3b8;margin-top:3px">국내(소모품·제품) + 해외 통합</div>
+      <div id="page-subtitle" style="font-size:12px;color:#94a3b8;margin-top:3px">국내(소모품·제품) + 해외 통합</div>
     </div>
     <div style="font-size:12px;color:#64748b" id="updated-label"></div>
   </div>
@@ -426,6 +439,7 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
       <div class="fld"><label>적용 환율 ₩/$</label><input id="ex-rate" type="number" step="1" oninput="exOnRate()"></div>
       <div class="fld"><label>현 차수</label><span id="ex-cyc-name" style="font-size:13px;font-weight:800;color:#0d9488"></span></div>
       <button class="btn btn-sm" style="background:#0d9488;color:#fff;font-weight:700;font-size:12px" onclick="exOpenEdit()"><i class="bi bi-pencil-square me-1"></i>데이터 편집</button>
+      <button id="ex-pdf-btn" class="btn btn-sm" style="background:#475569;color:#fff;font-weight:700;font-size:12px" onclick="exPrint()"><i class="bi bi-filetype-pdf me-1"></i>PDF 추출</button>
       <div class="prov">당월(<span id="ex-prov-month" style="font-weight:700"></span>) 잠정 <b id="ex-prov-usd">$0</b> <span id="ex-prov-calc" style="font-size:11px;color:#94a3b8"></span></div>
     </div>
 
@@ -1502,6 +1516,13 @@ function exRenderYearly(){
     el.innerHTML='<div class="ex-ybars">'+vals.map(v=>'<div class="ex-ybar"><div class="v">'+Number(v).toLocaleString()+'</div><div class="bar" style="height:'+Math.max(v/max*100,1).toFixed(1)+'%;background:'+color+'"></div></div>').join('')+'</div><div class="ex-yx">'+labels.map(l=>'<span>'+l+'</span>').join('')+'</div><div class="ex-yleg"><i style="background:'+color+'"></i>수출액 (USD)</div>'; };
   draw('ex-yacc',acc,'#f0a868'); draw('ex-yexp',exp,'#2a8a8a');
   const ins=document.getElementById('ex-insight'); if(ins) ins.innerHTML=y.insight?('<b>Insight</b>'+y.insight):'';
+}
+function exPrint(){
+  var ot=document.title;
+  document.title='원텍 수출의 탑 진행현황';
+  var restore=function(){ document.title=ot; window.removeEventListener('afterprint',restore); };
+  window.addEventListener('afterprint',restore);
+  window.print();
 }
 function exOpenEdit(){
   const body=document.getElementById('ex-edit-body'); body.innerHTML='';
