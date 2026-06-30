@@ -393,12 +393,17 @@ function renderOverview(){
   // KPI: USD 환산 → 전년 대비 증감액
   const diffAmt = tot - ptot;
   const diffStr = diffAmt>=0 ? '+'+fmtW(diffAmt) : '-'+fmtW(Math.abs(diffAmt));
-  document.getElementById('ov-kpi').innerHTML=[
-    {l:'해외 합계 ('+pl+')',v:fmtW(tot+pendYtd),s:'<span style="color:#7c3aed;font-weight:700">미반영 포함·보고기준</span> · 회계 '+fmtW(tot)+(pendYtd>0?' (+미반영 '+fmtW(pendYtd)+')':'')+' · 전년 '+fmtW(ptot)+' '+bdg(yoy),c:'#111827',i:'bi-currency-won'},
-    {l:'전년 대비 증감',v:diffStr,s:'동기 증감액',c:diffAmt>=0?'#16a34a':'#dc2626',i:diffAmt>=0?'bi-graph-up-arrow':'bi-graph-down-arrow'},
+  const _dualHead='<div class="col-12 col-md-6"><div class="kpi-card"><div class="kpi-label"><i class="bi bi-currency-won me-1" style="color:#111827"></i>해외 합계 ('+pl+')</div>'
+    +'<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px">'
+    +'<div><div style="font-size:10px;color:#7c3aed;margin-bottom:1px;font-weight:700">미반영 포함 <span style="color:#cbd5e1;font-weight:500">· 보고기준</span></div><div class="kpi-value" style="color:#111827;font-size:1.4rem;line-height:1.1">'+fmtW(tot+pendYtd)+'</div><div class="kpi-sub" style="margin-top:3px">전년 '+fmtW(ptot)+' '+bdg(yoy)+'</div></div>'
+    +'<div style="text-align:right;border-left:1px solid #eef2f7;padding-left:11px"><div style="font-size:10px;color:#9ca3af;margin-bottom:1px;font-weight:600">회계반영</div><div style="font-size:1.32rem;font-weight:800;color:#374151;line-height:1.1">'+fmtW(tot)+'</div><div style="font-size:10px;color:#9ca3af;margin-top:3px">+ '+fmtW(pendYtd)+'</div></div>'
+    +'</div></div></div>';
+  const _others=[
+    {l:'전년 대비 증감',v:diffStr,s:'동기 증감액(회계)',c:diffAmt>=0?'#16a34a':'#dc2626',i:diffAmt>=0?'bi-graph-up-arrow':'bi-graph-down-arrow'},
     {l:'거래 국가수',v:nct+'개국',s:'활성 국가',c:'#0d9488',i:'bi-globe'},
-    {l:'YoY',v:yoy===null?'-':((parseFloat(yoy)>=0?'▲':'▼')+Math.abs(parseFloat(yoy))+'%'),s:'전년 동기 대비',c:yoy===null?'#6b7280':parseFloat(yoy)>=0?'#16a34a':'#dc2626',i:'bi-graph-up'},
-  ].map(c=>`<div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-label"><i class="bi ${c.i} me-1" style="color:${c.c}"></i>${c.l}</div><div class="kpi-value" style="color:${c.c}">${c.v}</div><div class="kpi-sub">${c.s}</div></div></div>`).join('');
+    {l:'YoY',v:yoy===null?'-':((parseFloat(yoy)>=0?'▲':'▼')+Math.abs(parseFloat(yoy))+'%'),s:'전년 동기 대비(회계)',c:yoy===null?'#6b7280':parseFloat(yoy)>=0?'#16a34a':'#dc2626',i:'bi-graph-up'},
+  ].map(c=>`<div class="col-6 col-md-2"><div class="kpi-card"><div class="kpi-label"><i class="bi ${c.i} me-1" style="color:${c.c}"></i>${c.l}</div><div class="kpi-value" style="color:${c.c}">${c.v}</div><div class="kpi-sub">${c.s}</div></div></div>`).join('');
+  document.getElementById('ov-kpi').innerHTML=_dualHead+_others;
 
   const m12=Array.from({length:12},(_,i)=>i+1);
   dch('ov');
