@@ -202,17 +202,25 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       <button onclick="openAddUserModal()" style="margin-left:auto;background:#ff4500;border:none;color:#fff;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><i class="bi bi-person-plus me-1"></i>사용자 추가</button>
     </div>
     <div style="max-width:1200px;margin:0 auto;padding:32px 32px 40px">
-    <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:auto">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+      <input id="user-search" oninput="_paintUsers()" placeholder="🔍 이름·이메일·부서·직급 검색" style="flex:1;min-width:220px;max-width:360px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 12px;font-size:13px;color:#fff">
+      <select id="user-role-filter" onchange="_paintUsers()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 10px;font-size:13px;color:#fff">
+        <option value="" style="background:#1e293b">전체 역할</option>
+        <option value="user" style="background:#1e293b">팀원</option>
+        <option value="manager" style="background:#1e293b">팀/파트장</option>
+        <option value="admin" style="background:#1e293b">관리자</option>
+      </select>
+    </div>
+        <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:auto">
       <table style="width:100%;border-collapse:collapse;min-width:900px">
         <thead><tr style="border-bottom:1px solid rgba(255,255,255,.08)">
           <th style="padding:12px 16px;text-align:left;font-size:11px;color:#64748b;font-weight:600;white-space:nowrap">이메일</th>
           <th style="padding:12px 16px;text-align:left;font-size:11px;color:#64748b;font-weight:600;white-space:nowrap">이름</th>
           <th style="padding:12px 16px;text-align:left;font-size:11px;color:#64748b;font-weight:600;white-space:nowrap">부서</th>
           <th style="padding:12px 16px;text-align:left;font-size:11px;color:#64748b;font-weight:600;white-space:nowrap">직급</th>
-          <th style="padding:12px 16px;text-align:left;font-size:11px;color:#64748b;font-weight:600;white-space:nowrap">임시 비밀번호</th>
-          <th style="padding:12px 16px;text-align:left;font-size:11px;color:#64748b;font-weight:600;white-space:nowrap">접근 / 업로드 권한</th>
+          <th style="padding:12px 16px;text-align:left;font-size:11px;color:#64748b;font-weight:600;white-space:nowrap">권한 (프리셋)</th>
           <th style="padding:12px 16px;text-align:left;font-size:11px;color:#64748b;font-weight:600;white-space:nowrap">역할</th>
-          <th style="padding:12px 16px;white-space:nowrap"></th>
+          <th style="padding:12px 16px;text-align:left;font-size:11px;color:#64748b;font-weight:600;white-space:nowrap">임시PW · 작업</th>
         </tr></thead>
         <tbody id="admin-user-list"></tbody>
       </table>
@@ -5174,6 +5182,7 @@ function delLog(){
 
 // ── 사용자 관리 ──────────────────────────────────────────────────────
 let _isAdmin = false;
+let _isMaster = false;
 let _isMgr   = false;
 let _meId = null, _meName = '';
 let _currentAccess = ['korea'];
@@ -5183,6 +5192,7 @@ async function loadUserRole() {
   if(!session) return;
   const {data} = await _sb.from('crm_profiles').select('role,display_name,position,dept').eq('id', session.user.id).single();
   _isAdmin = data?.role === 'admin';
+  _isMaster = session.user.email === 'pmw0406@gmail.com';
   _isMgr   = _isAdmin || data?.role === 'manager';
   _meId    = session.user.id;
   _meName  = data?.display_name || session.user.email?.split('@')[0] || '';
@@ -5328,66 +5338,95 @@ function _renderLauncherCards(access) {
 
 async function renderAdminUsers() {
   const el = document.getElementById('admin-user-list');
-  el.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px;color:#64748b">불러오는 중...</td></tr>`;
+  el.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:#64748b">불러오는 중...</td></tr>`;
   const {data: profiles} = await _sb.from('crm_profiles').select('*').order('dept').order('display_name');
-  if(!profiles?.length) { el.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:24px;color:#64748b">사용자 없음</td></tr>`; return; }
-  const iS = "background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:4px 8px;font-size:12px;color:#fff;width:90px";
-
-  // 부서별 그룹화
-  const groups = {};
-  profiles.forEach(p => {
-    const dept = p.dept?.trim() || '(부서 미지정)';
-    if(!groups[dept]) groups[dept] = [];
-    groups[dept].push(p);
+  _allProfiles = profiles || [];
+  _paintUsers();
+}
+let _allProfiles = [];
+const PERM_PRESETS = [
+  {name:'없음',                  access:'',                            upload:''},
+  {name:'한국영업',              access:'korea',                       upload:''},
+  {name:'해외영업',              access:'intl',                        upload:''},
+  {name:'일본법인',              access:'japan',                       upload:''},
+  {name:'소모품담당(일보)',      access:'daily',                       upload:'daily'},
+  {name:'국내(영업+소모품+종합)', access:'korea,daily,total',           upload:''},
+  {name:'임원(전체 보기)',       access:'korea,intl,japan,total,daily', upload:''},
+  {name:'전체관리자',            access:'korea,intl,japan,total,daily', upload:'korea,intl,japan,total,daily'}
+];
+function _normPerm(s){ return (s||'').split(',').map(x=>x.trim()).filter(Boolean).sort().join(','); }
+function _matchPreset(p){
+  const a=_normPerm(p.access), u=_normPerm(p.upload);
+  for(const ps of PERM_PRESETS){ if(_normPerm(ps.access)===a && _normPerm(ps.upload)===u) return ps.name; }
+  return '맞춤';
+}
+async function applyPreset(id, name){
+  const ps=PERM_PRESETS.find(x=>x.name===name);
+  if(!ps) return;
+  await _sb.from('crm_profiles').update({access:ps.access, upload:ps.upload}).eq('id',id);
+  const p=_allProfiles.find(x=>x.id===id); if(p){ p.access=ps.access; p.upload=ps.upload; }
+  showToast('권한 적용: '+name, true);
+  _paintUsers();
+}
+function _paintUsers(){
+  const el = document.getElementById('admin-user-list');
+  const q = (document.getElementById('user-search')?.value || '').trim().toLowerCase();
+  const roleF = document.getElementById('user-role-filter')?.value || '';
+  const list = _allProfiles.filter(p=>{
+    if(roleF && (p.role||'user')!==roleF) return false;
+    if(!q) return true;
+    return [p.email,p.display_name,p.dept,p.position].some(v=>(v||'').toLowerCase().includes(q));
   });
-  const deptOrder = Object.keys(groups).sort((a,b) => a==='(부서 미지정)'?1:b==='(부서 미지정)'?-1:a.localeCompare(b,'ko'));
-
+  if(!list.length){ el.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:#64748b">해당 사용자 없음</td></tr>`; return; }
+  const iS = "background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:4px 8px;font-size:12px;color:#fff;width:84px";
+  const groups = {};
+  list.forEach(p => { const d=p.dept?.trim()||'(부서 미지정)'; (groups[d]=groups[d]||[]).push(p); });
+  const deptOrder = Object.keys(groups).sort((a,b)=>a==='(부서 미지정)'?1:b==='(부서 미지정)'?-1:a.localeCompare(b,'ko'));
   const rows = [];
   deptOrder.forEach(dept => {
-    rows.push(`<tr><td colspan="8" style="padding:10px 16px 6px;background:rgba(255,255,255,.04);border-top:1px solid rgba(255,255,255,.1);border-bottom:1px solid rgba(255,255,255,.06)">
-      <span style="font-size:11px;font-weight:700;color:#0d9488;letter-spacing:.05em;text-transform:uppercase"><i class="bi bi-building me-1"></i>${dept}</span>
-      <span style="font-size:10px;color:#475569;margin-left:6px">${groups[dept].length}명</span>
-    </td></tr>`);
+    rows.push(`<tr><td colspan="7" style="padding:9px 16px 5px;background:rgba(255,255,255,.04);border-top:1px solid rgba(255,255,255,.1)"><span style="font-size:11px;font-weight:700;color:#0d9488;letter-spacing:.05em"><i class="bi bi-building me-1"></i>${dept}</span><span style="font-size:10px;color:#475569;margin-left:6px">${groups[dept].length}명</span></td></tr>`);
     groups[dept].forEach(p => rows.push(_adminUserRow(p, iS)));
   });
+  rows.push(`<tr><td colspan="7" style="padding:10px 16px;color:#475569;font-size:11px">총 ${list.length}명</td></tr>`);
   el.innerHTML = rows.join('');
 }
 
 const WT_SITES = [['korea','한국','#0891b2'],['intl','해외','#0d9488'],['japan','일본','#f59e0b'],['total','종합','#4f46e5'],['daily','일보','#16a34a']];
-function _permMatrix(p) {
-  const head = WT_SITES.map(([k,lbl])=>`<th style="font-size:10px;font-weight:600;color:#94a3b8;padding:0 7px 3px;text-align:center">${lbl}</th>`).join('');
-  const row = (field, fn, rowLbl) => {
-    const cur = (p[field]||'').split(',').map(s=>s.trim());
-    const cells = WT_SITES.map(([k,lbl,col])=>`<td style="text-align:center;padding:2px 7px"><input type="checkbox" ${cur.includes(k)?'checked':''} onchange="${fn}('${p.id}','${k}',this.checked)" style="accent-color:${col};cursor:pointer;margin:0"></td>`).join('');
-    return `<tr><td style="font-size:10px;font-weight:700;color:#64748b;padding:2px 10px 2px 0;white-space:nowrap">${rowLbl}</td>${cells}</tr>`;
-  };
-  return `<table style="border-collapse:collapse"><thead><tr><td></td>${head}</tr></thead><tbody>${row('access','toggleAccess','접근')}${row('upload','toggleUpload','업로드')}</tbody></table>`;
+function _permDetail(p){
+  const cell=(field,fn)=>WT_SITES.map(([k,lbl,col])=>{const cur=(p[field]||'').split(',').map(s=>s.trim());return `<label style="display:inline-flex;flex-direction:column;align-items:center;gap:3px;font-size:9px;color:#94a3b8"><span>${lbl}</span><input type="checkbox" ${cur.includes(k)?'checked':''} onchange="${fn}('${p.id}','${k}',this.checked)" style="accent-color:${col};cursor:pointer;margin:0"></label>`;}).join('');
+  return `<div style="display:flex;gap:24px;flex-wrap:wrap;padding:8px 4px"><div><div style="font-size:10px;color:#64748b;margin-bottom:5px;font-weight:700">접근</div><div style="display:flex;gap:12px">${cell('access','toggleAccess')}</div></div><div style="border-left:1px solid rgba(255,255,255,.08);padding-left:24px"><div style="font-size:10px;color:#64748b;margin-bottom:5px;font-weight:700">업로드</div><div style="display:flex;gap:12px">${cell('upload','toggleUpload')}</div></div></div>`;
 }
+
 function _adminUserRow(p, iS) {
-    const pwId = 'pw_'+p.id.replace(/-/g,'');
-    const hasPw = p.temp_pw && p.temp_pw.trim();
-    return `<tr style="border-bottom:1px solid rgba(255,255,255,.06)">
-    <td style="padding:12px 16px;font-size:13px;color:#e2e8f0">${p.email||''}</td>
-    <td style="padding:12px 16px"><input type="text" value="${p.display_name||''}" style="${iS}" onchange="updateUserField('${p.id}','display_name',this.value)"></td>
-    <td style="padding:12px 16px"><input type="text" value="${p.dept||''}" placeholder="부서" style="${iS}" onchange="updateUserField('${p.id}','dept',this.value)"></td>
-    <td style="padding:12px 16px"><input type="text" value="${p.position||''}" placeholder="직급" style="${iS}" onchange="updateUserField('${p.id}','position',this.value)"></td>
-    <td style="padding:12px 16px">
-      ${hasPw ? `<div style="display:flex;align-items:center;gap:4px">
-        <span id="${pwId}" style="font-size:12px;color:#94a3b8;font-family:monospace;letter-spacing:2px">••••••••</span>
-        <button onclick="togglePw('${pwId}','${p.temp_pw}')" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:13px;padding:2px" title="비밀번호 보기"><i class="bi bi-eye"></i></button>
-      </div>` : `<span style="font-size:11px;color:#475569">-</span>`}
+  const matched=_matchPreset(p);
+  let opts=PERM_PRESETS.map(ps=>`<option ${ps.name===matched?'selected':''} style="background:#1e293b">${ps.name}</option>`).join('');
+  if(matched==='맞춤') opts+=`<option selected style="background:#1e293b">맞춤</option>`;
+  const detId='det_'+p.id.replace(/-/g,'');
+  const pwId='pw_'+p.id.replace(/-/g,'');
+  const hasPw=p.temp_pw && p.temp_pw.trim();
+  const pwCell = _isMaster
+    ? (hasPw ? `<span id="${pwId}" style="font-size:12px;color:#94a3b8;font-family:monospace;letter-spacing:2px">••••••••</span> <button onclick="togglePw('${pwId}','${p.temp_pw}')" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:13px" title="보기"><i class="bi bi-eye"></i></button>` : `<span style="font-size:11px;color:#475569">-</span>`)
+    : `<span style="font-size:11px;color:#475569" title="마스터만 열람 가능">●●●●</span>`;
+  return `<tr style="border-bottom:1px solid rgba(255,255,255,.06)">
+    <td style="padding:10px 16px;font-size:12px;color:#e2e8f0;white-space:nowrap">${p.email||''}</td>
+    <td style="padding:10px 8px"><input type="text" value="${p.display_name||''}" style="${iS}" onchange="updateUserField('${p.id}','display_name',this.value)"></td>
+    <td style="padding:10px 8px"><input type="text" value="${p.dept||''}" placeholder="부서" style="${iS}" onchange="updateUserField('${p.id}','dept',this.value)"></td>
+    <td style="padding:10px 8px"><input type="text" value="${p.position||''}" placeholder="직급" style="${iS};width:62px" onchange="updateUserField('${p.id}','position',this.value)"></td>
+    <td style="padding:10px 8px;white-space:nowrap">
+      <select onchange="applyPreset('${p.id}',this.value)" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:4px 6px;font-size:12px;color:#fff;max-width:170px">${opts}</select>
+      <button onclick="(function(){var d=document.getElementById('${detId}');d.style.display=d.style.display==='none'?'table-row':'none';})()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:13px;margin-left:2px" title="상세 권한 조정"><i class="bi bi-sliders"></i></button>
     </td>
-    <td style="padding:8px 12px">${_permMatrix(p)}</td>
-    <td style="padding:12px 16px"><select style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:4px 8px;font-size:12px;color:#fff" onchange="updateUserRole('${p.id}',this.value)">
-      <option value="user"    ${(!p.role||p.role==='user')?'selected':''}    style="background:#1e293b">팀원</option>
+    <td style="padding:10px 8px"><select style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:4px 6px;font-size:12px;color:#fff" onchange="updateUserRole('${p.id}',this.value)">
+      <option value="user" ${(!p.role||p.role==='user')?'selected':''} style="background:#1e293b">팀원</option>
       <option value="manager" ${p.role==='manager'?'selected':''} style="background:#1e293b">팀/파트장</option>
-      <option value="admin"   ${p.role==='admin'?'selected':''}   style="background:#1e293b">관리자</option>
+      <option value="admin" ${p.role==='admin'?'selected':''} style="background:#1e293b">관리자</option>
     </select></td>
-    <td style="padding:12px 16px;display:flex;gap:6px">
-      <button onclick="sendResetEmail('${p.email}')" style="background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.3);color:#93c5fd;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer">PW재설정</button>
-      <button onclick="deleteUser('${p.id}','${p.email}')" style="background:rgba(220,38,38,.2);border:1px solid rgba(220,38,38,.3);color:#fca5a5;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer">삭제</button>
+    <td style="padding:10px 8px;white-space:nowrap">${pwCell}
+      <button onclick="setUserPassword('${p.id}','${p.email}')" style="background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.3);color:#93c5fd;padding:3px 9px;border-radius:6px;font-size:11px;cursor:pointer;margin-left:6px">비번 설정</button>
+      <button onclick="deleteUser('${p.id}','${p.email}')" style="background:rgba(220,38,38,.2);border:1px solid rgba(220,38,38,.3);color:#fca5a5;padding:3px 9px;border-radius:6px;font-size:11px;cursor:pointer">삭제</button>
     </td>
-  </tr>`;
+  </tr>
+  <tr id="${detId}" style="display:none"><td colspan="7" style="padding:2px 16px 12px;background:rgba(255,255,255,.02)">${_permDetail(p)}</td></tr>`;
 }
 
 async function updateUserAccess(id, access) {
@@ -5414,10 +5453,26 @@ async function toggleUpload(id, key, checked) {
   showToast('업로드 권한 변경됨', true);
 }
 
-async function sendResetEmail(email) {
-  const {error} = await _sb.auth.resetPasswordForEmail(email, {redirectTo: location.origin+location.pathname});
-  if(error) { showToast('발송 실패: '+error.message, true, true); return; }
-  showToast(email+' 으로 재설정 링크 발송됨', true);
+async function setUserPassword(id, email){
+  if(!_isMaster && !_isAdmin){ showToast('권한이 없습니다', true, true); return; }
+  const np = prompt(email+'\n새 비밀번호를 입력하세요 (6자 이상):', '');
+  if(np===null) return;
+  if(!np || np.length<6){ alert('비밀번호는 6자 이상이어야 합니다.'); return; }
+  const {data:{session}} = await _sb.auth.getSession();
+  if(!session){ showToast('세션 없음', true, true); return; }
+  try{
+    const res = await fetch('https://mhfacbsittfdkknwybhc.supabase.co/functions/v1/admin-set-password', {
+      method:'POST',
+      headers:{'Content-Type':'application/json', 'Authorization':'Bearer '+session.access_token},
+      body: JSON.stringify({user_id:id, password:np})
+    });
+    let out={}; try{ out=await res.json(); }catch(e){}
+    if(!res.ok){ showToast('비번 설정 실패: '+(out.error || ('HTTP '+res.status))+' (Edge Function 배포 필요할 수 있음)', true, true); return; }
+    await _sb.from('crm_profiles').update({temp_pw:np}).eq('id',id);
+    const p=_allProfiles.find(x=>x.id===id); if(p) p.temp_pw=np;
+    showToast(email+' 비밀번호 변경 완료', true);
+    _paintUsers();
+  }catch(e){ showToast('오류: '+e.message, true, true); }
 }
 
 async function renderUsers() { renderAdminUsers(); }
