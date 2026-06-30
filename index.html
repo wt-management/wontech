@@ -512,10 +512,12 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;padding:10px 14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0">
       <span style="font-size:12px;font-weight:600;color:#374151;white-space:nowrap">📅 조회 기간</span>
-      <select id="reg-year-sel" class="form-select form-select-sm" style="width:84px" onchange="renderRegion()"><option value="2026" selected>2026년</option><option value="2025">2025년</option></select>
-      <select id="reg-from-sel" class="form-select form-select-sm" style="width:70px" onchange="renderRegion()"><option value="1" selected>1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select>
-      <span style="font-size:13px;color:#9ca3af">~</span>
-      <select id="reg-to-sel" class="form-select form-select-sm" style="width:70px" onchange="renderRegion()"><option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6" selected>6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select>
+      <span id="reg-simple" style="display:none">
+      <select id="reg-year-sel" class="form-select form-select-sm" style="width:84px"><option value="2026" selected>2026년</option><option value="2025">2025년</option></select>
+      <select id="reg-from-sel" class="form-select form-select-sm" style="width:70px"><option value="1" selected>1월</option></select>
+      <select id="reg-to-sel" class="form-select form-select-sm" style="width:70px"><option value="6" selected>6월</option></select>
+      </span>
+      <span id="reg-period-host"></span>
       <span id="reg-info" style="margin-left:auto;font-size:11px;color:#9ca3af;white-space:nowrap"></span>
     </div>
     <div class="row g-3 mb-3" id="reg-kpi"></div>
@@ -1141,17 +1143,12 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;padding:10px 14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0">
       <span style="font-size:12px;font-weight:600;color:#374151;white-space:nowrap">📅 조회 기간</span>
-      <select id="devrep-year-sel" class="form-select form-select-sm" style="width:84px" onchange="renderDevReps()">
-        <option value="2026" selected>2026년</option>
-        <option value="2025">2025년</option>
-      </select>
-      <select id="devrep-from-sel" class="form-select form-select-sm" style="width:70px" onchange="_devRepPeriodChange()">
-        <option value="1" selected>1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
-      </select>
-      <span style="font-size:13px;color:#9ca3af">~</span>
-      <select id="devrep-to-sel" class="form-select form-select-sm" style="width:70px" onchange="_devRepPeriodChange()">
-        <option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6" selected>6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
-      </select>
+      <span id="devrep-simple" style="display:none">
+      <select id="devrep-year-sel" class="form-select form-select-sm" style="width:84px"><option value="2026" selected>2026년</option><option value="2025">2025년</option></select>
+      <select id="devrep-from-sel" class="form-select form-select-sm" style="width:70px"><option value="1" selected>1월</option></select>
+      <select id="devrep-to-sel" class="form-select form-select-sm" style="width:70px"><option value="6" selected>6월</option></select>
+      </span>
+      <span id="devrep-period-host"></span>
     </div>
     <!-- 전체 순위 테이블 -->
     <div class="card p-0">
@@ -2439,10 +2436,13 @@ function _grPct(v26,v25){ return v25>0?((v26/v25-1)*100):null; }
 function _grBadge(v26,v25){ if(!v25) return v26>0?'<span style="color:#7c3aed;font-weight:700">신규</span>':'<span style="color:#9ca3af">-</span>'; const p=(v26/v25-1)*100; return '<span style="color:'+(p>=0?'#16a34a':'#dc2626')+';font-weight:700">'+(p>=0?'▲':'▼')+Math.abs(p).toFixed(0)+'%</span>'; }
 function _cntNewLost(hosps){ let nw=0,lost=0; Object.values(hosps).forEach(o=>{ if(o.v26>0&&!o.v25) nw++; else if(!o.v26&&o.v25>0) lost++; }); return {nw,lost}; }
 // 병원별 기간 매출(2026/2025) + 담당자/주력제품 (CONS+DEVICE 합산)
-function _hospPeriodVals(fromM,toM){
+function _hospPeriodVals(P){
+  const cur=_spanMonths(P), prev=_spanMonths(_yoyShift(P));
+  const mY=(h,y)=>y===2026?(h.m2026||{}):(y===2025?(h.m2025||{}):{});
+  const sv=(h,rng)=>rng.reduce((s,x)=>s+Number(mY(h,x.y)[x.m]||0),0);
   const byName={};
   const addH=hmap=>Object.entries(hmap||{}).forEach(function(e){ const name=e[0],h=e[1];
-    let v26=0,v25=0; for(let m=fromM;m<=toM;m++){ v26+=Number((h.m2026||{})[m]||0); v25+=Number((h.m2025||{})[m]||0); }
+    const v26=sv(h,cur), v25=sv(h,prev);
     if(!v26&&!v25) return;
     if(!byName[name]) byName[name]={v26:0,v25:0,sales:'',prod:''};
     byName[name].v26+=v26; byName[name].v25+=v25;
@@ -2452,8 +2452,8 @@ function _hospPeriodVals(fromM,toM){
   addH(CONS.hospitals); addH(DEVICE.hospitals);
   return byName;
 }
-function _regionAgg(fromM,toM){
-  const byName=_hospPeriodVals(fromM,toM);
+function _regionAgg(P){
+  const byName=_hospPeriodVals(P);
   const sido={};
   Object.entries(byName).forEach(function(e){ const name=e[0],o=e[1];
     const r=_hospRegion(name); const s=(r&&r[0])?r[0]:'미분류', g=(r&&r[1])?r[1]:'(미상)';
@@ -2464,16 +2464,17 @@ function _regionAgg(fromM,toM){
   });
   return {sido, byName};
 }
-function _regSel(){ return {fromM:parseInt(document.getElementById('reg-from-sel')?.value||'1'), toM:parseInt(document.getElementById('reg-to-sel')?.value||'6')}; }
+function _regSel(){ return _getPeriod('reg'); }
 function renderRegion(){
-  const s=_regSel(); const {sido,byName}=_regionAgg(s.fromM,s.toM);
+  _injectPeriodCtrl('reg');
+  const P=_regSel(); const {sido,byName}=_regionAgg(P);
   const entries=Object.entries(sido).filter(([,o])=>o.v26>0||o.v25>0);
   const named=entries.filter(([x])=>x!=='미분류'&&x!=='유통·기타');
   const grand=entries.reduce((a,[,o])=>a+o.v26,0)||1;
   const nHosp=Object.values(byName).filter(o=>o.v26>0).length;
   const un=sido['미분류']; const unCnt=un?Object.values(un.hosps).filter(o=>o.v26>0).length:0; const unAmt=un?un.v26:0;
   document.getElementById('reg-kpi').innerHTML=[
-    {l:'총 매출(2026)',v:_ovFmt(grand),c:'#111827',sub:''},
+    {l:'총 매출('+P.label+')',v:_ovFmt(grand),c:'#111827',sub:''},
     {l:'거래처 수',v:nHosp.toLocaleString()+'곳',c:'#2563eb',sub:''},
     {l:'지역(시도) 수',v:named.length+'개',c:'#16a34a',sub:''},
     {l:'미분류',v:unCnt.toLocaleString()+'곳',c:unCnt?'#d97706':'#9ca3af',sub:_ovFmt(unAmt)+' ('+(unAmt/grand*100).toFixed(0)+'%)'},
@@ -2496,7 +2497,7 @@ function _hospRow(name,o,maxH){
   return '<div data-h="'+String(name).replace(/"/g,'&quot;')+'" onclick="_ovToHosp(this.getAttribute(\'data-h\'))" title="클릭하면 거래처 상세" style="padding:5px 6px;cursor:pointer;border-radius:5px;border-bottom:1px solid #f6f8fa" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'"><div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:2px"><span style="font-weight:600">'+_ovEsc(name)+' <i class="bi bi-box-arrow-up-right" style="font-size:8px;color:#cbd5e1"></i>'+(o.sales?' <span style="color:#9ca3af;font-weight:400">·'+_ovEsc(o.sales)+'</span>':'')+(o.prod?' <span style="color:#cbd5e1;font-weight:400">'+_ovEsc(o.prod)+'</span>':'')+'</span><span style="display:flex;gap:6px;align-items:center"><span style="font-weight:700">'+_ovFmt(o.v26)+'</span>'+_grBadge(o.v26,o.v25)+'</span></div><div style="background:#f3f4f6;border-radius:3px;height:4px"><div style="width:'+(o.v26/maxH*100).toFixed(1)+'%;height:100%;background:#2563eb;border-radius:3px"></div></div></div>';
 }
 function openRegionDetail(sidoName){
-  const s=_regSel(); const {sido}=_regionAgg(s.fromM,s.toM); const o=sido[sidoName]; if(!o) return;
+  const P=_regSel(); const {sido}=_regionAgg(P); const o=sido[sidoName]; if(!o) return;
   const nl=_cntNewLost(o.hosps); const hc=Object.values(o.hosps).filter(h=>h.v26>0).length;
   const hospArr=Object.entries(o.hosps).filter(([,h])=>h.v26>0||h.v25>0);
   const movers=hospArr.filter(([,h])=>h.v25>0&&h.v26>0).map(([n,h])=>({n,h,p:(h.v26/h.v25-1)*100}));
@@ -2518,7 +2519,7 @@ function openRegionDetail(sidoName){
   _ovShowModal('<i class="bi bi-geo-alt me-1" style="color:#2563eb"></i>'+_ovEsc(sidoName)+' <span style="font-size:12px;color:#9ca3af">지역 상세</span>', body);
 }
 function openGugunDetail(sidoName,gugun){
-  const s=_regSel(); const {sido}=_regionAgg(s.fromM,s.toM); const o=sido[sidoName]; if(!o||!o.gugun[gugun]) return;
+  const P=_regSel(); const {sido}=_regionAgg(P); const o=sido[sidoName]; if(!o||!o.gugun[gugun]) return;
   const go=o.gugun[gugun]; const hosps=Object.entries(go.hosps).filter(([,h])=>h.v26>0||h.v25>0).sort((a,b)=>b[1].v26-a[1].v26); const maxH=hosps.length?(hosps[0][1].v26||1):1;
   const back='<button onclick="openRegionDetail(this.getAttribute(\'data-s\'))" data-s="'+String(sidoName).replace(/"/g,'&quot;')+'" style="background:none;border:none;color:#2563eb;font-size:12px;cursor:pointer;padding:0;margin-bottom:10px"><i class="bi bi-arrow-left me-1"></i>'+_ovEsc(sidoName)+'로 돌아가기</button>';
   const head='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'+_ovKpiBox('매출',_ovFmt(go.v26),'#2563eb')+_ovKpiBox('전년',_ovFmt(go.v25),'#6b7280')+_ovKpiBox('성장률',_grBadge(go.v26,go.v25),'#111827')+_ovKpiBox('거래처',hosps.filter(([,h])=>h.v26>0).length+'곳','#111827')+'</div>';
@@ -6157,23 +6158,22 @@ function devRepExport() {
 let _devRepChart = null;
 function renderDevReps() {
   const fmtW = v => v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만원':v.toLocaleString()+'원';
-  const yr    = parseInt(document.getElementById('devrep-year-sel')?.value||'2026');
-  const fromM = parseInt(document.getElementById('devrep-from-sel')?.value||'1');
-  const toM   = parseInt(document.getElementById('devrep-to-sel')?.value||'6');
-  const YTD   = Array.from({length:toM-fromM+1},(_,i)=>fromM+i);
+  _injectPeriodCtrl('devrep');
+  const P=_getPeriod('devrep'), _cur=_spanMonths(P), _prev=_spanMonths(_yoyShift(P));
+  const _mY=(o,y)=>y===2026?(o.m2026||{}):(y===2025?(o.m2025||{}):{});
+  const _spanV=(o,rng)=>rng.reduce((s,x)=>s+(_mY(o,x.y)[x.m]||0),0);
+  const _endY=P.ey;   // 대수/거래처수/주력제품은 연단위 지표 → 종료연도 기준
   const reps  = DEVICE.reps||{};
 
   if (!Object.keys(reps).length) return;
 
-  // per-rep YTD
+  // per-rep 기간 합
   const entries = Object.entries(reps).map(([name, rep]) => {
-    const curM = yr===2026 ? rep.m2026||{} : rep.m2025||{};
-    const preM = yr===2026 ? rep.m2025||{} : {};
-    const cur  = YTD.reduce((s,m)=>s+(curM[m]||0),0);
-    const pre  = YTD.reduce((s,m)=>s+(preM[m]||0),0);
-    const qty  = yr===2026 ? rep.qty2026 : rep.qty2025;
-    const cust = yr===2026 ? rep.cust2026 : rep.cust2025;
-    const topProd = Object.entries(yr===2026?rep.prods2026:rep.prods2025||{}).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
+    const cur  = _spanV(rep,_cur);
+    const pre  = _spanV(rep,_prev);
+    const qty  = _endY===2026 ? rep.qty2026 : rep.qty2025;
+    const cust = _endY===2026 ? rep.cust2026 : rep.cust2025;
+    const topProd = Object.entries((_endY===2026?rep.prods2026:rep.prods2025)||{}).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
     return {name, rep, cur, pre, qty, cust, topProd, yoy: pre>0?(cur/pre-1)*100:null};
   }).sort((a,b)=>b.cur-a.cur);
 
@@ -6196,10 +6196,10 @@ function renderDevReps() {
 
 function showDevRepDetail(repName) {
   const fmtW = v => v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만원':v.toLocaleString()+'원';
-  const yr    = parseInt(document.getElementById('devrep-year-sel')?.value||'2026');
-  const fromM = parseInt(document.getElementById('devrep-from-sel')?.value||'1');
-  const toM   = parseInt(document.getElementById('devrep-to-sel')?.value||'6');
-  const YTD   = Array.from({length:toM-fromM+1},(_,i)=>fromM+i);
+  const P=_getPeriod('devrep'), _cur=_spanMonths(P), _prev=_spanMonths(_yoyShift(P));
+  const _mY=(o,y)=>y===2026?(o.m2026||{}):(y===2025?(o.m2025||{}):{});
+  const _spanV=(o,rng)=>rng.reduce((s,x)=>s+(_mY(o,x.y)[x.m]||0),0);
+  const _endY=P.ey, yr=_endY;
   const rep   = (DEVICE.reps||{})[repName];
   if (!rep) return;
 
@@ -6230,10 +6230,8 @@ function showDevRepDetail(repName) {
   const hospList = Object.entries(DEVICE.hospitals||{})
     .filter(([,h])=>h.sales===repName)
     .map(([name,h]) => {
-      const curM = yr===2026?h.m2026||{}:h.m2025||{};
-      const preM = yr===2026?h.m2025||{}:{};
-      const cur  = YTD.reduce((s,m)=>s+(curM[m]||0),0);
-      const pre  = YTD.reduce((s,m)=>s+(preM[m]||0),0);
+      const cur  = _spanV(h,_cur);
+      const pre  = _spanV(h,_prev);
       return {name, cur, pre, topProd:h.topProd||'', lastDate:h.lastDate||''};
     }).filter(h=>h.cur>0||h.pre>0).sort((a,b)=>b.cur-a.cur);
 
@@ -6252,7 +6250,7 @@ function showDevRepDetail(repName) {
       </table>`
     : '<div class="text-muted p-2" style="font-size:12px">해당 기간 거래처 없음</div>';
 
-  const mLabel = fromM===toM ? fromM+'월' : fromM+'~'+toM+'월';
+  const mLabel = P.label;
   const chartId = 'devrep-modal-chart-'+Date.now();
 
   modal.innerHTML = `<div style="background:#fff;border-radius:14px;width:100%;max-width:820px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.25)">
