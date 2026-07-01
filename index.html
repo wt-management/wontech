@@ -346,7 +346,6 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
           <i class="bi bi-box-arrow-right"></i> 로그아웃</button>
       </div>
     </div>
-    <a class="nav-link" style="color:#6b7280;margin:0 0 4px" onclick="openSearch()"><i class="bi bi-search"></i>통합 검색 <kbd style="font-size:9px;background:#1e293b;border:1px solid #334155;border-radius:4px;padding:1px 4px;color:#94a3b8;margin-left:auto">⌘K</kbd></a>
     <!-- 사이트 전환 드롭다운 -->
     <div id="site-switcher" style="display:none;position:relative;padding:0 8px 8px">
       <button id="site-switcher-btn" onclick="(function(){var d=document.getElementById('site-dropdown');d.style.display=d.style.display==='block'?'none':'block'})()"
@@ -4645,7 +4644,7 @@ function searchKeyNav(e) {
   if(_searchIdx>=0) items[_searchIdx].scrollIntoView({block:'nearest'});
 }
 document.addEventListener('keydown', e => {
-  if ((e.metaKey||e.ctrlKey) && e.key==='k') { e.preventDefault(); openSearch(); }
+  // 통합 검색(Ctrl+K) 비활성화 — 메뉴에서 제거됨
   if (e.key==='Escape' && document.getElementById('search-overlay').classList.contains('open')) closeSearch();
 });
 
