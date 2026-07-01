@@ -810,6 +810,27 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
   .spd-card .spd-tag{font-size:12px;color:#64748b;line-height:1.45;margin-top:3px}
   .spd-card .spd-go{position:absolute;right:14px;top:16px;color:#cbd5e1;font-size:13px;transition:.15s}
   .spd-card:hover .spd-go{color:#6366f1;transform:translateX(2px)}
+  /* ── Sales Speech 상세 ── */
+  .spdt-hero{border-radius:18px;padding:22px 24px;color:#fff;margin-bottom:6px;position:relative;overflow:hidden;box-shadow:0 6px 20px rgba(15,23,42,.10)}
+  .spdt-hero:after{content:'';position:absolute;right:-30px;top:-30px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.10)}
+  .spdt-hero .sh-name{font-size:25px;font-weight:900;letter-spacing:-.01em;position:relative}
+  .spdt-hero .sh-tag{font-size:13px;opacity:.95;margin-top:5px;line-height:1.5;position:relative;max-width:90%}
+  .spdt-hero .sh-rivals{margin-top:13px;display:flex;flex-wrap:wrap;gap:6px;position:relative}
+  .spdt-hero .sh-rival{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);color:#fff;font-size:11px;font-weight:600;padding:4px 11px;border-radius:999px}
+  .spdt-sec{font-size:12px;font-weight:800;color:#334155;letter-spacing:.02em;margin:22px 0 10px;display:flex;align-items:center;gap:6px}
+  .cmp{border:1px solid #eef2f6;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(15,23,42,.05)}
+  .cmp table{width:100%;border-collapse:collapse;font-size:13px}
+  .cmp th{padding:12px 10px;font-weight:800;text-align:center}
+  .cmp td{padding:11px 10px;text-align:center;border-top:1px solid #f1f5f9}
+  .cmp .c-item{text-align:center;color:#64748b;font-weight:700;background:#fbfcfe;white-space:nowrap}
+  .cmp .c-won{font-weight:800}
+  .cmp .c-riv{color:#94a3b8;font-weight:500}
+  .spdt-close{border-radius:16px;padding:18px 20px;margin-bottom:14px}
+  .spdt-close .clbl{font-size:11px;font-weight:800;margin-bottom:7px;display:flex;align-items:center;gap:5px}
+  .spdt-close .q{font-size:15px;font-weight:700;line-height:1.65;color:#0f172a}
+  .spdt-para{font-size:13.5px;color:#3f4b5b;line-height:1.75;margin-bottom:13px;padding-left:18px;position:relative}
+  .spdt-para:before{content:'';position:absolute;left:2px;top:8px;width:7px;height:7px;border-radius:50%;background:var(--dot,#cbd5e1)}
+  .spdt-para strong{color:#0f172a}
   </style>
 
   <!-- ROI 계산기 (네이티브 재구현: RF/HIFU · Laser) -->
@@ -7126,30 +7147,40 @@ window.addEventListener('popstate', function(e) {
     document.getElementById('speech-grid-view').style.display='';
     window.scrollTo(0,0);
   };
+  const _dk=hex=>{ const n=parseInt(String(hex).slice(1),16); let r=(n>>16)&255,g=(n>>8)&255,b=n&255; r=Math.round(r*.68);g=Math.round(g*.68);b=Math.round(b*.68); return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1); };
   function _renderSpeechDetail(d){
     if(!d) return '';
-    const rows=d.table.rows.map(r=>'<tr><td style="font-weight:600;color:#374151">'+_esc(r.label)+'</td><td style="font-weight:700;color:'+d.color+'">'+_esc(r.wontech)+'</td><td style="color:#6b7280">'+_esc(r.rival)+'</td></tr>').join('');
-    const rivals=d.competitors.map(x=>'<span class="badge rounded-pill me-1" style="background:#f3f4f6;color:#4b5563;font-weight:500">'+_esc(x)+'</span>').join('');
+    const rows=d.table.rows.map(r=>
+      '<tr><td class="c-item">'+_esc(r.label)+'</td>'
+      +'<td class="c-won" style="background:'+d.color+'12;color:'+d.color+'"><i class="bi bi-check-lg" style="opacity:.55;margin-right:2px"></i>'+_esc(r.wontech)+'</td>'
+      +'<td class="c-riv">'+_esc(r.rival)+'</td></tr>').join('');
+    const rivals=d.competitors.map(x=>'<span class="sh-rival">vs '+_esc(x)+'</span>').join('');
     const closing=d.speech.find(b=>b.closing), details=d.speech.filter(b=>!b.closing);
-    const closingBlock=closing?'<div style="border-left:3px solid '+d.color+';background:'+d.color+'12;border-radius:10px;padding:14px 16px;margin-bottom:12px"><div style="font-size:14px;font-weight:600;color:#111827;line-height:1.6">'+_bold(_esc(closing.text))+'</div></div>':'';
-    const detailBlocks=details.map(b=>'<p style="font-size:13.5px;color:#374151;line-height:1.7;margin-bottom:12px">'+_bold(_esc(b.text))+'</p>').join('');
-    return '<div class="card border-0 shadow-sm"><div class="card-body">'
-      +'<div class="d-flex align-items-center flex-wrap gap-2 mb-2"><span class="badge" style="background:'+d.color+';font-size:15px;font-weight:800;padding:6px 12px;letter-spacing:.3px">'+_esc(d.name)+'</span><span style="font-size:13px;color:#6b7280">'+_esc(d.tagline)+'</span></div>'
-      +'<div class="mb-3">'+rivals+'</div>'
-      +'<div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:6px"><i class="bi bi-table me-1"></i>경쟁사 비교</div>'
-      +'<div class="table-responsive mb-3"><table class="table table-sm align-middle mb-0" style="font-size:13px"><thead><tr style="border-bottom:2px solid #e5e7eb"><th style="color:#9ca3af;font-weight:600">항목</th><th style="color:'+d.color+'">'+_esc(d.name)+'</th><th style="color:#9ca3af;font-weight:600">'+_esc(d.table.competitor)+'</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
-      +'<div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:8px"><i class="bi bi-chat-quote me-1"></i>세일즈 멘트</div>'
-      +closingBlock+detailBlocks
-    +'</div></div>';
+    const closeBlock=closing?'<div class="spdt-close" style="background:'+d.color+'0e;border:1px solid '+d.color+'33"><div class="clbl" style="color:'+d.color+'"><i class="bi bi-megaphone-fill"></i>클로징 한마디</div><div class="q">'+_bold(_esc(closing.text))+'</div></div>':'';
+    const paras=details.map(b=>'<p class="spdt-para" style="--dot:'+d.color+'">'+_bold(_esc(b.text))+'</p>').join('');
+    return '<div class="spdt-hero" style="background:linear-gradient(135deg,'+d.color+','+_dk(d.color)+')">'
+        +'<div class="sh-name">'+_esc(d.name)+'</div>'
+        +'<div class="sh-tag">'+_esc(d.tagline)+'</div>'
+        +'<div class="sh-rivals">'+rivals+'</div>'
+      +'</div>'
+      +'<div class="spdt-sec"><i class="bi bi-bar-chart-steps"></i>경쟁사 비교 <span style="color:#cbd5e1;font-weight:600">· '+_esc(d.table.competitor)+'</span></div>'
+      +'<div class="cmp"><table><thead><tr>'
+        +'<th class="c-item">항목</th>'
+        +'<th style="background:'+d.color+';color:#fff">'+_esc(d.name)+' <span style="font-size:9.5px;opacity:.85;font-weight:700">원텍</span></th>'
+        +'<th style="color:#94a3b8;background:#f8fafc">'+_esc(d.table.competitor)+'</th>'
+      +'</tr></thead><tbody>'+rows+'</tbody></table></div>'
+      +'<div class="spdt-sec"><i class="bi bi-chat-quote-fill"></i>세일즈 멘트</div>'
+      +closeBlock+paras;
   }
   function _renderClosing(){
-    const paras=CLOSING_SPEECH.quote.split('\n').map(l=>l.trim()?'<p style="margin:0 0 6px">'+_bold(_esc(l))+'</p>':'<div style="height:8px"></div>').join('');
-    const points=CLOSING_SPEECH.points.map(p=>'<div class="col-md-4"><div style="text-align:center;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px"><div style="font-size:26px">'+p.icon+'</div><div style="font-weight:800;font-size:14px;margin-top:6px;color:#111827">'+_esc(p.title)+'</div><div style="font-size:12px;color:#6b7280;margin-top:2px">'+_esc(p.desc)+'</div></div></div>').join('');
-    return '<div class="card border-0 shadow-sm"><div class="card-body">'
-      +'<div class="d-flex align-items-center gap-2 mb-3"><span class="badge" style="background:#ff5a0a;font-size:15px;font-weight:800;padding:6px 12px"><i class="bi bi-stars me-1"></i>원장님 클로징</span><span style="font-size:13px;color:#6b7280">마무리 세일즈 멘트</span></div>'
-      +'<div style="background:#fafafa;border-radius:12px;padding:18px 20px;font-size:14px;color:#1f2937;line-height:1.7;margin-bottom:16px">'+paras+'</div>'
-      +'<div class="row g-2">'+points+'</div>'
-    +'</div></div>';
+    const paras=CLOSING_SPEECH.quote.split('\n').map(l=>l.trim()?'<p style="margin:0 0 8px">'+_bold(_esc(l))+'</p>':'<div style="height:5px"></div>').join('');
+    const points=CLOSING_SPEECH.points.map(p=>'<div class="col-md-4"><div style="text-align:center;background:#fff;border:1px solid #eef2f6;border-radius:14px;padding:18px 14px;box-shadow:0 1px 3px rgba(15,23,42,.04);height:100%"><div style="font-size:30px">'+p.icon+'</div><div style="font-weight:800;font-size:14px;margin-top:8px;color:#0f172a">'+_esc(p.title)+'</div><div style="font-size:12px;color:#64748b;margin-top:3px">'+_esc(p.desc)+'</div></div></div>').join('');
+    return '<div class="spdt-hero" style="background:linear-gradient(135deg,#fb923c,#ea580c)">'
+        +'<div class="sh-name"><i class="bi bi-stars me-2"></i>원장님 클로징</div>'
+        +'<div class="sh-tag">모든 장비 상담의 마무리 — 투자 회수 관점 한마디</div>'
+      +'</div>'
+      +'<div class="spdt-close" style="background:#fff7ed;border:1px solid #fed7aa"><div class="q" style="line-height:1.85">'+paras+'</div></div>'
+      +'<div class="row g-3">'+points+'</div>';
   }
 })();
 function printPDF(){var t=document.title;var r=function(){document.title=t;window.removeEventListener('afterprint',r);};window.addEventListener('afterprint',r);window.print();}</script>
