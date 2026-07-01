@@ -779,24 +779,24 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
   .roi-form .form-control,.roi-form .form-select{border-radius:10px;border-color:#e5e9f0;font-size:13.5px;padding:9px 12px;background:#fbfcfe}
   .roi-form .form-control:focus,.roi-form .form-select:focus{border-color:#f9a86a;box-shadow:0 0 0 3px rgba(249,115,22,.13);background:#fff}
   .roi-form .form-control[readonly]{background:#f4f6fa;color:#64748b}
-  /* ── 결과 카드 ── */
+  /* ── 결과: 다크 히어로 + 스탯 타일 ── */
   .roi-res{display:flex;flex-direction:column;gap:14px}
-  .roi-rc{border-radius:20px;padding:22px 24px;border:1px solid;position:relative;overflow:hidden}
-  .roi-rc .rc-top{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;letter-spacing:.01em}
-  .roi-rc .rc-ic{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px}
-  .roi-rc .rc-big{font-size:38px;font-weight:900;letter-spacing:-.03em;line-height:1.02;margin:12px 0 3px}
-  .roi-rc .rc-big small{font-size:17px;font-weight:800;margin-left:2px}
-  .roi-rc .rc-sub{font-size:12px;color:#64748b}
-  .roi-rc .rc-rows{margin-top:16px;padding-top:14px;border-top:1px dashed #e2e8f0;display:flex;flex-direction:column;gap:7px}
-  .roi-rc .rc-row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:#475569}
-  .roi-rc .rc-row b{font-weight:800;color:#0f172a}
-  .roi-rc.g{background:linear-gradient(165deg,#ecfdf5 0%,#fff 55%);border-color:#a7f3d0}
-  .roi-rc.g .rc-top,.roi-rc.g .rc-big{color:#047857} .roi-rc.g .rc-ic{background:#10b981}
-  .roi-rc.o{background:linear-gradient(165deg,#fff7ed 0%,#fff 55%);border-color:#fed7aa}
-  .roi-rc.o .rc-top,.roi-rc.o .rc-big{color:#c2410c} .roi-rc.o .rc-ic{background:#f97316}
-  .roi-rc.b{background:linear-gradient(165deg,#eff6ff 0%,#fff 55%);border-color:#bfdbfe}
-  .roi-rc.b .rc-top,.roi-rc.b .rc-big{color:#1d4ed8} .roi-rc.b .rc-ic{background:#3b82f6}
-  .roi-rc .rc-chip{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.7);border:1px solid rgba(15,23,42,.06);border-radius:8px;padding:5px 9px;font-size:11px;color:#475569;font-weight:600}
+  .roi-hero-res{border-radius:24px;padding:28px 30px;position:relative;overflow:hidden;background:radial-gradient(120% 120% at 100% 0%,#1b2b47 0%,#0b1220 60%);box-shadow:0 18px 40px -12px rgba(11,18,32,.55)}
+  .roi-hero-res .hglow{position:absolute;width:280px;height:280px;border-radius:50%;right:-80px;top:-110px;filter:blur(4px);pointer-events:none}
+  .roi-hero-res .hr-label{font-size:12px;font-weight:700;color:#8ea3c0;letter-spacing:.04em;position:relative;display:flex;align-items:center;gap:7px}
+  .roi-hero-res .hr-big{font-size:58px;font-weight:900;line-height:1;letter-spacing:-.035em;margin:12px 0 6px;position:relative;-webkit-background-clip:text;background-clip:text;color:transparent}
+  .roi-hero-res .hr-big em{font-style:normal;font-size:26px;font-weight:800;margin-left:3px}
+  .roi-hero-res .hr-sub{font-size:12.5px;color:#b6c4da;position:relative;line-height:1.55}
+  .roi-hero-res .hr-form{position:relative;margin-top:16px;display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);border-radius:12px;padding:9px 13px}
+  .roi-hero-res .hr-form span{font-size:11.5px;color:#cbd5e1;font-weight:600}
+  .roi-hero-res .hr-form i{color:#64748b;font-style:normal;font-weight:700}
+  .roi-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .roi-stat{background:#fff;border:1px solid #eef2f6;border-radius:16px;padding:15px 17px;box-shadow:0 1px 3px rgba(15,23,42,.04);transition:.15s}
+  .roi-stat:hover{box-shadow:0 6px 18px rgba(15,23,42,.08);transform:translateY(-2px)}
+  .roi-stat .st-lbl{font-size:11px;color:#64748b;font-weight:600;display:flex;align-items:center;gap:5px}
+  .roi-stat .st-val{font-size:23px;font-weight:900;letter-spacing:-.02em;margin-top:5px;line-height:1.05}
+  .roi-stat .st-sub{font-size:10.5px;color:#94a3b8;margin-top:3px}
+  .roi-stat.wide{grid-column:1/-1}
   /* ── Sales Speech ── */
   .spd-hero{border-radius:16px;padding:16px 20px;margin-bottom:18px;display:flex;align-items:center;gap:15px;background:linear-gradient(120deg,#eef2ff,#f5f3ff);border:1px solid #c7d2fe}
   .spd-hero .rs-ic{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;flex-shrink:0;background:linear-gradient(135deg,#6366f1,#4f46e5)}
@@ -6978,24 +6978,17 @@ window.addEventListener('popstate', function(e) {
     const dailyRevenue=pricePerTreatment*treatmentsPerDay;
     el.innerHTML =
       '<div class="roi-res">'
-        +'<div class="roi-rc g">'
-          +'<div class="rc-top"><span class="rc-ic"><i class="bi bi-check2-circle"></i></span>원금 회수 기간</div>'
-          +'<div class="rc-big">'+_day(paybackDays)+'</div>'
-          +'<div class="rc-sub">하루 매출 '+_kr(dailyRevenue)+' 기준 · 패키지 '+_kr(packagePrice)+'</div>'
-          +'<div class="rc-rows">'
-            +'<div class="rc-row"><span>1회 시술단가</span><b>'+_won(pricePerTreatment)+'원</b></div>'
-            +'<div class="rc-row"><span>일 시술 횟수</span><b>'+treatmentsPerDay+'회</b></div>'
-          +'</div>'
+        +'<div class="roi-hero-res">'
+          +'<div class="hglow" style="background:radial-gradient(circle,rgba(52,211,153,.42),transparent 70%)"></div>'
+          +'<div class="hr-label"><i class="bi bi-check2-circle" style="color:#34d399"></i>원금 회수까지</div>'
+          +'<div class="hr-big" style="background-image:linear-gradient(135deg,#6ee7b7,#34d399)">'+_day(paybackDays).replace('일','<em>일</em>')+'</div>'
+          +'<div class="hr-sub">하루 매출 '+_kr(dailyRevenue)+' 기준 · 패키지 '+_kr(packagePrice)+'</div>'
+          +'<div class="hr-form"><span>패키지 '+_kr(packagePrice)+'</span><i>÷</i><span>1회 '+_won(pricePerTreatment)+'원</span><i>÷</i><span>일 '+treatmentsPerDay+'회</span></div>'
         +'</div>'
-        +'<div class="roi-rc o">'
-          +'<div class="rc-top"><span class="rc-ic"><i class="bi bi-graph-up-arrow"></i></span>패키지 총 순수익</div>'
-          +'<div class="rc-big">'+_kr(pureProfit)+'</div>'
-          +'<div class="rc-sub">소모품 '+consumableCount+'개를 끝까지 소진했을 때</div>'
-          +'<div class="rc-rows">'
-            +'<div class="rc-row"><span>총 시술 횟수</span><b>'+_times(totalTreatments)+' <span style="color:#94a3b8;font-weight:500">('+consumableCount+'개 × '+(tipShots/shotsPerTreatment).toFixed(1)+'회)</span></b></div>'
-            +'<div class="rc-row"><span>총 매출</span><b>'+_won(totalRevenue)+'원</b></div>'
-            +'<div class="rc-row"><span>− 패키지 비용</span><b style="color:#dc2626">'+_won(packagePrice)+'원</b></div>'
-          +'</div>'
+        +'<div class="roi-stats">'
+          +'<div class="roi-stat wide"><div class="st-lbl"><i class="bi bi-graph-up-arrow" style="color:#f97316"></i>패키지 총 순수익</div><div class="st-val" style="color:#ea580c">'+_kr(pureProfit)+'</div><div class="st-sub">소모품 '+consumableCount+'개 완주 시 · 총매출 '+_kr(totalRevenue)+' − 패키지 '+_kr(packagePrice)+'</div></div>'
+          +'<div class="roi-stat"><div class="st-lbl"><i class="bi bi-repeat" style="color:#2563eb"></i>총 시술 횟수</div><div class="st-val" style="color:#1d4ed8">'+_times(totalTreatments)+'</div><div class="st-sub">'+consumableCount+'개 × '+(tipShots/shotsPerTreatment).toFixed(1)+'회</div></div>'
+          +'<div class="roi-stat"><div class="st-lbl"><i class="bi bi-cash-stack" style="color:#059669"></i>하루 매출</div><div class="st-val" style="color:#047857">'+_kr(dailyRevenue)+'</div><div class="st-sub">1회 '+_won(pricePerTreatment)+'원 × '+treatmentsPerDay+'회</div></div>'
         +'</div>'
       +'</div>';
   };
@@ -7013,15 +7006,17 @@ window.addEventListener('popstate', function(e) {
     const paybackDays=equipmentPrice/dailyRevenue;
     el.innerHTML =
       '<div class="roi-res">'
-        +'<div class="roi-rc b">'
-          +'<div class="rc-top"><span class="rc-ic"><i class="bi bi-cash-stack"></i></span>하루 매출</div>'
-          +'<div class="rc-big">'+_kr(dailyRevenue)+'</div>'
-          +'<div class="rc-sub">1회 '+_won(sessionUnitPrice)+'원 × '+ticketingCount+'회 × '+customerCount+'명/일</div>'
+        +'<div class="roi-hero-res">'
+          +'<div class="hglow" style="background:radial-gradient(circle,rgba(52,211,153,.42),transparent 70%)"></div>'
+          +'<div class="hr-label"><i class="bi bi-check2-circle" style="color:#34d399"></i>장비 원금 회수까지</div>'
+          +'<div class="hr-big" style="background-image:linear-gradient(135deg,#6ee7b7,#34d399)">'+_day(paybackDays).replace('일','<em>일</em>')+'</div>'
+          +'<div class="hr-sub">장비가 '+_kr(equipmentPrice)+' ÷ 하루 매출 '+_kr(dailyRevenue)+'</div>'
+          +'<div class="hr-form"><span>장비 '+_kr(equipmentPrice)+'</span><i>÷</i><span>하루매출 '+_kr(dailyRevenue)+'</span></div>'
         +'</div>'
-        +'<div class="roi-rc g">'
-          +'<div class="rc-top"><span class="rc-ic"><i class="bi bi-check2-circle"></i></span>장비 원금 회수 기간</div>'
-          +'<div class="rc-big">'+_day(paybackDays)+'</div>'
-          +'<div class="rc-sub">장비가 '+_kr(equipmentPrice)+' ÷ 하루 매출 '+_kr(dailyRevenue)+'</div>'
+        +'<div class="roi-stats">'
+          +'<div class="roi-stat wide"><div class="st-lbl"><i class="bi bi-cash-stack" style="color:#2563eb"></i>하루 매출</div><div class="st-val" style="color:#1d4ed8">'+_kr(dailyRevenue)+'</div><div class="st-sub">1회 '+_won(sessionUnitPrice)+'원 × 티케팅 '+ticketingCount+'회 × 고객 '+customerCount+'명</div></div>'
+          +'<div class="roi-stat"><div class="st-lbl"><i class="bi bi-cpu" style="color:#64748b"></i>장비 가격</div><div class="st-val" style="color:#334155">'+_kr(equipmentPrice)+'</div></div>'
+          +'<div class="roi-stat"><div class="st-lbl"><i class="bi bi-calendar-check" style="color:#059669"></i>월 매출(25일)</div><div class="st-val" style="color:#047857">'+_kr(dailyRevenue*25)+'</div><div class="st-sub">하루매출 × 25일</div></div>'
         +'</div>'
       +'</div>';
   };
