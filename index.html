@@ -1714,9 +1714,18 @@ function purgeForeignHospitals() {
 }
 // 담당자명 앞 코드번호("55.드림메드"→"드림메드") 제거 — 표시용 일괄
 function _sN(s){ return String(s==null?'':s).replace(/^\s*\d+\s*[\.\-]\s*/,''); }
+// 한국영업 1·2파트 담당자(담당자별 분석은 이 인원만 표기)
+const KOR_SALES_TEAM=['조만식','김세현','양준욱','구주영','강지형','김정국','송재원','최준수','김량현'];
+function _mergeRep(a,b){
+  if(!a) return JSON.parse(JSON.stringify(b));
+  ['total','y2025','y2026','qty2025','qty2026','cust2025','cust2026'].forEach(k=>a[k]=(a[k]||0)+(b[k]||0));
+  ['prods2025','prods2026','m2025','m2026'].forEach(k=>{ a[k]=a[k]||{}; Object.entries(b[k]||{}).forEach(([kk,vv])=>a[k][kk]=(a[k][kk]||0)+vv); });
+  return a;
+}
 function _stripSalesPrefixes(){
   [CONS.hospitals, DEVICE.hospitals].forEach(hm=>{ if(hm) Object.values(hm).forEach(h=>{ if(h&&h.sales) h.sales=_sN(h.sales); }); });
-  if(DEVICE.reps){ const nr={}; Object.keys(DEVICE.reps).forEach(k=>{ const nk=_sN(k); nr[nk]=DEVICE.reps[k]; }); DEVICE.reps=nr; }
+  // 담당자별 분석: 번호접두사 정리('17.조만식'→'조만식') + 변형 병합 + 한국영업1/2파트만
+  if(DEVICE.reps){ const nr={}; Object.keys(DEVICE.reps).forEach(k=>{ const nk=_sN(k); if(KOR_SALES_TEAM.indexOf(nk)<0) return; nr[nk]=_mergeRep(nr[nk], DEVICE.reps[k]); }); DEVICE.reps=nr; }
 }
 // 이탈위험 '내 거래처' — 로그인 담당자명으로 필터 자동선택
 function _riskMine(){
