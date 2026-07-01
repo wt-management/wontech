@@ -1156,6 +1156,7 @@ function _dealMatch(d){
   return true;
 }
 function _fmtUSD(v){ return '$'+Math.round(Number(v)||0).toLocaleString(); }
+function _esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return c==='&'?'&amp;':c==='<'?'&lt;':c==='>'?'&gt;':'&quot;';});}
 function renderSales(){
   var list=INTL_PIPE.filter(_dealMatch);
   var rf=document.getElementById('is-f-rep');
@@ -1186,8 +1187,8 @@ function _dealCard(d){
   var days=d.stageUpdatedAt?Math.floor((Date.now()-new Date(d.stageUpdatedAt).getTime())/864e5):null;
   var overdue=d.expectedShip&&d.expectedShip<today&&d.stage!=='선적/납품';
   return '<div draggable="true" ondragstart="_dragId=\''+d.id+'\'" onclick="openDeal(\''+d.id+'\')" style="background:#fff;border-radius:8px;padding:8px 10px;margin-bottom:7px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.06)">'+
-    '<div style="display:flex;justify-content:space-between;align-items:start;gap:6px"><div style="font-size:12px;font-weight:700">'+(d.dealer||'-')+' <span style="font-size:10px;color:#94a3b8">'+(d.country||'')+'</span></div>'+(days!=null?'<span style="font-size:9px;color:'+(days>=30?'#dc2626':'#94a3b8')+';white-space:nowrap" title="단계 체류일">'+days+'일</span>':'')+'</div>'+
-    (d.product?'<div style="font-size:11px;color:#475569">'+d.product+'</div>':'')+
+    '<div style="display:flex;justify-content:space-between;align-items:start;gap:6px"><div style="font-size:12px;font-weight:700">'+_esc(d.dealer||'-')+' <span style="font-size:10px;color:#94a3b8">'+_esc(d.country||'')+'</span></div>'+(days!=null?'<span style="font-size:9px;color:'+(days>=30?'#dc2626':'#94a3b8')+';white-space:nowrap" title="단계 체류일">'+days+'일</span>':'')+'</div>'+
+    (d.product?'<div style="font-size:11px;color:#475569">'+_esc(d.product)+'</div>':'')+
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:3px"><span style="font-size:12px;font-weight:700;color:#0d9488">'+_fmtUSD(d.amount)+'</span><span style="font-size:10px;color:#64748b">'+(d.sales||'')+(d.prob?' · '+d.prob+'%':'')+'</span></div>'+
     (d.nextAction?'<div style="font-size:10px;color:#16a34a;margin-top:3px"><i class="bi bi-arrow-right-short"></i>'+d.nextAction+(d.nextDate?' ('+d.nextDate.slice(5)+')':'')+'</div>':'')+
     (d.expectedShip?'<div style="font-size:10px;color:'+(overdue?'#dc2626':'#9ca3af')+';margin-top:2px"><i class="bi bi-truck me-1"></i>선적 '+d.expectedShip.slice(5)+(overdue?' ⚠️':'')+'</div>':'')+
@@ -1274,7 +1275,7 @@ function renderCrmDash(){
   acts.sort(function(a,b){return (a.date||'')<(b.date||'')?-1:1;});
   var actH=acts.slice(0,8).map(function(a){var od=a.date<today; return '<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:12px"><span style="width:52px;color:'+(od?'#dc2626':'#64748b')+';font-weight:'+(od?'700':'400')+'">'+(a.date||'').slice(5)+(od?' !':'')+'</span><span style="flex:1">'+(a.who||'')+' — '+a.what+'</span></div>';}).join('')||'<div style="font-size:12px;color:#9ca3af">예정 액션 없음</div>';
   var ship=deals.filter(function(d){return d.expectedShip&&d.stage!=='선적/납품';}).sort(function(a,b){return (a.expectedShip||'')<(b.expectedShip||'')?-1:1;}).slice(0,6);
-  var shipH=ship.map(function(d){var od=d.expectedShip<today; return '<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:12px"><span style="width:52px;color:'+(od?'#dc2626':'#64748b')+'">'+d.expectedShip.slice(5)+'</span><span style="flex:1">'+(d.dealer||'')+' <span style="color:#94a3b8">'+(d.country||'')+'</span></span><span style="font-weight:600;color:#0d9488">'+_fmtUSD(d.amount)+'</span></div>';}).join('')||'<div style="font-size:12px;color:#9ca3af">선적 예정 없음</div>';
+  var shipH=ship.map(function(d){var od=d.expectedShip<today; return '<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:12px"><span style="width:52px;color:'+(od?'#dc2626':'#64748b')+'">'+d.expectedShip.slice(5)+'</span><span style="flex:1">'+_esc(d.dealer||'')+' <span style="color:#94a3b8">'+_esc(d.country||'')+'</span></span><span style="font-weight:600;color:#0d9488">'+_fmtUSD(d.amount)+'</span></div>';}).join('')||'<div style="font-size:12px;color:#9ca3af">선적 예정 없음</div>';
   el.innerHTML=
     '<div class="row g-2 mb-3">'+kpiH+'</div>'+
     '<div class="row g-2 mb-3">'+
@@ -1317,7 +1318,7 @@ function openDealer(name){
     '<div style="font-size:11px;font-weight:700;color:#64748b;margin:4px 0">진행 딜 ('+deals.length+')</div>'+
     (deals.map(function(d){return '<div style="font-size:12px;padding:3px 0;border-bottom:1px solid #f3f4f6;display:flex;justify-content:space-between"><span>'+(d.product||'-')+' <span style="color:#94a3b8">'+d.stage+'</span></span><span style="font-weight:600;color:#0d9488">'+_fmtUSD(d.amount)+'</span></div>';}).join('')||'<div style="font-size:12px;color:#9ca3af">없음</div>')+
     '<div style="font-size:11px;font-weight:700;color:#64748b;margin:8px 0 4px">최근 활동</div>'+
-    (acts.map(function(a){return '<div style="font-size:12px;padding:3px 0;border-bottom:1px solid #f3f4f6"><span style="color:#64748b">'+(a.date||'').slice(5)+' ['+(a.type||'')+']</span> '+(a.content||'').slice(0,40)+'</div>';}).join('')||'<div style="font-size:12px;color:#9ca3af">없음</div>');
+    (acts.map(function(a){return '<div style="font-size:12px;padding:3px 0;border-bottom:1px solid #f3f4f6"><span style="color:#64748b">'+(a.date||'').slice(5)+' ['+(a.type||'')+']</span> '+_esc((a.content||'').slice(0,40))+'</div>';}).join('')||'<div style="font-size:12px;color:#9ca3af">없음</div>');
   document.getElementById('dl-modal').style.display='flex';
 }
 function closeDealer(){ document.getElementById('dl-modal').style.display='none'; }
@@ -1335,7 +1336,7 @@ function renderActivities(){
   var ty=document.getElementById('ac-type')&&document.getElementById('ac-type').value||'';
   var arr=INTL_ACT.filter(function(a){ if(ty&&a.type!==ty)return false; if(kw&&((a.dealer||'')+(a.content||'')+(a.country||'')).toLowerCase().indexOf(kw)<0)return false; return true; }).sort(function(a,b){return (b.date||'')<(a.date||'')?-1:1;});
   el.innerHTML='<div class="card p-0" style="overflow:hidden"><table class="table table-sm mb-0" style="font-size:12px"><thead style="background:#f8fafc"><tr><th style="padding:8px 12px">일자</th><th>유형</th><th>딜러/국가</th><th>내용</th><th>다음액션</th><th>담당</th></tr></thead><tbody>'+
-    (arr.map(function(a){return '<tr style="cursor:pointer" onclick="openAct(\''+a.id+'\')"><td style="padding:7px 12px">'+(a.date||'')+'</td><td><span style="font-size:10px;background:#f1f5f9;color:'+(ACT_COLOR[a.type]||'#64748b')+';font-weight:600;border-radius:4px;padding:1px 6px">'+(a.type||'')+'</span></td><td>'+(a.dealer||'')+' <span style="color:#94a3b8">'+(a.country||'')+'</span></td><td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(a.content||'')+'</td><td style="color:#16a34a">'+(a.nextAction||'')+(a.nextDate?' ('+a.nextDate.slice(5)+')':'')+'</td><td>'+(a.sales||'')+'</td></tr>';}).join('')||'<tr><td colspan="6" class="text-center text-muted py-4">활동 기록이 없습니다</td></tr>')+
+    (arr.map(function(a){return '<tr style="cursor:pointer" onclick="openAct(\''+a.id+'\')"><td style="padding:7px 12px">'+(a.date||'')+'</td><td><span style="font-size:10px;background:#f1f5f9;color:'+(ACT_COLOR[a.type]||'#64748b')+';font-weight:600;border-radius:4px;padding:1px 6px">'+(a.type||'')+'</span></td><td>'+_esc(a.dealer||'')+' <span style="color:#94a3b8">'+_esc(a.country||'')+'</span></td><td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_esc(a.content||'')+'</td><td style="color:#16a34a">'+_esc(a.nextAction||'')+(a.nextDate?' ('+a.nextDate.slice(5)+')':'')+'</td><td>'+_esc(a.sales||'')+'</td></tr>';}).join('')||'<tr><td colspan="6" class="text-center text-muted py-4">활동 기록이 없습니다</td></tr>')+
     '</tbody></table></div>';
 }
 function openAct(id){
@@ -1371,7 +1372,7 @@ function renderSchedule(){
   var dates=Object.keys(groups).sort();
   if(!dates.length){ el.innerHTML='<div class="card p-4 text-center text-muted" style="font-size:13px">예정된 일정이 없습니다. 딜의 다음 액션·선적일이나 활동의 다음 액션일을 입력하면 여기 모입니다.</div>'; return; }
   el.innerHTML=dates.map(function(dt){var od=dt<today; return '<div class="card p-2 px-3 mb-2" style="border-left:3px solid '+(od?'#dc2626':'#0d9488')+'"><div style="font-size:12px;font-weight:700;color:'+(od?'#dc2626':'#0f172a')+';margin-bottom:5px">'+dt+(od?' · 지연':(dt===today?' · 오늘':''))+'</div>'+
-    groups[dt].map(function(it){return '<div style="display:flex;gap:8px;align-items:center;font-size:12px;padding:2px 0"><span style="font-size:10px;color:#fff;background:'+it.color+';border-radius:4px;padding:1px 6px;min-width:34px;text-align:center">'+it.cat+'</span><span style="font-weight:600">'+(it.who||'')+'</span><span style="color:#94a3b8;font-size:11px">'+(it.country||'')+'</span><span style="flex:1;color:#475569">'+it.what+'</span></div>';}).join('')+
+    groups[dt].map(function(it){return '<div style="display:flex;gap:8px;align-items:center;font-size:12px;padding:2px 0"><span style="font-size:10px;color:#fff;background:'+it.color+';border-radius:4px;padding:1px 6px;min-width:34px;text-align:center">'+it.cat+'</span><span style="font-weight:600">'+_esc(it.who||'')+'</span><span style="color:#94a3b8;font-size:11px">'+_esc(it.country||'')+'</span><span style="flex:1;color:#475569">'+_esc(it.what)+'</span></div>';}).join('')+
   '</div>';}).join('');
 }
 async function _loadIlboPending(){
