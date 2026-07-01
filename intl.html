@@ -758,11 +758,11 @@ async function doLogin() {
 async function _afterLogin(user) {
   const {data:profile} = await _sb.from('crm_profiles').select('display_name,access,role,position,dept').eq('id',user.id).maybeSingle();
   const access = profile?.access||'';
-  const allowed = access.includes('korea')||access.includes('intl')||profile?.role==='admin';
+  const allowed = access.includes('intl')||profile?.role==='admin'||user.email==='pmw0406@gmail.com';
   if(!allowed){
     await _sb.auth.signOut();
     const errEl=document.getElementById('login-error');
-    errEl.textContent='해외영업 접근 권한이 없습니다.';errEl.style.display='block';
+    errEl.textContent='해외영업 접근 권한이 없습니다. (해외 권한 필요)';errEl.style.display='block';
     const btn=document.getElementById('login-btn');btn.disabled=false;btn.textContent='로그인';
     return;
   }

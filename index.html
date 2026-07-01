@@ -1950,35 +1950,24 @@ function _hideLoading() {
 async function _bootApp(access) {
   document.title = 'wontech - 한국';
   await Promise.all([DB.load(), loadUserRole()]);
-  // japan 권한 또는 관리자이면 사이트 전환 메뉴 표시
-  if(access?.includes('japan') || access?.includes('intl') || access?.includes('korea') || _isAdmin) {
-    document.getElementById('site-switcher').style.display='block';
-  }
-  if(access?.includes('japan')) {
-    const ji = document.getElementById('switcher-japan-item');
-    if(ji) { ji.style.display='flex'; }
-  }
-  if(access?.includes('intl') || access?.includes('korea') || _isAdmin) {
-    const ii = document.getElementById('switcher-intl-item');
-    if(ii) { ii.style.display='flex'; }
-  }
-  { const ci = document.getElementById('switcher-cons-item'); if(ci) ci.style.display='flex'; }
-  { const ti = document.getElementById('switcher-total-item'); if(ti) ti.style.display='flex'; }
-  if(_isAdmin) {
-    const ai = document.getElementById('switcher-admin-item');
-    if(ai) { ai.style.display='flex'; }
-  }
-  // 사이트 이동 순서·표시 통일: 전사종합/한국/해외/일본/일보/관리자 (관리자만 관리자페이지)
+  // ── 사이트 이동: 접근 권한 있는 사이트만 노출(권한 배열이 유일한 기준) ──
+  const _acc = new Set(access||[]);
+  const _showSw=(id,ok)=>{ const el=document.getElementById(id); if(el) el.style.display=ok?'flex':'none'; };
+  _showSw('switcher-intl-item',  _acc.has('intl'));
+  _showSw('switcher-japan-item', _acc.has('japan'));
+  _showSw('switcher-total-item', _acc.has('total'));
+  _showSw('switcher-cons-item',  _acc.has('daily'));
+  _showSw('switcher-admin-item', _isAdmin);
+  // 전환 가능한 '다른' 사이트가 하나도 없으면(=한국 전용) 스위처 자체 숨김
+  const _hasOther = _acc.has('intl')||_acc.has('japan')||_acc.has('total')||_acc.has('daily')||_isAdmin;
+  document.getElementById('site-switcher').style.display = _hasOther ? 'block' : 'none';
+  // 표시 순서만 정렬(display는 위에서 결정 — 강제 표시 금지)
   (function(){
     var box=document.querySelector('#site-dropdown > div'); if(!box) return;
-    var kr=box.querySelector('div[style*="rgba(8,145,178"]');
-    var ids=['switcher-total-item',null,'switcher-intl-item','switcher-japan-item','switcher-cons-item','switcher-admin-item'];
-    ids.forEach(function(id,idx){
-      var el = id ? document.getElementById(id) : kr;
-      if(!el) return;
-      if(id!=='switcher-admin-item') el.style.display='flex';
-      el.style.marginTop = idx===0 ? '0' : '2px';
-      box.appendChild(el);
+    var kr=box.querySelector('div[style*="rgba(8,145,178"]'); if(kr) kr.style.display='flex';
+    ['switcher-total-item',null,'switcher-intl-item','switcher-japan-item','switcher-cons-item','switcher-admin-item'].forEach(function(id){
+      var el = id ? document.getElementById(id) : kr; if(!el) return;
+      el.style.marginTop='2px'; box.appendChild(el);
     });
   })();
   // 팀장/관리자만 담당자별 분석 메뉴 표시
