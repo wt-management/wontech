@@ -2838,6 +2838,28 @@ function openGugunDetail(sidoName,gugun){
   _ovShowModal('<i class="bi bi-geo me-1" style="color:#2563eb"></i>'+_ovEsc(sidoName)+' › '+_ovEsc(gugun)+' <span style="font-size:12px;color:#9ca3af">병원별</span>', back+head+hosps.map(([n,h])=>_hospRow(n,h,maxH)).join(''));
 }
 
+// 지연된 후속조치 목록(현황판 '지연 N건' 클릭)
+function _ovCloseThen(fn){ try{ const m=bootstrap.Modal.getInstance(document.getElementById('ovDetailModal')); if(m)m.hide(); }catch(e){} setTimeout(fn,230); }
+function _showOverdue(){
+  const t=new Date(); t.setHours(0,0,0,0);
+  const od=(DB.d.logs||[]).filter(l=>{ if(!l.nextDate||!l.nextAction)return false; const d=new Date(l.nextDate); d.setHours(0,0,0,0); return d<t; })
+    .sort((a,b)=>String(a.nextDate||'').localeCompare(String(b.nextDate||'')));
+  const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  if(!od.length){ _ovShowModal('지연된 후속조치','<div style="padding:24px;text-align:center;color:#94a3b8">지연된 항목이 없습니다.</div>'); return; }
+  const rows=od.map(l=>{
+    const days=Math.floor((t-new Date(l.nextDate).setHours(0,0,0,0))/864e5);
+    const nm=esc(l.custName).replace(/'/g,"\\x27"), sl=esc(l.sales||'').replace(/'/g,"\\x27"), ac=esc(l.nextAction||'').replace(/'/g,"\\x27");
+    return '<div style="display:flex;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px solid #f1f5f9">'
+      +'<span style="font-size:10px;font-weight:800;color:#dc2626;background:#fee2e2;border-radius:6px;padding:3px 8px;white-space:nowrap;flex-shrink:0">'+days+'일 지남</span>'
+      +'<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13px;color:#0f172a">'+esc(l.custName||'-')+(l.sales?' <span style="font-size:11px;color:#2563eb;font-weight:600">'+esc(l.sales)+'</span>':'')+'</div>'
+        +'<div style="font-size:12px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(l.nextAction||'')+' <span style="color:#94a3b8">· 예정일 '+esc(l.nextDate||'')+'</span></div></div>'
+      +'<button onclick="_ovCloseThen(function(){openSchedule({custName:\''+nm+'\',sales:\''+sl+'\',content:\''+ac+'\'})})" style="border:1px solid #bfdbfe;background:#eff6ff;color:#2563eb;border-radius:8px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0"><i class="bi bi-calendar-plus"></i> 일정 잡기</button>'
+      +'<button onclick="_ovCloseThen(function(){showHospitalDetail(\''+nm+'\')})" style="border:1px solid #e5e7eb;background:#fff;color:#475569;border-radius:8px;padding:5px 11px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0">병원 상세</button>'
+    +'</div>';
+  }).join('');
+  _ovShowModal('<i class="bi bi-clock-history me-1" style="color:#dc2626"></i>지연된 후속조치 <span style="font-size:13px;color:#94a3b8;font-weight:500">'+od.length+'건</span>',
+    '<div style="font-size:12px;color:#64748b;margin-bottom:8px">상담일지에 남긴 <b>“다음 방문 예정일”이 이미 지난</b> 건입니다. 다시 일정을 잡아 챙기세요.</div>'+rows);
+}
 function renderDashboard() {
   const now = new Date();
   _initDashPeriodUI();
@@ -2859,7 +2881,7 @@ function renderDashboard() {
   document.getElementById('dash-quick-badges').innerHTML=`
     <div class="dash-badge"><i class="bi bi-kanban" style="color:#2563eb"></i>딜 ${activePipe.length}건 진행중</div>
     <div class="dash-badge" style="cursor:pointer;border-color:#bfdbfe;color:#1d4ed8" onclick="showPage('schedule')" title="일정 페이지로 이동"><i class="bi bi-calendar-week" style="color:#2563eb"></i>오늘 일정 ${_todaySched}건</div>
-    ${overdueActs.length?`<div class="dash-badge" style="cursor:pointer;border-color:#fecaca;color:#dc2626" onclick="showPage('schedule')"><i class="bi bi-exclamation-circle-fill" style="color:#dc2626"></i>지연 ${overdueActs.length}건</div>`:''}
+    ${overdueActs.length?`<div class="dash-badge" style="cursor:pointer;border-color:#fecaca;color:#dc2626" onclick="_showOverdue()" title="지연된 후속조치 목록 보기"><i class="bi bi-exclamation-circle-fill" style="color:#dc2626"></i>지연 ${overdueActs.length}건</div>`:''}
   `;
 
   // KPI 1: 기간별 확정 매출
@@ -6087,6 +6109,11 @@ function _schFillProdList(){ const dl=document.getElementById('sch-prod-list'); 
   ['Oligio','Oligio Kiss','Oligio X','Oligio XM','Tightan','V LASER','Pico Andy','Pico Alex','Picocare Majesty','Pastelle Pro','Avvio','Lavieen','Sandro Dual'].forEach(p=>ps.add(p));
   dl.innerHTML=[...ps].sort((a,b)=>a.localeCompare(b,'ko')).map(p=>'<option value="'+p.replace(/"/g,'&quot;')+'">').join(''); dl.dataset.filled='1';
 }
+// 일정 모달 닫고 병원 상세 열기(모달 겹침 방지)
+function _schToHosp(nm){
+  try{ const m=bootstrap.Modal.getInstance(document.getElementById('scheduleModal')); if(m) m.hide(); }catch(e){}
+  setTimeout(function(){ try{ showHospitalDetail(nm); }catch(e){} }, 230);
+}
 // 병원 선택 시 종합정보 패널
 function _schHospInfo(name){
   const box=document.getElementById('sch-hosp-info'); if(!box) return;
@@ -6111,7 +6138,7 @@ function _schHospInfo(name){
   box.innerHTML='<div style="background:#f8fafc;border:1px solid #eef2f7;border-radius:12px;padding:12px 14px">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
       +'<b style="font-size:13px;color:#0f172a"><i class="bi bi-hospital me-1" style="color:#0891b2"></i>'+_schEsc(name)+'</b>'
-      +'<span onclick="showHospitalDetail(\''+nm+'\')" style="font-size:11px;color:#2563eb;cursor:pointer;font-weight:600">병원 상세 ↗</span></div>'
+      +'<span onclick="_schToHosp(\''+nm+'\')" style="font-size:11px;color:#2563eb;cursor:pointer;font-weight:600">병원 상세 ↗</span></div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px 14px;font-size:11.5px">'
       +cell('담당영업',_schEsc(mgr))+cell('지역',_schEsc(regStr))
       +cell('올해매출',y26?( (y26/1e8).toFixed(1)+'억'):'-')+cell('납품장비',equipCnt+'대')
