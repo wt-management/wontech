@@ -6940,7 +6940,8 @@ function devRepExport() {
   const YTD   = Array.from({length:toM-fromM+1},(_,i)=>fromM+i);
   const reps  = DEVICE.reps||{};
   const rows  = [['담당자',`${yr-1}년YTD(만원)`,`${yr}년YTD(만원)`,'YoY(%)','대수(당해)','거래처수','주력제품']];
-  Object.entries(reps).filter(([name])=>_isKorSales(name)).map(([name,rep]) => {
+  const _emptyRep={m2025:{},m2026:{},prods2025:{},prods2026:{},qty2025:0,qty2026:0,cust2025:0,cust2026:0};
+  KOR_SALES_TEAM.map((name) => { const rep=reps[name]||_emptyRep;
     const cur  = YTD.reduce((s,m)=>s+((yr===2026?rep.m2026:rep.m2025)||{})[m]||0, 0);
     const pre  = YTD.reduce((s,m)=>s+((yr===2026?rep.m2025:{})||{})[m]||0, 0);
     const yoy  = pre>0?((cur/pre-1)*100).toFixed(1):'';
@@ -6967,8 +6968,10 @@ function renderDevReps() {
 
   if (!Object.keys(reps).length) return;
 
-  // per-rep 기간 합 (한국영업1/2파트만 표시 — 대리점·기타 제외)
-  const entries = Object.entries(reps).filter(([name])=>_isKorSales(name)).map(([name, rep]) => {
+  // 한국영업1/2파트 전원 표시 — 실적 없는 담당자도 0으로 포함(대리점·기타 제외)
+  const _emptyRep={total:0,y2025:0,y2026:0,cust2025:0,cust2026:0,prods2025:{},prods2026:{},m2025:{},m2026:{},qty2025:0,qty2026:0};
+  const entries = KOR_SALES_TEAM.map((name) => {
+    const rep = reps[name] || _emptyRep;
     const cur  = _spanV(rep,_cur);
     const pre  = _spanV(rep,_prev);
     const qty  = _endY===2026 ? rep.qty2026 : rep.qty2025;
