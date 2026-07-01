@@ -757,6 +757,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       <span id="sch-title" class="ms-2" style="font-size:13px;font-weight:700;color:#374151"></span>
       <span id="sch-monthnav" class="ms-auto"></span>
     </div>
+    <div id="sch-stats"></div>
     <div id="sch-body"></div>
   </div>
 
@@ -5843,6 +5844,49 @@ function _schItemRow(i){
     +(i.kind==='sched'?'<button class="btn btn-sm btn-link p-0 text-secondary" style="font-size:12px;flex-shrink:0" onclick="editSchedule(\''+i.id+'\')"><i class="bi bi-pencil"></i></button>':'')
     +'</div>';
 }
+// 요약 통계바 + 유형 범례
+function _schStatsBar(all){
+  const today=_schTodayStr(), wk=_schWeekRange();
+  const t=all.filter(i=>i.date===today).length;
+  const w=all.filter(i=>i.date>=wk.start&&i.date<=wk.end).length;
+  const pend=all.filter(i=>i.kind==='sched'&&!i.done&&i.date>=today).length;
+  const done=all.filter(i=>i.kind==='sched'&&i.done).length;
+  const byType={}; all.forEach(i=>byType[i.type]=(byType[i.type]||0)+1);
+  const stat=(lbl,n,col)=>'<div style="flex:1;min-width:78px;background:#fff;border:1px solid #eef2f7;border-radius:11px;padding:9px 13px;box-shadow:0 1px 2px rgba(15,23,42,.03)"><div style="font-size:11px;color:#64748b">'+lbl+'</div><div style="font-size:21px;font-weight:800;color:'+col+';line-height:1.15">'+n+'</div></div>';
+  const legend=Object.keys(_SCH_COL).filter(x=>x!=='후속').map(x=>'<span style="font-size:10.5px;color:'+_SCH_COL[x]+';font-weight:600"><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:'+_SCH_COL[x]+';margin-right:4px;vertical-align:middle"></span>'+x+(byType[x]?' <span style="color:#94a3b8">'+byType[x]+'</span>':'')+'</span>').join('&nbsp;&nbsp;&nbsp;');
+  return '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">'
+      +stat('오늘',t,'#2563eb')+stat('이번주',w,'#0891b2')+stat('예정·미완료',pend,'#ea580c')+stat('완료',done,'#16a34a')
+    +'</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin-bottom:14px;padding:8px 12px;background:#f8fafc;border-radius:9px">'
+      +'<span style="font-size:10.5px;color:#94a3b8;font-weight:700">유형</span>'+legend+'</div>';
+}
+// 이번주 7일 그리드용 미니 카드
+function _schMiniCard(i){
+  const c=_SCH_COL[i.type]||'#64748b';
+  const nm=_schEsc(i.custName).replace(/&#39;/g,"\\x27");
+  return '<div onclick="'+(i.kind==='sched'?"editSchedule('"+i.id+"')":"showHospitalDetail('"+nm+"')")+'" style="background:'+c+'14;border-left:3px solid '+c+';border-radius:5px;padding:4px 6px;margin-bottom:4px;cursor:pointer;'+(i.done?'opacity:.5':'')+'" title="'+_schEsc(i.custName+' · '+i.content)+'">'
+    +'<div style="font-size:9.5px;font-weight:800;color:'+c+'">'+(i.time?_schEsc(i.time)+' ':'')+_schEsc(i.type)+(i.done?' ✓':'')+'</div>'
+    +'<div style="font-size:10.5px;font-weight:700;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_schEsc(i.custName)+'</div>'
+    +(i.sales?'<div style="font-size:9px;color:#2563eb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><i class="bi bi-person-badge"></i> '+_schEsc(i.sales)+'</div>':'')
+  +'</div>';
+}
+// 이번주 7일 그리드 뷰
+function _schWeekGrid(items){
+  const wk=_schWeekRange(); const mon=new Date(wk.start+'T00:00');
+  const f=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+  const WD=['월','화','수','목','금','토','일'];
+  const byd={}; items.forEach(i=>{ if(i.date>=wk.start&&i.date<=wk.end)(byd[i.date]=byd[i.date]||[]).push(i); });
+  const today=_schTodayStr();
+  let cols='';
+  for(let idx=0;idx<7;idx++){ const dt=new Date(mon); dt.setDate(mon.getDate()+idx); const ds=f(dt); const isToday=ds===today;
+    const its=(byd[ds]||[]).sort((a,b)=>(a.time||'99').localeCompare(b.time||'99'));
+    cols+='<div style="border:1px solid '+(isToday?'#bfdbfe':'#eef2f7')+';border-radius:9px;min-height:140px;'+(isToday?'background:#eff6ff':'background:#fff')+';overflow:hidden">'
+      +'<div style="padding:6px 8px;font-size:11px;font-weight:800;border-bottom:1px solid #f1f3f7;color:'+(isToday?'#2563eb':idx===5?'#2563eb':idx===6?'#dc2626':'#475569')+'">'+WD[idx]+' <span style="font-weight:600;color:#9ca3af">'+parseInt(ds.slice(8),10)+'일</span>'+(isToday?' <span style="font-size:9px">●오늘</span>':'')+'</div>'
+      +'<div style="padding:5px">'+(its.length?its.map(_schMiniCard).join(''):'<div style="font-size:10px;color:#cbd5e1;text-align:center;padding:10px 0">일정 없음</div>')+'</div>'
+    +'</div>';
+  }
+  return '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><div style="display:grid;grid-template-columns:repeat(7,minmax(96px,1fr));gap:6px;min-width:700px">'+cols+'</div></div>';
+}
 function _schListView(list){
   if(!list.length) return '<div class="text-center text-muted py-5" style="font-size:13px"><i class="bi bi-calendar-x" style="font-size:24px;color:#cbd5e1"></i><div class="mt-2">일정이 없습니다. <b>일정 추가</b>로 방문·콜을 등록하세요.</div></div>';
   const byd={}; list.forEach(i=>{ (byd[i.date]=byd[i.date]||[]).push(i); });
@@ -5881,14 +5925,19 @@ function renderSchedule(){
   if(sf && !sf.dataset.filled){ const sn=[...new Set(all.map(i=>i.sales).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko')); sf.insertAdjacentHTML('beforeend', sn.map(n=>'<option value="'+n.replace(/"/g,'&quot;')+'">'+_schEsc(n)+'</option>').join('')); sf.dataset.filled='1'; }
   const sfv=(sf&&sf.value)||'';
   const items = sfv? all.filter(i=>i.sales===sfv) : all;
+  const st=document.getElementById('sch-stats'); if(st) st.innerHTML=_schStatsBar(items);
   const body=document.getElementById('sch-body'), title=document.getElementById('sch-title'), nav=document.getElementById('sch-monthnav');
   nav.innerHTML=''; title.textContent='';
   if(_schView==='month'){ body.innerHTML=_schMonthView(items); }
+  else if(_schView==='week'){
+    const wk=_schWeekRange();
+    title.textContent='이번주 '+wk.start.slice(5).replace('-','.')+'~'+wk.end.slice(5).replace('-','.')+' · '+items.filter(i=>i.date>=wk.start&&i.date<=wk.end).length+'건'+(sfv?' · '+_schEsc(sfv):'');
+    body.innerHTML=_schWeekGrid(items);
+  }
   else {
-    const today=_schTodayStr(); let list,label;
-    if(_schView==='today'){ list=items.filter(i=>i.date===today); label='오늘 '+today.slice(5).replace('-','/'); }
-    else { const wk=_schWeekRange(); list=items.filter(i=>i.date>=wk.start&&i.date<=wk.end); label='이번주 '+wk.start.slice(5).replace('-','.')+'~'+wk.end.slice(5).replace('-','.'); }
-    title.textContent=label+' · '+list.length+'건'+(sfv?' · '+_schEsc(sfv):'');
+    const today=_schTodayStr();
+    const list=items.filter(i=>i.date===today);
+    title.textContent='오늘 '+today.slice(5).replace('-','/')+' · '+list.length+'건'+(sfv?' · '+_schEsc(sfv):'');
     body.innerHTML=_schListView(list);
   }
 }
