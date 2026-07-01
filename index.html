@@ -2025,7 +2025,7 @@ function _ilboMonthMaps(){
     var m=parseInt(d.slice(5,7),10); if(!m) return;
     var amt=Number(r.amount)||0;
     var rc=String(r.category||r.cat||r.gubun||'');
-    var isCons = rc.indexOf('소모')>=0 ? true : (rc.indexOf('제품')>=0||rc.indexOf('장비')>=0) ? false : !!consSet[_normPname(r.product)];
+    var isCons = rc.indexOf('소모')>=0 ? true : (rc.indexOf('제품')>=0||rc.indexOf('장비')>=0) ? false : (!!consSet[_normPname(r.product)] || /tip|팁|소모품|카트리지|cartridge|gel|젤|니들|needle|cathet/i.test(String(r.product||'')));
     if(isCons) consMo[m]=(consMo[m]||0)+amt; else devMo[m]=(devMo[m]||0)+amt;
   });
   return {consMo:consMo, devMo:devMo};
@@ -4074,6 +4074,8 @@ function renderConsHospitals() {
   const _hmY=(h,y)=>y===2026?(h.m2026||{}):(y===2025?(h.m2025||{}):{});
   const ytd26cur  = h => _hcur.reduce((s,x)=>s+(_hmY(h,x.y)[x.m]||0),0);
   const ytd25est  = h => _hprev.reduce((s,x)=>s+(_hmY(h,x.y)[x.m]||0),0);
+  const _prevHasData=_hprev.some(x=>x.y===2025||x.y===2026);   // 전년 비교기간에 데이터가 있나(2024↓ 없음)
+  const _noHosp='<div style="font-size:12px;color:#9ca3af;padding:16px 0;text-align:center">'+(_prevHasData?'해당 병원 없음':'선택 기간의 전년(비교) 데이터가 없어 성장·감소·이탈 비교 불가')+'</div>';
 
   const all = Object.entries(CONS.hospitals).filter(([n,h])=>{
     if(q && !n.toLowerCase().includes(q)) return false;
@@ -4176,10 +4178,10 @@ function renderConsHospitals() {
         <div style="background:#fffbeb;border-radius:4px;padding:3px 6px;font-size:10px"><div style="font-size:9px;color:#9ca3af;margin-bottom:1px">최근구매</div>${lastBadge(h)}</div>
       </div>
     </div>`;
-  }).join('') || '<div style="font-size:12px;color:#9ca3af;padding:16px 0;text-align:center">해당 병원 없음</div>';
+  }).join('') || _noHosp;
 
   // ── 성장 ──
-  document.getElementById('hosp-growth-list').innerHTML=all.filter(([,h])=>ytd26cur(h)>0&&h.y2025>0&&ytd26cur(h)>=ytd25est(h))
+  document.getElementById('hosp-growth-list').innerHTML=all.filter(([,h])=>ytd26cur(h)>0&&ytd25est(h)>0&&ytd26cur(h)>=ytd25est(h))
     .sort((a,b)=>(ytd26cur(b[1])/Math.max(ytd25est(b[1]),1))-(ytd26cur(a[1])/Math.max(ytd25est(a[1]),1)))
     .map(([name,h])=>{
       const est25=ytd25est(h),cur26=ytd26cur(h),chg=est25>0?(cur26/est25-1)*100:null;
@@ -4203,11 +4205,11 @@ function renderConsHospitals() {
           <div style="background:#f0fdf4;border-radius:4px;padding:3px 6px;font-size:10px"><div style="font-size:9px;color:#9ca3af;margin-bottom:1px">최근구매</div>${lastBadge(h)}</div>
         </div>
       </div>`;
-    }).join('') || '<div style="font-size:12px;color:#9ca3af;padding:16px 0;text-align:center">해당 병원 없음</div>';
+    }).join('') || _noHosp;
 
   // ── 신규 ──
-  document.getElementById('hosp-new-list').innerHTML=all.filter(([,h])=>h.y2026>0&&h.y2025<=0)
-    .sort((a,b)=>b[1].y2026-a[1].y2026)
+  document.getElementById('hosp-new-list').innerHTML=all.filter(([,h])=>ytd26cur(h)>0&&ytd25est(h)<=0)
+    .sort((a,b)=>ytd26cur(b[1])-ytd26cur(a[1]))
     .map(([name,h])=>{
       const p26=calcPat(h.txns2026||[]);
       const safeN=name.replace(/"/g,'&quot;');
@@ -4216,7 +4218,7 @@ function renderConsHospitals() {
           <div style="flex:1;min-width:0;cursor:pointer" data-name="${safeN}" onclick="showHospitalDetail(this.dataset.name)">
             <span style="font-size:12px;font-weight:700">${gradeBadge(h)}<span style="text-decoration:underline dotted">${name}</span><span style="font-size:9px;background:#dcfce7;color:#16a34a;border-radius:4px;padding:1px 5px;margin-left:4px">NEW</span>${h.sales?`<span style="font-size:10px;color:#9ca3af;margin-left:5px">${h.sales}</span>`:''}</span>
           </div>
-          <span style="font-size:12px;font-weight:800;color:#7c3aed;flex-shrink:0">${fmtW(h.y2026)}</span>
+          <span style="font-size:12px;font-weight:800;color:#7c3aed;flex-shrink:0">${fmtW(ytd26cur(h))}</span>
         </div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">
           <div style="background:#faf5ff;border-radius:4px;padding:3px 6px;font-size:10px"><div style="font-size:9px;color:#9ca3af;margin-bottom:1px">구매건수</div><strong style="color:#374151">${p26?p26.cnt+'건':'-'}</strong></div>
@@ -4225,7 +4227,7 @@ function renderConsHospitals() {
           <div style="background:#faf5ff;border-radius:4px;padding:3px 6px;font-size:10px"><div style="font-size:9px;color:#9ca3af;margin-bottom:1px">주력제품</div><strong style="color:#7c3aed;font-size:9px">${h.topProd||'-'}</strong></div>
         </div>
       </div>`;
-    }).join('') || '<div style="font-size:12px;color:#9ca3af;padding:16px 0;text-align:center">해당 병원 없음</div>';
+    }).join('') || _noHosp;
 
   if(_hospTab==='rank') renderHospRank();
 }
@@ -4310,13 +4312,16 @@ function renderConsAccounts() { renderConsHospitals(); }
 function consExportAccounts() {
   const q = (document.getElementById('hosp-search')?.value||'').trim().toLowerCase();
   let list = Object.entries(CONS.hospitals).filter(([n])=>!q||n.toLowerCase().includes(q));
-  const ytd25est = h => Math.round((h.y2025||0)/12*5);
-  list.sort((a,b)=>b[1].y2026-a[1].y2026);
-  const ws_data = [['순위','병원명','2025 YTD 추정(1-5월)','2026 YTD(1-5월)','YoY(%)','2025 연간','전체 누적','주요 제품','구매건수']];
+  const _ym=Object.keys(CONS.monthly2026||{}).map(Number).filter(m=>m>=1&&m<=12), _lastM=_ym.length?Math.max(..._ym):0;
+  const ytd25est = h => _ym.reduce((s,m)=>s+((h.m2025||{})[m]||0),0);   // 화면과 동일: 실제 1~마지막데이터월 m2025 합
+  const ytd26cur = h => _ym.reduce((s,m)=>s+((h.m2026||{})[m]||0),0);
+  list.sort((a,b)=>ytd26cur(b[1])-ytd26cur(a[1]));
+  const _hdr='(1-'+_lastM+'월)';
+  const ws_data = [['순위','병원명','2025 YTD '+_hdr,'2026 YTD '+_hdr,'YoY(%)','2025 연간','전체 누적','주요 제품','구매건수']];
   list.forEach(([name,h],i)=>{
-    const est25=ytd25est(h);
-    const chg=est25>0&&h.y2026>0?((h.y2026/est25-1)*100).toFixed(1):'';
-    ws_data.push([i+1,name,est25,h.y2026||0,chg,h.y2025||0,h.total||0,h.topProd||'',h.orders||0]);
+    const est25=ytd25est(h), cur26=ytd26cur(h);
+    const chg=est25>0&&cur26>0?((cur26/est25-1)*100).toFixed(1):'';
+    ws_data.push([i+1,name,est25,cur26,chg,h.y2025||0,h.total||0,h.topProd||'',h.orders||0]);
   });
   const wb=XLSX.utils.book_new(), ws=XLSX.utils.aoa_to_sheet(ws_data);
   ws['!cols']=[{wch:5},{wch:30},{wch:16},{wch:16},{wch:10},{wch:14},{wch:14},{wch:24},{wch:10}];
@@ -4628,6 +4633,8 @@ function setPipeChip(stage, el) {
   renderPipeline();
 }
 
+// 공용 HTML 이스케이프 (저장형 XSS 방지 + 특수문자 깨짐 방지)
+function _escH(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function renderPipeline() {
   const q=(document.getElementById('pipe-search')?.value||'').toLowerCase().trim();
   const salesF=document.getElementById('pipe-sales-filter')?.value||'';
@@ -4704,17 +4711,17 @@ function renderPipeline() {
         const isOverdue=d.expectedDate&&d.expectedDate<today&&!isWon;
         return`<div class="deal-card" draggable="true" ondragstart="dragStart(event,'${d.id}')" onclick='openDealDrawer("${d.id}")' style="border-left:3px solid ${SC[d.stage]||'#4f8ef7'}${isClosingThis?';box-shadow:0 0 0 2px #f59e0b40':isOverdue?';box-shadow:0 0 0 2px #dc262640':''}">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:4px">
-            <div style="font-size:13px;font-weight:600;flex:1;line-height:1.3">${d.custName||''}</div>
+            <div style="font-size:13px;font-weight:600;flex:1;line-height:1.3">${_escH(d.custName)}</div>
             ${daysBadge}
           </div>
-          <div style="font-size:11px;color:#9ca3af;margin-top:2px">${d.model||''}</div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:2px">${_escH(d.model)}</div>
           <div style="font-size:15px;font-weight:800;color:#1d4ed8;margin-top:6px">${fmtAmt(Number(d.amount||0))}</div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-            <span style="font-size:11px;font-weight:600;color:#374151">${d.sales||''}</span>
+            <span style="font-size:11px;font-weight:600;color:#374151">${_escH(d.sales)}</span>
             <span style="background:${probColor(d.prob)};color:#fff;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700">${d.prob||0}%</span>
           </div>
           ${d.expectedDate?`<div style="font-size:10px;color:${isOverdue?'#dc2626':isClosingThis?'#d97706':'#9ca3af'};margin-top:5px;font-weight:${isOverdue||isClosingThis?'700':'400'}"><i class="bi bi-calendar3 me-1"></i>마감 ${fmtDate(d.expectedDate)}${isOverdue?' ⚠️ 기한초과':isClosingThis?' · 이달마감':''}</div>`:''}
-          ${d.nextAction?`<div style="font-size:10px;color:#059669;margin-top:4px;background:#ecfdf5;border-radius:4px;padding:3px 6px;display:flex;gap:4px;align-items:center"><i class="bi bi-arrow-right-circle-fill"></i><span>${d.nextAction}${d.nextDate?' · '+fmtDate(d.nextDate):''}</span></div>`:''}
+          ${d.nextAction?`<div style="font-size:10px;color:#059669;margin-top:4px;background:#ecfdf5;border-radius:4px;padding:3px 6px;display:flex;gap:4px;align-items:center"><i class="bi bi-arrow-right-circle-fill"></i><span>${_escH(d.nextAction)}${d.nextDate?' · '+fmtDate(d.nextDate):''}</span></div>`:''}
         </div>`;
       }).join('')}
     </div>`;
@@ -4821,9 +4828,9 @@ function renderQuotes() {
   if(!sorted.length){el.innerHTML='<tr><td colspan="7" class="text-center text-muted py-3">견적서 없음</td></tr>';return;}
   el.innerHTML=sorted.map(q=>`<tr>
     <td><small class="text-muted" style="font-size:11px">${q.id}</small></td>
-    <td><strong>${q.custName||''}</strong></td>
+    <td><strong>${_escH(q.custName)}</strong></td>
     <td style="font-size:12px">${fmtDate(q.quoteDate)}</td>
-    <td style="font-size:12px">${q.sales||''}</td>
+    <td style="font-size:12px">${_escH(q.sales)}</td>
     <td style="font-weight:700">${fmtAmt(Number(q.total||0))}</td>
     <td><span class="badge quote-status-${q.status||'임시'}">${q.status||'임시'}</span></td>
     <td style="white-space:nowrap">
@@ -5928,7 +5935,7 @@ function renderLogs(){
   const list=[...DB.d.logs].filter(l=>l.kind!=='schedule').sort((a,b)=>new Date(b.date)-new Date(a.date)).filter(l=>!q||(l.custName||'').toLowerCase().includes(q)||(l.content||'').toLowerCase().includes(q)||(l.sales||'').toLowerCase().includes(q));
   const el=document.getElementById('log-list');
   if(!list.length){el.innerHTML='<tr><td colspan="8" class="text-center text-muted py-3">데이터 없음</td></tr>';return;}
-  el.innerHTML=list.map(l=>`<tr><td style="font-size:12px">${fmtDate(l.date)}</td><td><strong>${l.custName||''}</strong></td><td><span class="badge bg-secondary" style="font-size:10px">${l.type||''}</span></td><td style="font-size:12px;color:#555">${(l.content||'').substring(0,35)}</td><td style="font-size:12px">${l.product||''}</td><td style="font-size:12px">${l.nextAction||''}</td><td style="font-size:12px">${l.sales||''}</td><td><button class="btn btn-outline-primary" style="font-size:11px;padding:1px 6px" onclick='editLog("${l.id}")'>수정</button></td></tr>`).join('');
+  el.innerHTML=list.map(l=>`<tr><td style="font-size:12px">${fmtDate(l.date)}</td><td><strong>${_escH(l.custName)}</strong></td><td><span class="badge bg-secondary" style="font-size:10px">${_escH(l.type)}</span></td><td style="font-size:12px;color:#555">${_escH((l.content||'').substring(0,35))}</td><td style="font-size:12px">${_escH(l.product)}</td><td style="font-size:12px">${_escH(l.nextAction)}</td><td style="font-size:12px">${_escH(l.sales)}</td><td><button class="btn btn-outline-primary" style="font-size:11px;padding:1px 6px" onclick='editLog("${l.id}")'>수정</button></td></tr>`).join('');
 }
 
 function editLog(id){
