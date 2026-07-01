@@ -3150,6 +3150,7 @@ async function doLogin() {
   sessionStorage.removeItem('wt_app');   // 로그인 시 이전 앱 상태 무시 → 런처부터
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-loading').style.display='flex';
+  _applyLoginUI(data.user);   // 좌측하단 사용자 블록 표시(신규 로그인 시 누락되던 버그)
   await _showLauncherOrApp(data.user);
 }
 
@@ -5972,6 +5973,7 @@ async function loadUserRole() {
 }
 
 function _updateSidebarProfile(profile, email) {
+  const box=document.getElementById('sidebar-user'); if(box) box.style.display='block';   // 항상 표시(비번변경 접근)
   const name = profile.display_name || email?.split('@')[0] || '-';
   const position = profile.position || '';
   const dept = profile.dept || '';
