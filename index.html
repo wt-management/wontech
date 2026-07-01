@@ -762,41 +762,38 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 
   <!-- ROI / Sales Speech 공용 디자인 -->
   <style>
-  /* ── 세그먼트 토글 ── */
-  #page-roi .roi-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
-  #page-roi .roi-title{font-size:19px;font-weight:800;color:#0f172a;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
-  #page-roi .roi-title .ti{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#fb923c,#f97316);color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px}
-  .roi-seg{display:inline-flex;background:#eef2f6;border-radius:12px;padding:4px;gap:4px}
-  .roi-seg button{border:0;background:transparent;font-size:13px;font-weight:700;color:#64748b;padding:8px 24px;border-radius:9px;cursor:pointer;transition:.18s}
-  .roi-seg button.active{background:#fff;color:#0f172a;box-shadow:0 1px 6px rgba(15,23,42,.10)}
-  /* ── 2단 레이아웃 ── */
-  .roi-split{display:grid;grid-template-columns:minmax(300px,.85fr) 1.15fr;gap:18px;align-items:start}
-  @media(max-width:820px){.roi-split{grid-template-columns:1fr}}
-  .roi-form{background:#fff;border:1px solid #eef2f6;border-radius:18px;padding:20px 22px;box-shadow:0 1px 3px rgba(15,23,42,.04)}
-  .roi-form .rf-hd{font-size:14px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:7px;margin-bottom:3px}
-  .roi-form .rf-desc{font-size:11.5px;color:#94a3b8;margin-bottom:16px;line-height:1.5}
-  .roi-form .rf-lbl{font-size:11px;color:#64748b;font-weight:600;margin-bottom:5px;display:block}
-  .roi-form .form-control,.roi-form .form-select{border-radius:10px;border-color:#e5e9f0;font-size:13.5px;padding:9px 12px;background:#fbfcfe}
-  .roi-form .form-control:focus,.roi-form .form-select:focus{border-color:#f9a86a;box-shadow:0 0 0 3px rgba(249,115,22,.13);background:#fff}
-  .roi-form .form-control[readonly]{background:#f4f6fa;color:#64748b}
-  /* ── 결과: 다크 히어로 + 스탯 타일 ── */
-  .roi-res{display:flex;flex-direction:column;gap:14px}
-  .roi-hero-res{border-radius:24px;padding:28px 30px;position:relative;overflow:hidden;background:radial-gradient(120% 120% at 100% 0%,#1b2b47 0%,#0b1220 60%);box-shadow:0 18px 40px -12px rgba(11,18,32,.55)}
-  .roi-hero-res .hglow{position:absolute;width:280px;height:280px;border-radius:50%;right:-80px;top:-110px;filter:blur(4px);pointer-events:none}
-  .roi-hero-res .hr-label{font-size:12px;font-weight:700;color:#8ea3c0;letter-spacing:.04em;position:relative;display:flex;align-items:center;gap:7px}
-  .roi-hero-res .hr-big{font-size:58px;font-weight:900;line-height:1;letter-spacing:-.035em;margin:12px 0 6px;position:relative;-webkit-background-clip:text;background-clip:text;color:transparent}
-  .roi-hero-res .hr-big em{font-style:normal;font-size:26px;font-weight:800;margin-left:3px}
-  .roi-hero-res .hr-sub{font-size:12.5px;color:#b6c4da;position:relative;line-height:1.55}
-  .roi-hero-res .hr-form{position:relative;margin-top:16px;display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);border-radius:12px;padding:9px 13px}
-  .roi-hero-res .hr-form span{font-size:11.5px;color:#cbd5e1;font-weight:600}
-  .roi-hero-res .hr-form i{color:#64748b;font-style:normal;font-weight:700}
-  .roi-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .roi-stat{background:#fff;border:1px solid #eef2f6;border-radius:16px;padding:15px 17px;box-shadow:0 1px 3px rgba(15,23,42,.04);transition:.15s}
-  .roi-stat:hover{box-shadow:0 6px 18px rgba(15,23,42,.08);transform:translateY(-2px)}
-  .roi-stat .st-lbl{font-size:11px;color:#64748b;font-weight:600;display:flex;align-items:center;gap:5px}
-  .roi-stat .st-val{font-size:23px;font-weight:900;letter-spacing:-.02em;margin-top:5px;line-height:1.05}
-  .roi-stat .st-sub{font-size:10.5px;color:#94a3b8;margin-top:3px}
-  .roi-stat.wide{grid-column:1/-1}
+  /* ── ROI: 미니멀 부티크(피부과 럭셔리) ── */
+  #page-roi{--ink:#221f1c;--mut:#8c837a;--line:#efeae3;--clay:#bf6a45;--cardbd:#ece7e1}
+  #page-roi .roi-top{display:flex;justify-content:center;margin-bottom:24px}
+  .roi-seg{display:inline-flex;background:#f2ede7;border-radius:999px;padding:4px;gap:2px}
+  .roi-seg button{border:0;background:transparent;font-size:13px;font-weight:600;color:#9a9089;padding:9px 32px;border-radius:999px;cursor:pointer;transition:.2s;letter-spacing:.01em}
+  .roi-seg button.active{background:#fff;color:#221f1c;box-shadow:0 1px 4px rgba(60,45,30,.10)}
+  .roi-split{display:grid;grid-template-columns:minmax(290px,.9fr) 1.1fr;gap:22px;align-items:start}
+  @media(max-width:860px){.roi-split{grid-template-columns:1fr}}
+  /* 입력 폼 */
+  .roi-form{background:#fff;border:1px solid var(--cardbd);border-radius:22px;padding:28px 30px;box-shadow:0 1px 2px rgba(60,50,40,.03)}
+  .roi-form .rf-hd{font-size:11.5px;font-weight:700;color:#221f1c;letter-spacing:.13em;text-transform:uppercase;margin-bottom:22px;display:flex;align-items:center;gap:9px}
+  .roi-form .rf-hd .dot{width:6px;height:6px;border-radius:50%;background:var(--clay);flex-shrink:0}
+  .roi-form .rf-lbl{font-size:11px;color:#a49a90;font-weight:600;margin-bottom:6px;display:block}
+  .roi-form .form-control,.roi-form .form-select{border-radius:11px;border:1px solid #ebe5dd;font-size:14px;padding:10px 13px;background:#faf8f5;color:#221f1c;font-weight:600}
+  .roi-form .form-control:focus,.roi-form .form-select:focus{border-color:var(--clay);box-shadow:0 0 0 3px rgba(191,106,69,.12);background:#fff}
+  .roi-form .form-control[readonly]{background:#f5f1ec;color:#a49a90}
+  .roi-form .row{--bs-gutter-y:1.05rem}
+  /* 결과 */
+  .lux-res{background:#fff;border:1px solid var(--cardbd);border-radius:22px;overflow:hidden;box-shadow:0 1px 2px rgba(60,50,40,.03)}
+  .lux-head{text-align:center;padding:36px 30px 30px;background:linear-gradient(180deg,#fbf9f6,#fff)}
+  .lux-cap{font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#b0a69b}
+  .lux-num{font-size:68px;font-weight:800;letter-spacing:-.035em;color:#221f1c;line-height:1;margin-top:16px}
+  .lux-num span{font-size:23px;font-weight:600;color:var(--clay);margin-left:5px;letter-spacing:0}
+  .lux-note{font-size:12.5px;color:#8c837a;margin-top:15px;line-height:1.5}
+  .lux-list{padding:6px 30px 26px}
+  .lux-item{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px 0;border-bottom:1px solid var(--line)}
+  .lux-item:last-child{border-bottom:0}
+  .lux-item .li-l{font-size:12.5px;color:#8c837a;font-weight:500;line-height:1.35}
+  .lux-item .li-l small{display:block;font-size:10.5px;color:#b7ada2;margin-top:2px;font-weight:400}
+  .lux-item .li-v{font-size:17px;font-weight:800;color:#221f1c;letter-spacing:-.01em;text-align:right;white-space:nowrap}
+  .lux-item.hi .li-v{color:var(--clay)}
+  .lux-err{background:#fff;border:1px solid #f0dcd2;border-radius:18px;padding:24px;color:#a1543a;font-size:13px;text-align:center}
   /* ── Sales Speech ── */
   .spd-hero{border-radius:16px;padding:16px 20px;margin-bottom:18px;display:flex;align-items:center;gap:15px;background:linear-gradient(120deg,#eef2ff,#f5f3ff);border:1px solid #c7d2fe}
   .spd-hero .rs-ic{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;flex-shrink:0;background:linear-gradient(135deg,#6366f1,#4f46e5)}
@@ -836,7 +833,6 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
   <!-- ROI 계산기 (네이티브 재구현: RF/HIFU · Laser) -->
   <div id="page-roi" class="page">
     <div class="roi-top">
-      <div class="roi-title"><span class="ti"><i class="bi bi-graph-up-arrow"></i></span>ROI 시뮬레이터</div>
       <div class="roi-seg">
         <button id="roitab-rf" class="active" onclick="roiTab('rf')">RF / HIFU</button>
         <button id="roitab-laser" onclick="roiTab('laser')">Laser</button>
@@ -845,8 +841,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 
     <div id="roi-rf-panel" class="roi-split">
       <div class="roi-form">
-        <div class="rf-hd"><i class="bi bi-lightning-charge-fill" style="color:#f97316"></i>RF / HIFU</div>
-        <div class="rf-desc">장비·패키지를 선택하면 검증된 기준값이 자동 입력됩니다.<br>예외는 “직접 입력”으로 조정하세요.</div>
+        <div class="rf-hd"><span class="dot"></span>RF / HIFU 입력</div>
         <div class="row g-3">
           <div class="col-12"><label class="rf-lbl">장비명</label><select id="rf-equipment" class="form-select"></select></div>
           <div class="col-12" id="rf-package-row"><label class="rf-lbl">패키지명</label><select id="rf-package" class="form-select"></select></div>
@@ -863,8 +858,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 
     <div id="roi-laser-panel" class="roi-split" style="display:none">
       <div class="roi-form">
-        <div class="rf-hd"><i class="bi bi-brightness-high-fill" style="color:#2563eb"></i>Laser</div>
-        <div class="rf-desc">일 고객 유입 기준 패키지 매출로<br>장비 투자 회수일을 계산합니다.</div>
+        <div class="rf-hd"><span class="dot"></span>Laser 입력</div>
         <div class="row g-3">
           <div class="col-12"><label class="rf-lbl">장비 가격(원)</label><input id="laser-equipmentPrice" class="form-control" inputmode="numeric" value="150,000,000"></div>
           <div class="col-12"><label class="rf-lbl">1회 시술단가(원)</label><input id="laser-sessionUnitPrice" class="form-control" inputmode="numeric" value="300,000"></div>
@@ -2025,7 +2019,7 @@ function showPage(name, el, noPush) {
   else if(name==='quotes') renderQuotes();
   else if(name==='schedule') renderSchedule();
   else if(name==='roi'){ if(!window._roiInit){ roiInit(); window._roiInit=1; } }
-  else if(name==='speech'){ if(!window._speechInit){ buildSpeechGrid(); window._speechInit=1; } }
+  else if(name==='speech'){ if(!window._speechInit){ buildSpeechGrid(); window._speechInit=1; } var _sd=document.getElementById('speech-detail-view'),_sg=document.getElementById('speech-grid-view'); if(_sd&&_sg){_sd.style.display='none';_sg.style.display='';} }
   else if(name==='customers') renderCustomers();
   else if(name==='equipments') initEquip();
   else if(name==='logs') { showPage('sales'); const tb=document.getElementById('sales-tab-logs-btn'); salesTab('logs',tb); return; }
@@ -6793,6 +6787,9 @@ window.addEventListener('popstate', function(e) {
     sessionStorage.removeItem('wt_page');
     document.getElementById('main-content').style.display = 'none';
     document.getElementById('launcher-screen').style.display = 'flex';
+  } else if(e.state?.page === 'speech' && e.state?.sd) {
+    showPage('speech', null, true);
+    if(typeof showSpeechDetail==='function') showSpeechDetail(e.state.sd, true);
   } else if(e.state?.page) {
     showPage(e.state.page, null, true);
   } else {
@@ -6968,8 +6965,8 @@ window.addEventListener('popstate', function(e) {
     const packagePrice=_n(_rf('packagePrice').value), consumableCount=_n(_rf('consumableCount').value),
           shotsPerTreatment=_n(_rf('shotsPerTreatment').value), pricePerTreatment=_n(_rf('pricePerTreatment').value),
           treatmentsPerDay=_n(_rf('treatmentsPerDay').value), tipShots=_n(_rf('tipShots').value);
-    const err = m => el.innerHTML='<div style="padding:14px 16px;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;color:#dc2626;font-size:13px">'+m+'</div>';
-    if(packagePrice<=0) return err('패키지 가격이 0보다 커야 합니다.');
+    const err = m => el.innerHTML='<div class="lux-err">'+m+'</div>';
+    if(packagePrice<=0) return err('패키지 가격을 입력하세요.');
     if(consumableCount<=0||shotsPerTreatment<=0||pricePerTreatment<=0||treatmentsPerDay<=0||tipShots<=0) return err('모든 입력값은 0보다 커야 합니다.');
     const totalTreatments=(tipShots/shotsPerTreatment)*consumableCount;
     const totalRevenue=totalTreatments*pricePerTreatment;
@@ -6977,18 +6974,17 @@ window.addEventListener('popstate', function(e) {
     const paybackDays=packagePrice/(pricePerTreatment*treatmentsPerDay);
     const dailyRevenue=pricePerTreatment*treatmentsPerDay;
     el.innerHTML =
-      '<div class="roi-res">'
-        +'<div class="roi-hero-res">'
-          +'<div class="hglow" style="background:radial-gradient(circle,rgba(52,211,153,.42),transparent 70%)"></div>'
-          +'<div class="hr-label"><i class="bi bi-check2-circle" style="color:#34d399"></i>원금 회수까지</div>'
-          +'<div class="hr-big" style="background-image:linear-gradient(135deg,#6ee7b7,#34d399)">'+_day(paybackDays).replace('일','<em>일</em>')+'</div>'
-          +'<div class="hr-sub">하루 매출 '+_kr(dailyRevenue)+' 기준 · 패키지 '+_kr(packagePrice)+'</div>'
-          +'<div class="hr-form"><span>패키지 '+_kr(packagePrice)+'</span><i>÷</i><span>1회 '+_won(pricePerTreatment)+'원</span><i>÷</i><span>일 '+treatmentsPerDay+'회</span></div>'
+      '<div class="lux-res">'
+        +'<div class="lux-head">'
+          +'<div class="lux-cap">원금 회수 기간</div>'
+          +'<div class="lux-num">'+_day(paybackDays).replace('일','<span>일</span>')+'</div>'
+          +'<div class="lux-note">하루 매출 '+_kr(dailyRevenue)+' 기준 · 패키지 '+_kr(packagePrice)+'</div>'
         +'</div>'
-        +'<div class="roi-stats">'
-          +'<div class="roi-stat wide"><div class="st-lbl"><i class="bi bi-graph-up-arrow" style="color:#f97316"></i>패키지 총 순수익</div><div class="st-val" style="color:#ea580c">'+_kr(pureProfit)+'</div><div class="st-sub">소모품 '+consumableCount+'개 완주 시 · 총매출 '+_kr(totalRevenue)+' − 패키지 '+_kr(packagePrice)+'</div></div>'
-          +'<div class="roi-stat"><div class="st-lbl"><i class="bi bi-repeat" style="color:#2563eb"></i>총 시술 횟수</div><div class="st-val" style="color:#1d4ed8">'+_times(totalTreatments)+'</div><div class="st-sub">'+consumableCount+'개 × '+(tipShots/shotsPerTreatment).toFixed(1)+'회</div></div>'
-          +'<div class="roi-stat"><div class="st-lbl"><i class="bi bi-cash-stack" style="color:#059669"></i>하루 매출</div><div class="st-val" style="color:#047857">'+_kr(dailyRevenue)+'</div><div class="st-sub">1회 '+_won(pricePerTreatment)+'원 × '+treatmentsPerDay+'회</div></div>'
+        +'<div class="lux-list">'
+          +'<div class="lux-item hi"><div class="li-l">패키지 총 순수익<small>소모품 '+consumableCount+'개 완주 시</small></div><div class="li-v">'+_kr(pureProfit)+'</div></div>'
+          +'<div class="lux-item"><div class="li-l">총 시술 횟수<small>'+consumableCount+'개 × '+(tipShots/shotsPerTreatment).toFixed(1)+'회</small></div><div class="li-v">'+_times(totalTreatments)+'</div></div>'
+          +'<div class="lux-item"><div class="li-l">총 매출</div><div class="li-v">'+_kr(totalRevenue)+'</div></div>'
+          +'<div class="lux-item"><div class="li-l">하루 매출<small>1회 '+_won(pricePerTreatment)+'원 × '+treatmentsPerDay+'회</small></div><div class="li-v">'+_kr(dailyRevenue)+'</div></div>'
         +'</div>'
       +'</div>';
   };
@@ -6999,24 +6995,22 @@ window.addEventListener('popstate', function(e) {
     const el=document.getElementById('laser-result'); if(!el) return;
     const equipmentPrice=_n(_ls('equipmentPrice').value), sessionUnitPrice=_n(_ls('sessionUnitPrice').value),
           ticketingCount=_n(_ls('ticketingCount').value), customerCount=_n(_ls('customerCount').value);
-    const err = m => el.innerHTML='<div style="padding:14px 16px;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;color:#dc2626;font-size:13px">'+m+'</div>';
-    if(equipmentPrice<=0) return err('장비 가격이 0보다 커야 합니다.');
+    const err = m => el.innerHTML='<div class="lux-err">'+m+'</div>';
+    if(equipmentPrice<=0) return err('장비 가격을 입력하세요.');
     if(sessionUnitPrice<=0||ticketingCount<=0||customerCount<=0) return err('시술단가, 티케팅수, 고객수는 0보다 커야 합니다.');
     const dailyRevenue=sessionUnitPrice*ticketingCount*customerCount;
     const paybackDays=equipmentPrice/dailyRevenue;
     el.innerHTML =
-      '<div class="roi-res">'
-        +'<div class="roi-hero-res">'
-          +'<div class="hglow" style="background:radial-gradient(circle,rgba(52,211,153,.42),transparent 70%)"></div>'
-          +'<div class="hr-label"><i class="bi bi-check2-circle" style="color:#34d399"></i>장비 원금 회수까지</div>'
-          +'<div class="hr-big" style="background-image:linear-gradient(135deg,#6ee7b7,#34d399)">'+_day(paybackDays).replace('일','<em>일</em>')+'</div>'
-          +'<div class="hr-sub">장비가 '+_kr(equipmentPrice)+' ÷ 하루 매출 '+_kr(dailyRevenue)+'</div>'
-          +'<div class="hr-form"><span>장비 '+_kr(equipmentPrice)+'</span><i>÷</i><span>하루매출 '+_kr(dailyRevenue)+'</span></div>'
+      '<div class="lux-res">'
+        +'<div class="lux-head">'
+          +'<div class="lux-cap">장비 원금 회수 기간</div>'
+          +'<div class="lux-num">'+_day(paybackDays).replace('일','<span>일</span>')+'</div>'
+          +'<div class="lux-note">장비가 '+_kr(equipmentPrice)+' ÷ 하루 매출 '+_kr(dailyRevenue)+'</div>'
         +'</div>'
-        +'<div class="roi-stats">'
-          +'<div class="roi-stat wide"><div class="st-lbl"><i class="bi bi-cash-stack" style="color:#2563eb"></i>하루 매출</div><div class="st-val" style="color:#1d4ed8">'+_kr(dailyRevenue)+'</div><div class="st-sub">1회 '+_won(sessionUnitPrice)+'원 × 티케팅 '+ticketingCount+'회 × 고객 '+customerCount+'명</div></div>'
-          +'<div class="roi-stat"><div class="st-lbl"><i class="bi bi-cpu" style="color:#64748b"></i>장비 가격</div><div class="st-val" style="color:#334155">'+_kr(equipmentPrice)+'</div></div>'
-          +'<div class="roi-stat"><div class="st-lbl"><i class="bi bi-calendar-check" style="color:#059669"></i>월 매출(25일)</div><div class="st-val" style="color:#047857">'+_kr(dailyRevenue*25)+'</div><div class="st-sub">하루매출 × 25일</div></div>'
+        +'<div class="lux-list">'
+          +'<div class="lux-item hi"><div class="li-l">하루 매출<small>1회 '+_won(sessionUnitPrice)+'원 × '+ticketingCount+'회 × '+customerCount+'명</small></div><div class="li-v">'+_kr(dailyRevenue)+'</div></div>'
+          +'<div class="lux-item"><div class="li-l">월 매출<small>영업일 25일 기준</small></div><div class="li-v">'+_kr(dailyRevenue*25)+'</div></div>'
+          +'<div class="lux-item"><div class="li-l">장비 가격</div><div class="li-v">'+_kr(equipmentPrice)+'</div></div>'
         +'</div>'
       +'</div>';
   };
@@ -7130,14 +7124,18 @@ window.addEventListener('popstate', function(e) {
         +'<div class="spd-tag" style="color:#9a3412">전 장비 공통 · 마무리 세일즈 멘트</div>'
       +'</div></div>';
   };
-  window.showSpeechDetail = function(id){
+  window.showSpeechDetail = function(id, noPush){
     const c=document.getElementById('speech-detail-content');
     c.innerHTML = id==='closing' ? _renderClosing() : _renderSpeechDetail(SPEECH_DATA.find(x=>x.id===id));
     document.getElementById('speech-grid-view').style.display='none';
     document.getElementById('speech-detail-view').style.display='';
+    // 상세를 히스토리에 편입 → 뒤로가기 시 목록으로 복귀
+    if(!noPush){ try{ history.pushState({page:'speech', sd:id}, '', location.href.split('#')[0]+'#speech'); }catch(e){} }
     try{ document.querySelector('.main-scroll, .content, main')?.scrollTo(0,0); }catch(e){} window.scrollTo(0,0);
   };
   window.speechBack = function(){
+    // 상세 상태가 히스토리에 있으면 뒤로가기로 목록 복귀(브라우저 뒤로가기와 동일 동작)
+    if(history.state && history.state.sd){ history.back(); return; }
     document.getElementById('speech-detail-view').style.display='none';
     document.getElementById('speech-grid-view').style.display='';
     window.scrollTo(0,0);
