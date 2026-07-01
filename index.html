@@ -2209,7 +2209,11 @@ function _ovProdAgg(cat, name){
     (obj.txns2026||[]).forEach(t=>{ const prod=isCons?t[2]:t[3]; if(prod!==name) return; const amt=Number((isCons?t[3]:t[4])||0), m=+t[0], q=Number((isCons?t[4]:t[5])||0); mo26[m]=(mo26[m]||0)+amt; byHosp[h]=(byHosp[h]||0)+amt; qtyHosp[h]=(qtyHosp[h]||0)+q; });
     (obj.txns2025||[]).forEach(t=>{ const prod=isCons?t[2]:t[3]; if(prod!==name) return; const amt=Number((isCons?t[3]:t[4])||0), m=+t[0]; mo25[m]=(mo25[m]||0)+amt; });
   });
-  return {isCons, mo26, mo25, byHosp, qtyHosp, tot26:(src.products2026||{})[name]||0, tot25:(src.products2025||{})[name]||0};
+  // 전년 '동기' = 2026 데이터가 있는 마지막 달까지의 2025 합계(작년 12개월 전체가 아님)
+  const lastM26=Math.max(0,...Object.keys(mo26).map(Number));
+  let tot25same=0; for(let m=1;m<=lastM26;m++) tot25same+=(mo25[m]||0);
+  const tot25full=Object.values(mo25).reduce((s,v)=>s+v,0)||(src.products2025||{})[name]||0;
+  return {isCons, mo26, mo25, byHosp, qtyHosp, lastM26, tot26:(src.products2026||{})[name]||0, tot25:tot25same, tot25full};
 }
 function _ovMonthBars(mo26, mo25, accent){
   const H=84;
@@ -2242,7 +2246,7 @@ function openOvDetail(cat, name){
   const pendTot=pend.reduce((s,it)=>s+Number(it.p.amount||0),0);
   const pendHtml=pend.length?'<div style="margin-top:14px;background:#faf5ff;border:1px solid #ede9fe;border-radius:10px;padding:10px 12px"><div style="font-size:12px;font-weight:700;color:#7c3aed;margin-bottom:5px"><i class="bi bi-hourglass-split me-1"></i>예정분(회계 미반영) '+_ovFmt(pendTot)+'</div>'+pend.map(it=>'<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;color:#6b7280"><span>'+(it.p.expected_date||'')+' · '+_ovEsc(it.p.hospital||'-')+'</span><span style="font-weight:600">'+_ovFmt(it.p.amount)+'</span></div>').join('')+'</div>':'';
   const body='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">'
-    +_ovKpiBox('YTD 매출',_ovFmt(d.tot26),accent)+_ovKpiBox('전년 동기',_ovFmt(d.tot25),'#6b7280')
+    +_ovKpiBox('YTD 매출',_ovFmt(d.tot26),accent)+_ovKpiBox('전년 동기'+(d.lastM26?' (1~'+d.lastM26+'월)':''),_ovFmt(d.tot25),'#6b7280')
     +_ovKpiBox('전년 대비',yoyHtml,'#111827')+_ovKpiBox('거래처 수',Object.keys(d.byHosp).length?Object.keys(d.byHosp).length+'곳':'-','#111827')+'</div>'
     +'<div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:2px"><i class="bi bi-graph-up me-1"></i>월별 매출 추이 <span style="font-size:10px;font-weight:400;color:#9ca3af">막대=2026 · 선=2025</span></div>'
     +_ovMonthBars(d.mo26,d.mo25,accent)
