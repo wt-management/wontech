@@ -508,6 +508,10 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
   <div id="page-region" class="page">
     <div class="page-header">
       <h5><i class="bi bi-geo-alt me-2"></i>지역별 매출 분석 <span style="font-size:12px;font-weight:400;color:#9ca3af">시도 · 구군</span></h5>
+      <div class="btn-group btn-group-sm" role="group">
+        <button id="regv-table" type="button" class="btn btn-outline-primary active" onclick="_regView('table',this)"><i class="bi bi-table me-1"></i>표</button>
+        <button id="regv-map" type="button" class="btn btn-outline-primary" onclick="_regView('map',this)"><i class="bi bi-map me-1"></i>지도</button>
+      </div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;padding:10px 14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0">
       <span style="font-size:12px;font-weight:600;color:#374151;white-space:nowrap">📅 조회 기간</span>
@@ -521,7 +525,17 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
     </div>
     <div class="row g-3 mb-3" id="reg-kpi"></div>
     <div class="row g-3 mb-3" id="reg-insight"></div>
-    <div class="card p-3">
+    <!-- 장비 판매 지도 -->
+    <div id="reg-map-card" class="card p-3 mb-3" style="display:none">
+      <div class="d-flex align-items-center mb-2" style="font-size:13px">
+        <span class="fw-bold"><i class="bi bi-map me-1" style="color:#374151"></i><span id="reg-map-title">전국 장비 판매 지도</span></span>
+        <span style="font-size:11px;color:#9ca3af;margin-left:8px">지역 클릭 → 시·군·구 확대 · 색이 진할수록 판매 많음</span>
+        <button id="reg-map-back" class="btn btn-outline-secondary btn-sm ms-auto" style="display:none;font-size:11px" onclick="_regMapBack()"><i class="bi bi-arrow-left"></i> 전국</button>
+      </div>
+      <div id="reg-map" style="height:520px;border-radius:10px;overflow:hidden;background:#eef2f6"></div>
+      <div id="reg-map-legend" style="font-size:11px;color:#6b7280;margin-top:8px"></div>
+    </div>
+    <div class="card p-3" id="reg-table-card">
       <div class="fw-bold mb-2" style="font-size:13px"><i class="bi bi-bar-chart-line me-1" style="color:#374151"></i>시도별 매출·성장 분석 <span style="font-size:11px;font-weight:400;color:#9ca3af">행 클릭 → 구군 → 병원까지 상세 조회</span></div>
       <div id="reg-list"></div>
     </div>
@@ -2846,6 +2860,106 @@ function _regionAgg(P){
   return {sido, byName};
 }
 function _regSel(){ return _getPeriod('reg'); }
+
+// ══ 장비 판매 지도 (Leaflet + 한국 시도/시군구 GeoJSON) ══
+let _regViewMode='table', _regMap=null, _regLayer=null, _regProvGeo=null, _regMuniGeo=null, _regMuniLoading=false, _regMapAgg=null;
+const _GEO_PROV='https://cdn.jsdelivr.net/gh/southkorea/southkorea-maps@master/kostat/2018/json/skorea-provinces-2018-geo.json';
+const _GEO_MUNI='https://cdn.jsdelivr.net/gh/southkorea/southkorea-maps@master/kostat/2018/json/skorea-municipalities-2018-geo.json';
+const _PROV2SHORT=[['서울','서울'],['부산','부산'],['대구','대구'],['인천','인천'],['광주','광주'],['대전','대전'],['울산','울산'],['세종','세종'],['경기','경기'],['강원','강원'],['충청북','충북'],['충청남','충남'],['전라북','전북'],['전북','전북'],['전라남','전남'],['경상북','경북'],['경상남','경남'],['제주','제주']];
+const _MUNI_CD2SHORT={'11':'서울','26':'부산','27':'대구','28':'인천','29':'광주','30':'대전','31':'울산','36':'세종','41':'경기','42':'강원','51':'강원','43':'충북','44':'충남','45':'전북','52':'전북','46':'전남','47':'경북','48':'경남','50':'제주'};
+function _grTxt(a,b){ if(!b) return '신규'; const p=(a/b-1)*100; return (p>=0?'▲':'▼')+Math.abs(p).toFixed(0)+'%'; }
+function _provName(f){ const p=f.properties||{}; return p.name||p.CTP_KOR_NM||p.name_ko||''; }
+function _muniName(f){ const p=f.properties||{}; return p.name||p.SIG_KOR_NM||''; }
+function _featSidoShort(n){ for(const [pre,s] of _PROV2SHORT){ if(String(n).indexOf(pre)===0) return s; } return null; }
+function _muniProvShort(f){ const p=f.properties||{}; const c2=String(p.code||p.SIG_CD||'').slice(0,2); return _MUNI_CD2SHORT[c2]||null; }
+function _colorFor(v,max){ if(!v||v<=0) return '#eef2f6'; const t=Math.min(1,Math.sqrt(v/(max||1))); const stops=['#fde68a','#fcd34d','#fbbf24','#f59e0b','#d97706','#b45309','#92400e']; return stops[Math.min(stops.length-1, Math.floor(t*stops.length))]; }
+// DEVICE(장비) 전용 시도/구군 집계
+function _deviceRegionAgg(P){
+  const cur=_spanMonths(P), prev=_spanMonths(_yoyShift(P));
+  const mY=(h,y)=>y===2026?(h.m2026||{}):(y===2025?(h.m2025||{}):{});
+  const sv=(h,rng)=>rng.reduce((s,x)=>s+Number(mY(h,x.y)[x.m]||0),0);
+  const sido={};
+  Object.entries((typeof DEVICE!=='undefined'&&DEVICE.hospitals)||{}).forEach(([name,h])=>{
+    const v26=sv(h,cur), v25=sv(h,prev); if(!v26&&!v25) return;
+    const r=_hospRegion(name); const s=(r&&r[0])?r[0]:'미분류', g=(r&&r[1])?r[1]:'(미상)';
+    if(!sido[s]) sido[s]={v26:0,v25:0,prods:{},gugun:{}};
+    sido[s].v26+=v26; sido[s].v25+=v25;
+    const pr=h.prods2026||h.prods||{}; Object.entries(pr).forEach(([k,v])=>sido[s].prods[k]=(sido[s].prods[k]||0)+Number(v||0));
+    if(!sido[s].gugun[g]) sido[s].gugun[g]={v26:0,v25:0,prods:{}};
+    const gg=sido[s].gugun[g]; gg.v26+=v26; gg.v25+=v25;
+    Object.entries(pr).forEach(([k,v])=>gg.prods[k]=(gg.prods[k]||0)+Number(v||0));
+  });
+  return sido;
+}
+function _regView(mode, btn){
+  _regViewMode=mode;
+  document.querySelectorAll('#page-region .page-header .btn').forEach(b=>b.classList.remove('active')); if(btn) btn.classList.add('active');
+  document.getElementById('reg-map-card').style.display = mode==='map'?'':'none';
+  document.getElementById('reg-table-card').style.display = mode==='map'?'none':'';
+  if(mode==='map') _initRegMap();
+}
+function _ensureLeaflet(cb){
+  if(window.L){ cb(); return; }
+  if(!document.getElementById('_leaflet-css')){ const css=document.createElement('link'); css.id='_leaflet-css'; css.rel='stylesheet'; css.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css'; document.head.appendChild(css); }
+  const js=document.createElement('script'); js.src='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js'; js.onload=cb;
+  js.onerror=()=>{ document.getElementById('reg-map').innerHTML='<div style="padding:60px;text-align:center;color:#9ca3af">지도 라이브러리를 불러오지 못했습니다(인터넷 확인)</div>'; };
+  document.head.appendChild(js);
+}
+function _initRegMap(){
+  _ensureLeaflet(()=>{
+    if(!_regMap){ _regMap=L.map('reg-map',{zoomControl:true,attributionControl:false,scrollWheelZoom:true}).setView([36.4,127.8],6.4); }
+    setTimeout(()=>{ try{_regMap.invalidateSize();}catch(e){} }, 30);
+    if(_regProvGeo){ _drawProvinces(); return; }
+    document.getElementById('reg-map-title').textContent='전국 지도 불러오는 중...';
+    fetch(_GEO_PROV).then(r=>r.json()).then(g=>{ _regProvGeo=g; _drawProvinces(); })
+      .catch(e=>{ document.getElementById('reg-map').innerHTML='<div style="padding:60px;text-align:center;color:#9ca3af">지도 데이터를 불러오지 못했습니다</div>'; });
+  });
+}
+function _drawProvinces(){
+  const agg=_deviceRegionAgg(_regSel()); _regMapAgg=agg;
+  const max=Math.max(1,...Object.entries(agg).filter(([k])=>k!=='미분류'&&k!=='유통·기타').map(([,o])=>o.v26));
+  if(_regLayer){ _regMap.removeLayer(_regLayer); _regLayer=null; }
+  _regLayer=L.geoJSON(_regProvGeo,{
+    style:f=>{ const s=_featSidoShort(_provName(f)); const v=(s&&agg[s])?agg[s].v26:0; return {fillColor:_colorFor(v,max),weight:1,color:'#fff',fillOpacity:.85}; },
+    onEachFeature:(f,layer)=>{
+      const s=_featSidoShort(_provName(f)); const o=(s&&agg[s])||{v26:0,v25:0,prods:{}};
+      const top=Object.entries(o.prods||{}).sort((a,b)=>b[1]-a[1])[0];
+      layer.bindTooltip('<b>'+(s||_provName(f))+'</b><br>장비 매출 '+_ovFmt(o.v26)+(o.v25?' · 전년비 '+_grTxt(o.v26,o.v25):'')+(top?'<br>주력 '+top[0]:''),{sticky:true});
+      layer.on({ mouseover:e=>e.target.setStyle({weight:2.5,color:'#334155'}), mouseout:e=>{ try{_regLayer.resetStyle(e.target);}catch(_){} }, click:e=>{ if(s) _drillProvince(s); } });
+    }
+  }).addTo(_regMap);
+  try{ _regMap.fitBounds(_regLayer.getBounds(),{padding:[8,8]}); }catch(e){}
+  document.getElementById('reg-map-back').style.display='none';
+  document.getElementById('reg-map-title').textContent='전국 장비 판매 지도';
+  const el=document.getElementById('reg-map-legend'); if(el) el.innerHTML='판매액 <span style="display:inline-block;width:80px;height:10px;background:linear-gradient(90deg,#eef2f6,#fcd34d,#d97706,#92400e);border-radius:3px;vertical-align:middle;margin:0 4px"></span> 적음 → 많음';
+}
+function _drillProvince(short){
+  const draw=()=>_drawMunicipalities(short);
+  if(_regMuniGeo){ draw(); return; }
+  if(_regMuniLoading) return; _regMuniLoading=true;
+  document.getElementById('reg-map-title').textContent=short+' — 시·군·구 불러오는 중...';
+  fetch(_GEO_MUNI).then(r=>r.json()).then(g=>{ _regMuniGeo=g; _regMuniLoading=false; draw(); })
+    .catch(e=>{ _regMuniLoading=false; document.getElementById('reg-map-title').textContent=short+' (시·군·구 데이터 로드 실패)'; });
+}
+function _drawMunicipalities(short){
+  const agg=_regMapAgg||_deviceRegionAgg(_regSel()); const gmap=(agg[short]&&agg[short].gugun)||{}; const gEntries=Object.entries(gmap);
+  const matchG=(mName)=>{ let best={v26:0,v25:0,prods:{}}; if(!mName) return best; gEntries.forEach(([g,o])=>{ if(g===mName||g.indexOf(mName)>=0||(mName.indexOf(g)>=0&&g.length>1)){ best.v26+=o.v26; best.v25+=o.v25; Object.entries(o.prods||{}).forEach(([k,v])=>best.prods[k]=(best.prods[k]||0)+v); } }); return best; };
+  const feats={type:'FeatureCollection',features:(_regMuniGeo.features||[]).filter(f=>_muniProvShort(f)===short)};
+  const max=Math.max(1,...feats.features.map(f=>matchG(_muniName(f)).v26));
+  if(_regLayer){ _regMap.removeLayer(_regLayer); _regLayer=null; }
+  _regLayer=L.geoJSON(feats,{
+    style:f=>{ const o=matchG(_muniName(f)); return {fillColor:_colorFor(o.v26,max),weight:1,color:'#fff',fillOpacity:.85}; },
+    onEachFeature:(f,layer)=>{ const nm=_muniName(f); const o=matchG(nm); const top=Object.entries(o.prods||{}).sort((a,b)=>b[1]-a[1])[0];
+      layer.bindTooltip('<b>'+short+' '+nm+'</b><br>장비 매출 '+_ovFmt(o.v26)+(top?'<br>주력 '+top[0]:''),{sticky:true});
+      layer.on({ mouseover:e=>e.target.setStyle({weight:2.5,color:'#334155'}), mouseout:e=>{ try{_regLayer.resetStyle(e.target);}catch(_){} } });
+    }
+  }).addTo(_regMap);
+  try{ _regMap.fitBounds(_regLayer.getBounds(),{padding:[10,10]}); }catch(e){}
+  document.getElementById('reg-map-back').style.display='';
+  document.getElementById('reg-map-title').textContent=short+' 시·군·구 장비 판매';
+}
+function _regMapBack(){ _drawProvinces(); }
+
 function renderRegion(){
   _injectPeriodCtrl('reg');
   const P=_regSel(); const {sido,byName}=_regionAgg(P);
@@ -2873,6 +2987,7 @@ function renderRegion(){
   }).join('');
   document.getElementById('reg-list').innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:700px"><thead><tr style="color:#6b7280;font-size:11px;border-bottom:2px solid #e5e7eb"><th style="padding:7px 10px;text-align:left">#</th><th style="text-align:left">시도</th><th style="text-align:right">매출</th><th style="text-align:right">전년</th><th style="text-align:right">성장률</th><th style="text-align:center">거래처</th><th style="text-align:center">신규/이탈</th><th>비중</th><th style="text-align:right">%</th></tr></thead><tbody>'+(rows||'<tr><td colspan="9" style="text-align:center;color:#9ca3af;padding:14px">데이터 없음 — 지역 매핑 SQL을 먼저 적재하세요</td></tr>')+'</tbody></table></div>';
   const info=document.getElementById('reg-info'); if(info) info.textContent=(CONS.updatedAt?'기준일 '+CONS.updatedAt:'')+((HOSP_REGION.regions&&Object.keys(HOSP_REGION.regions).length)?'':' · ⚠ 지역매핑 미적재');
+  if(_regViewMode==='map' && _regMap && _regProvGeo && document.getElementById('reg-map-back')?.style.display==='none') _drawProvinces();
 }
 function _hospRow(name,o,maxH){
   return '<div data-h="'+String(name).replace(/"/g,'&quot;')+'" onclick="_ovToHosp(this.getAttribute(\'data-h\'))" title="클릭하면 거래처 상세" style="padding:5px 6px;cursor:pointer;border-radius:5px;border-bottom:1px solid #f6f8fa" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'"><div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:2px"><span style="font-weight:600">'+_ovEsc(name)+' <i class="bi bi-box-arrow-up-right" style="font-size:8px;color:#cbd5e1"></i>'+(o.sales?' <span style="color:#9ca3af;font-weight:400">·'+_ovEsc(o.sales)+'</span>':'')+(o.prod?' <span style="color:#cbd5e1;font-weight:400">'+_ovEsc(o.prod)+'</span>':'')+'</span><span style="display:flex;gap:6px;align-items:center"><span style="font-weight:700">'+_ovFmt(o.v26)+'</span>'+_grBadge(o.v26,o.v25)+'</span></div><div style="background:#f3f4f6;border-radius:3px;height:4px"><div style="width:'+(o.v26/maxH*100).toFixed(1)+'%;height:100%;background:#2563eb;border-radius:3px"></div></div></div>';
