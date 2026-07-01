@@ -1328,7 +1328,14 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
     </div>
     <!-- 전체 순위 테이블 -->
     <div class="card p-0">
-      <div class="p-3 border-bottom fw-bold" style="font-size:13px"><i class="bi bi-trophy-fill me-1" style="color:#f59e0b"></i>담당자별 순위</div>
+      <div class="p-3 border-bottom d-flex align-items-center" style="font-size:13px">
+        <span class="fw-bold"><i class="bi bi-trophy-fill me-1" style="color:#f59e0b"></i>담당자별 순위</span>
+        <div class="btn-group btn-group-sm ms-auto" role="group" style="font-size:11px">
+          <button id="devf-all" type="button" class="btn btn-outline-secondary active" onclick="_setDevFilter('all',this)">전체</button>
+          <button id="devf-team" type="button" class="btn btn-outline-secondary" onclick="_setDevFilter('team',this)">영업사원</button>
+          <button id="devf-dealer" type="button" class="btn btn-outline-secondary" onclick="_setDevFilter('dealer',this)">대리점·딜러</button>
+        </div>
+      </div>
       <div style="overflow-x:auto">
         <table class="table table-hover table-sm mb-0">
           <thead class="table-light" style="position:sticky;top:0">
@@ -6992,17 +6999,20 @@ function devRepExport() {
   const toM   = parseInt(document.getElementById('devrep-to-sel')?.value||'6');
   const YTD   = Array.from({length:toM-fromM+1},(_,i)=>fromM+i);
   const reps  = DEVICE.reps||{};
-  const rows  = [['담당자',`${yr-1}년YTD(만원)`,`${yr}년YTD(만원)`,'YoY(%)','대수(당해)','거래처수','주력제품']];
+  const rows  = [['구분','담당자',`${yr-1}년YTD(만원)`,`${yr}년YTD(만원)`,'YoY(%)','대수(당해)','거래처수','주력제품']];
   const _emptyRep={m2025:{},m2026:{},prods2025:{},prods2026:{},qty2025:0,qty2026:0,cust2025:0,cust2026:0};
-  KOR_SALES_TEAM.map((name) => { const rep=reps[name]||_emptyRep;
+  const _allNames=[...new Set([...KOR_SALES_TEAM, ...Object.keys(reps)])];
+  const _flt=(typeof _devFilter!=='undefined'?_devFilter:'all');
+  _allNames.map((name) => { const rep=reps[name]||_emptyRep; const isTeam=_isKorSales(name);
     const cur  = YTD.reduce((s,m)=>s+((yr===2026?rep.m2026:rep.m2025)||{})[m]||0, 0);
     const pre  = YTD.reduce((s,m)=>s+((yr===2026?rep.m2025:{})||{})[m]||0, 0);
     const yoy  = pre>0?((cur/pre-1)*100).toFixed(1):'';
     const qty  = yr===2026?rep.qty2026:rep.qty2025;
     const cust = yr===2026?rep.cust2026:rep.cust2025;
     const top  = Object.entries(yr===2026?rep.prods2026:rep.prods2025||{}).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
-    return [name, Math.round(pre/1e4), Math.round(cur/1e4), yoy, qty, cust, top];
-  }).sort((a,b)=>b[2]-a[2]).forEach(r=>rows.push(r));
+    return [isTeam?'영업사원':'대리점', name, Math.round(pre/1e4), Math.round(cur/1e4), yoy, qty, cust, top, isTeam];
+  }).filter(r=> _flt==='team'?r[8] : _flt==='dealer'?!r[8] : true)
+    .sort((a,b)=>b[3]-a[3]).forEach(r=>rows.push(r.slice(0,8)));
   const csv = rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
   const blob = new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
   const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
@@ -7010,6 +7020,8 @@ function devRepExport() {
 }
 
 let _devRepChart = null;
+let _devFilter = 'all';   // all | team(영업사원) | dealer(대리점·딜러)
+function _setDevFilter(v, btn){ _devFilter=v; document.querySelectorAll('#page-device-reps .btn-group .btn').forEach(b=>b.classList.remove('active')); if(btn) btn.classList.add('active'); renderDevReps(); }
 function renderDevReps() {
   const fmtW = v => (v=Number(v||0))>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만원':Math.round(v).toLocaleString()+'원';
   _injectPeriodCtrl('devrep');
@@ -7021,17 +7033,20 @@ function renderDevReps() {
 
   if (!Object.keys(reps).length) return;
 
-  // 한국영업1/2파트 전원 표시 — 실적 없는 담당자도 0으로 포함(대리점·기타 제외)
+  // 한국영업1/2파트 전원(실적0 포함) + 대리점·딜러 전부 표시. 구분(_devFilter): all/team/dealer
   const _emptyRep={total:0,y2025:0,y2026:0,cust2025:0,cust2026:0,prods2025:{},prods2026:{},m2025:{},m2026:{},qty2025:0,qty2026:0};
-  const entries = KOR_SALES_TEAM.map((name) => {
+  const _allNames=[...new Set([...KOR_SALES_TEAM, ...Object.keys(reps)])];
+  const _flt=(typeof _devFilter!=='undefined'?_devFilter:'all');
+  const entries = _allNames.map((name) => {
     const rep = reps[name] || _emptyRep;
     const cur  = _spanV(rep,_cur);
     const pre  = _spanV(rep,_prev);
     const qty  = _endY===2026 ? rep.qty2026 : rep.qty2025;
     const cust = _endY===2026 ? rep.cust2026 : rep.cust2025;
     const topProd = Object.entries((_endY===2026?rep.prods2026:rep.prods2025)||{}).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
-    return {name, rep, cur, pre, qty, cust, topProd, yoy: pre>0?(cur/pre-1)*100:null};
-  }).sort((a,b)=>b.cur-a.cur);
+    return {name, rep, cur, pre, qty, cust, topProd, yoy: pre>0?(cur/pre-1)*100:null, isTeam:_isKorSales(name)};
+  }).filter(e=> _flt==='team'?e.isTeam : _flt==='dealer'?!e.isTeam : true)
+    .sort((a,b)=>b.cur-a.cur);
 
   // rank table
   document.getElementById('devrep-rank-table').innerHTML = entries.map((e,i) => {
@@ -7039,7 +7054,7 @@ function renderDevReps() {
     const yoyCol = e.yoy===null?'#9ca3af':e.yoy>=0?'#16a34a':'#dc2626';
     return `<tr style="cursor:pointer" onclick="showDevRepDetail('${e.name.replace(/'/g,'\\\'')}')" title="클릭하면 상세 보기">
       <td style="color:#9ca3af;font-size:11px">${i+1}</td>
-      <td style="font-size:12px;font-weight:700;color:#1d4ed8">${e.name}</td>
+      <td style="font-size:12px;font-weight:700;color:${e.isTeam?'#1d4ed8':'#334155'}">${e.name}${e.isTeam?'<span style="font-size:8.5px;font-weight:700;color:#2563eb;background:#eff6ff;border-radius:4px;padding:1px 5px;margin-left:5px">영업</span>':'<span style="font-size:8.5px;font-weight:700;color:#a16207;background:#fef9c3;border-radius:4px;padding:1px 5px;margin-left:5px">대리점</span>'}</td>
       <td class="text-end" style="font-size:12px">${fmtW(e.pre)}</td>
       <td class="text-end" style="font-size:12px;font-weight:700">${fmtW(e.cur)}</td>
       <td class="text-end" style="font-size:12px;color:${yoyCol};font-weight:600">${yoyStr}</td>
