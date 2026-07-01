@@ -4161,7 +4161,8 @@ async function setDealStage(id,stage){
 async function addDealLog(id){
   const d=DB.d.pipeline.find(x=>x.id===id); if(!d)return;
   const inp=document.getElementById('deal-log-input'); const v=(inp&&inp.value||'').trim(); if(!v)return;
-  const log={id:uid(),date:new Date().toISOString().slice(0,10),custName:d.custName,type:'메모',content:v,product:d.model||'',nextAction:'',nextDate:'',sales:d.sales||''};
+  const _by=((typeof _meName!=='undefined'&&_meName)||(typeof currentUserName==='function'?currentUserName():'')||d.sales||'').trim();
+  const log={id:uid(),date:new Date().toISOString().slice(0,10),custName:d.custName,type:'메모',content:v,product:d.model||'',nextAction:'',nextDate:'',sales:_by,by:_by};
   DB.d.logs.push(log);
   document.getElementById('deal-drawer').innerHTML=dealDrawerHtml(d);
   showToast('상담 기록 추가, 저장 중...');
