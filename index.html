@@ -2855,9 +2855,12 @@ function renderDashboard() {
     const t=new Date(); t.setHours(0,0,0,0);
     return d<t;
   });
+  const _todayStr=_schTodayStr();
+  const _todaySched=(DB.d.logs||[]).filter(l=>l.kind==='schedule'&&l.date===_todayStr).length;
   document.getElementById('dash-quick-badges').innerHTML=`
     <div class="dash-badge"><i class="bi bi-kanban" style="color:#2563eb"></i>딜 ${activePipe.length}건 진행중</div>
-    ${overdueActs.length?`<div class="dash-badge" style="border-color:#fecaca;color:#dc2626"><i class="bi bi-exclamation-circle-fill" style="color:#dc2626"></i>지연 ${overdueActs.length}건</div>`:''}
+    <div class="dash-badge" style="cursor:pointer;border-color:#bfdbfe;color:#1d4ed8" onclick="showPage('schedule')" title="일정 페이지로 이동"><i class="bi bi-calendar-week" style="color:#2563eb"></i>오늘 일정 ${_todaySched}건</div>
+    ${overdueActs.length?`<div class="dash-badge" style="cursor:pointer;border-color:#fecaca;color:#dc2626" onclick="showPage('schedule')"><i class="bi bi-exclamation-circle-fill" style="color:#dc2626"></i>지연 ${overdueActs.length}건</div>`:''}
   `;
 
   // KPI 1: 기간별 확정 매출
@@ -4499,6 +4502,7 @@ function dealDrawerHtml(d){
         </div></div></div>
     <div style="padding:14px 22px;border-top:1px solid #e5e7eb;display:flex;gap:8px;justify-content:flex-end">
       <button onclick="closeDealDrawer()" style="border:1px solid #e5e7eb;background:#fff;border-radius:9px;padding:8px 14px;font-weight:600;font-size:13px;cursor:pointer">닫기</button>
+      <button onclick="closeDealDrawer();openSchedule({custName:'${esc(d.custName).replace(/'/g,"&#39;")}',sales:'${esc(d.sales||'').replace(/'/g,"&#39;")}',type:'방문',content:'${esc(d.model||'').replace(/'/g,"&#39;")} 관련'})" style="border:1px solid #bfdbfe;background:#eff6ff;color:#2563eb;border-radius:9px;padding:8px 14px;font-weight:600;font-size:13px;cursor:pointer"><i class="bi bi-calendar-plus"></i> 일정 잡기</button>
       <button onclick="closeDealDrawer();editPipeline('${d.id}')" style="border:0;background:#2563eb;color:#fff;border-radius:9px;padding:8px 14px;font-weight:600;font-size:13px;cursor:pointer"><i class="bi bi-pencil"></i> 정보 수정</button></div>`;
 }
 
@@ -5872,7 +5876,7 @@ function _schStatsBar(all){
 function _schMiniCard(i){
   const c=_SCH_COL[i.type]||'#64748b';
   const nm=_schEsc(i.custName).replace(/&#39;/g,"\\x27");
-  return '<div onclick="'+(i.kind==='sched'?"editSchedule('"+i.id+"')":"showHospitalDetail('"+nm+"')")+'" style="background:'+c+'14;border-left:3px solid '+c+';border-radius:5px;padding:4px 6px;margin-bottom:4px;cursor:pointer;'+(i.done?'opacity:.5':'')+'" title="'+_schEsc(i.custName+' · '+i.content)+'">'
+  return '<div onclick="event.stopPropagation();'+(i.kind==='sched'?"editSchedule('"+i.id+"')":"showHospitalDetail('"+nm+"')")+'" style="background:'+c+'14;border-left:3px solid '+c+';border-radius:5px;padding:4px 6px;margin-bottom:4px;cursor:pointer;'+(i.done?'opacity:.5':'')+'" title="'+_schEsc(i.custName+' · '+i.content)+'">'
     +'<div style="font-size:9.5px;font-weight:800;color:'+c+'">'+(i.time?_schEsc(i.time)+' ':'')+_schEsc(i.type)+(i.done?' ✓':'')+'</div>'
     +'<div style="font-size:10.5px;font-weight:700;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_schEsc(i.custName)+'</div>'
     +(i.sales?'<div style="font-size:9px;color:#2563eb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><i class="bi bi-person-badge"></i> '+_schEsc(i.sales)+'</div>':'')
@@ -5888,9 +5892,9 @@ function _schWeekGrid(items){
   let cols='';
   for(let idx=0;idx<7;idx++){ const dt=new Date(mon); dt.setDate(mon.getDate()+idx); const ds=f(dt); const isToday=ds===today;
     const its=(byd[ds]||[]).sort((a,b)=>(a.time||'99').localeCompare(b.time||'99'));
-    cols+='<div style="border:1px solid '+(isToday?'#bfdbfe':'#eef2f7')+';border-radius:9px;min-height:140px;'+(isToday?'background:#eff6ff':'background:#fff')+';overflow:hidden">'
+    cols+='<div onclick="openSchedule({date:\''+ds+'\'})" title="이 날짜에 일정 추가" style="border:1px solid '+(isToday?'#bfdbfe':'#eef2f7')+';border-radius:9px;min-height:140px;'+(isToday?'background:#eff6ff':'background:#fff')+';overflow:hidden;cursor:pointer">'
       +'<div style="padding:6px 8px;font-size:11px;font-weight:800;border-bottom:1px solid #f1f3f7;color:'+(isToday?'#2563eb':idx===5?'#2563eb':idx===6?'#dc2626':'#475569')+'">'+WD[idx]+' <span style="font-weight:600;color:#9ca3af">'+parseInt(ds.slice(8),10)+'일</span>'+(isToday?' <span style="font-size:9px">●오늘</span>':'')+'</div>'
-      +'<div style="padding:5px">'+(its.length?its.map(_schMiniCard).join(''):'<div style="font-size:10px;color:#cbd5e1;text-align:center;padding:10px 0">일정 없음</div>')+'</div>'
+      +'<div style="padding:5px">'+(its.length?its.map(_schMiniCard).join(''):'<div style="font-size:10px;color:#cbd5e1;text-align:center;padding:14px 0"><i class="bi bi-plus-circle" style="opacity:.4"></i></div>')+'</div>'
     +'</div>';
   }
   return '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><div style="display:grid;grid-template-columns:repeat(7,minmax(96px,1fr));gap:6px;min-width:700px">'+cols+'</div></div>';
@@ -5915,9 +5919,10 @@ function _schMonthView(items){
   const todayS=_schTodayStr(); let cells='';
   for(let i=0;i<startDow;i++) cells+='<div style="min-height:82px;border:1px solid #f1f3f7;background:#fafbfc"></div>';
   for(let d=1;d<=days;d++){ const ds=mp+'-'+String(d).padStart(2,'0'); const its=(byd[ds]||[]).sort((a,b)=>(a.time||'99').localeCompare(b.time||'99'));
-    cells+='<div style="min-height:82px;border:1px solid #f1f3f7;padding:3px 4px;overflow:hidden;'+(ds===todayS?'background:#eff6ff':'')+'">'
-      +'<div style="font-size:11px;color:'+(ds===todayS?'#2563eb':'#9ca3af')+';font-weight:'+(ds===todayS?'800':'400')+'">'+d+'</div>'
-      +its.slice(0,3).map(i=>'<div '+(i.kind==='sched'?'onclick="editSchedule(\''+i.id+'\')"':'')+' style="font-size:10px;margin-top:1px;padding:1px 4px;border-radius:3px;background:'+((_SCH_COL[i.type]||'#64748b')+'22')+';color:'+(_SCH_COL[i.type]||'#64748b')+';cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+_schEsc(i.custName+' '+i.content)+'">'+(i.time?_schEsc(i.time)+' ':'')+_schEsc(i.custName)+'</div>').join('')
+    const bg=(ds===todayS?'#eff6ff':''), hov=(ds===todayS?'#e0efff':'#f8fbff');
+    cells+='<div onclick="openSchedule({date:\''+ds+'\'})" title="이 날짜에 일정 추가" style="position:relative;min-height:84px;border:1px solid #f1f3f7;padding:3px 4px;overflow:hidden;cursor:pointer;background:'+bg+'" onmouseover="this.style.background=\''+hov+'\';this.querySelector(\'.d-add\').style.opacity=1" onmouseout="this.style.background=\''+bg+'\';this.querySelector(\'.d-add\').style.opacity=0">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;color:'+(ds===todayS?'#2563eb':'#9ca3af')+';font-weight:'+(ds===todayS?'800':'400')+'">'+d+'</span><span class="d-add" style="opacity:0;font-size:11px;color:#2563eb;transition:.1s"><i class="bi bi-plus-circle-fill"></i></span></div>'
+      +its.slice(0,3).map(i=>'<div onclick="event.stopPropagation();'+(i.kind==='sched'?'editSchedule(\''+i.id+'\')':'')+'" style="font-size:10px;margin-top:1px;padding:1px 4px;border-radius:3px;background:'+((_SCH_COL[i.type]||'#64748b')+'22')+';color:'+(_SCH_COL[i.type]||'#64748b')+';cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+_schEsc(i.custName+' '+(i.sales?'('+i.sales+') ':'')+i.content)+'">'+(i.time?_schEsc(i.time)+' ':'')+_schEsc(i.custName)+(i.sales?' <span style="color:#94a3b8">('+_schEsc(i.sales)+')</span>':'')+'</div>').join('')
       +(its.length>3?'<div style="font-size:9px;color:#9ca3af;margin-top:1px">+'+(its.length-3)+' 더</div>':'')
       +'</div>';
   }
