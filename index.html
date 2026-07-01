@@ -1714,8 +1714,17 @@ function purgeForeignHospitals() {
 }
 // 담당자명 앞 코드번호("55.드림메드"→"드림메드") 제거 — 표시용 일괄
 function _sN(s){ return String(s==null?'':s).replace(/^\s*\d+\s*[\.\-]\s*/,''); }
-// 한국영업 1·2파트 담당자(담당자별 분석은 이 인원만 표기)
-const KOR_SALES_TEAM=['조만식','김세현','양준욱','구주영','강지형','김정국','송재원','최준수','김량현'];
+// 한국영업 1·2파트 담당자 명단 — crm_profiles(dept)에서 자동 로드. 실패 시 아래 기본값.
+// 입사/퇴사/부서이동이 생기면 crm_profiles만 갱신하면 담당자별 분석에 자동 반영됨.
+let KOR_SALES_TEAM=['조만식','김세현','양준욱','구주영','강지형','김정국','송재원','최준수','김량현'];
+async function _loadSalesTeam(){
+  try{
+    const {data}=await _sb.from('crm_profiles').select('display_name,dept').in('dept',['한국영업1파트','한국영업2파트']);
+    const names=[...new Set((data||[]).map(p=>(p.display_name||'').trim()).filter(Boolean))];
+    if(names.length) KOR_SALES_TEAM=names;
+  }catch(e){}
+}
+function _isKorSales(name){ return KOR_SALES_TEAM.indexOf(name)>=0; }
 function _mergeRep(a,b){
   if(!a) return JSON.parse(JSON.stringify(b));
   ['total','y2025','y2026','qty2025','qty2026','cust2025','cust2026'].forEach(k=>a[k]=(a[k]||0)+(b[k]||0));
@@ -1724,8 +1733,8 @@ function _mergeRep(a,b){
 }
 function _stripSalesPrefixes(){
   [CONS.hospitals, DEVICE.hospitals].forEach(hm=>{ if(hm) Object.values(hm).forEach(h=>{ if(h&&h.sales) h.sales=_sN(h.sales); }); });
-  // 담당자별 분석: 번호접두사 정리('17.조만식'→'조만식') + 변형 병합 + 한국영업1/2파트만
-  if(DEVICE.reps){ const nr={}; Object.keys(DEVICE.reps).forEach(k=>{ const nk=_sN(k); if(KOR_SALES_TEAM.indexOf(nk)<0) return; nr[nk]=_mergeRep(nr[nk], DEVICE.reps[k]); }); DEVICE.reps=nr; }
+  // 번호접두사 정리('17.조만식'→'조만식') + 변형 병합. 전 담당자 유지 — 팀 필터는 표시(렌더) 시점에.
+  if(DEVICE.reps){ const nr={}; Object.keys(DEVICE.reps).forEach(k=>{ const nk=_sN(k); nr[nk]=_mergeRep(nr[nk], DEVICE.reps[k]); }); DEVICE.reps=nr; }
 }
 // 이탈위험 '내 거래처' — 로그인 담당자명으로 필터 자동선택
 function _riskMine(){
@@ -1792,6 +1801,7 @@ async function init() {
   await Promise.all([
     _loadConsCacheCached('main', CONS),
     _loadConsCacheCached('device', DEVICE),
+    _loadSalesTeam(),
   ]);
   purgeForeignHospitals();
   _stripSalesPrefixes();
@@ -3176,6 +3186,7 @@ async function doLogin() {
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-loading').style.display='flex';
   _applyLoginUI(data.user);   // 좌측하단 사용자 블록 표시(신규 로그인 시 누락되던 버그)
+  await _loadSalesTeam();      // 로그인 후 담당자 명단 최신화(자동반영)
   await _showLauncherOrApp(data.user);
 }
 
@@ -6929,7 +6940,7 @@ function devRepExport() {
   const YTD   = Array.from({length:toM-fromM+1},(_,i)=>fromM+i);
   const reps  = DEVICE.reps||{};
   const rows  = [['담당자',`${yr-1}년YTD(만원)`,`${yr}년YTD(만원)`,'YoY(%)','대수(당해)','거래처수','주력제품']];
-  Object.entries(reps).map(([name,rep]) => {
+  Object.entries(reps).filter(([name])=>_isKorSales(name)).map(([name,rep]) => {
     const cur  = YTD.reduce((s,m)=>s+((yr===2026?rep.m2026:rep.m2025)||{})[m]||0, 0);
     const pre  = YTD.reduce((s,m)=>s+((yr===2026?rep.m2025:{})||{})[m]||0, 0);
     const yoy  = pre>0?((cur/pre-1)*100).toFixed(1):'';
@@ -6956,8 +6967,8 @@ function renderDevReps() {
 
   if (!Object.keys(reps).length) return;
 
-  // per-rep 기간 합
-  const entries = Object.entries(reps).map(([name, rep]) => {
+  // per-rep 기간 합 (한국영업1/2파트만 표시 — 대리점·기타 제외)
+  const entries = Object.entries(reps).filter(([name])=>_isKorSales(name)).map(([name, rep]) => {
     const cur  = _spanV(rep,_cur);
     const pre  = _spanV(rep,_prev);
     const qty  = _endY===2026 ? rep.qty2026 : rep.qty2025;
