@@ -1220,6 +1220,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
     <div style="flex:1;min-width:0">
       <h5 class="modal-title fw-bold mb-0" id="hosp-modal-name"></h5>
       <div class="text-muted mt-1" style="font-size:12px" id="hosp-modal-sub"></div>
+      <div class="mt-1 d-flex flex-wrap gap-1" id="hosp-modal-contacts"></div>
     </div>
     <button class="btn btn-outline-primary btn-sm" style="white-space:nowrap" onclick="openSchedule({custName:window._hospDetailName||document.getElementById('hosp-modal-name').textContent})"><i class="bi bi-calendar-plus me-1"></i>일정</button>
     <button class="btn btn-primary btn-sm ms-1" style="white-space:nowrap" onclick="openLogFromHospModal()"><i class="bi bi-journal-plus me-1"></i>상담일지 작성</button>
@@ -1259,7 +1260,11 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
         <div class="col-6"><label class="form-label" style="font-size:12px">원장명</label><input type="text" id="hi-doctor" class="form-control form-control-sm"></div>
         <div class="col-6"><label class="form-label" style="font-size:12px">전화</label><input type="text" id="hi-tel" class="form-control form-control-sm"></div>
         <div class="col-8"><label class="form-label" style="font-size:12px">주소</label><input type="text" id="hi-address" class="form-control form-control-sm"></div>
-        <div class="col-4"><label class="form-label" style="font-size:12px">병원 담당자</label><input type="text" id="hi-contact" class="form-control form-control-sm"></div>
+        <div class="col-4"><label class="form-label" style="font-size:12px">대표 담당자 <span class="text-muted">(요약)</span></label><input type="text" id="hi-contact" class="form-control form-control-sm" placeholder="예: 김실장"></div>
+        <div class="col-12">
+          <div class="d-flex align-items-center mb-1"><i class="bi bi-people me-1" style="color:#2563eb"></i><label class="form-label mb-0" style="font-size:12px"><b>연락처 (원장·실장·구매 등 여러 명)</b></label><button type="button" class="btn btn-outline-primary btn-sm ms-auto py-0 px-2" style="font-size:11px" onclick="addHospContactRow()"><i class="bi bi-plus-lg"></i> 연락처 추가</button></div>
+          <div id="hi-contacts"></div>
+        </div>
         <div class="col-12"><label class="form-label" style="font-size:12px">태그</label><input type="text" id="hi-tags" class="form-control form-control-sm" placeholder="쉼표 구분 — VIP, 재구매예정"></div>
         <div class="col-12"><label class="form-label" style="font-size:12px">메모</label><textarea id="hi-note" class="form-control form-control-sm" rows="2"></textarea></div>
       </div>
@@ -4986,6 +4991,33 @@ function _custMine(){
 }
 // 고객사 → 통합 병원 상세로 일원화(showHospitalDetail 단일 모달)
 function openHospDetail(name){ showHospitalDetail(name); }
+// ── 연락처 다중화(원장·실장·구매 등) ──
+const _HC_ROLES=['원장','부원장','실장','상담실장','구매담당','코디','간호','기타'];
+function _hcRow(c){
+  c=c||{};
+  const opts=_HC_ROLES.map(r=>`<option ${c.role===r?'selected':''}>${r}</option>`).join('');
+  const d=document.createElement('div');
+  d.className='hc-row row g-1 mb-1 align-items-center';
+  d.innerHTML=`<div class="col-2"><select class="form-select form-select-sm hc-role">${opts}</select></div>`+
+    `<div class="col-3"><input type="text" class="form-control form-control-sm hc-name" placeholder="이름" value="${(c.name||'').replace(/"/g,'&quot;')}"></div>`+
+    `<div class="col-3"><input type="text" class="form-control form-control-sm hc-tel" placeholder="연락처" value="${(c.tel||'').replace(/"/g,'&quot;')}"></div>`+
+    `<div class="col-3"><input type="text" class="form-control form-control-sm hc-note" placeholder="메모(선호시간 등)" value="${(c.note||'').replace(/"/g,'&quot;')}"></div>`+
+    `<div class="col-1 text-end"><button type="button" class="btn btn-link btn-sm text-danger p-0" title="삭제" onclick="this.closest('.hc-row').remove()"><i class="bi bi-x-lg"></i></button></div>`;
+  return d;
+}
+function addHospContactRow(c){ document.getElementById('hi-contacts').appendChild(_hcRow(c)); }
+function _renderHospContacts(list){
+  const wrap=document.getElementById('hi-contacts'); if(!wrap) return; wrap.innerHTML='';
+  (Array.isArray(list)&&list.length?list:[{}]).forEach(c=>wrap.appendChild(_hcRow(c)));
+}
+function _collectHospContacts(){
+  return [...document.querySelectorAll('#hi-contacts .hc-row')].map(r=>({
+    role:r.querySelector('.hc-role').value,
+    name:r.querySelector('.hc-name').value.trim(),
+    tel:r.querySelector('.hc-tel').value.trim(),
+    note:r.querySelector('.hc-note').value.trim()
+  })).filter(c=>c.name||c.tel||c.note);
+}
 // 병원정보 수정 탭 저장(통합 모달)
 async function saveHospInfoTab(){
   const name=document.getElementById('hi-name').value; if(!name) return;
@@ -4996,6 +5028,7 @@ async function saveHospInfoTab(){
     doctor:document.getElementById('hi-doctor').value.trim(), tel:document.getElementById('hi-tel').value.trim(),
     address:document.getElementById('hi-address').value.trim(), contact:document.getElementById('hi-contact').value.trim(),
     note:document.getElementById('hi-note').value.trim(), mgr:document.getElementById('hi-mgr').value.trim(),
+    contacts:_collectHospContacts(),
     tags:tagsRaw?tagsRaw.split(',').map(t=>t.trim()).filter(Boolean):[], region:region,
     updatedBy:(typeof currentUserName==='function'?currentUserName():(_meName||'사용자')), updatedAt:new Date().toISOString().slice(0,10)});
   HOSP_INFO[name]=info; _KW_SORTED=null;
@@ -5129,12 +5162,19 @@ function showHospitalDetail(name){
   const _hinfo=HOSP_INFO[name]||{}; const _mgr=_hinfo.mgr||'';
   const _txnSales=(CONS.hospitals&&CONS.hospitals[name]&&CONS.hospitals[name].sales)||(DEVICE.hospitals&&DEVICE.hospitals[name]&&DEVICE.hospitals[name].sales)||'';
   document.getElementById('hosp-modal-sub').innerHTML=`<i class="bi bi-geo-alt-fill" style="color:#059669"></i> ${_regStr} &nbsp;·&nbsp; <i class="bi bi-person-badge" style="color:#2563eb"></i> 담당영업 <b>${_mgr||'<span style="color:#d1d5db">미배정</span>'}</b>${_txnSales&&_txnSales!==_mgr?` <span style="color:#9ca3af">(거래담당 ${_txnSales})</span>`:''} &nbsp;·&nbsp; 납품 장비 ${equips.length}대`;
+  // 연락처 칩(읽기전용) — 여러 담당자 한눈에
+  (function(){ const box=document.getElementById('hosp-modal-contacts'); if(!box) return;
+    const cs=(_hinfo.contacts||[]).filter(c=>c&&(c.name||c.tel));
+    if(!cs.length){ box.innerHTML=''; return; }
+    box.innerHTML=cs.map(c=>`<span class="badge rounded-pill" style="background:#eef2ff;color:#3730a3;font-weight:500;font-size:11px"><i class="bi bi-person-fill me-1"></i>${c.role||''} ${c.name||''}${c.tel?` <span style="color:#6366f1">· ${c.tel}</span>`:''}</span>`).join('');
+  })();
   // 병원정보 수정 탭 채우기
   (function(){ const v=(id,val)=>{const e=document.getElementById(id); if(e)e.value=val||'';};
     const nm=document.getElementById('hi-name'); if(nm)nm.value=name;
     v('hi-mgr',_hinfo.mgr); v('hi-doctor',_hinfo.doctor); v('hi-tel',_hinfo.tel); v('hi-address',_hinfo.address); v('hi-contact',_hinfo.contact); v('hi-note',_hinfo.note);
     v('hi-region',_regStr==='지역 미분류'?'':_regStr);
     v('hi-tags',(_hinfo.tags||[]).join(', '));
+    _renderHospContacts(_hinfo.contacts);
     const m=document.getElementById('hi-editmeta'); if(m)m.textContent=_hinfo.updatedAt?('최종수정: '+(_hinfo.updatedBy||'')+' · '+_hinfo.updatedAt):'아직 수정 이력 없음';
     const sm=document.getElementById('hi-save-msg'); if(sm)sm.textContent='';
   })();
