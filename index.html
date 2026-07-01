@@ -318,6 +318,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       <li><a class="nav-link" onclick="showPage('quotes',this)"><i class="bi bi-file-earmark-text"></i>견적서</a></li>
       <li><a class="nav-link" onclick="showPage('schedule',this)"><i class="bi bi-calendar-week"></i>일정</a></li>
       <li><a class="nav-link" onclick="showPage('roi',this)"><i class="bi bi-calculator"></i>ROI 계산기</a></li>
+      <li><a class="nav-link" onclick="showPage('speech',this)"><i class="bi bi-chat-quote"></i>Sales Speech</a></li>
     </ul>
     <div class="nav-label mt-3">관리</div>
     <ul class="nav flex-column gap-0">
@@ -759,10 +760,58 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
     <div id="sch-body"></div>
   </div>
 
-  <!-- ROI 계산기 (외부 wt-k7r 이식: RF/HIFU·Laser·Sales) -->
+  <!-- ROI 계산기 (네이티브 재구현: RF/HIFU · Laser) -->
   <div id="page-roi" class="page">
-    <div class="page-header"><h5><i class="bi bi-calculator me-2"></i>ROI 계산기 <span class="text-muted" style="font-size:12px;font-weight:400">· RF/HIFU · Laser · Sales</span></h5></div>
-    <iframe id="roi-frame" title="ROI 계산기" style="width:100%;height:calc(100vh - 150px);border:0;border-radius:12px;background:#080c15"></iframe>
+    <div class="page-header"><h5><i class="bi bi-calculator me-2"></i>ROI 계산기 <span class="text-muted" style="font-size:12px;font-weight:400">· 장비 투자 회수 시뮬레이터</span></h5></div>
+    <ul class="nav nav-pills mb-3" style="gap:6px">
+      <li class="nav-item"><button id="roitab-rf" class="nav-link active" onclick="roiTab('rf')"><i class="bi bi-lightning-charge me-1"></i>RF / HIFU</button></li>
+      <li class="nav-item"><button id="roitab-laser" class="nav-link" onclick="roiTab('laser')"><i class="bi bi-brightness-high me-1"></i>Laser</button></li>
+    </ul>
+
+    <div id="roi-rf-panel">
+      <div class="card border-0 shadow-sm mb-3"><div class="card-body">
+        <div class="fw-bold mb-1" style="font-size:14px"><i class="bi bi-lightning-charge-fill me-1" style="color:#f97316"></i>RF/HIFU ROI 분석</div>
+        <div class="text-muted mb-3" style="font-size:12px">장비·패키지를 선택하면 검증된 기준값이 자동 입력됩니다. 예외는 “직접 입력”으로 조정하세요.</div>
+        <div class="row g-2">
+          <div class="col-md-6"><label class="form-label" style="font-size:12px">장비명</label><select id="rf-equipment" class="form-select form-select-sm"></select></div>
+          <div class="col-md-6" id="rf-package-row"><label class="form-label" style="font-size:12px">패키지명</label><select id="rf-package" class="form-select form-select-sm"></select></div>
+          <div class="col-md-4"><label class="form-label" style="font-size:12px">패키지 가격(원)</label><input id="rf-packagePrice" class="form-control form-control-sm" inputmode="numeric"></div>
+          <div class="col-md-4"><label class="form-label" style="font-size:12px">제공 소모품수(개)</label><input id="rf-consumableCount" class="form-control form-control-sm" type="number" min="0"></div>
+          <div class="col-md-4"><label class="form-label" style="font-size:12px">시술샷수(샷/회)</label><input id="rf-shotsPerTreatment" class="form-control form-control-sm" type="number" min="1"></div>
+          <div class="col-md-4"><label class="form-label" style="font-size:12px">1회 시술단가(원)</label><input id="rf-pricePerTreatment" class="form-control form-control-sm" inputmode="numeric"></div>
+          <div class="col-md-4"><label class="form-label" style="font-size:12px">일 시술 횟수(회/일)</label><input id="rf-treatmentsPerDay" class="form-control form-control-sm" type="number" min="0"></div>
+          <div class="col-md-4"><label class="form-label" style="font-size:12px">팁/카트리지 샷수(총 샷)</label><input id="rf-tipShots" class="form-control form-control-sm" type="number" min="1"></div>
+        </div>
+      </div></div>
+      <div id="rf-result"></div>
+    </div>
+
+    <div id="roi-laser-panel" style="display:none">
+      <div class="card border-0 shadow-sm mb-3"><div class="card-body">
+        <div class="fw-bold mb-1" style="font-size:14px"><i class="bi bi-brightness-high-fill me-1" style="color:#2563eb"></i>Laser ROI 분석</div>
+        <div class="text-muted mb-3" style="font-size:12px">일 고객 유입 기준 패키지 매출로 장비 투자 회수일을 계산합니다.</div>
+        <div class="row g-2">
+          <div class="col-md-6"><label class="form-label" style="font-size:12px">장비 가격(원)</label><input id="laser-equipmentPrice" class="form-control form-control-sm" inputmode="numeric" value="150,000,000"></div>
+          <div class="col-md-6"><label class="form-label" style="font-size:12px">1회 시술단가(원)</label><input id="laser-sessionUnitPrice" class="form-control form-control-sm" inputmode="numeric" value="300,000"></div>
+          <div class="col-md-6"><label class="form-label" style="font-size:12px">티케팅수(회)</label><input id="laser-ticketingCount" class="form-control form-control-sm" type="number" min="0" value="3"></div>
+          <div class="col-md-6"><label class="form-label" style="font-size:12px">고객수(명/일)</label><input id="laser-customerCount" class="form-control form-control-sm" type="number" min="0" value="15"></div>
+        </div>
+      </div></div>
+      <div id="laser-result"></div>
+    </div>
+  </div>
+
+  <!-- Sales Speech (네이티브 재구현) -->
+  <div id="page-speech" class="page">
+    <div class="page-header"><h5><i class="bi bi-chat-quote me-2"></i>Sales Speech <span class="text-muted" style="font-size:12px;font-weight:400">· 장비별 경쟁사 비교 + 세일즈 멘트</span></h5></div>
+    <div id="speech-grid-view">
+      <div class="text-muted mb-3" style="font-size:13px">장비를 선택하면 경쟁사 비교표와 세일즈 멘트를 확인할 수 있습니다.</div>
+      <div id="speech-grid" class="row g-2"></div>
+    </div>
+    <div id="speech-detail-view" style="display:none">
+      <button class="btn btn-outline-secondary btn-sm mb-3" onclick="speechBack()"><i class="bi bi-arrow-left me-1"></i>장비 목록</button>
+      <div id="speech-detail-content"></div>
+    </div>
   </div>
 
   <!-- 견적서 -->
@@ -1889,14 +1938,15 @@ function showPage(name, el, noPush) {
   if(el) el.classList.add('active');
   else { const links = document.querySelectorAll('.nav-link');
     links.forEach(l=>{ if(l.textContent.trim().includes(
-      {'sales-overview':'종합',dashboard:'현황판',sales:'수주관리',quotes:'견적서',schedule:'일정',roi:'ROI 계산기',customers:'고객사',equipments:'장비',logs:'상담일지',products:'제품',consumables:'소모품 매출','cons-hospitals':'병원별','device-sales':'제품 매출','device-reps':'담당자별',region:'지역별 분석',pending:'회계 미반영 매출','cons-accounts':'거래처'}[name]||''
+      {'sales-overview':'종합',dashboard:'현황판',sales:'수주관리',quotes:'견적서',schedule:'일정',roi:'ROI 계산기',speech:'Sales Speech',customers:'고객사',equipments:'장비',logs:'상담일지',products:'제품',consumables:'소모품 매출','cons-hospitals':'병원별','device-sales':'제품 매출','device-reps':'담당자별',region:'지역별 분석',pending:'회계 미반영 매출','cons-accounts':'거래처'}[name]||''
     )) l.classList.add('active'); }); }
   if(name==='sales-overview') renderSalesOverview();
   else if(name==='dashboard') renderDashboard();
   else if(name==='sales'||name==='pipeline'||name==='performance') renderSalesPage(name);
   else if(name==='quotes') renderQuotes();
   else if(name==='schedule') renderSchedule();
-  else if(name==='roi'){ const f=document.getElementById('roi-frame'); if(f && !f.getAttribute('src')) f.setAttribute('src','roi.html'); }
+  else if(name==='roi'){ if(!window._roiInit){ roiInit(); window._roiInit=1; } }
+  else if(name==='speech'){ if(!window._speechInit){ buildSpeechGrid(); window._speechInit=1; } }
   else if(name==='customers') renderCustomers();
   else if(name==='equipments') initEquip();
   else if(name==='logs') { showPage('sales'); const tb=document.getElementById('sales-tab-logs-btn'); salesTab('logs',tb); return; }
@@ -6716,7 +6766,277 @@ window.addEventListener('popstate', function(e) {
     <button class="btn btn-primary w-100" onclick="saveNewUser()">추가</button>
   </div>
 </div></div></div>
-<script>function printPDF(){var t=document.title;var r=function(){document.title=t;window.removeEventListener('afterprint',r);};window.addEventListener('afterprint',r);window.print();}</script>
+<!-- ── ROI 계산기 + Sales Speech (네이티브) ── -->
+<script>
+(function(){
+  // ===== 공용 =====
+  const _n = v => { const x=Number(String(v==null?'':v).replace(/,/g,'')); return Number.isFinite(x)?x:0; };
+  const _won = v => Math.round(v||0).toLocaleString('ko-KR');
+  const _day = v => (!Number.isFinite(v)||v<=0)?'회수 불가':(v.toFixed(1)+'일');
+  const _times = v => Math.round(v||0).toLocaleString('ko-KR')+'회';
+  // 천단위 콤마 입력 자동포맷
+  function _fmtPriceInput(el){ const raw=el.value.replace(/[^0-9]/g,''); el.value=raw?Number(raw).toLocaleString('ko-KR'):''; }
+
+  // ===== RF/HIFU 데이터 =====
+  const RF_PACKAGE_DATA = {
+    "Oligio X/Kiss": [
+      {packageName:"4,400 패키지", packagePrice:44000000, consumableCount:90,  shotsPerTreatment:600, tipShots:900, defaultPricePerTreatment:1200000, defaultTreatmentsPerDay:3},
+      {packageName:"6,600 패키지", packagePrice:66000000, consumableCount:170, shotsPerTreatment:600, tipShots:900, defaultPricePerTreatment:1200000, defaultTreatmentsPerDay:3},
+      {packageName:"8,800 패키지", packagePrice:88000000, consumableCount:250, shotsPerTreatment:600, tipShots:900, defaultPricePerTreatment:1200000, defaultTreatmentsPerDay:3}
+    ],
+    "Tightan": [
+      {packageName:"550 패키지",   packagePrice:5500000,  consumableCount:5,  shotsPerTreatment:300, tipShots:15000, defaultPricePerTreatment:300000, defaultTreatmentsPerDay:3},
+      {packageName:"1,100 패키지", packagePrice:11000000, consumableCount:10, shotsPerTreatment:300, tipShots:15000, defaultPricePerTreatment:300000, defaultTreatmentsPerDay:1}
+    ]
+  };
+  const _rf = id => document.getElementById('rf-'+id);
+
+  function _setRFDefaults(pkg){
+    const ro = ['packagePrice','consumableCount','shotsPerTreatment','tipShots'];
+    if(pkg.isCustom){ ro.forEach(k=>_rf(k).readOnly=false); calcRF(); return; }
+    ro.forEach(k=>_rf(k).readOnly=true);
+    _rf('packagePrice').value=pkg.packagePrice.toLocaleString('ko-KR');
+    _rf('consumableCount').value=pkg.consumableCount;
+    _rf('shotsPerTreatment').value=pkg.shotsPerTreatment;
+    _rf('tipShots').value=pkg.tipShots;
+    if(pkg.defaultPricePerTreatment) _rf('pricePerTreatment').value=pkg.defaultPricePerTreatment.toLocaleString('ko-KR');
+    if(pkg.defaultTreatmentsPerDay)  _rf('treatmentsPerDay').value=pkg.defaultTreatmentsPerDay;
+    calcRF();
+  }
+  function _populateRFPackages(){
+    const eq=_rf('equipment').value, sel=_rf('package'), pkgs=RF_PACKAGE_DATA[eq]||[];
+    sel.innerHTML='';
+    pkgs.forEach((p,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=p.packageName; sel.appendChild(o); });
+    const c=document.createElement('option'); c.value='custom'; c.textContent='직접 입력'; sel.appendChild(c);
+    if(pkgs.length) _setRFDefaults(pkgs[0]);
+  }
+  function _setAllRFEditable(){
+    document.getElementById('rf-package-row').style.display='none';
+    ['packagePrice','consumableCount','shotsPerTreatment','tipShots','pricePerTreatment','treatmentsPerDay'].forEach(k=>{ _rf(k).readOnly=false; _rf(k).value=''; });
+    calcRF();
+  }
+  function _bindRF(){
+    const eq=_rf('equipment'); eq.innerHTML='';
+    Object.keys(RF_PACKAGE_DATA).forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; eq.appendChild(o); });
+    const c=document.createElement('option'); c.value='custom'; c.textContent='직접 입력'; eq.appendChild(c);
+    eq.addEventListener('change',()=>{ if(eq.value==='custom'){ _setAllRFEditable(); } else { document.getElementById('rf-package-row').style.display=''; _populateRFPackages(); } });
+    _rf('package').addEventListener('change',()=>{ const pkgs=RF_PACKAGE_DATA[eq.value]||[]; if(_rf('package').value==='custom'){ _setRFDefaults({isCustom:true}); return; } const p=pkgs[_n(_rf('package').value)]||pkgs[0]; if(p)_setRFDefaults(p); });
+    // 입력 시 재계산 + 가격 콤마
+    ['packagePrice','pricePerTreatment'].forEach(k=>_rf(k).addEventListener('input',()=>{ if(!_rf(k).readOnly)_fmtPriceInput(_rf(k)); }));
+    document.getElementById('roi-rf-panel').addEventListener('input',calcRF);
+    _populateRFPackages();
+  }
+
+  function _chip(label,val,accent){ return '<div style="text-align:center;padding:8px 12px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;min-width:96px"><div style="font-size:10px;color:#6b7280;margin-bottom:2px">'+label+'</div><div style="font-size:15px;font-weight:800;color:'+(accent||'#111827')+'">'+val+'</div></div>'; }
+  const _op = s => '<span style="font-size:16px;color:#9ca3af;font-weight:700;padding:0 2px">'+s+'</span>';
+  const _arrow = '<div style="text-align:center;color:#cbd5e1;font-size:14px;margin:8px 0">▼</div>';
+
+  window.calcRF = function(){
+    const el=document.getElementById('rf-result'); if(!el) return;
+    const packagePrice=_n(_rf('packagePrice').value), consumableCount=_n(_rf('consumableCount').value),
+          shotsPerTreatment=_n(_rf('shotsPerTreatment').value), pricePerTreatment=_n(_rf('pricePerTreatment').value),
+          treatmentsPerDay=_n(_rf('treatmentsPerDay').value), tipShots=_n(_rf('tipShots').value);
+    const err = m => el.innerHTML='<div style="padding:14px 16px;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;color:#dc2626;font-size:13px">'+m+'</div>';
+    if(packagePrice<=0) return err('패키지 가격이 0보다 커야 합니다.');
+    if(consumableCount<=0||shotsPerTreatment<=0||pricePerTreatment<=0||treatmentsPerDay<=0||tipShots<=0) return err('모든 입력값은 0보다 커야 합니다.');
+    const totalTreatments=(tipShots/shotsPerTreatment)*consumableCount;
+    const totalRevenue=totalTreatments*pricePerTreatment;
+    const pureProfit=totalRevenue-packagePrice;
+    const paybackDays=packagePrice/(pricePerTreatment*treatmentsPerDay);
+    const dailyRevenue=pricePerTreatment*treatmentsPerDay;
+    el.innerHTML =
+      '<div class="card border-0 shadow-sm mb-3" style="background:#f0fdf4;border-left:4px solid #16a34a!important"><div class="card-body">'
+        +'<span class="badge" style="background:#dcfce7;color:#166534;font-weight:700">원금 회수</span>'
+        +'<div style="display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin:14px 0 4px">'
+          +_chip('패키지 가격',_won(packagePrice))+_op('÷')+_chip('1회 시술단가',_won(pricePerTreatment))+_op('÷')+_chip('일 시술 횟수',treatmentsPerDay+'회')
+        +'</div>'+_arrow
+        +'<div style="text-align:center"><span style="font-size:13px;color:#374151">패키지 구매 후 </span><span style="font-size:26px;font-weight:800;color:#16a34a">'+_day(paybackDays)+'</span><span style="font-size:13px;color:#374151"> 만에 원금 회수</span></div>'
+        +'<div style="text-align:center;font-size:11px;color:#9ca3af;margin-top:4px">하루 매출 '+_won(dailyRevenue)+'원 기준</div>'
+      +'</div></div>'
+      +'<div style="text-align:center;font-size:12px;color:#9ca3af;margin:-6px 0 10px">이 패키지, 끝까지 쓰면?</div>'
+      +'<div class="card border-0 shadow-sm mb-3" style="background:#fff7ed;border-left:4px solid #f97316!important"><div class="card-body">'
+        +'<span class="badge" style="background:#ffedd5;color:#9a3412;font-weight:700">총 수익 구조</span>'
+        +'<div style="display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin:14px 0 10px">'
+          +_chip('소모품',consumableCount+'개')+_op('×')+_chip('팁÷시술샷',Math.round(tipShots/shotsPerTreatment)+'회/개')+_op('=')+_chip('총 시술 횟수',_times(totalTreatments),'#f97316')
+        +'</div>'
+        +'<div style="max-width:420px;margin:0 auto;font-size:12px">'
+          +'<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #fed7aa"><span>총 매출 ('+_times(totalTreatments)+' × '+_won(pricePerTreatment)+')</span><span style="font-weight:700">'+_won(totalRevenue)+'</span></div>'
+          +'<div style="display:flex;justify-content:space-between;padding:4px 0;color:#dc2626"><span>패키지 비용</span><span style="font-weight:700">− '+_won(packagePrice)+'</span></div>'
+        +'</div>'+_arrow
+        +'<div style="text-align:center"><span style="font-size:13px;color:#374151">이 패키지로 총 </span><span style="font-size:26px;font-weight:800;color:#f97316">'+_won(pureProfit)+'</span><span style="font-size:13px;color:#374151"> 수익</span></div>'
+      +'</div></div>';
+  };
+
+  // ===== Laser =====
+  const _ls = id => document.getElementById('laser-'+id);
+  window.calcLaser = function(){
+    const el=document.getElementById('laser-result'); if(!el) return;
+    const equipmentPrice=_n(_ls('equipmentPrice').value), sessionUnitPrice=_n(_ls('sessionUnitPrice').value),
+          ticketingCount=_n(_ls('ticketingCount').value), customerCount=_n(_ls('customerCount').value);
+    const err = m => el.innerHTML='<div style="padding:14px 16px;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;color:#dc2626;font-size:13px">'+m+'</div>';
+    if(equipmentPrice<=0) return err('장비 가격이 0보다 커야 합니다.');
+    if(sessionUnitPrice<=0||ticketingCount<=0||customerCount<=0) return err('시술단가, 티케팅수, 고객수는 0보다 커야 합니다.');
+    const dailyRevenue=sessionUnitPrice*ticketingCount*customerCount;
+    const paybackDays=equipmentPrice/dailyRevenue;
+    el.innerHTML =
+      '<div class="card border-0 shadow-sm mb-3" style="background:#eff6ff;border-left:4px solid #2563eb!important"><div class="card-body">'
+        +'<span class="badge" style="background:#dbeafe;color:#1e40af;font-weight:700">하루 매출 계산</span>'
+        +'<div style="display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin:14px 0 4px">'
+          +_chip('1회 시술단가',_won(sessionUnitPrice))+_op('×')+_chip('티케팅수',ticketingCount+'회')+_op('×')+_chip('고객수',customerCount+'명/일')
+        +'</div>'+_arrow
+        +'<div style="text-align:center"><span style="font-size:13px;color:#374151">하루 매출 </span><span style="font-size:26px;font-weight:800;color:#2563eb">'+_won(dailyRevenue)+'</span></div>'
+      +'</div></div>'
+      +'<div style="text-align:center;font-size:12px;color:#9ca3af;margin:-6px 0 10px">이 매출로 장비값 회수하면?</div>'
+      +'<div class="card border-0 shadow-sm mb-3" style="background:#f0fdf4;border-left:4px solid #16a34a!important"><div class="card-body">'
+        +'<span class="badge" style="background:#dcfce7;color:#166534;font-weight:700">원금 회수</span>'
+        +'<div style="display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin:14px 0 4px">'
+          +_chip('장비 가격',_won(equipmentPrice))+_op('÷')+_chip('하루 매출',_won(dailyRevenue))
+        +'</div>'+_arrow
+        +'<div style="text-align:center"><span style="font-size:26px;font-weight:800;color:#16a34a">'+_day(paybackDays)+'</span><span style="font-size:13px;color:#374151"> 만에 원금 회수</span></div>'
+      +'</div></div>';
+  };
+
+  window.roiTab = function(which){
+    document.getElementById('roi-rf-panel').style.display   = which==='rf'?'':'none';
+    document.getElementById('roi-laser-panel').style.display= which==='laser'?'':'none';
+    document.getElementById('roitab-rf').classList.toggle('active',which==='rf');
+    document.getElementById('roitab-laser').classList.toggle('active',which==='laser');
+  };
+  window.roiInit = function(){
+    _bindRF();
+    ['equipmentPrice','sessionUnitPrice'].forEach(k=>_ls(k).addEventListener('input',()=>_fmtPriceInput(_ls(k))));
+    document.getElementById('roi-laser-panel').addEventListener('input',calcLaser);
+    calcRF(); calcLaser();
+  };
+
+  // ===== Sales Speech 데이터(한국어) =====
+  const SPEECH_DATA = [
+    {id:'v-laser',name:'V LASER',color:'#e8472a',tagline:'엑셀브이급 적응증, 혁신적인 ROI의 혈관레이저',competitors:['Excel V','Vbeam','Cynergy'],table:{competitor:'Excel V',rows:[
+      {label:'가격',wontech:'약 6,000만원',rival:'1.5~2억'},{label:'소모품',wontech:'없음',rival:'있음'},{label:'A/S',wontech:'국내 즉시 대응',rival:'수입 지연'},{label:'ROI',wontech:'매우 우수',rival:'투자금 부담'}]},speech:[
+      {text:'V LASER는 **핸드피스 교체 없이 532nm와 1064nm 두 파장을 즉시 전환**해 사용할 수 있어, 시술 흐름을 끊지 않고 연속 진료가 가능합니다.'},
+      {text:'4단계 접촉식 쿨링 시스템으로 피부 타입과 병변 종류에 따라 시술자가 세밀하게 파라미터를 조절할 수 있으며, **화상 위험을 최소화**합니다.'},
+      {text:'**소모품이 없어 유지비가 거의 발생하지 않고**, 혈관 병변부터 리쥬브·색소·여드름까지 폭넓은 적응증을 하나의 장비로 커버합니다.'},
+      {closing:true,text:"소모품 비용 '0', 넓은 적응증 — Excel V 효과를 6,000만원으로. ROI가 가장 빠른 혈관·색소 플랫폼입니다."}]},
+    {id:'pastelle-pro',name:'PASTELLE PRO',color:'#8b5cf6',tagline:'기존 Q-Switch가 못 지우는 문신색상까지 커버',competitors:['Spectra XT','Revlite SI','Medlite C6'],table:{competitor:'기존 Q-Switched',rows:[
+      {label:'파장',wontech:'1064/532/595/660',rival:'1064/532'},{label:'문신 색상',wontech:'거의 전색상',rival:'제한적'},{label:'MLA',wontech:'가능',rival:'제한'},{label:'활용성',wontech:'매우 높음',rival:'색소 위주'}]},speech:[
+      {text:'기존 Q-Switched 장비가 1064/532nm에 한정된 것과 달리, **PASTELLE PRO는 595nm(홍조·파란 문신)와 660nm(초록 문신·고멜라닌)까지 총 4파장을 지원**합니다.'},
+      {text:'덕분에 기존에 거절할 수밖에 없었던 다양한 색상의 문신도 효과적으로 치료할 수 있습니다.'},
+      {text:'**HEXA MLA와 멀티 PTP 모드**는 광기계적 파괴력을 극대화해 기존 Q-Switched 대비 더 적은 횟수로 뚜렷한 개선 효과를 냅니다.'},
+      {closing:true,text:'4가지 파장으로 모든 문신 색상까지 전부 수용하세요. 시술 메뉴 확장과 수익성이 동시에 해결됩니다.'}]},
+    {id:'picocare-majesty',name:'PICOCARE MAJESTY',color:'#f59e0b',tagline:'250ps 초단파 펄스로 프리미엄 피코 시장 공략',competitors:['피코웨이','PicoPlus','디스커버리 피코'],table:{competitor:'PicoPlus',rows:[
+      {label:'펄스폭',wontech:'250ps',rival:'300ps급'},{label:'피크파워',wontech:'2GW',rival:'상대적 낮음'},{label:'유지비',wontech:'국산 저렴',rival:'수입 고가'},{label:'가격',wontech:'경쟁력 우수',rival:'고가'}]},speech:[
+      {text:'PICOCARE MAJESTY는 **전 세계 최초로 250ps 펄스듀레이션을 구현한 피코레이저** 장비입니다. 기존 Q스위치보다 1,000배 빠르고, 멜라노좀의 SRT인 300ps보다 짧은 펄스로 **멜라노좀만 선택적으로 파괴**합니다.'},
+      {text:'**2GW 피크 파워**는 나노 레이저로 치료가 어려웠던 완고한 색소 병변과 복잡한 문신 색상에서도 탁월한 효과를 발휘합니다.'},
+      {text:'국산 장비이므로 수입 피코 대비 **유지비가 저렴하고, A/S 대응이 신속**합니다.'},
+      {closing:true,text:'세계 최초 250ps · 2GW — 피코플러스보다 빠르고 강하면서 가격은 더 낮습니다. 프리미엄 시술 단가를 기술로 정당화하는 유일한 국산 플래그십입니다.'}]},
+    {id:'picoalex',name:'PICOALEX',color:'#10b981',tagline:'755nm 피코 시장 공략용 플랫폼',competitors:['PicoSure','Discovery Pico'],table:{competitor:'PicoSure',rows:[
+      {label:'출력',wontech:'310mJ',rival:'상대적 낮음'},{label:'캘리브레이션',wontech:'초기 1회',rival:'스팟 변경마다'},{label:'운용편의성',wontech:'우수',rival:'보통'},{label:'가격',wontech:'경쟁력 우수',rival:'고가'}]},speech:[
+      {text:'PICOALEX는 **755nm 알렉산드라이트 파장 특유의 높은 멜라닌 선택성**을 600ps 피코초 기술과 결합한 장비입니다.'},
+      {text:'피코슈어(PicoSure) 대비 **최대 출력(310mJ)이 높고**, 스팟 사이즈 변경 시 매번 캘리브레이션을 진행해야 하는 번거로움 없이 **시술 시작 시 한 번만** 진행하면 되어 시술 흐름이 훨씬 효율적입니다.'},
+      {text:'Zoom과 MLA 핸드피스로 문신 제거·토닝에서 리쥬브네이션·흉터 치료까지 폭넓게 대응하며, 동급 수입 장비 대비 **합리적인 가격으로 도입 문턱을 낮춥니다.**'},
+      {closing:true,text:'피코슈어 대비 출력은 높고, 캘리브레이션은 1회로 끝나고, 가격은 낮습니다. 동일 결과를 더 빠르고 효율적으로 낼 수 있습니다.'}]},
+    {id:'picoandy',name:'PICOANDY',color:'#3b82f6',tagline:'개원가에서 가장 무난하게 수익 내는 피코 장비',competitors:['PicoPlus','PicoLO','Enlighten'],table:{competitor:'피코플러스',rows:[
+      {label:'출력',wontech:'600mJ',rival:'500mJ'},{label:'펄스폭',wontech:'450~550ps',rival:'유사'},{label:'가격',wontech:'우수',rival:'상대적 고가'},{label:'범용성',wontech:'매우 높음',rival:'높음'}]},speech:[
+      {text:'PICOANDY는 **450ps의 피코초 펄스**로 기존 나노 레이저 대비 색소 파괴력을 높이면서도 주변 조직 손상을 최소화합니다.'},
+      {text:'**1064nm 기준 최대 600mJ의 출력**은 깊은 진피 색소부터 표피 잡티, 문신 제거까지 넓은 적응증을 한 번의 도입으로 커버합니다.'},
+      {text:'낮은 통증과 부작용 프로파일 덕분에 **환자 만족도가 높고**, 유연한 패키지 구성으로 시술 단가와 재방문율 향상에 직접 기여합니다.'},
+      {closing:true,text:'나노 레이저를 쓰고 계신다면, 동일 환자에게 피코 옵션을 추가해 시술 단가를 높일 수 있는 가장 합리적인 업그레이드입니다.'}]},
+    {id:'oligio',name:'OLIGIO',color:'#f97316',tagline:'써마지급 효과 + 국내 A/S + 낮은 소모품 비용',competitors:['써마지 FLX','볼뉴머'],table:{competitor:'써마지 FLX',rows:[
+      {label:'원리',wontech:'Monopolar RF',rival:'Monopolar RF'},{label:'가격',wontech:'약 5,500만원',rival:'1.5억 이상'},{label:'A/S',wontech:'국내 즉시 대응',rival:'수입 지연'},{label:'소모품',wontech:'저렴',rival:'고가'}]},speech:[
+      {text:'OLIGIO는 **한국 최초 모노폴라 RF 장비**로, 진피 콜라겐에 열에너지를 직접 전달해 콜라겐 수축과 섬유아세포 자극을 통해 신생 콜라겐을 생성합니다.'},
+      {text:'**4중 안전장치와 GAS Cooling 시스템**이 시술 중 실시간으로 작동하여 열 손상 위험을 최소화하면서도 충분한 치료 심도를 확보합니다.'},
+      {text:'싱글·듀얼·오토 모드와 자유로운 쿨링 조절 기능으로 시술자의 임상 판단에 따른 맞춤 프로토콜이 가능하며, 울세라·써마지 대비 **합리적인 도입 비용과 우수한 국내 A/S 체계**를 갖추고 있습니다.'},
+      {closing:true,text:'써마지와 동일한 모노폴라 RF, 동등한 최대출력 400W — 도입 비용은 5분의 1 이하에 국내 즉시 A/S까지. 효과는 같고 운영 효율은 훨씬 높습니다.'}]},
+    {id:'oligio-xm',name:'OLIGIO XM',color:'#f97316',tagline:'RF + HIFU 복합 전층 리프팅 — 두 장비가 하나로',competitors:['써마지 FLX','울쎄라','볼뉴머'],table:{competitor:'써마지 FLX',rows:[
+      {label:'RF',wontech:'O',rival:'O'},{label:'HIFU',wontech:'O',rival:'X'},{label:'복합시술',wontech:'O',rival:'X'},{label:'쿨링',wontech:'강화',rival:'기본'}]},speech:[
+      {text:'OLIGIO XM은 **HIFU와 RF를 하나의 플랫폼에 통합한 세계 최초 복합 리프팅 장비**입니다.'},
+      {text:'HIFU로 SMAS층부터 끌어올리고, RF G모드로 진피 상부를 부드럽게 가열하고, RF X모드로 심부까지 강력하게 히팅하는 **3에너지 교차 시술**이 가능합니다.'},
+      {text:'울세라는 HIFU만, 써마지는 RF만 제공하는 데 반해, **OLIGIO XM은 두 장비의 적응증을 단일 플랫폼으로 커버**합니다. XM Pack 소모품 패키지로 1인 1팩 프리미엄 시술 구조를 설계할 수 있습니다.'},
+      {closing:true,text:'울세라와 써마지를 따로 살 이유가 없습니다. OLIGIO XM 하나로 HIFU+RF 전층 리프팅을 완성하고, XM Pack으로 반복 매출 구조까지 만드세요.'}]},
+    {id:'tightan',name:'TIGHTAN',color:'#22c55e',tagline:'HIFU 시장 진입용 — 최고의 투자 효율',competitors:['울쎄라','울트라포머 MPT','슈링크 유니버스'],table:{competitor:'울쎄라',rows:[
+      {label:'가격',wontech:'1천만원대',rival:'1억 이상'},{label:'시술속도',wontech:'300샷 6분',rival:'상대적 느림'},{label:'도입부담',wontech:'매우 낮음',rival:'높음'},{label:'A/S',wontech:'국내',rival:'수입'}]},speech:[
+      {text:'TIGHTAN은 HIFU 기반 비침습 리프팅 장비로, 타겟층에만 에너지를 정밀 집속해 **주변 조직 손상 없이 즉각적인 리프팅 효과**를 제공합니다.'},
+      {text:'**1회 시술로 6개월~1년까지 효과가 지속**되며, 300샷을 6분 이내에 완료하는 빠른 시술 속도로 회전율 높은 시술 환경에 최적화되어 있습니다.'},
+      {text:'합리적인 도입 가격으로 **HIFU 시술 메뉴를 처음 추가하려는 클리닉에도 진입 장벽이 낮고**, 얼굴 부위별 카트리지 선택으로 개인화 시술이 가능합니다.'},
+      {closing:true,text:'울세라 대비 10분의 1 가격에 HIFU 리프팅 메뉴 추가, 300샷을 6분에 완료. 시술 단가는 유지하면서 도입 부담은 최소화됩니다.'}]},
+    {id:'avvio',name:'AVVIO',color:'#14b8a6',tagline:'CO2 대비 짧은 다운타임 — 같은 효과, 더 빠른 회복',competitors:['액션2','루트로닉 eCO2','CO2 레이저'],table:{competitor:'CO2 레이저',rows:[
+      {label:'열손상',wontech:'적음',rival:'많음'},{label:'회복속도',wontech:'빠름',rival:'느림'},{label:'PIH',wontech:'적음',rival:'상대적 높음'},{label:'A/S',wontech:'국내',rival:'수입'}]},speech:[
+      {text:'AVVIO는 **수분 흡수율이 CO2 레이저보다 16배 높은 Er:YAG 2940nm 레이저**로, 표피 손상과 열 확산이 최소화되어 회복 기간이 훨씬 짧습니다.'},
+      {text:'다운타임에 민감한 환자가 늘어나는 추세에서, AVVIO는 **CO2 대비 환자 만족도를 높이면서 동등한 치료 효과**를 제공합니다.'},
+      {text:'Short/Long 모드 선택으로 Ablation과 Coagulation 효과를 병변에 따라 적용하고, **Fractional 핸드피스로 적응증 범위를 더욱 확장**할 수 있습니다.'},
+      {closing:true,text:'CO2보다 16배 높은 수분 흡수율로 열 확산과 피부 손상을 최소화 — 다운타임이 짧아 CO2를 꺼려하던 환자도 설득되는 더 안전한 선택입니다.'}]},
+    {id:'lavieen',name:'LAVIEEN',color:'#a855f7',tagline:'BB레이저로 알려진 패키지 매출 창출 장비',competitors:['모자이크','Halo','Fraxel Dual'],table:{competitor:'프락셀',rows:[
+      {label:'다운타임',wontech:'짧음',rival:'상대적 김'},{label:'소모품',wontech:'없음',rival:'있음'},{label:'드럭딜리버리',wontech:'강점',rival:'보통'},{label:'환자인지도',wontech:'BB레이저',rival:'프락셀'}]},speech:[
+      {text:'LAVIEEN은 **1927nm Thulium 파장이 수분에 선택적으로 반응하는 BB레이저**입니다. 각질층을 보존한 채로 표피와 진피 상부에만 열에너지를 전달하기 때문에 CO2 대비 다운타임이 짧고 피부 장벽 손상이 최소화됩니다.'},
+      {text:"'**비비크림 필요 없는 올인원 레이저**'라는 컨셉으로 환자 인지도가 높아 상담 전환율이 좋은 장비입니다."},
+      {text:'핵심 강점은 **시술 후 드럭 딜리버리 효과**입니다. MTZ 형성 후 EGF·FGF·PDRN·트라넥삼산 등 앰플을 도포하면 흡수율이 현저히 높아져 **앰플 판매로 추가 수익 구조**를 만들 수 있습니다.'},
+      {closing:true,text:'경쟁 프랙셔널 장비들의 소모품 비용 없이 BB레이저 고객 유입 · 앰플 수익 · 복합 패키지 단가 극대화를 동시에 실현하세요.'}]},
+    {id:'sandro-dual',name:'SANDRO DUAL',color:'#06b6d4',tagline:'제모·색소·혈관을 모두 커버하는 수익형 레이저 플랫폼',competitors:['젠틀맥스 프로','아포지 플러스','클라리티2'],table:{competitor:'젠틀맥스',rows:[
+      {label:'파장',wontech:'755+1064 동시조사',rival:'개별조사'},{label:'냉각',wontech:'파장별 독립냉각',rival:'DCD 냉각'},{label:'활용도',wontech:'제모+색소+혈관',rival:'제모 중심'},{label:'A/S',wontech:'국내 즉시 대응',rival:'수입 지연'}]},speech:[
+      {text:'SANDRO DUAL은 **755nm Alexandrite와 1064nm Nd:YAG 파장을 단일 플랫폼에 통합**한 멀티 레이저 장비입니다.'},
+      {text:'경쟁사 대부분의 듀얼 장비가 두 파장을 순차적으로만 사용하는 데 반해, **SANDRO DUAL은 하이브리드 모드를 통해 두 파장을 동시에 조사**할 수 있어 시술 시간을 단축하고 치료 효율을 극대화합니다.'},
+      {text:'각 파장별 독립 냉각 시스템(SCS)으로 출력 안정성이 뛰어나며, **제모는 물론 색소·혈관 병변과 리쥬브네이션까지 한 장비로 커버**할 수 있어 원내 장비 투자 효율이 높습니다.'},
+      {closing:true,text:'젠틀맥스 프로는 두 파장을 순차 조사하지만, SANDRO DUAL은 755nm + 1064nm을 동시 조사 — 시술 시간은 줄고 치료 효율은 올라갑니다. 파장별 독립 냉각으로 출력 안정성까지 갖췄으니, 젠틀맥스 프로 가격의 절반 이하로 더 넓은 적응증을 커버하는 장비입니다.'}]}
+  ];
+  const CLOSING_SPEECH = {
+    quote:"원텍 장비의 가장 큰 장점은\n단순히 효과가 아니라 **투자금 회수**입니다.\n\n수입장비 대비 초기 투자금은 낮고,\n유지비는 적으며, 시술 메뉴는 더 많이 만들 수 있습니다.\n\n결국 장비는 스펙이 아니라\n**병원 매출을 만드는 도구**인데,\n원텍 장비는 그 부분에 가장 최적화되어 있습니다.",
+    points:[{icon:'💰',title:'낮은 초기 투자금',desc:'수입장비 대비 대폭 절감'},{icon:'🔧',title:'적은 유지비',desc:'국내 A/S · 소모품 절약'},{icon:'📈',title:'넓은 시술 메뉴',desc:'투자 대비 수익 극대화'}]
+  };
+  const _bold = t => String(t).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  const _esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  window.buildSpeechGrid = function(){
+    const grid=document.getElementById('speech-grid'); if(!grid) return;
+    grid.innerHTML = SPEECH_DATA.map(d=>
+      '<div class="col-md-4 col-sm-6"><button type="button" onclick="showSpeechDetail(\''+d.id+'\')" class="w-100 text-start h-100" style="cursor:pointer;background:#fff;border:1px solid #e5e7eb;border-left:4px solid '+d.color+';border-radius:12px;padding:14px 16px;transition:box-shadow .12s,transform .12s" onmouseover="this.style.boxShadow=\'0 4px 14px rgba(0,0,0,.08)\';this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.boxShadow=\'\';this.style.transform=\'\'">'
+        +'<div style="font-size:15px;font-weight:800;color:#111827;letter-spacing:.3px">'+_esc(d.name)+'</div>'
+        +'<div style="font-size:12px;color:#6b7280;margin-top:4px;line-height:1.4">'+_esc(d.tagline)+'</div>'
+      +'</button></div>'
+    ).join('') +
+      '<div class="col-md-4 col-sm-6"><button type="button" onclick="showSpeechDetail(\'closing\')" class="w-100 text-start h-100" style="cursor:pointer;background:linear-gradient(135deg,#fff7ed,#fff);border:1px solid #fdba74;border-left:4px solid #ff5a0a;border-radius:12px;padding:14px 16px">'
+        +'<div style="font-size:15px;font-weight:800;color:#c2410c"><i class="bi bi-stars me-1"></i>원장님 클로징</div>'
+        +'<div style="font-size:12px;color:#9a3412;margin-top:4px">마무리 세일즈 멘트</div>'
+      +'</button></div>';
+  };
+  window.showSpeechDetail = function(id){
+    const c=document.getElementById('speech-detail-content');
+    c.innerHTML = id==='closing' ? _renderClosing() : _renderSpeechDetail(SPEECH_DATA.find(x=>x.id===id));
+    document.getElementById('speech-grid-view').style.display='none';
+    document.getElementById('speech-detail-view').style.display='';
+    try{ document.querySelector('.main-scroll, .content, main')?.scrollTo(0,0); }catch(e){} window.scrollTo(0,0);
+  };
+  window.speechBack = function(){
+    document.getElementById('speech-detail-view').style.display='none';
+    document.getElementById('speech-grid-view').style.display='';
+    window.scrollTo(0,0);
+  };
+  function _renderSpeechDetail(d){
+    if(!d) return '';
+    const rows=d.table.rows.map(r=>'<tr><td style="font-weight:600;color:#374151">'+_esc(r.label)+'</td><td style="font-weight:700;color:'+d.color+'">'+_esc(r.wontech)+'</td><td style="color:#6b7280">'+_esc(r.rival)+'</td></tr>').join('');
+    const rivals=d.competitors.map(x=>'<span class="badge rounded-pill me-1" style="background:#f3f4f6;color:#4b5563;font-weight:500">'+_esc(x)+'</span>').join('');
+    const closing=d.speech.find(b=>b.closing), details=d.speech.filter(b=>!b.closing);
+    const closingBlock=closing?'<div style="border-left:3px solid '+d.color+';background:'+d.color+'12;border-radius:10px;padding:14px 16px;margin-bottom:12px"><div style="font-size:14px;font-weight:600;color:#111827;line-height:1.6">'+_bold(_esc(closing.text))+'</div></div>':'';
+    const detailBlocks=details.map(b=>'<p style="font-size:13.5px;color:#374151;line-height:1.7;margin-bottom:12px">'+_bold(_esc(b.text))+'</p>').join('');
+    return '<div class="card border-0 shadow-sm"><div class="card-body">'
+      +'<div class="d-flex align-items-center flex-wrap gap-2 mb-2"><span class="badge" style="background:'+d.color+';font-size:15px;font-weight:800;padding:6px 12px;letter-spacing:.3px">'+_esc(d.name)+'</span><span style="font-size:13px;color:#6b7280">'+_esc(d.tagline)+'</span></div>'
+      +'<div class="mb-3">'+rivals+'</div>'
+      +'<div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:6px"><i class="bi bi-table me-1"></i>경쟁사 비교</div>'
+      +'<div class="table-responsive mb-3"><table class="table table-sm align-middle mb-0" style="font-size:13px"><thead><tr style="border-bottom:2px solid #e5e7eb"><th style="color:#9ca3af;font-weight:600">항목</th><th style="color:'+d.color+'">'+_esc(d.name)+'</th><th style="color:#9ca3af;font-weight:600">'+_esc(d.table.competitor)+'</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+      +'<div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:8px"><i class="bi bi-chat-quote me-1"></i>세일즈 멘트</div>'
+      +closingBlock+detailBlocks
+    +'</div></div>';
+  }
+  function _renderClosing(){
+    const paras=CLOSING_SPEECH.quote.split('\n').map(l=>l.trim()?'<p style="margin:0 0 6px">'+_bold(_esc(l))+'</p>':'<div style="height:8px"></div>').join('');
+    const points=CLOSING_SPEECH.points.map(p=>'<div class="col-md-4"><div style="text-align:center;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px"><div style="font-size:26px">'+p.icon+'</div><div style="font-weight:800;font-size:14px;margin-top:6px;color:#111827">'+_esc(p.title)+'</div><div style="font-size:12px;color:#6b7280;margin-top:2px">'+_esc(p.desc)+'</div></div></div>').join('');
+    return '<div class="card border-0 shadow-sm"><div class="card-body">'
+      +'<div class="d-flex align-items-center gap-2 mb-3"><span class="badge" style="background:#ff5a0a;font-size:15px;font-weight:800;padding:6px 12px"><i class="bi bi-stars me-1"></i>원장님 클로징</span><span style="font-size:13px;color:#6b7280">마무리 세일즈 멘트</span></div>'
+      +'<div style="background:#fafafa;border-radius:12px;padding:18px 20px;font-size:14px;color:#1f2937;line-height:1.7;margin-bottom:16px">'+paras+'</div>'
+      +'<div class="row g-2">'+points+'</div>'
+    +'</div></div>';
+  }
+})();
+function printPDF(){var t=document.title;var r=function(){document.title=t;window.removeEventListener('afterprint',r);};window.addEventListener('afterprint',r);window.print();}</script>
 <button id="pdf-fab" onclick="printPDF()" title="이 페이지를 PDF로 추출">📄 PDF</button>
 </body>
 </html>
