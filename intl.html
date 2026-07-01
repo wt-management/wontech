@@ -355,17 +355,23 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
       <div class="col-6"><label>국가</label><input id="d-country" class="form-control form-control-sm" list="d-country-list" autocomplete="off"><datalist id="d-country-list"></datalist></div>
       <div class="col-6"><label>딜러/거래처</label><input id="d-dealer" class="form-control form-control-sm" autocomplete="off"></div>
       <div class="col-7"><label>제품</label><input id="d-product" class="form-control form-control-sm" autocomplete="off"></div>
-      <div class="col-5"><label>금액 (USD)</label><input id="d-amount" type="number" class="form-control form-control-sm"></div>
+      <div class="col-5"><label>금액 (USD)</label><input id="d-amount" type="number" class="form-control form-control-sm" oninput="var k=document.getElementById('d-krw');if(k)k.textContent=this.value?('≈ '+_krw(this.value)):''"></div>
       <div class="col-4"><label>단계</label><select id="d-stage" class="form-select form-select-sm"></select></div>
       <div class="col-4"><label>확률 %</label><input id="d-prob" type="number" class="form-control form-control-sm"></div>
       <div class="col-4"><label>담당</label><input id="d-sales" class="form-control form-control-sm" autocomplete="off"></div>
       <div class="col-6"><label>예상 선적일</label><input id="d-ship" type="date" class="form-control form-control-sm"></div>
       <div class="col-6"><label>다음 액션일</label><input id="d-nextdate" type="date" class="form-control form-control-sm"></div>
       <div class="col-12"><label>다음 액션</label><input id="d-next" class="form-control form-control-sm" placeholder="데모/견적발송/딜러미팅/선적준비 등" autocomplete="off"></div>
+      <div class="col-12" style="border-top:1px solid #f1f5f9;margin-top:4px;padding-top:6px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;font-weight:700;color:#0891b2"><i class="bi bi-truck me-1"></i>수출/선적</span><span id="d-krw" style="font-size:10px;color:#94a3b8"></span></div>
+      <div class="col-4"><label>PO번호</label><input id="d-po" class="form-control form-control-sm" autocomplete="off"></div>
+      <div class="col-4"><label>인보이스</label><input id="d-inv" class="form-control form-control-sm" autocomplete="off"></div>
+      <div class="col-4"><label>선적상태</label><select id="d-shipstat" class="form-select form-select-sm"><option value=""></option><option>준비중</option><option>선적완료</option><option>통관중</option><option>납품완료</option></select></div>
+      <div class="col-12" style="font-size:11px"><label style="margin-bottom:3px;display:block">수출 서류</label><div style="display:flex;gap:14px;flex-wrap:wrap"><label style="font-weight:400;cursor:pointer"><input type="checkbox" id="doc-co"> 원산지</label><label style="font-weight:400;cursor:pointer"><input type="checkbox" id="doc-ci"> 상업송장</label><label style="font-weight:400;cursor:pointer"><input type="checkbox" id="doc-pl"> 패킹리스트</label><label style="font-weight:400;cursor:pointer"><input type="checkbox" id="doc-ip"> 수입허가</label></div></div>
       <div class="col-12"><label>메모</label><textarea id="d-note" class="form-control form-control-sm" rows="2"></textarea></div>
     </div>
     <div style="display:flex;justify-content:space-between;margin-top:16px">
       <button class="btn btn-sm btn-outline-danger" id="d-del" onclick="delDeal()" style="display:none">삭제</button>
+      <button class="btn btn-sm btn-outline-secondary" onclick="_actFromDeal()"><i class="bi bi-journal-plus me-1"></i>활동</button>
       <div style="flex:1"></div>
       <button class="btn btn-sm" style="background:#0d9488;color:#fff" onclick="saveDeal()">저장</button>
     </div>
@@ -1157,6 +1163,13 @@ function _dealMatch(d){
 }
 function _fmtUSD(v){ return '$'+Math.round(Number(v)||0).toLocaleString(); }
 function _esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return c==='&'?'&amp;':c==='<'?'&lt;':c==='>'?'&gt;':'&quot;';});}
+var USD_KRW=1380;
+function _krw(v){v=Number(v)||0;var w=v*USD_KRW;return w>=1e8?'₩'+(w/1e8).toFixed(1)+'억':'₩'+Math.round(w/1e4).toLocaleString()+'만';}
+function _docCount(d){var o=d.docs||{};return ['co','ci','pl','ip'].filter(function(k){return o[k];}).length;}
+function _isMasterIntl(){return !!(_currentUser&&(_currentUser.role==='admin'||_currentUser.email==='pmw0406@gmail.com'));}
+function _canEditIntl(owner){return !owner||owner===_meName||_isMasterIntl();}
+function _actFromDeal(){var d=_dealEdit||{};closeDeal();openAct();var g=function(k,v){var e=document.getElementById(k);if(e)e.value=v||'';};g('a-country',d.country);g('a-dealer',d.dealer);g('a-product',d.product);}
+function _alertStripHTML(){var today=_today();var t7=new Date(Date.now()+7*864e5).toISOString().slice(0,10);var overdue=INTL_PIPE.filter(function(d){return d.stage!=='선적/납품'&&d.expectedShip&&d.expectedShip<today;}).length;var todayAct=0;INTL_ACT.forEach(function(a){if(a.nextDate===today)todayAct++;});INTL_PIPE.forEach(function(d){if(d.nextDate===today)todayAct++;});var shipSoon=INTL_PIPE.filter(function(d){return d.stage!=='선적/납품'&&d.expectedShip&&d.expectedShip>=today&&d.expectedShip<=t7;}).length;if(!overdue&&!todayAct&&!shipSoon)return '';var chip=function(ic,txt,n,col){return n?'<span style="display:inline-flex;align-items:center;gap:5px;background:'+col+'18;color:'+col+';border-radius:8px;padding:5px 11px;font-size:12px;font-weight:600"><i class="bi '+ic+'"></i>'+txt+' '+n+'</span>':'';};return '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'+chip('bi-exclamation-triangle','기한초과 딜',overdue,'#dc2626')+chip('bi-check2-square','오늘 액션',todayAct,'#16a34a')+chip('bi-truck','선적임박(7일)',shipSoon,'#fd7e14')+'</div>';}
 function renderSales(){
   var list=INTL_PIPE.filter(_dealMatch);
   var rf=document.getElementById('is-f-rep');
@@ -1192,6 +1205,7 @@ function _dealCard(d){
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:3px"><span style="font-size:12px;font-weight:700;color:#0d9488">'+_fmtUSD(d.amount)+'</span><span style="font-size:10px;color:#64748b">'+(d.sales||'')+(d.prob?' · '+d.prob+'%':'')+'</span></div>'+
     (d.nextAction?'<div style="font-size:10px;color:#16a34a;margin-top:3px"><i class="bi bi-arrow-right-short"></i>'+d.nextAction+(d.nextDate?' ('+d.nextDate.slice(5)+')':'')+'</div>':'')+
     (d.expectedShip?'<div style="font-size:10px;color:'+(overdue?'#dc2626':'#9ca3af')+';margin-top:2px"><i class="bi bi-truck me-1"></i>선적 '+d.expectedShip.slice(5)+(overdue?' ⚠️':'')+'</div>':'')+
+    ((d.stage==='계약/PO'||d.stage==='선적/납품')?'<div style="font-size:10px;color:#7c3aed;margin-top:2px"><i class="bi bi-file-earmark-check me-1"></i>서류 '+_docCount(d)+'/4'+(d.shipStatus?' · '+_esc(d.shipStatus):'')+'</div>':'')+
     '</div>';
 }
 function _dropDeal(stage){
@@ -1209,6 +1223,7 @@ function openDeal(id){
   var set=function(k,v){var el=document.getElementById(k);if(el)el.value=(v==null?'':v);};
   set('d-country',d.country);set('d-dealer',d.dealer);set('d-product',d.product);set('d-amount',d.amount);
   set('d-prob',d.prob);set('d-sales',d.sales!=null?d.sales:_meName);set('d-ship',d.expectedShip);set('d-nextdate',d.nextDate);set('d-next',d.nextAction);set('d-note',d.note);
+  set('d-po',d.poNo);set('d-inv',d.invoiceNo);var ss=document.getElementById('d-shipstat');if(ss)ss.value=d.shipStatus||'';var dc=d.docs||{};['co','ci','pl','ip'].forEach(function(k){var e=document.getElementById('doc-'+k);if(e)e.checked=!!dc[k];});var kr=document.getElementById('d-krw');if(kr)kr.textContent=d.amount?('≈ '+_krw(d.amount)):'';
   document.getElementById('d-del').style.display=id?'inline-block':'none';
   document.getElementById('is-modal').style.display='flex';
 }
@@ -1216,11 +1231,13 @@ function closeDeal(){ document.getElementById('is-modal').style.display='none'; 
 function saveDeal(){
   var g=function(k){return document.getElementById(k).value;};
   var dealer=g('d-dealer').trim(); if(!dealer){ alert('딜러/거래처를 입력하세요'); return; }
+  if(_dealEdit&&!_canEditIntl(_dealEdit.sales)){ alert('담당자('+(_dealEdit.sales||'')+')의 딜입니다. 본인 딜만 수정할 수 있어요.'); return; }
   var d=_dealEdit||{id:'ip_'+Date.now()+Math.random().toString(36).slice(2,6),channel:'intl',createdAt:new Date().toISOString()};
   var prevStage=d.stage;
   d.channel='intl'; d.country=g('d-country').trim(); d.dealer=dealer; d.product=g('d-product').trim();
   d.amount=Number(g('d-amount'))||0; d.prob=Number(g('d-prob'))||0; d.stage=g('d-stage');
   d.expectedShip=g('d-ship'); d.nextDate=g('d-nextdate'); d.nextAction=g('d-next').trim(); d.note=g('d-note').trim(); d.sales=g('d-sales').trim();
+  d.poNo=g('d-po').trim(); d.invoiceNo=g('d-inv').trim(); d.shipStatus=document.getElementById('d-shipstat').value; d.docs={co:document.getElementById('doc-co').checked,ci:document.getElementById('doc-ci').checked,pl:document.getElementById('doc-pl').checked,ip:document.getElementById('doc-ip').checked};
   if(d.stage!==prevStage||!d.stageUpdatedAt) d.stageUpdatedAt=new Date().toISOString();
   if(!_dealEdit) INTL_PIPE.push(d);
   closeDeal(); renderSales(); _saveDeals();
@@ -1277,6 +1294,7 @@ function renderCrmDash(){
   var ship=deals.filter(function(d){return d.expectedShip&&d.stage!=='선적/납품';}).sort(function(a,b){return (a.expectedShip||'')<(b.expectedShip||'')?-1:1;}).slice(0,6);
   var shipH=ship.map(function(d){var od=d.expectedShip<today; return '<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:12px"><span style="width:52px;color:'+(od?'#dc2626':'#64748b')+'">'+d.expectedShip.slice(5)+'</span><span style="flex:1">'+_esc(d.dealer||'')+' <span style="color:#94a3b8">'+_esc(d.country||'')+'</span></span><span style="font-weight:600;color:#0d9488">'+_fmtUSD(d.amount)+'</span></div>';}).join('')||'<div style="font-size:12px;color:#9ca3af">선적 예정 없음</div>';
   el.innerHTML=
+    _alertStripHTML()+
     '<div class="row g-2 mb-3">'+kpiH+'</div>'+
     '<div class="row g-2 mb-3">'+
       '<div class="col-md-6"><div class="card p-3 h-100"><div class="fw-bold mb-2" style="font-size:13px"><i class="bi bi-funnel me-1" style="color:#0891b2"></i>파이프라인 단계</div>'+funH+'</div></div>'+
