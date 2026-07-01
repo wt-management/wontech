@@ -906,8 +906,8 @@ async function _afterLogin(user) {
   } catch(_e) { console.log('해외 데이터 로드 실패 (내장 데이터 사용):', _e.message); }
   await _loadIntlPending();   // 해외 예정분(미반영) 로드
   await _loadIlboPending();
-  _loadIntlPipe();
-  _loadIntlCrm();
+  await _loadIntlPipe();
+  await _loadIntlCrm();
   var _sameDoc=false; try{ _sameDoc = !!document.referrer && new URL(document.referrer).pathname===location.pathname; }catch(e){ _sameDoc=false; }
   // 다른 사이트/페이지에서 진입(또는 토큰 해시)하면 종합현황, intl 자체 새로고침이면 마지막 페이지 유지
   var _nav=(performance.getEntriesByType('navigation')[0]||{}).type;   // reload=새로고침 / navigate=신규진입
@@ -1183,9 +1183,10 @@ function renderSales(){
 }
 function _dealCard(d){
   var today=new Date().toISOString().slice(0,10);
+  var days=d.stageUpdatedAt?Math.floor((Date.now()-new Date(d.stageUpdatedAt).getTime())/864e5):null;
   var overdue=d.expectedShip&&d.expectedShip<today&&d.stage!=='선적/납품';
   return '<div draggable="true" ondragstart="_dragId=\''+d.id+'\'" onclick="openDeal(\''+d.id+'\')" style="background:#fff;border-radius:8px;padding:8px 10px;margin-bottom:7px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.06)">'+
-    '<div style="font-size:12px;font-weight:700">'+(d.dealer||'-')+' <span style="font-size:10px;color:#94a3b8">'+(d.country||'')+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between;align-items:start;gap:6px"><div style="font-size:12px;font-weight:700">'+(d.dealer||'-')+' <span style="font-size:10px;color:#94a3b8">'+(d.country||'')+'</span></div>'+(days!=null?'<span style="font-size:9px;color:'+(days>=30?'#dc2626':'#94a3b8')+';white-space:nowrap" title="단계 체류일">'+days+'일</span>':'')+'</div>'+
     (d.product?'<div style="font-size:11px;color:#475569">'+d.product+'</div>':'')+
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:3px"><span style="font-size:12px;font-weight:700;color:#0d9488">'+_fmtUSD(d.amount)+'</span><span style="font-size:10px;color:#64748b">'+(d.sales||'')+(d.prob?' · '+d.prob+'%':'')+'</span></div>'+
     (d.nextAction?'<div style="font-size:10px;color:#16a34a;margin-top:3px"><i class="bi bi-arrow-right-short"></i>'+d.nextAction+(d.nextDate?' ('+d.nextDate.slice(5)+')':'')+'</div>':'')+
@@ -1231,6 +1232,7 @@ function delDeal(){
 // ── 해외 CRM 확장: 활동일지·딜러·현황판·일정 ──
 let INTL_ACT=[], INTL_DEALERS={}, _actEdit=null, _dealerCur=null;
 const ACT_TYPES=['전시회','딜러미팅','데모','화상','이메일','방문','기타'];
+const ACT_COLOR={'전시회':'#7c3aed','딜러미팅':'#0891b2','데모':'#16a34a','화상':'#0d9488','이메일':'#64748b','방문':'#fd7e14','기타':'#94a3b8'};
 async function _loadIntlCrm(){
   try{ const {data}=await _sb.from('cons_cache').select('data').eq('key','intl_activities').maybeSingle(); INTL_ACT=(data&&data.data&&data.data.activities)||[]; }catch(e){ INTL_ACT=[]; }
   try{ const {data}=await _sb.from('cons_cache').select('data').eq('key','intl_dealers').maybeSingle(); INTL_DEALERS=(data&&data.data&&data.data.dealers)||{}; }catch(e){ INTL_DEALERS={}; }
@@ -1333,14 +1335,14 @@ function renderActivities(){
   var ty=document.getElementById('ac-type')&&document.getElementById('ac-type').value||'';
   var arr=INTL_ACT.filter(function(a){ if(ty&&a.type!==ty)return false; if(kw&&((a.dealer||'')+(a.content||'')+(a.country||'')).toLowerCase().indexOf(kw)<0)return false; return true; }).sort(function(a,b){return (b.date||'')<(a.date||'')?-1:1;});
   el.innerHTML='<div class="card p-0" style="overflow:hidden"><table class="table table-sm mb-0" style="font-size:12px"><thead style="background:#f8fafc"><tr><th style="padding:8px 12px">일자</th><th>유형</th><th>딜러/국가</th><th>내용</th><th>다음액션</th><th>담당</th></tr></thead><tbody>'+
-    (arr.map(function(a){return '<tr style="cursor:pointer" onclick="openAct(\''+a.id+'\')"><td style="padding:7px 12px">'+(a.date||'')+'</td><td><span style="font-size:10px;background:#eef2f7;border-radius:4px;padding:1px 6px">'+(a.type||'')+'</span></td><td>'+(a.dealer||'')+' <span style="color:#94a3b8">'+(a.country||'')+'</span></td><td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(a.content||'')+'</td><td style="color:#16a34a">'+(a.nextAction||'')+(a.nextDate?' ('+a.nextDate.slice(5)+')':'')+'</td><td>'+(a.sales||'')+'</td></tr>';}).join('')||'<tr><td colspan="6" class="text-center text-muted py-4">활동 기록이 없습니다</td></tr>')+
+    (arr.map(function(a){return '<tr style="cursor:pointer" onclick="openAct(\''+a.id+'\')"><td style="padding:7px 12px">'+(a.date||'')+'</td><td><span style="font-size:10px;background:#f1f5f9;color:'+(ACT_COLOR[a.type]||'#64748b')+';font-weight:600;border-radius:4px;padding:1px 6px">'+(a.type||'')+'</span></td><td>'+(a.dealer||'')+' <span style="color:#94a3b8">'+(a.country||'')+'</span></td><td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(a.content||'')+'</td><td style="color:#16a34a">'+(a.nextAction||'')+(a.nextDate?' ('+a.nextDate.slice(5)+')':'')+'</td><td>'+(a.sales||'')+'</td></tr>';}).join('')||'<tr><td colspan="6" class="text-center text-muted py-4">활동 기록이 없습니다</td></tr>')+
     '</tbody></table></div>';
 }
 function openAct(id){
   _actEdit=id?INTL_ACT.find(function(a){return a.id===id;}):null; var a=_actEdit||{};
   document.getElementById('ac-modal-title').textContent=id?'활동 수정':'활동 기록';
   document.getElementById('a-type').innerHTML=ACT_TYPES.map(function(t){return '<option'+(a.type===t?' selected':'')+'>'+t+'</option>';}).join('');
-  var cs=[]; INTL_PIPE.forEach(function(x){if(x.country&&cs.indexOf(x.country)<0)cs.push(x.country);});
+  var cs=[]; INTL_PIPE.forEach(function(x){if(x.country&&cs.indexOf(x.country)<0)cs.push(x.country);}); INTL_ACT.forEach(function(x){if(x.country&&cs.indexOf(x.country)<0)cs.push(x.country);}); var dcl=document.getElementById('d-country-list'); if(dcl)dcl.innerHTML=cs.map(function(c){return '<option value="'+c+'">';}).join('');
   var g=function(k,v){var e=document.getElementById(k);if(e)e.value=v==null?'':v;};
   g('a-date',a.date||_today());g('a-country',a.country);g('a-dealer',a.dealer);g('a-product',a.product);g('a-sales',a.sales!=null?a.sales:_meName);g('a-content',a.content);g('a-next',a.nextAction);g('a-nextdate',a.nextDate);
   document.getElementById('a-del').style.display=id?'inline-block':'none';
