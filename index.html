@@ -1737,11 +1737,18 @@ function _sN(s){ return String(s==null?'':s).replace(/^\s*\d+\s*[\.\-]\s*/,''); 
 // 한국영업 1·2파트 담당자 명단 — crm_profiles(dept)에서 자동 로드. 실패 시 아래 기본값.
 // 입사/퇴사/부서이동이 생기면 crm_profiles만 갱신하면 담당자별 분석에 자동 반영됨.
 let KOR_SALES_TEAM=['조만식','김세현','양준욱','구주영','강지형','김정국','송재원','최준수','김량현'];
+// 담당자 소속(파트)·직급 — crm_profiles에서 자동 로드. 실패 시 기본값.
+let KOR_TEAM_INFO={
+  조만식:{dept:'1파트',pos:'부장'}, 김정국:{dept:'1파트',pos:'차장'}, 양준욱:{dept:'1파트',pos:'차장'},
+  김세현:{dept:'1파트',pos:'과장'}, 구주영:{dept:'1파트',pos:'과장'}, 강지형:{dept:'1파트',pos:'대리'},
+  송재원:{dept:'2파트',pos:'차장'}, 최준수:{dept:'2파트',pos:'과장'}, 김량현:{dept:'2파트',pos:'과장'}
+};
 async function _loadSalesTeam(){
   try{
-    const {data}=await _sb.from('crm_profiles').select('display_name,dept').in('dept',['한국영업1파트','한국영업2파트']);
-    const names=[...new Set((data||[]).map(p=>(p.display_name||'').trim()).filter(Boolean))];
-    if(names.length) KOR_SALES_TEAM=names;
+    const {data}=await _sb.from('crm_profiles').select('display_name,dept,position').in('dept',['한국영업1파트','한국영업2파트']);
+    const names=[], info={};
+    (data||[]).forEach(p=>{ const nm=(p.display_name||'').trim(); if(!nm) return; names.push(nm); info[nm]={dept:String(p.dept||'').replace('한국영업',''), pos:String(p.position||'').trim()}; });
+    if(names.length){ KOR_SALES_TEAM=[...new Set(names)]; KOR_TEAM_INFO=info; }
   }catch(e){}
 }
 function _isKorSales(name){ return KOR_SALES_TEAM.indexOf(name)>=0; }
@@ -7114,20 +7121,20 @@ function devRepExport() {
   const toM   = parseInt(document.getElementById('devrep-to-sel')?.value||'6');
   const YTD   = Array.from({length:toM-fromM+1},(_,i)=>fromM+i);
   const reps  = DEVICE.reps||{};
-  const rows  = [['구분','담당자',`${yr-1}년YTD(만원)`,`${yr}년YTD(만원)`,'YoY(%)','대수(당해)','거래처수','주력제품']];
+  const rows  = [['구분','소속','담당자','직급',`${yr-1}년YTD(만원)`,`${yr}년YTD(만원)`,'YoY(%)','대수(당해)','거래처수','주력제품']];
   const _emptyRep={m2025:{},m2026:{},prods2025:{},prods2026:{},qty2025:0,qty2026:0,cust2025:0,cust2026:0};
   const _allNames=[...new Set([...KOR_SALES_TEAM, ...Object.keys(reps)])];
   const _flt=(typeof _devFilter!=='undefined'?_devFilter:'all');
-  _allNames.map((name) => { const rep=reps[name]||_emptyRep; const isTeam=_isKorSales(name);
+  _allNames.map((name) => { const rep=reps[name]||_emptyRep; const isTeam=_isKorSales(name); const inf=(KOR_TEAM_INFO[name]||{});
     const cur  = YTD.reduce((s,m)=>s+((yr===2026?rep.m2026:rep.m2025)||{})[m]||0, 0);
     const pre  = YTD.reduce((s,m)=>s+((yr===2026?rep.m2025:{})||{})[m]||0, 0);
     const yoy  = pre>0?((cur/pre-1)*100).toFixed(1):'';
     const qty  = yr===2026?rep.qty2026:rep.qty2025;
     const cust = yr===2026?rep.cust2026:rep.cust2025;
     const top  = Object.entries(yr===2026?rep.prods2026:rep.prods2025||{}).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
-    return [isTeam?'영업사원':'대리점', name, Math.round(pre/1e4), Math.round(cur/1e4), yoy, qty, cust, top, isTeam];
-  }).filter(r=> _flt==='team'?r[8] : _flt==='dealer'?!r[8] : true)
-    .sort((a,b)=>b[3]-a[3]).forEach(r=>rows.push(r.slice(0,8)));
+    return [isTeam?'영업사원':'대리점', isTeam?(inf.dept||''):'', name, isTeam?(inf.pos||''):'', Math.round(pre/1e4), Math.round(cur/1e4), yoy, qty, cust, top, isTeam];
+  }).filter(r=> _flt==='team'?r[10] : _flt==='dealer'?!r[10] : true)
+    .sort((a,b)=>b[5]-a[5]).forEach(r=>rows.push(r.slice(0,10)));
   const csv = rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
   const blob = new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
   const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
@@ -7137,6 +7144,15 @@ function devRepExport() {
 let _devRepChart = null;
 let _devFilter = 'all';   // all | team(영업사원) | dealer(대리점·딜러)
 function _setDevFilter(v, btn){ _devFilter=v; document.querySelectorAll('#page-device-reps .btn-group .btn').forEach(b=>b.classList.remove('active')); if(btn) btn.classList.add('active'); renderDevReps(); }
+// 담당자 표기: 영업사원=[파트] 이름 직급 / 대리점=이름 [대리점]
+function _devRepName(e){
+  const esc=s=>String(s||'').replace(/</g,'&lt;');
+  if(e.isTeam){ const inf=KOR_TEAM_INFO[e.name]||{};
+    return (inf.dept?'<span style="font-size:9px;font-weight:800;color:#0891b2;background:#ecfeff;border-radius:4px;padding:1px 6px;margin-right:6px;vertical-align:middle">'+esc(inf.dept)+'</span>':'')
+      +esc(e.name)+(inf.pos?' <span style="font-size:10.5px;font-weight:600;color:#64748b">'+esc(inf.pos)+'</span>':'');
+  }
+  return esc(e.name)+'<span style="font-size:8.5px;font-weight:700;color:#a16207;background:#fef9c3;border-radius:4px;padding:1px 5px;margin-left:5px;vertical-align:middle">대리점</span>';
+}
 function renderDevReps() {
   const fmtW = v => (v=Number(v||0))>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만원':Math.round(v).toLocaleString()+'원';
   _injectPeriodCtrl('devrep');
@@ -7169,7 +7185,7 @@ function renderDevReps() {
     const yoyCol = e.yoy===null?'#9ca3af':e.yoy>=0?'#16a34a':'#dc2626';
     return `<tr style="cursor:pointer" onclick="showDevRepDetail('${e.name.replace(/'/g,'\\\'')}')" title="클릭하면 상세 보기">
       <td style="color:#9ca3af;font-size:11px">${i+1}</td>
-      <td style="font-size:12px;font-weight:700;color:${e.isTeam?'#1d4ed8':'#334155'}">${e.name}${e.isTeam?'<span style="font-size:8.5px;font-weight:700;color:#2563eb;background:#eff6ff;border-radius:4px;padding:1px 5px;margin-left:5px">영업</span>':'<span style="font-size:8.5px;font-weight:700;color:#a16207;background:#fef9c3;border-radius:4px;padding:1px 5px;margin-left:5px">대리점</span>'}</td>
+      <td style="font-size:12px;font-weight:700;color:${e.isTeam?'#1d4ed8':'#334155'}">${_devRepName(e)}</td>
       <td class="text-end" style="font-size:12px">${fmtW(e.pre)}</td>
       <td class="text-end" style="font-size:12px;font-weight:700">${fmtW(e.cur)}</td>
       <td class="text-end" style="font-size:12px;color:${yoyCol};font-weight:600">${yoyStr}</td>
