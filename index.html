@@ -2241,42 +2241,44 @@ function renderSalesOverview() {
   // 월별 상세 표 (선택 기간)
   const _mt = document.getElementById('ov-month-table');
   if (_mt) {
-    const _bl='border-left:1px solid #e5e7eb';                       // 그룹 구분선
-    const _bdg=(cur,ly)=>{ if(!(ly>0)) return ''; const g=(cur/ly-1)*100, up=g>=0; return ' <span style="font-size:9px;font-weight:700;color:'+(up?'#15803d':'#dc2626')+';background:'+(up?'#dcfce7':'#fee2e2')+';border-radius:5px;padding:1px 4px;white-space:nowrap;vertical-align:middle">'+(up?'▲':'▼')+Math.abs(g).toFixed(0)+'</span>'; };
-    const _ly =v=>'<td style="text-align:right;color:#94a3b8;'+_bl+'">'+(v?fmtW(v):'-')+'</td>';          // 작년(회색, 그룹시작)
-    const _cur=(v,col,ly)=>'<td style="text-align:right;font-weight:600;color:'+col+';white-space:nowrap">'+fmtW(v)+_bdg(v,ly)+'</td>'; // 올해+증감
+    // 그룹 컬럼 배경(은은한 톤)으로 구분 — 세로줄 제거
+    const TC='background:#f6f9ff', TD='background:#f5fbf7', TH='background:#fbfcfe', TP='background:#faf9ff';
+    const _dl=(cur,ly)=>{ if(!(ly>0)) return '<span style="color:#cbd5e1;font-size:10px">–</span>'; const g=(cur/ly-1)*100, up=g>=0; return '<span style="font-size:10px;font-weight:700;color:'+(up?'#059669':'#e11d48')+'">'+(up?'▲':'▼')+Math.abs(g).toFixed(0)+'%</span>'; };
+    const _ly =(v,tint)=>'<td style="text-align:center;color:#9aa7b8;font-weight:500;'+tint+'">'+(v?fmtW(v):'–')+'</td>';
+    const _cur=(v,col,ly,tint)=>'<td style="text-align:center;'+tint+'"><div style="font-weight:800;color:'+col+';line-height:1.15">'+fmtW(v)+'</div><div style="margin-top:1px">'+_dl(v,ly)+'</div></td>';
     let rows='', tC=0,tD=0,tP=0,tC25=0,tD25=0, ri=0;
     spanMs.forEach(x=>{
       const m=x.m, lbl=(P.cross?(String(x.y).slice(2)+'.'+m+'월'):(m+'월'));
       const c=_mCY(CONS,x.y)[m]||0, dv=_mCY(DEVICE,x.y)[m]||0, pe=(x.y===2026?(_consPendM(m)+_devPendM(m)):0),
             c25=_mCY(CONS,x.y-1)[m]||0, dv25=_mCY(DEVICE,x.y-1)[m]||0;
       tC+=c;tD+=dv;tP+=pe;tC25+=c25;tD25+=dv25; const sum=c+dv+pe, pr=c25+dv25, chg=pr>0?(((c+dv)/pr-1)*100):null;
-      const zebra=(ri++%2)?'background:#fcfdfe':'';
-      rows+='<tr style="border-bottom:1px solid #f1f5f9;'+zebra+'"><td style="padding:7px 10px;font-weight:600;color:#334151">'+lbl+'</td>'
-        +_ly(c25)+_cur(c,'#2563eb',c25)
-        +_ly(dv25)+_cur(dv,'#16a34a',dv25)
-        +'<td style="text-align:right;color:'+(pe?'#7c3aed':'#cbd5e1')+';'+_bl+'">'+(pe?fmtW(pe):'-')+'</td>'
-        +_ly(pr)+'<td style="text-align:right;font-weight:800;color:#0f172a">'+fmtW(sum)+'</td>'
-        +'<td style="text-align:right;padding-right:10px;'+_bl+'">'+(chg===null?'<span style="color:#cbd5e1">-</span>':'<span style="font-weight:700;color:'+(chg>=0?'#15803d':'#dc2626')+'">'+(chg>=0?'▲':'▼')+Math.abs(chg).toFixed(0)+'%</span>')+'</td></tr>';
+      rows+='<tr style="border-top:1px solid #eef2f7" onmouseover="this.style.background=\'#fbfdff\'" onmouseout="this.style.background=\'\'">'
+        +'<td style="text-align:center;padding:11px 8px;font-weight:700;color:#475569">'+lbl+'</td>'
+        +_ly(c25,TC)+_cur(c,'#2563eb',c25,TC)
+        +_ly(dv25,TD)+_cur(dv,'#16a34a',dv25,TD)
+        +'<td style="text-align:center;font-weight:700;color:'+(pe?'#8b5cf6':'#cbd5e1')+';'+TP+'">'+(pe?fmtW(pe):'–')+'</td>'
+        +_ly(pr,TH)+'<td style="text-align:center;font-weight:800;color:#0f172a;'+TH+'">'+fmtW(sum)+'</td>'
+        +'<td style="text-align:center;'+TH+'">'+(chg===null?'<span style="color:#cbd5e1">–</span>':'<span style="font-weight:800;color:'+(chg>=0?'#059669':'#e11d48')+'">'+(chg>=0?'▲':'▼')+Math.abs(chg).toFixed(0)+'%</span>')+'</td></tr>';
     });
     const sumAll=tC+tD+tP, prAll=tC25+tD25, chgAll=prAll>0?(((tC+tD)/prAll-1)*100):null;
-    rows+='<tr style="border-top:2px solid #cbd5e1;background:#f1f5f9"><td style="padding:9px 10px;font-weight:800;color:#0f172a">합계</td>'
-      +_ly(tC25)+_cur(tC,'#2563eb',tC25)
-      +_ly(tD25)+_cur(tD,'#16a34a',tD25)
-      +'<td style="text-align:right;font-weight:700;color:'+(tP?'#7c3aed':'#cbd5e1')+';'+_bl+'">'+(tP?fmtW(tP):'-')+'</td>'
-      +_ly(prAll)+'<td style="text-align:right;font-weight:800;color:#0f172a">'+fmtW(sumAll)+'</td>'
-      +'<td style="text-align:right;padding-right:10px;'+_bl+'">'+(chgAll===null?'-':'<span style="font-weight:800;color:'+(chgAll>=0?'#15803d':'#dc2626')+'">'+(chgAll>=0?'▲':'▼')+Math.abs(chgAll).toFixed(0)+'%</span>')+'</td></tr>';
-    const _gh=(txt,col,bg)=>'<th colspan="2" style="text-align:center;color:'+col+';background:'+bg+';padding:6px 8px;font-weight:700;'+_bl+';border-top-left-radius:8px;border-top-right-radius:8px">'+txt+'</th>';
-    _mt.innerHTML='<div style="overflow-x:auto;border:1px solid #e5e7eb;border-radius:12px"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:660px">'
-      +'<thead><tr style="font-size:11px">'
-        +'<th rowspan="2" style="text-align:left;padding:6px 10px;vertical-align:bottom;color:#64748b">월</th>'
-        +_gh('소모품','#2563eb','#eff6ff')+_gh('제품(장비)','#16a34a','#f0fdf4')
-        +'<th rowspan="2" style="text-align:right;color:#7c3aed;vertical-align:bottom;padding:6px 8px;'+_bl+'">미반영<br><span style="font-size:9px;font-weight:400;color:#c4b5fd">(예정)</span></th>'
-        +'<th colspan="3" style="text-align:center;color:#334151;background:#f8fafc;padding:6px 8px;font-weight:700;'+_bl+'">합계</th></tr>'
-      +'<tr style="color:#94a3b8;font-size:10px;border-bottom:2px solid #e5e7eb">'
-        +'<th style="text-align:right;padding:3px 8px;'+_bl+'">작년</th><th style="text-align:right">올해</th>'
-        +'<th style="text-align:right;'+_bl+'">작년</th><th style="text-align:right">올해</th>'
-        +'<th style="text-align:right;'+_bl+'">작년</th><th style="text-align:right">올해</th><th style="text-align:right;padding-right:10px;'+_bl+'">증감</th></tr>'
+    rows+='<tr style="border-top:2px solid #e2e8f0;background:#f8fafc">'
+      +'<td style="text-align:center;padding:12px 8px;font-weight:800;color:#0f172a">합계</td>'
+      +_ly(tC25,TC)+_cur(tC,'#2563eb',tC25,TC)
+      +_ly(tD25,TD)+_cur(tD,'#16a34a',tD25,TD)
+      +'<td style="text-align:center;font-weight:800;color:'+(tP?'#8b5cf6':'#cbd5e1')+';'+TP+'">'+(tP?fmtW(tP):'–')+'</td>'
+      +_ly(prAll,TH)+'<td style="text-align:center;font-weight:800;color:#0f172a;'+TH+'">'+fmtW(sumAll)+'</td>'
+      +'<td style="text-align:center;'+TH+'">'+(chgAll===null?'–':'<span style="font-weight:800;color:'+(chgAll>=0?'#059669':'#e11d48')+'">'+(chgAll>=0?'▲':'▼')+Math.abs(chgAll).toFixed(0)+'%</span>')+'</td></tr>';
+    const _gh=(txt,col,bg)=>'<th colspan="2" style="text-align:center;color:'+col+';background:'+bg+';padding:9px 8px;font-weight:800;letter-spacing:.02em">'+txt+'</th>';
+    _mt.innerHTML='<div style="overflow-x:auto;border:1px solid #eef2f7;border-radius:16px;box-shadow:0 1px 3px rgba(15,23,42,.04)"><table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:680px">'
+      +'<thead><tr style="font-size:11.5px">'
+        +'<th rowspan="2" style="text-align:center;padding:9px 8px;vertical-align:middle;color:#94a3b8;font-weight:700">월</th>'
+        +_gh('소모품','#2563eb','#eef4ff')+_gh('제품(장비)','#16a34a','#eef9f1')
+        +'<th rowspan="2" style="text-align:center;color:#8b5cf6;vertical-align:middle;padding:9px 8px;font-weight:800;background:#f6f4ff">미반영<br><span style="font-size:9px;font-weight:500;color:#c4b5fd">예정</span></th>'
+        +'<th colspan="3" style="text-align:center;color:#475569;background:#f4f6fa;padding:9px 8px;font-weight:800">합계</th></tr>'
+      +'<tr style="color:#9aa7b8;font-size:10px;font-weight:600;border-bottom:1px solid #eef2f7">'
+        +'<th style="text-align:center;padding:5px 8px;background:#f6f9ff">작년</th><th style="text-align:center;background:#f6f9ff">올해</th>'
+        +'<th style="text-align:center;background:#f5fbf7">작년</th><th style="text-align:center;background:#f5fbf7">올해</th>'
+        +'<th style="text-align:center;background:#fbfcfe">작년</th><th style="text-align:center;background:#fbfcfe">올해</th><th style="text-align:center;background:#fbfcfe">증감</th></tr>'
       +'</thead><tbody>'+rows+'</tbody></table></div>';
   }
 
