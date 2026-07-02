@@ -131,7 +131,7 @@ async function _canUpload(user){
     try{
       if(typeof _sb!=='undefined' && _sb && _sb.auth && _sb.auth.getSession){
         _sb.auth.getSession().then(function(r){
-          if(r&&r.data&&r.data.session){ _logout(); } else { _arm(); }
+          var s=r&&r.data&&r.data.session; if(s&&s.user&&s.user.email==='pmw0406@gmail.com'){ _arm(); return; } /* 마스터는 자동로그아웃 제외 */ if(s){ _logout(); } else { _arm(); }
         }).catch(function(){ _logout(); });
       } else { _logout(); }
     }catch(e){ _logout(); }
