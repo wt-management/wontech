@@ -1326,7 +1326,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
   <!-- 담당자별 제품 분석 -->
   <div id="page-device-reps" class="page">
     <div class="page-header">
-      <h5><i class="bi bi-person-badge me-2"></i>담당자별 제품 분석</h5>
+      <h5><i class="bi bi-person-badge me-2"></i>담당자별 매출 현황</h5>
       <div class="d-flex gap-2 align-items-center">
         <button class="btn btn-outline-success btn-sm" onclick="devRepExport()"><i class="bi bi-file-earmark-excel me-1"></i>내보내기</button>
       </div>
@@ -1339,6 +1339,18 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       <select id="devrep-to-sel" class="form-select form-select-sm" style="width:70px"><option value="6" selected>6월</option></select>
       </span>
       <span id="devrep-period-host"></span>
+    </div>
+    <!-- 매출 한눈에 그래프 -->
+    <div class="card p-3 mb-3">
+      <div class="d-flex align-items-center mb-2" style="font-size:13px">
+        <span class="fw-bold"><i class="bi bi-grid-1x2-fill me-1" style="color:#7c3aed"></i>매출 한눈에</span>
+        <span id="devchart-hint" style="font-size:11px;color:#9ca3af;margin-left:8px">칸 크기 = 매출 규모 · 파랑=영업사원 / 주황=대리점</span>
+        <div class="btn-group btn-group-sm ms-auto" role="group" style="font-size:11px">
+          <button id="devchart-tree" type="button" class="btn btn-outline-primary active" onclick="_setDevChart('tree',this)">비중지도</button>
+          <button id="devchart-pareto" type="button" class="btn btn-outline-primary" onclick="_setDevChart('pareto',this)">집중도</button>
+        </div>
+      </div>
+      <div style="position:relative;height:360px"><canvas id="devrep-chart"></canvas></div>
     </div>
     <!-- 전체 순위 테이블 -->
     <div class="card p-0">
@@ -7111,6 +7123,53 @@ function devRepExport() {
 }
 
 let _devRepChart = null;
+// ── 매출 한눈에 그래프 (비중지도=트리맵 / 집중도=Pareto) ──
+let _devChartMode='tree', _devChartObj=null, _devLastEntries=[];
+function _setDevChart(m, btn){ _devChartMode=m;
+  ['devchart-tree','devchart-pareto'].forEach(function(id){ var e=document.getElementById(id); if(e) e.classList.remove('active'); }); if(btn) btn.classList.add('active');
+  var h=document.getElementById('devchart-hint'); if(h) h.textContent = (m==='pareto') ? '막대=매출(큰 순) · 보라 선=누적 비중(상위 몇 곳이 전체의 몇 %인지)' : '칸 크기 = 매출 규모 · 파랑=영업사원 / 주황=대리점';
+  renderDevChart();
+}
+function _devFmt(v){ v=Number(v||0); return v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만':Math.round(v)+''; }
+function _hasTreemap(){ try{ return !!Chart.registry.getController('treemap'); }catch(e){ return false; } }
+function _ensureTreemap(cb){
+  if(window.Chart && _hasTreemap()){ cb(); return; }
+  var ex=document.getElementById('_treemap-js');
+  if(ex){ ex.addEventListener('load', cb); return; }
+  var s=document.createElement('script'); s.id='_treemap-js'; s.src='https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@3.1.0/dist/chartjs-chart-treemap.min.js';
+  s.onload=cb; s.onerror=function(){ _devChartMode='pareto'; renderDevChart(); }; document.head.appendChild(s);
+}
+function renderDevChart(){
+  var el=document.getElementById('devrep-chart'); if(!el||!window.Chart) return;
+  var data=(_devLastEntries||[]).filter(function(e){ return e.cur>0; });
+  if(!data.length){ if(_devChartObj){ _devChartObj.destroy(); _devChartObj=null; } return; }
+  if(_devChartMode==='pareto'){ _drawParetoChart(el,data); return; }
+  _ensureTreemap(function(){ if(!_hasTreemap()){ _drawParetoChart(el,data); return; } _drawTreemapChart(el,data); });
+}
+function _drawTreemapChart(el,data){
+  if(_devChartObj){ _devChartObj.destroy(); _devChartObj=null; }
+  _devChartObj=new Chart(el,{ type:'treemap', data:{ datasets:[{
+    tree:data, key:'cur', spacing:1, borderWidth:1, borderColor:'#fff',
+    backgroundColor:function(ctx){ if(ctx.type!=='data'||!ctx.raw) return 'rgba(0,0,0,0)'; var d=ctx.raw._data||{}; return d.isTeam?'#2563eb':'#f59e0b'; },
+    labels:{ display:true, color:'#fff', font:{size:10,weight:'700'}, formatter:function(ctx){ var d=(ctx.raw&&ctx.raw._data)||{}; return [d.name, _devFmt(d.cur)]; } }
+  }] }, options:{ maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{ callbacks:{
+    title:function(items){ return ((items[0].raw||{})._data||{}).name||''; },
+    label:function(item){ return '매출 '+_devFmt(((item.raw||{})._data||{}).cur); } } } } } });
+}
+function _drawParetoChart(el,data){
+  if(_devChartObj){ _devChartObj.destroy(); _devChartObj=null; }
+  var sorted=data.slice().sort(function(a,b){ return b.cur-a.cur; });
+  var top=sorted.slice(0,25);
+  var total=sorted.reduce(function(s,e){ return s+e.cur; },0)||1, cum=0;
+  var cumPct=top.map(function(e){ cum+=e.cur; return +(cum/total*100).toFixed(1); });
+  _devChartObj=new Chart(el,{ data:{ labels:top.map(function(e){ return e.name; }), datasets:[
+    { type:'bar', label:'매출', data:top.map(function(e){ return e.cur; }), backgroundColor:top.map(function(e){ return e.isTeam?'#2563eb':'#f59e0b'; }), yAxisID:'y', order:2 },
+    { type:'line', label:'누적 비중(%)', data:cumPct, borderColor:'#7c3aed', backgroundColor:'#7c3aed', yAxisID:'y1', tension:.25, pointRadius:2, order:1 }
+  ] }, options:{ maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, plugins:{ legend:{display:true,labels:{font:{size:11}}}, tooltip:{ callbacks:{ label:function(c){ return c.dataset.type==='line'?('누적 '+c.parsed.y+'%'):('매출 '+_devFmt(c.parsed.y)); } } } }, scales:{
+    x:{ ticks:{font:{size:9},maxRotation:65,minRotation:65,autoSkip:false} },
+    y:{ position:'left', ticks:{font:{size:10},callback:function(v){ return _devFmt(v); }} },
+    y1:{ position:'right', min:0, max:100, ticks:{font:{size:10},callback:function(v){ return v+'%'; }}, grid:{drawOnChartArea:false} } } } });
+}
 let _devFilter = 'all';   // all | team(영업사원) | dealer(대리점·딜러)
 function _setDevFilter(v, btn){ _devFilter=v; document.querySelectorAll('#page-device-reps .btn-group .btn').forEach(b=>b.classList.remove('active')); if(btn) btn.classList.add('active'); renderDevReps(); }
 // 담당자 표기: 영업사원=[파트] 이름 직급 / 대리점=이름 [대리점]
@@ -7163,6 +7222,8 @@ function renderDevReps() {
       <td style="font-size:11px;color:#6b7280">${e.topProd||'-'}</td>
     </tr>`;
   }).join('') || '<tr><td colspan="8" class="text-center text-muted py-3">데이터 없음</td></tr>';
+  _devLastEntries = entries.map(function(e){ return {name:e.name, cur:e.cur, isTeam:e.isTeam}; });
+  renderDevChart();
 }
 
 function showDevRepDetail(repName) {
