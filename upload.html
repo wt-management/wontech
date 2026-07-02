@@ -267,14 +267,23 @@ async function doWrite(){
     if(BUILT.sp) writes.push(['sales_portfolio',BUILT.sp]);
     if(BUILT.ilbo) writes.push(['ilbo_acc',BUILT.ilbo]);
     if(BUILT.ilboPending) writes.push(['ilbo_pending',BUILT.ilboPending]);
+    const skipped=[];
+    if(!BUILT.sp) skipped.push('Sales Portfolio(sales_portfolio) — 포트폴리오 집계 실패로 미갱신 (이전 데이터 유지)');
+    if(!BUILT.ilbo) skipped.push('일일보고(ilbo_acc) — 일보 집계 실패로 미갱신 (이전 데이터 유지)');
     for(const [k,data] of writes){
       await _sb.from('cons_cache').delete().eq('key',k);
       const {error}=await _sb.from('cons_cache').insert({key:k,data});
       if(error) throw new Error(k+' 기록 실패: '+error.message);
       log(k+' 기록 OK');
     }
-    btn.className='btn btn-success w-100 btn-confirm mt-3'; btn.innerHTML='<i class="bi bi-check-circle me-1"></i> 적재 완료 — 모든 사이트 반영됨';
-    log('=== 적재 완료 ('+BUILT.summary.updatedAt+') ===');
+    if(skipped.length){
+      btn.className='btn btn-warning w-100 btn-confirm mt-3'; btn.innerHTML='<i class="bi bi-exclamation-triangle me-1"></i> 일부만 반영됨 — 로그 확인';
+      skipped.forEach(function(s){ log('⚠️ 미반영: '+s); });
+      log('=== 적재 완료(일부 미반영 '+skipped.length+'건) ('+BUILT.summary.updatedAt+') — main/device/intl은 정상 반영, 위 항목은 집계 실패로 이전값 유지 ===');
+    }else{
+      btn.className='btn btn-success w-100 btn-confirm mt-3'; btn.innerHTML='<i class="bi bi-check-circle me-1"></i> 적재 완료 — 모든 사이트 반영됨';
+      log('=== 적재 완료 ('+BUILT.summary.updatedAt+') ===');
+    }
   }catch(err){ log('오류: '+err.message); btn.disabled=false; btn.innerHTML='<i class="bi bi-database-check me-1"></i> 다시 시도'; }
 }
 init();
