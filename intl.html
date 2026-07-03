@@ -1356,17 +1356,18 @@ function renderCrmDash(){
 }
 
 // ── 딜러 관리 ──
+function _tierColor(t){return t==='A'?'#0d9488':t==='B'?'#0891b2':t==='C'?'#94a3b8':t==='신규'?'#7c3aed':'#64748b';}
 function renderDealers(){
   var el=document.getElementById('dl-body'); if(!el)return;
   var kw=(document.getElementById('dl-kw')&&document.getElementById('dl-kw').value||'').trim().toLowerCase();
   var ag=_dealerAgg(); var arr=Object.values(ag).filter(function(o){return !kw||((o.name+o.country).toLowerCase().indexOf(kw)>=0);}).sort(function(a,b){return (b.won+b.openAmt)-(a.won+a.openAmt);});
   var cnt=document.getElementById('dl-count'); if(cnt)cnt.textContent=arr.length+'개사';
-  el.innerHTML='<div class="row g-2">'+arr.map(function(o){var info=INTL_DEALERS[o.name]||{};
+  el.innerHTML='<div class="row g-2">'+arr.map(function(o){var info=INTL_DEALERS[o.name]||{};var ar=_dealerActual(o.name);
     return '<div class="col-md-6 col-lg-4"><div class="card dl-card p-3 h-100" style="cursor:pointer" onclick="openDealer(\''+o.name.replace(/'/g,"\\'")+'\')">'+
-      '<div style="display:flex;justify-content:space-between;align-items:start"><div><div style="font-size:13px;font-weight:700">'+o.name+'</div><div style="font-size:11px;color:#94a3b8">'+(o.country||'')+(info.tier?' · '+info.tier+'등급':'')+'</div></div>'+(o.sales?'<span style="font-size:10px;color:#64748b">'+o.sales+'</span>':'')+'</div>'+
+      '<div style="display:flex;justify-content:space-between;align-items:start"><div><div style="font-size:13px;font-weight:700">'+_esc(o.name)+(info.tier?' <span style="font-size:9px;font-weight:700;color:#fff;background:'+_tierColor(info.tier)+';border-radius:5px;padding:1px 6px;vertical-align:middle">'+_esc(info.tier)+'</span>':'')+'</div><div style="font-size:11px;color:#94a3b8">'+_esc(o.country||'')+'</div></div>'+(o.sales?'<span style="font-size:10px;color:#64748b">'+_esc(o.sales)+'</span>':'')+'</div>'+
       '<div style="display:flex;gap:12px;margin-top:8px;font-size:11px">'+
         '<div><div style="color:#94a3b8">진행딜</div><div style="font-weight:700;color:#0891b2">'+o.open+'건 '+_fmtUSD(o.openAmt)+'</div></div>'+
-        '<div><div style="color:#94a3b8">누계</div><div style="font-weight:700;color:#16a34a">'+_fmtUSD(o.won)+'</div></div>'+
+        '<div><div style="color:#94a3b8">누계</div><div style="font-weight:700;color:#16a34a">'+_fmtUSD(o.won)+'</div></div>'+(ar.krw>0?'<div><div style="color:#94a3b8">회계매출</div><div style="font-weight:700;color:#2563eb">'+fmtW(ar.krw)+'</div></div>':'')+
       '</div>'+
       '<div style="font-size:10px;color:#9ca3af;margin-top:6px">활동 '+o.acts+'회'+(o.lastAct?' · 최근 '+o.lastAct.slice(5):'')+'</div>'+
     '</div></div>';
