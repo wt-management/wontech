@@ -572,20 +572,25 @@ function renderOverview(){
     +'<div><div style="font-size:10px;color:#7c3aed;margin-bottom:1px;font-weight:700">미반영 포함 <span style="color:#cbd5e1;font-weight:500">· 보고기준</span></div><div class="kpi-value" style="color:#111827;font-size:1.4rem;line-height:1.1">'+fmtW(tot+pendYtd)+'</div><div class="kpi-sub" style="margin-top:3px">전년 '+fmtW(ptot)+' '+bdg(yoy)+'</div></div>'
     +'<div style="text-align:right;border-left:1px solid #eef2f7;padding-left:11px"><div style="font-size:10px;color:#9ca3af;margin-bottom:1px;font-weight:600">회계반영</div><div style="font-size:1.32rem;font-weight:800;color:#374151;line-height:1.1">'+fmtW(tot)+'</div><div style="font-size:10px;color:#9ca3af;margin-top:3px">+ '+fmtW(pendYtd)+'</div></div>'
     +'</div></div></div>';
-  const _mNow=(yr===2026)?Math.min(12,new Date().getMonth()+1):12;
-  const _moAcc=(cur.monthly&&cur.monthly[_mNow])||0;
-  const _moPend=(yr===2026)?((pAgg.monthly&&pAgg.monthly[_mNow])||0):0;
-  const _moLY=(pre&&pre.monthly&&pre.monthly[_mNow])||0;
-  const _ytdAll=ytd(cur.monthly,1,_mNow)+((yr===2026)?ytd(pAgg.monthly,1,_mNow):0);
-  const _fc=_ytdAll/Math.max(1,_mNow)*12;
-  const _pyTot=pre?Object.values(pre.monthly||{}).reduce(function(a,v){return a+v;},0):0;
-  const _pipeA=(typeof INTL_PIPE!=='undefined'&&INTL_PIPE?INTL_PIPE:[]).filter(function(d){return d.stage!=='선적/납품';});
-  const _pipeW=_pipeA.reduce(function(a,d){return a+Number(d.amount||0)*(Number(d.prob||0)/100);},0);
-  const _others=[
-    {l:_mNow+'월 실적(진행중)',v:fmtW(_moAcc+_moPend),s:'전년동월 '+fmtW(_moLY)+' '+bdg(pct(_moAcc+_moPend,_moLY)),c:'#0891b2',i:'bi-calendar3',oc:'openMonthDetail('+_mNow+')'},
-    {l:'연간 전망(런레이트)',v:fmtW(_fc),s:'전년총 '+fmtW(_pyTot)+' '+bdg(pct(_fc,_pyTot)),c:'#7c3aed',i:'bi-graph-up-arrow',oc:'document.getElementById(&quot;ov-chart&quot;).scrollIntoView({behavior:&quot;smooth&quot;,block:&quot;center&quot;})'},
-    {l:'CRM 파이프라인',v:_pipeA.length+'건 · '+_fmtUSD(_pipeW),s:'가중예상 · 클릭 시 수주관리',c:'#0d9488',i:'bi-kanban',oc:'showPage(&quot;sales&quot;,document.querySelector(&quot;.nav-link[onclick*=sales]&quot;))'}
-  ].map(function(c){return '<div class="col-6 col-md-2"><div class="kpi-card" style="cursor:pointer" title="클릭하여 조회" onclick="'+c.oc+'"><div class="kpi-label"><i class="bi '+c.i+' me-1" style="color:'+c.c+'"></i>'+c.l+'</div><div class="kpi-value" style="color:'+c.c+';font-size:1.02rem">'+c.v+'</div><div class="kpi-sub">'+c.s+'</div></div></div>';}).join('');
+  const _cm=(yr===2026)?Math.min(12,new Date().getMonth()+1):12;
+  const _pmM=_cm>1?_cm-1:1;
+  const _mCard=function(mo){
+    var acc=(cur.monthly&&cur.monthly[mo])||0;
+    var pd=(yr===2026)?((pAgg.monthly&&pAgg.monthly[mo])||0):0;
+    var cum=ytd(cur.monthly,1,mo)+((yr===2026)?ytd(pAgg.monthly,1,mo):0);
+    var ly=(pre&&pre.monthly&&pre.monthly[mo])||0;
+    var lycum=pre?ytd(pre.monthly,1,mo):0;
+    return {mo:mo,cur:acc+pd,cum:cum,ly:ly,lycum:lycum};
+  };
+  const _others=[_mCard(_cm),_mCard(_pmM)].map(function(c,idx){
+    var lbl=(idx===0?'이번달':'전월')+' ('+c.mo+'월)';
+    var col=idx===0?'#0891b2':'#64748b';
+    return '<div class="col-6 col-md-3"><div class="kpi-card" style="cursor:pointer" title="클릭 시 월 상세" onclick="openMonthDetail('+c.mo+')">'+
+      '<div class="kpi-label"><i class="bi bi-calendar3 me-1" style="color:'+col+'"></i>'+lbl+' <span style="font-weight:400;color:#cbd5e1">보고기준</span></div>'+
+      '<div style="display:flex;align-items:baseline;gap:7px"><span class="kpi-value" style="color:'+col+';font-size:1.28rem">'+fmtW(c.cur)+'</span>'+bdg(pct(c.cur,c.ly))+'</div>'+
+      '<div class="kpi-sub" style="margin-top:4px">누계(1~'+c.mo+'월) <b style="color:#374151">'+fmtW(c.cum)+'</b> '+bdg(pct(c.cum,c.lycum))+'</div>'+
+    '</div></div>';
+  }).join('');
   document.getElementById('ov-kpi').innerHTML=_dualHead+_others;
 
   const m12=Array.from({length:12},(_,i)=>i+1);
@@ -968,6 +973,7 @@ async function _afterLogin(user) {
   await _loadIntlPipe();
   await _loadIntlCrm();
   _loadQuotes();
+  _setDefaultRanges();
   // 조회기간 종료월을 데이터 마지막월로 동적 세팅(하드코딩 5월 → 실제 마지막 데이터월, 종합사이트와 정합)
   try{
     var _im=Object.keys((INTL&&INTL.monthly)||{}).map(Number).filter(function(m){return m>=1&&m<=12;});
@@ -2084,6 +2090,14 @@ function renderQuotes(){
 <script>
 // ═══ 종합 v3: 월 상세 드릴다운 + 예정분 출고/선적예정일(일보 공유) ═══
 var ILBO_DOC=null;
+function _setDefaultRanges(){
+  try{
+    var last=1; for(var m=1;m<=12;m++){ if(INTL&&INTL.monthly&&Number(INTL.monthly[m])>0) last=m; }
+    var cm=Math.min(12,new Date().getMonth()+1);
+    ['ct-to','pd-to','cs-to','rp-to'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=String(last); });
+    var ov=document.getElementById('ov-to'); if(ov) ov.value=String(Math.max(last,cm));
+  }catch(e){}
+}
 function _ilboKey(p){ return encodeURIComponent([p.customer||'',p.product||'',p.amount||'',p.expectedDate||''].join('|')); }
 function _renderIlboRows(){
   var tb=document.getElementById('ilbo-pend-tbody'),emp=document.getElementById('ilbo-pend-empty'),sum=document.getElementById('ilbo-pend-sum');
