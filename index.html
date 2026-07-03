@@ -1493,7 +1493,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
     <div id="sch-deal-badge" style="display:none;margin-bottom:8px;font-size:11.5px;background:#f5f3ff;border:1px solid #ddd6fe;color:#6d28d9;border-radius:8px;padding:6px 10px"><i class="bi bi-kanban me-1"></i>수주관리 딜과 연결된 일정입니다 — 완료 처리하면 딜에 자동으로 기록됩니다.</div>
     <div class="row g-2">
       <div class="col-md-8"><label class="form-label" style="font-size:12px">병원 * <span class="text-muted" style="font-weight:400">(입력하면 자동완성)</span></label><input type="text" id="sch-cust" class="form-control form-control-sm" list="sch-cust-list" placeholder="병원명 입력…" oninput="_schHospInfo(this.value)" autocomplete="off"><datalist id="sch-cust-list"></datalist></div>
-      <div class="col-md-4"><label class="form-label" style="font-size:12px">유형</label><select id="sch-type" class="form-select form-select-sm"><option>방문</option><option>콜</option><option>데모</option><option>A/S</option><option>기타</option></select></div>
+      <div class="col-md-4"><label class="form-label" style="font-size:12px">유형</label><select id="sch-type" class="form-select form-select-sm"><option>방문</option><option>콜</option><option>A/S</option><option>기타</option></select></div>
       <div class="col-md-4"><label class="form-label" style="font-size:12px">날짜 *</label><input type="date" id="sch-date" class="form-control form-control-sm"></div>
       <div class="col-md-4"><label class="form-label" style="font-size:12px">시간</label><input type="time" id="sch-time" class="form-control form-control-sm"></div>
       <div class="col-md-4"><label class="form-label" style="font-size:12px">담당</label><input type="text" id="sch-sales" class="form-control form-control-sm"></div>
@@ -6231,13 +6231,16 @@ function _schTodayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d
 function _schMe(){ return ((typeof _meName!=='undefined'&&_meName)||(typeof currentUserName==='function'?currentUserName():'')||'').trim(); }
 function setSchView(v,btn){ _schView=v; _schOverdueOnly=false; try{sessionStorage.setItem('sch_view',v);}catch(e){} document.querySelectorAll('#page-schedule .btn-group .btn').forEach(b=>b.classList.remove('active')); if(btn)btn.classList.add('active'); renderSchedule(); }
 function _schSyncViewBtn(){ const m={today:'sch-v-today',week:'sch-v-week',month:'sch-v-month'}; document.querySelectorAll('#page-schedule .btn-group .btn').forEach(b=>b.classList.remove('active')); const b=document.getElementById(m[_schView]); if(b)b.classList.add('active'); }
-// 데모 일정 사이트(demo_schedules) 병합읽기 — 양방향 연동(읽기전용, 데모사이트가 쓰는 테이블). 테이블 없으면 조용히 빈배열.
+// 데모 일정 사이트(demo_schedules) 병합읽기 — 읽기전용, 데모사이트가 쓰는 테이블. 오늘~+7일 범위만 표시(그 이후는 숨김).
 let _demoSched=[];
 async function _loadDemoSched(){
   try{
     const {data,error}=await _sb.from('demo_schedules').select('*');
     if(error||!data){ _demoSched=[]; return; }
-    _demoSched=data.filter(r=>r&&r.date).map(r=>({id:'demo_'+r.id,date:r.date,time:r.time||'',type:'데모',custName:r.cust||'',sales:r.sales||'',product:r.product||'',content:r.content||r.outcome||'',done:(r.status==='done'),kind:'demo'}));
+    const today=_schTodayStr();
+    const lim=new Date(); lim.setDate(lim.getDate()+7);
+    const limStr=lim.getFullYear()+'-'+String(lim.getMonth()+1).padStart(2,'0')+'-'+String(lim.getDate()).padStart(2,'0');
+    _demoSched=data.filter(r=>r&&r.date&&r.date>=today&&r.date<=limStr).map(r=>({id:'demo_'+r.id,date:r.date,time:r.time||'',type:'데모',custName:r.cust||'',sales:r.sales||'',product:r.product||'',content:r.content||r.outcome||'',done:(r.status==='done'),kind:'demo'}));
   }catch(e){ _demoSched=[]; }
 }
 function _schItems(){
