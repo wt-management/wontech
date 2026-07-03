@@ -272,6 +272,14 @@ function build(sheets, existing){
   var i26=aggIntl2026(intlR);
   var INTL={ INTL2026:i26, INTL2025:(exIntl.INTL2025||{}), updatedAt:updatedAt };
 
+  // 기타(종합 전용): 국내 전체 net − 국내소모품 − 국내제품 = 서지컬·B2C·고객만족·의료기기·지원부서.
+  // 한국영업 분석(소모품/제품)엔 미포함, 종합사이트 전사 합계에만 얹음 → 회계 전체와 정합.
+  var _domAll={};
+  rows26.forEach(function(r){ if(r['국내외']==='국내'){ var _m=monthNum(r['월']); var _a=num(r['금액']); if(_m&&_a) _domAll[_m]=(_domAll[_m]||0)+_a; } });
+  var _etcMo={};
+  for(var _em=1;_em<=12;_em++){ var _ev=Math.round((_domAll[_em]||0)-(a26.monthly[_em]||0)-(d26.monthly2026[_em]||0)); if(_ev) _etcMo[_em]=_ev; }
+  CONS.etcMonthly2026=_etcMo; CONS.etcMonthly2025=exMain.etcMonthly2025||{};
+
   var e8=function(x){return Math.round(x/1e8*10)/10;};
   var sum=function(o){var s=0;for(var k in o)s+=o[k];return s;};
   var dermak = ('주식회사 더마케이' in CONS.hospitals)||('주식회사 더마케이' in DEVICE.hospitals);
@@ -281,7 +289,8 @@ function build(sheets, existing){
     intl26:e8(i26.total), intlCountries:Object.keys(i26.countries).length,
     us:e8((i26.countries['미국']||{}).total||0),
     domestic:e8(sum(a26.monthly)+sum(d26.monthly2026)),
-    total:e8(sum(a26.monthly)+sum(d26.monthly2026)+i26.total),
+    etc26:e8(sum(_etcMo)),
+    total:e8(sum(a26.monthly)+sum(d26.monthly2026)+sum(_etcMo)+i26.total),
     dermakInDomestic:dermak,
     monConsT:a26.monthly, monDevT:d26.monthly2026, monIntlT:i26.monthly,
     rows26:rows26.length };
