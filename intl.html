@@ -368,23 +368,41 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
   </div>
 </div>
 <div id="dl-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:500;align-items:center;justify-content:center" onclick="if(event.target===this)closeDealer()">
-  <div style="background:#fff;border-radius:14px;padding:20px 22px;width:760px;max-width:96vw;max-height:92vh;overflow-y:auto">
+  <div style="background:#fff;border-radius:14px;padding:20px 22px;width:1000px;max-width:97vw;max-height:92vh;overflow-y:auto">
     <div style="display:flex;flex-direction:row;justify-content:space-between;align-items:center;margin-bottom:10px"><span id="dl-modal-title" style="font-weight:700;font-size:12px;color:#94a3b8">딜러 상세</span><span style="cursor:pointer;font-size:20px;color:#94a3b8" onclick="closeDealer()">&times;</span></div>
     <div id="dl-hero"></div>
-    <div id="dl-modal-kpi" class="row g-2 mb-2" style="font-size:12px"></div>
-    <div id="dl-chart" class="mb-2"></div>
-    <div id="dl-actions" style="display:flex;flex-direction:row;gap:8px;margin:10px 0"></div>
-    <div id="dl-modal-detail"></div>
+    <div id="dl-contactstrip"></div>
+    <div id="dl-actions" style="display:flex;flex-direction:row;gap:8px;margin:6px 0 12px;flex-wrap:wrap"></div>
+    <div class="row g-3"><div class="col-lg-7" id="dl-left"></div><div class="col-lg-5" id="dl-right"></div></div>
+    <div id="dl-modal-kpi" style="display:none"></div><div id="dl-chart" style="display:none"></div><div id="dl-modal-detail" style="display:none"></div>
     <details id="dl-info" style="margin-top:14px;border-top:1px solid #f1f5f9;padding-top:10px">
       <summary style="font-size:12px;font-weight:700;color:#64748b;cursor:pointer;list-style:none"><i class="bi bi-pencil-square me-1"></i>딜러 정보 편집 <span style="font-weight:400;color:#cbd5e1">(연락처·등급·거래조건)</span></summary>
-      <div class="row g-2 mt-1" style="font-size:13px">
+      <div class="row g-2 mt-1" style="font-size:12px">
         <div class="col-12" id="dm-name-row" style="display:none"><label>딜러명 *</label><input id="dm-name" class="form-control form-control-sm" autocomplete="off" placeholder="예: 국가/회사명"></div>
-        <div class="col-6"><label>국가</label><input id="dm-country" class="form-control form-control-sm" autocomplete="off"></div>
-        <div class="col-6"><label>담당자(연락)</label><input id="dm-contact" class="form-control form-control-sm" autocomplete="off"></div>
-        <div class="col-6"><label>이메일/연락처</label><input id="dm-email" class="form-control form-control-sm" autocomplete="off"></div>
-        <div class="col-6"><label>등급</label><select id="dm-tier" class="form-select form-select-sm"><option value=""></option><option>A</option><option>B</option><option>C</option><option>신규</option></select></div>
-        <div class="col-12"><label>거래조건(가격/결제/독점 등)</label><input id="dm-terms" class="form-control form-control-sm" autocomplete="off"></div>
-        <div class="col-12"><label>메모</label><textarea id="dm-note" class="form-control form-control-sm" rows="2"></textarea></div>
+        <div class="col-12" style="font-size:11px;font-weight:700;color:#0891b2;margin-top:2px"><i class="bi bi-building me-1"></i>회사 정보</div>
+        <div class="col-md-3"><label>국가</label><input id="dm-country" class="form-control form-control-sm"></div>
+        <div class="col-md-3"><label>도시</label><input id="dm-city" class="form-control form-control-sm"></div>
+        <div class="col-md-3"><label>웹사이트</label><input id="dm-website" class="form-control form-control-sm" placeholder="www..."></div>
+        <div class="col-md-3"><label>대표전화</label><input id="dm-phone" class="form-control form-control-sm"></div>
+        <div class="col-12" style="font-size:11px;font-weight:700;color:#16a34a;margin-top:5px"><i class="bi bi-person me-1"></i>담당자</div>
+        <div class="col-md-3"><label>담당자명</label><input id="dm-contact" class="form-control form-control-sm"></div>
+        <div class="col-md-3"><label>직책</label><input id="dm-contactTitle" class="form-control form-control-sm" placeholder="예: Sales Director"></div>
+        <div class="col-md-3"><label>이메일</label><input id="dm-email" class="form-control form-control-sm"></div>
+        <div class="col-md-3"><label>휴대폰</label><input id="dm-mobile" class="form-control form-control-sm"></div>
+        <div class="col-12" style="font-size:11px;font-weight:700;color:#7c3aed;margin-top:5px"><i class="bi bi-file-earmark-text me-1"></i>거래 조건</div>
+        <div class="col-md-2"><label>등급</label><select id="dm-tier" class="form-select form-select-sm"><option value=""></option><option>A</option><option>B</option><option>C</option><option>신규</option></select></div>
+        <div class="col-md-2"><label>관계</label><select id="dm-relType" class="form-select form-select-sm"><option value=""></option><option>대리점</option><option>딜러</option><option>에이전트</option><option>직판</option><option>기타</option></select></div>
+        <div class="col-md-2"><label>인코텀즈</label><select id="dm-incoterms" class="form-select form-select-sm"><option value=""></option><option>EXW</option><option>FOB</option><option>CFR</option><option>CIF</option><option>DAP</option><option>DDP</option></select></div>
+        <div class="col-md-2"><label>거래통화</label><select id="dm-currency" class="form-select form-select-sm"><option value=""></option><option>USD</option><option>EUR</option><option>JPY</option><option>CNY</option></select></div>
+        <div class="col-md-2" style="display:flex;align-items:flex-end;padding-bottom:6px"><label style="cursor:pointer;font-weight:600;font-size:12px"><input type="checkbox" id="dm-exclusive"> 독점권</label></div>
+        <div class="col-md-6"><label>결제조건</label><input id="dm-payment" class="form-control form-control-sm" placeholder="예: L/C at sight · T/T 30d"></div>
+        <div class="col-md-6"><label>관할지역/독점범위</label><input id="dm-territory" class="form-control form-control-sm" placeholder="예: 중화권 독점"></div>
+        <div class="col-md-3"><label>계약 시작</label><input id="dm-contractStart" type="date" class="form-control form-control-sm"></div>
+        <div class="col-md-3"><label>계약 만료</label><input id="dm-contractEnd" type="date" class="form-control form-control-sm"></div>
+        <div class="col-md-6"><label>추가 거래조건(요약)</label><input id="dm-terms" class="form-control form-control-sm"></div>
+        <div class="col-12" style="font-size:11px;font-weight:700;color:#f59e0b;margin-top:5px"><i class="bi bi-bullseye me-1"></i>목표 · 메모</div>
+        <div class="col-md-3"><label>연간 목표(억원)</label><input id="dm-annualTarget" type="number" class="form-control form-control-sm"></div>
+        <div class="col-md-9"><label>메모</label><textarea id="dm-note" class="form-control form-control-sm" rows="1"></textarea></div>
       </div>
       <div style="display:flex;flex-direction:row;justify-content:flex-end;margin-top:10px"><button class="btn btn-sm" style="background:#0d9488;color:#fff" onclick="saveDealerInfo()">딜러정보 저장</button></div>
     </details>
@@ -3010,6 +3028,133 @@ function renderDealers(){
     }).join('')+'</div>';
     return hdr+cards;
   }).join('')||'<div class="card p-4 text-center text-muted" style="font-size:13px">'+(kw?'검색 결과가 없습니다':'딜러가 없습니다')+'</div>';
+}
+</script>
+<script>
+// ═══ CRM v10 — 딜러 종합 프로필(계정 페이지) ═══
+var REL_COLOR={'대리점':'#0d9488','딜러':'#0891b2','에이전트':'#7c3aed','직판':'#f59e0b','기타':'#64748b'};
+function _dlDday(dend){ if(!dend)return ''; var t=new Date().toISOString().slice(0,10); if(dend<t)return '<span style="color:#dc2626;font-weight:700">만료</span>'; var d=Math.round((new Date(dend+'T00:00:00')-new Date(t+'T00:00:00'))/864e5); return d<=90?'<span style="color:#d97706;font-weight:700">D-'+d+'</span>':'<span style="color:#16a34a">유효</span>'; }
+function _dlInfoRow(ic,label,val,ph){ return '<div style="display:flex;gap:8px;font-size:12px;padding:5px 0;border-bottom:1px solid #f8fafc"><span style="color:#94a3b8;min-width:74px"><i class="bi '+ic+' me-1"></i>'+label+'</span><span style="flex:1;color:'+(val?'#334155':'#cbd5e1')+';font-weight:'+(val?'600':'400')+'">'+(val?_esc(val):(ph||'미입력'))+'</span></div>'; }
+function openDealer(name){
+  _dealerCur=name;
+  var ag=_dealerAggAll()[name]||{name:name,country:'',open:0,openAmt:0,won:0,acts:0,lastAct:'',sales:''};
+  var info=INTL_DEALERS[name]||{};
+  var acct=_dealerAcct(name);
+  var country=info.country||ag.country||acct.country||'';
+  var nmRow=document.getElementById('dm-name-row'); if(nmRow)nmRow.style.display='none';
+  var infoBox=document.getElementById('dl-info'); if(infoBox)infoBox.open=false;
+  document.getElementById('dl-modal-title').textContent='딜러 상세';
+  var deals=(INTL_PIPE||[]).filter(function(d){return d.dealer===name;});
+  var openDeals=deals.filter(function(d){return d.stage!=='선적/납품';});
+  var wonK=deals.filter(function(d){return d.stage==='계약/PO'||d.stage==='선적/납품';}).reduce(function(s,d){return s+_dealKrw(d);},0);
+  var openK=openDeals.reduce(function(s,d){return s+_dealKrw(d);},0);
+  var acts=(INTL_ACT||[]).filter(function(a){return a.dealer===name;});
+  var qts=(INTL_QUOTES||[]).filter(function(q){return q.dealer===name;});
+  var yy=pct(acct.krw,acct.prev);
+  var rel=info.relType||'';
+  // ── HERO ──
+  document.getElementById('dl-hero').innerHTML=
+    '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px">'+
+      '<div style="flex:1;min-width:220px"><div style="font-size:19px;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+_esc(name)+
+        (info.tier?'<span style="font-size:10px;font-weight:700;color:#fff;background:'+_tierColor(info.tier)+';border-radius:6px;padding:2px 9px">'+_esc(info.tier)+'등급</span>':'')+
+        (rel?'<span style="font-size:10px;font-weight:700;color:'+(REL_COLOR[rel]||'#64748b')+';background:'+(REL_COLOR[rel]||'#64748b')+'18;border-radius:6px;padding:2px 9px">'+_esc(rel)+'</span>':'')+
+        (info.exclusive?'<span style="font-size:10px;font-weight:700;color:#fff;background:#dc2626;border-radius:6px;padding:2px 9px"><i class="bi bi-star-fill me-1"></i>독점</span>':'')+
+        (ag._jp?'<span style="font-size:10px;color:#64748b;background:#f1f5f9;border-radius:5px;padding:2px 7px">'+ag._jp+'개 거래처 통합</span>':'')+
+      '</div>'+
+      '<div style="font-size:12px;color:#94a3b8;margin-top:3px">'+_esc(country)+(info.city?' · '+_esc(info.city):'')+(ag.sales?' · 담당 '+_esc(ag.sales):'')+(info.territory?' · 관할 '+_esc(info.territory):'')+'</div></div>'+
+      '<div style="text-align:right"><div style="font-size:10px;color:#94a3b8">올해 실제매출</div><div style="font-size:24px;font-weight:800;color:#2563eb;line-height:1.1">'+fmtW(acct.krw)+'</div><div style="font-size:11px;margin-top:2px">'+bdg(yy)+' <span style="color:#94a3b8">전년 '+fmtW(acct.prev)+'</span></div></div>'+
+    '</div>';
+  // ── CONTACT STRIP ──
+  var cs=[
+    ['bi-person-fill',(info.contact||'')+(info.contactTitle?' ('+info.contactTitle+')':''),'담당자 미입력'],
+    ['bi-envelope-fill',info.email,'이메일 미입력'],
+    ['bi-telephone-fill',info.mobile||info.phone,'전화 미입력'],
+    ['bi-globe',info.website,'웹사이트 미입력']
+  ];
+  document.getElementById('dl-contactstrip').innerHTML='<div style="background:#fbfcfe;border:1px solid #eef2f7;border-radius:10px;padding:8px 14px;margin-bottom:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:4px 18px;font-size:11.5px">'+
+    cs.map(function(c){return '<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><i class="bi '+c[0]+' me-1" style="color:#94a3b8"></i>'+(c[1]?_esc(c[1]):'<span style="color:#cbd5e1">'+c[2]+'</span>')+'</span>';}).join('')+'</div>';
+  // ── ACTIONS ──
+  var nEsc=name.replace(/'/g,"\\'"), cEsc=(country||'').replace(/'/g,"\\'");
+  document.getElementById('dl-actions').innerHTML=
+    '<button class="btn btn-sm btn-outline-secondary" style="font-size:12px" onclick="_dealFromDealer(\''+nEsc+'\',\''+cEsc+'\')"><i class="bi bi-kanban me-1"></i>+ 딜</button>'+
+    '<button class="btn btn-sm btn-outline-secondary" style="font-size:12px" onclick="_actFromDealer2(\''+nEsc+'\',\''+cEsc+'\')"><i class="bi bi-journal-plus me-1"></i>+ 활동</button>'+
+    '<button class="btn btn-sm btn-outline-secondary" style="font-size:12px" onclick="_quoteFromDealer(\''+nEsc+'\',\''+cEsc+'\')"><i class="bi bi-file-earmark-text me-1"></i>+ 견적</button>'+
+    '<button class="btn btn-sm btn-outline-secondary" style="font-size:12px;margin-left:auto" onclick="document.getElementById(\'dl-info\').open=true;document.getElementById(\'dl-info\').scrollIntoView({behavior:\'smooth\',block:\'center\'})"><i class="bi bi-pencil me-1"></i>정보 편집</button>';
+  // ── LEFT: 차트 + 제품 + 통합 이력 ──
+  var prodArr=Object.entries(acct.prods||{}).sort(function(a,b){return b[1]-a[1];}).slice(0,6);
+  var pmax=prodArr.length?prodArr[0][1]:1;
+  var prodH=prodArr.length?('<div style="font-size:11px;font-weight:700;color:#64748b;margin:12px 2px 7px"><i class="bi bi-box-seam me-1"></i>구매 제품 TOP</div>'+prodArr.map(function(pp){return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:11px"><span style="width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+_esc(pp[0])+'">'+_esc(pp[0])+'</span><div style="flex:1;height:8px;background:#eef2f7;border-radius:4px;overflow:hidden"><div style="width:'+Math.round(pp[1]/pmax*100)+'%;height:100%;background:#0891b2"></div></div><span style="width:58px;text-align:right;font-weight:700">'+fmtW(pp[1])+'</span></div>';}).join('')):'';
+  // 통합 이력(딜/활동/견적 최근순)
+  var tl=[];
+  deals.forEach(function(d){tl.push({dt:d.stageUpdatedAt?d.stageUpdatedAt.slice(0,10):'',t:'딜',c:SC_INTL[d.stage]||'#0891b2',txt:_esc(d.product||'-')+' · '+_esc(d.stage),right:_fmtCur(d),ref:"closeDealer();openDeal('"+d.id+"')"});});
+  acts.forEach(function(a){tl.push({dt:a.date||'',t:a.type||'활동',c:ACT_COLOR[a.type]||'#16a34a',txt:_esc((a.content||'').slice(0,42)),right:'',ref:"closeDealer();openAct('"+a.id+"')"});});
+  qts.forEach(function(q){var t=_qTot(q);tl.push({dt:q.date||'',t:'견적',c:'#7c3aed',txt:'견적 '+(q.status||'임시'),right:_fmtUSD(t.total),ref:"closeDealer();openQuote('"+q.id+"')"});});
+  tl.sort(function(a,b){return (b.dt||'')<(a.dt||'')?-1:1;});
+  var tlH='<div style="font-size:11px;font-weight:700;color:#64748b;margin:14px 2px 7px"><i class="bi bi-clock-history me-1"></i>거래·활동 타임라인 ('+tl.length+')</div>'+
+    (tl.slice(0,10).map(function(x){return '<div onclick="'+x.ref+'" style="cursor:pointer;display:flex;align-items:center;gap:8px;font-size:11.5px;padding:6px 2px;border-bottom:1px solid #f6f8fa"><span style="color:#94a3b8;width:38px;flex-shrink:0">'+(x.dt||'').slice(5)+'</span><span style="font-size:9px;font-weight:700;color:#fff;background:'+x.c+';border-radius:4px;padding:1px 6px;flex-shrink:0">'+_esc(x.t)+'</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+x.txt+'</span>'+(x.right?'<b style="color:#0d9488;flex-shrink:0">'+x.right+'</b>':'')+'</div>';}).join('')||'<div style="font-size:11px;color:#9ca3af">기록 없음</div>');
+  document.getElementById('dl-left').innerHTML=((acct.krw>0||acct.prev>0)?_dlChart(acct.m,acct.pm):'<div style="background:#f8fafc;border-radius:12px;padding:20px;text-align:center;font-size:12px;color:#9ca3af">매출 데이터 없음</div>')+prodH+tlH;
+  // ── RIGHT: 실적요약 + 계약조건 + 목표 ──
+  var moCnt=Object.keys(acct.m).filter(function(k){return Number(acct.m[k])>0;}).length;
+  var avgOrder=acct.cnt>0?acct.krw/acct.cnt:0;
+  var stat=[['주문',(acct.cnt||0)+'건'],['평균주문',avgOrder>0?fmtW(avgOrder):'-'],['거래월',moCnt+'/'+Math.min(12,new Date().getMonth()+1)],['최근거래',acct.last?acct.last.slice(2):'-'],['진행딜',openDeals.length+'건'],['CRM계약',fmtW(wonK)]];
+  var statH='<div style="background:#f8fafc;border-radius:12px;padding:12px 14px;margin-bottom:10px"><div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:8px"><i class="bi bi-graph-up me-1"></i>거래 실적</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px 6px">'+stat.map(function(k){return '<div><div style="font-size:9.5px;color:#94a3b8">'+k[0]+'</div><div style="font-size:13px;font-weight:800;color:#0f172a">'+k[1]+'</div></div>';}).join('')+'</div></div>';
+  var terms=[
+    ['bi-award','등급',info.tier?info.tier+'등급':''],
+    ['bi-diagram-3','관계',rel],
+    ['bi-geo','관할지역',info.territory],
+    ['bi-truck','인코텀즈',info.incoterms],
+    ['bi-credit-card','결제조건',info.payment],
+    ['bi-currency-exchange','거래통화',info.currency]
+  ];
+  var period=(info.contractStart||info.contractEnd)?((info.contractStart||'?')+' ~ '+(info.contractEnd||'?')+' '+_dlDday(info.contractEnd)):'';
+  var termH='<div style="border:1px solid #eef2f7;border-radius:12px;padding:12px 14px;margin-bottom:10px"><div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:4px"><i class="bi bi-file-earmark-text me-1"></i>계약·거래 조건</div>'+
+    terms.map(function(t){return _dlInfoRow(t[0],t[1],t[2]);}).join('')+
+    _dlInfoRow('bi-calendar-range','계약기간',null,period||'미입력').replace('미입력',period||'미입력')+
+    (info.terms?'<div style="font-size:11px;color:#475569;margin-top:6px;background:#f8fafc;border-radius:7px;padding:6px 9px">'+_esc(info.terms)+'</div>':'')+'</div>';
+  // 계약기간은 HTML 포함 → 별도 처리
+  termH='<div style="border:1px solid #eef2f7;border-radius:12px;padding:12px 14px;margin-bottom:10px"><div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:4px"><i class="bi bi-file-earmark-text me-1"></i>계약·거래 조건</div>'+
+    terms.map(function(t){return _dlInfoRow(t[0],t[1],t[2]);}).join('')+
+    '<div style="display:flex;gap:8px;font-size:12px;padding:5px 0"><span style="color:#94a3b8;min-width:74px"><i class="bi bi-calendar-range me-1"></i>계약기간</span><span style="flex:1;color:'+(period?'#334155':'#cbd5e1')+';font-weight:'+(period?'600':'400')+'">'+(period||'미입력')+'</span></div>'+
+    (info.terms?'<div style="font-size:11px;color:#475569;margin-top:6px;background:#f8fafc;border-radius:7px;padding:6px 9px"><i class="bi bi-info-circle me-1" style="color:#94a3b8"></i>'+_esc(info.terms)+'</div>':'')+'</div>';
+  var target=Number(info.annualTarget)||0;
+  var achieved=target>0?Math.min(100,Math.round(acct.krw/1e8/target*100)):0;
+  var targetH=target>0?('<div style="border:1px solid #eef2f7;border-radius:12px;padding:12px 14px;margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:#64748b;margin-bottom:7px"><span><i class="bi bi-bullseye me-1"></i>연간 목표</span><span style="color:'+(achieved>=100?'#16a34a':achieved>=60?'#0891b2':'#d97706')+'">'+achieved+'%</span></div><div style="height:12px;background:#eef2f7;border-radius:6px;overflow:hidden;margin-bottom:5px"><div style="width:'+achieved+'%;height:100%;background:'+(achieved>=100?'#16a34a':'#0d9488')+';border-radius:6px"></div></div><div style="font-size:11px;color:#64748b">실적 <b style="color:#0f172a">'+fmtW(acct.krw)+'</b> / 목표 '+target+'억</div></div>'):'<div style="border:1px dashed #e2e8f0;border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:11px;color:#94a3b8"><i class="bi bi-bullseye me-1"></i>연간 목표 미설정 <span style="color:#cbd5e1">— 편집에서 설정</span></div>';
+  var noteH=info.note?('<div style="border:1px solid #eef2f7;border-radius:12px;padding:12px 14px;font-size:11.5px;color:#475569"><div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:5px"><i class="bi bi-sticky me-1"></i>메모</div>'+_esc(info.note)+'</div>'):'';
+  document.getElementById('dl-right').innerHTML=statH+termH+targetH+noteH;
+  // ── 편집 폼 채우기 ──
+  var g=function(k,v){var e=document.getElementById(k);if(e)e.value=(v==null?'':v);};
+  g('dm-country',country);g('dm-city',info.city);g('dm-website',info.website);g('dm-phone',info.phone);
+  g('dm-contact',info.contact);g('dm-contactTitle',info.contactTitle);g('dm-email',info.email);g('dm-mobile',info.mobile);
+  g('dm-tier',info.tier);g('dm-relType',info.relType);g('dm-territory',info.territory);g('dm-incoterms',info.incoterms);g('dm-payment',info.payment);g('dm-currency',info.currency);
+  g('dm-contractStart',info.contractStart);g('dm-contractEnd',info.contractEnd);g('dm-annualTarget',info.annualTarget);
+  g('dm-terms',info.terms);g('dm-note',info.note);
+  var ex=document.getElementById('dm-exclusive'); if(ex)ex.checked=!!info.exclusive;
+  document.getElementById('dl-modal').style.display='flex';
+}
+function openNewDealer(){
+  _dealerCur=null;
+  document.getElementById('dl-modal-title').textContent='새 딜러 등록';
+  ['dl-hero','dl-contactstrip','dl-actions','dl-left','dl-right'].forEach(function(id){var e=document.getElementById(id);if(e)e.innerHTML='';});
+  var nmRow=document.getElementById('dm-name-row'); if(nmRow)nmRow.style.display='';
+  var infoBox=document.getElementById('dl-info'); if(infoBox)infoBox.open=true;
+  ['dm-name','dm-country','dm-city','dm-website','dm-phone','dm-contact','dm-contactTitle','dm-email','dm-mobile','dm-tier','dm-relType','dm-territory','dm-incoterms','dm-payment','dm-currency','dm-contractStart','dm-contractEnd','dm-annualTarget','dm-terms','dm-note'].forEach(function(k){var e=document.getElementById(k);if(e)e.value='';});
+  var ex=document.getElementById('dm-exclusive'); if(ex)ex.checked=false;
+  document.getElementById('dl-modal').style.display='flex';
+}
+function saveDealerInfo(){
+  var g=function(k){var e=document.getElementById(k);return e?e.value.trim():'';};
+  var name=_dealerCur||g('dm-name');
+  if(!name){ alert('딜러명을 입력하세요'); return; }
+  INTL_DEALERS[name]={
+    country:g('dm-country'),city:g('dm-city'),website:g('dm-website'),phone:g('dm-phone'),
+    contact:g('dm-contact'),contactTitle:g('dm-contactTitle'),email:g('dm-email'),mobile:g('dm-mobile'),
+    tier:g('dm-tier'),relType:g('dm-relType'),exclusive:(document.getElementById('dm-exclusive')||{}).checked||false,
+    territory:g('dm-territory'),incoterms:g('dm-incoterms'),payment:g('dm-payment'),currency:g('dm-currency'),
+    contractStart:g('dm-contractStart'),contractEnd:g('dm-contractEnd'),annualTarget:Number(g('dm-annualTarget'))||'',
+    terms:g('dm-terms'),note:g('dm-note')
+  };
+  if(_dealerCur)openDealer(name); else closeDealer();
+  renderDealers(); _saveDealers();
 }
 </script>
 </body>
