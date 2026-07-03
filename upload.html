@@ -189,20 +189,31 @@ function _mvNum(v){return Number(v)||0;}
 function _mvDt(v){ if(v instanceof Date) return v.toISOString().slice(0,10); return v||''; }
 // 미반영치 파싱: 국내(거래처4/제품11/수량16/미납품33/예정일39) 해외(거래처45/제품53/수량58/미선적78/예정일118)
 function parseMibanyong(wb){
-  const sn=wb.SheetNames.find(n=>/일매출일보|미반영/.test(n))||wb.SheetNames[0];
-  const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,raw:true,defval:null});
-  let hdr=-1;
-  for(let i=0;i<rows.length;i++){ const r=rows[i]||[]; if(String(r[4]||'').indexOf('거래처명')>=0 && String(r[11]||'').indexOf('제품명')>=0){ hdr=i; break; } }
-  if(hdr<0) throw new Error("미반영치 형식 인식 실패: '거래처명/제품명' 헤더를 찾지 못했습니다. 일매출일보 양식인지 확인하세요.");
-  const start=hdr+2, out=[]; let di=0, ii=0;
-  for(let i=start;i<rows.length;i++){ const r=rows[i]||[];
-    const dc=r[4], dp=r[11], dpen=_mvNum(r[33]);
-    if(dc&&String(dc).trim()&&dp&&String(dp).trim()&&dpen>0)
-      out.push({id:'s국'+(di++),region:'국내',country:'',customer:String(dc).trim(),product:String(dp).trim(),qty:_mvNum(r[16])||1,amount:Math.round(dpen),expectedDate:_mvDt(r[39]),type:'예정',status:'대기',memo:''});
-    const ic=r[45], ip=r[53], ipen=_mvNum(r[78]);
-    if(ic&&String(ic).trim()&&ip&&String(ip).trim()&&ipen>0){ const full=String(ic).trim(), ctry=full.indexOf('/')>=0?full.split('/')[0].trim():'';
-      out.push({id:'s해'+(ii++),region:'해외',country:ctry,customer:full,product:String(ip).trim(),qty:_mvNum(r[58])||1,amount:Math.round(ipen),expectedDate:_mvDt(r[118]),type:'예정',status:'대기',memo:''}); }
-  }
+  // 월별 일보 시트 전부(6월·7월…) 파싱. 각 시트에서 납품(완료·회계미반영)+미납품(예정) 둘 다.
+  const targets=wb.SheetNames.filter(n=>/일매출일보|미반영/.test(n));
+  const sheetList=targets.length?targets:[wb.SheetNames[0]];
+  const out=[]; let di=0, ii=0, foundAny=false;
+  sheetList.forEach(function(sn){
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,raw:true,defval:null});
+    let hdr=-1;
+    for(let i=0;i<rows.length;i++){ const r=rows[i]||[]; if(String(r[4]||'').indexOf('거래처명')>=0 && String(r[11]||'').indexOf('제품명')>=0){ hdr=i; break; } }
+    if(hdr<0) return; foundAny=true;
+    for(let i=hdr+2;i<rows.length;i++){ const r=rows[i]||[];
+      const dc=r[4], dp=r[11];
+      if(dc&&String(dc).trim()&&dp&&String(dp).trim()){
+        const dq=_mvNum(r[16])||1, ddel=_mvNum(r[22]), dpen=_mvNum(r[33]);
+        if(ddel>0) out.push({id:'s국'+(di++),region:'국내',country:'',customer:String(dc).trim(),product:String(dp).trim(),qty:dq,amount:Math.round(ddel),expectedDate:_mvDt(r[28]),type:'완료',status:'대기',memo:'납품완료·회계미반영'});
+        if(dpen>0) out.push({id:'s국'+(di++),region:'국내',country:'',customer:String(dc).trim(),product:String(dp).trim(),qty:dq,amount:Math.round(dpen),expectedDate:_mvDt(r[39]),type:'예정',status:'대기',memo:''});
+      }
+      const ic=r[45], ip=r[53];
+      if(ic&&String(ic).trim()&&ip&&String(ip).trim()){ const full=String(ic).trim(), ctry=full.indexOf('/')>=0?full.split('/')[0].trim():'', iq=_mvNum(r[58])||1;
+        const idel=_mvNum(r[66]), ipen=_mvNum(r[78]);
+        if(idel>0) out.push({id:'s해'+(ii++),region:'해외',country:ctry,customer:full,product:String(ip).trim(),qty:iq,amount:Math.round(idel),expectedDate:_mvDt(r[73]),type:'완료',status:'대기',memo:'선적완료·회계미반영'});
+        if(ipen>0) out.push({id:'s해'+(ii++),region:'해외',country:ctry,customer:full,product:String(ip).trim(),qty:iq,amount:Math.round(ipen),expectedDate:_mvDt(r[118]),type:'예정',status:'대기',memo:''});
+      }
+    }
+  });
+  if(!foundAny) throw new Error("미반영치 형식 인식 실패: '거래처명/제품명' 헤더를 찾지 못했습니다. 일매출일보 양식인지 확인하세요.");
   return out;
 }
 async function handleMv(file){
@@ -213,9 +224,10 @@ async function handleMv(file){
     if(!rows.length) throw new Error('미납품·미선적 행이 없습니다(전부 0). 파일 확인.');
     _pendFromFile={rows:rows, updatedAt:(BUILT&&BUILT.ilbo&&BUILT.ilbo.reportDate)||new Date().toISOString().slice(0,10)};
     const dom=rows.filter(p=>p.region==='국내'), intl=rows.filter(p=>p.region==='해외');
+    const done=rows.filter(p=>p.type==='완료'), plan=rows.filter(p=>p.type==='예정');
     const sum=a=>a.reduce((s,p)=>s+p.amount,0);
-    info.innerHTML='📎 '+file.name+' — 미반영 <b>'+rows.length+'건</b> (국내 '+dom.length+'건 '+e8(sum(dom))+'억 · 해외 '+intl.length+'건 '+e8(sum(intl))+'억). 확정 시 ilbo_pending 교체.';
-    log('미반영치 파싱: 국내 '+dom.length+'건 '+e8(sum(dom))+'억, 해외 '+intl.length+'건 '+e8(sum(intl))+'억');
+    info.innerHTML='📎 '+file.name+' — 미반영 <b>'+rows.length+'건 '+e8(sum(rows))+'억</b> (완료·회계미반영 '+done.length+'건 '+e8(sum(done))+'억 · 예정 '+plan.length+'건 '+e8(sum(plan))+'억 / 국내 '+dom.length+'·해외 '+intl.length+'). 확정 시 ilbo_pending 교체.';
+    log('미반영치 파싱: 완료 '+done.length+'건 '+e8(sum(done))+'억, 예정 '+plan.length+'건 '+e8(sum(plan))+'억 (국내 '+dom.length+'/해외 '+intl.length+')');
     if(BUILT) renderPreview(BUILT.summary);
   }catch(err){ _pendFromFile=null; info.innerHTML='❌ '+err.message; log('미반영치 오류: '+err.message); }
 }
