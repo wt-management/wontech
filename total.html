@@ -6,11 +6,30 @@
 <meta name="color-scheme" content="light">
 <title>wontech - 전사</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%234f46e5'/><g transform='translate(13,36) scale(0.144)' fill='%23fff'><rect width='110' height='110' rx='28'/><rect x='204' width='110' height='110' rx='28'/><rect x='408' width='110' height='110' rx='28'/><rect x='102' y='97' width='110' height='110' rx='28'/><rect x='306' y='97' width='110' height='110' rx='28'/></g></svg>">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
+/* ═══ DESIGN TOKENS (2026-07 리디자인: teal 단일 브랜드 · slate 램프 · 3радиус/2그림자/6타입) ═══ */
+:root{
+  --brand:#0d9488; --brand-strong:#0f766e; --brand-soft:#f0fdfa; --brand-line:#99f6e4;
+  --ink:#0f172a; --ink-2:#334155; --ink-3:#64748b; --ink-4:#94a3b8;
+  --line:#e7eaf0; --line-strong:#d8dde6; --line-soft:#eef2f7;
+  --bg:#f6f8fb; --surface:#ffffff; --surface-2:#f8fafc;
+  --hero-grad:linear-gradient(135deg,#0f172a 0%,#1e293b 55%,#134e4a 130%);
+  --hero-ink:#f8fafc; --hero-sub:#94a3b8; --hero-line:rgba(148,163,184,.18); --hero-accent:#5eead4;
+  --pos:#15803d; --pos-hero:#4ade80; --neg:#dc2626; --neg-hero:#f87171;
+  --warn:#b45309; --warn-hero:#fbbf24; --pend:#7c3aed;
+  --c-dom:#2563eb; --c-intl:#0d9488; --c-dev:#7c3aed; --c-cons:#0891b2; --c-etc:#94a3b8;
+  --r-sm:8px; --r-md:12px; --r-lg:16px;
+  --sh-1:0 1px 2px rgba(15,23,42,.05);
+  --sh-2:0 8px 24px rgba(15,23,42,.10);
+  --sh-float:0 16px 48px rgba(15,23,42,.16);
+  --fs-caption:11px; --fs-body:13px; --fs-ui:14px; --fs-h:15px; --fs-kpi:1.7rem;
+  --font:'Pretendard Variable',Pretendard,'Noto Sans KR',system-ui,sans-serif;
+}
 *{box-sizing:border-box}
 html{color-scheme:light}
 body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color:#1e293b;margin:0}
@@ -333,6 +352,80 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 #ex-edit-modal .mi.ovr input{border-color:#0d9488;background:#f0fdfa}
 #ex-edit-modal .mi .hint{font-size:9px;color:#94a3b8;text-align:right;height:11px}
 @media(max-width:1100px){#page-export .ex-tbls{grid-template-columns:1fr}#page-export .ex-kpis,#page-export .ex-kita{grid-template-columns:1fr}#ex-edit-modal .ex-mgrid{grid-template-columns:repeat(3,1fr)}}
+/* ═══════════ RESTYLE LAYER v1 (오버라이드 — 원본 규칙 무수정, 캐스케이드 우선) ═══════════ */
+body{font-family:var(--font);background:var(--bg);color:var(--ink-2);letter-spacing:-.01em;-webkit-font-smoothing:antialiased}
+.kpi-value,.kpi-side-value,.tm-v,.eh-v,.u-kv,.q-val,.cc-v,.sb-v,.g-hr,.g-mr,.rpt-hk .v{font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+/* 사이드바 — 다크 유지, 활성 teal-soft 필 */
+.sidebar{border-right:1px solid rgba(148,163,184,.12)}
+.nav-link{border-radius:var(--r-sm)}
+.nav-link.active{background:rgba(45,212,191,.14);color:var(--hero-accent);font-weight:600}
+.nav-label{letter-spacing:.08em}
+/* 카드 — 헤어라인 + 1단 그림자 + 호버 부상 */
+.kpi-card,.card,.tm-box,.u-kpi,.g-mini,.q-card,.cust-card,.period-bar,.qfilter-bar,#page-export .ex-kpi{
+  border:1px solid var(--line);border-radius:var(--r-md);box-shadow:var(--sh-1)}
+.kpi-card,.card{transition:box-shadow .18s ease,transform .18s ease}
+.kpi-card:hover,.card:hover{box-shadow:var(--sh-2)}
+.kpi-label,.tm-l,.u-kl,.q-lbl,.cc-l{font-size:var(--fs-caption);color:var(--ink-4);font-weight:600}
+.kpi-value{font-size:var(--fs-kpi);font-weight:700;color:var(--ink);line-height:1.1}
+.tm-box.accent{border-color:var(--brand-line);background:linear-gradient(180deg,var(--brand-soft),#fff 55%)}
+/* 표 — 헤더 fill 제거, 헤어라인 위계 */
+.ov-table th{background:transparent;color:var(--ink-4);font-weight:600;border-bottom:1px solid var(--line-strong)}
+.ov-table td{border-bottom:1px solid var(--line-soft)}
+.ov-table tr.total-row td{font-weight:700;border-top:2px solid var(--ink);background:transparent}
+.ov-clk{text-decoration:none;color:var(--brand-strong);font-weight:600}
+.ov-clk:hover{background:var(--brand-soft);color:var(--brand-strong)}
+.rpt-table thead th,.rpt-table thead th.grp-q,.rpt-table thead th.grp-h,.rpt-table thead th.grp-m{background:var(--surface-2);color:var(--ink-3);font-weight:600}
+.rpt-table td{border-bottom:1px solid var(--line-soft)}
+.rpt-table tr.grp td,.rpt-table tr.grp td.lbl{background:transparent;font-weight:700;border-bottom:1px solid var(--line-strong)}
+.rpt-table tr.grp:hover td{background:var(--surface-2)}
+.rpt-table tr.tot td,.rpt-table tr.tot td.lbl{background:var(--ink)}
+.rpt-table tr.tot.tot2 td,.rpt-table tr.tot.tot2 td.lbl{background:#334155}
+.lb-table th{background:var(--surface-2);color:var(--ink-3)}
+/* 컨트롤 */
+.seg{border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden}
+.seg button.on{background:var(--brand-strong);color:#fff}
+.qpreset{border-radius:var(--r-sm)}
+.qpreset.on{background:var(--brand-soft);color:var(--brand-strong);border-color:var(--brand-line);font-weight:700}
+.form-select{border-color:var(--line);border-radius:var(--r-sm);color:var(--ink-2)}
+.tm-prog{height:6px;border-radius:99px}
+.tm-prog>div{border-radius:99px;transition:width .6s cubic-bezier(.22,1,.36,1)}
+/* 모달 — 블러 스크림 + 플로팅 그림자 */
+.ovd-modal,.rpt-dbg{background:rgba(15,23,42,.35);backdrop-filter:blur(3px)}
+.ovd-box,.rpt-drill{border-radius:var(--r-lg);box-shadow:var(--sh-float);border:1px solid var(--line)}
+#pdf-fab{background:var(--ink);border-radius:99px;box-shadow:var(--sh-float)}
+#pdf-fab:hover{background:#1e293b}
+.exec-hero,.rpt-hk,#page-goals .g-hero{background:var(--hero-grad);border-radius:var(--r-lg)}
+button,.nav-link,.seg button,.qpreset,.sw-item{transition:background-color .15s ease,color .15s ease,border-color .15s ease}
+/* ═══ 전사 스코어보드(히어로) + 인사이트 칩 ═══ */
+.scoreboard{background:var(--hero-grad);border-radius:var(--r-lg);padding:18px 22px 16px;color:var(--hero-ink);margin-bottom:10px;box-shadow:var(--sh-2)}
+.sb-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.sb-title{font-size:12px;font-weight:700;color:var(--hero-sub);letter-spacing:.04em}
+.sb-note{font-size:11px;color:var(--hero-sub)}
+.sb-grid{display:grid;grid-template-columns:1.5fr 1.3fr 1fr 1fr;gap:0}
+.sb-cell{padding:2px 20px 0;border-left:1px solid var(--hero-line);min-width:0}
+.sb-cell:first-child{padding-left:0;border-left:none}
+.sb-l{font-size:11px;font-weight:600;color:var(--hero-sub);display:flex;align-items:center;gap:6px}
+.sb-l i{color:var(--hero-accent)}
+.sb-v{font-size:2.35rem;font-weight:750;line-height:1.08;margin:5px 0 3px;color:#fff}
+.sb-cell.sm .sb-v{font-size:1.55rem}
+.sb-s{font-size:11.5px;color:var(--hero-sub)}
+.sb-s b.up{color:var(--pos-hero);font-weight:700}.sb-s b.dn{color:var(--neg-hero);font-weight:700}.sb-s b.wr{color:var(--warn-hero);font-weight:700}
+.sb-gauge{height:8px;background:rgba(148,163,184,.22);border-radius:99px;position:relative;margin:12px 0 7px}
+.sb-gauge .fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#14b8a6,#5eead4);max-width:100%;transition:width .7s cubic-bezier(.22,1,.36,1)}
+.sb-gauge .pace{position:absolute;top:-3px;width:2px;height:14px;background:var(--warn-hero);border-radius:2px}
+.sb-insights{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.ins-chip{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;padding:7px 13px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);box-shadow:var(--sh-1)}
+.ins-chip i{font-size:13px}
+.ins-chip.drive{border-color:#bbf7d0;background:#f0fdf4;color:#166534}.ins-chip.drive i{color:#16a34a}
+.ins-chip.slump{border-color:#fecaca;background:#fef2f2;color:#991b1b}.ins-chip.slump i{color:#dc2626}
+.ins-chip.risk{border-color:#fde68a;background:#fffbeb;color:#92400e}.ins-chip.risk i{color:#d97706}
+.ins-chip.info{color:var(--ink-3)}
+.ins-chip.clk{cursor:pointer}.ins-chip.clk:hover{box-shadow:var(--sh-2)}
+@media(max-width:900px){.sb-grid{grid-template-columns:1fr 1fr;gap:16px 0}.sb-cell{border-left:none;padding-left:0}.sb-cell:nth-child(even){border-left:1px solid var(--hero-line);padding-left:16px}.sb-v{font-size:1.8rem}}
+@media print{
+  .scoreboard{-webkit-print-color-adjust:exact;print-color-adjust:exact;break-inside:avoid}
+  .sb-insights{display:none!important}
+}
 </style>
 </head>
 <body>
@@ -421,6 +514,9 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
       <span class="text-muted">~</span>
       <select id="ov-to" class="form-select form-select-sm" onchange="renderOverview()"></select>
     </div>
+
+    <section class="scoreboard" id="ov-hero" aria-label="전사 스코어보드"></section>
+    <div class="sb-insights" id="ov-insights"></div>
 
     <div class="row g-2 mb-3" id="ov-kpi"></div>
 
@@ -613,6 +709,18 @@ let CONS={}, DEVICE={}, INTL={}, PENDING=[], TARGETS=[], ILBO_PEND=[], _user=nul
 let SALEST=[], REGMAP={pair:{},name:{},country:{}};   // 매출목표 + 거래처→지역 매핑
 let _ovChart=null;
 const DOM_BLUE='#2563eb', INTL_TEAL='#0d9488', DEV_PURPLE='#7c3aed', CONS_CYAN='#0891b2';
+/* Chart.js 전역 룩 통일 (Pretendard·다크 툴팁·라운드 바) — 개별 차트 옵션 불변 */
+try{
+  Chart.defaults.font.family="'Pretendard Variable',Pretendard,'Noto Sans KR',sans-serif";
+  Chart.defaults.font.size=12;
+  Chart.defaults.color='#94a3b8';
+  Chart.defaults.borderColor='rgba(231,234,240,.9)';
+  Object.assign(Chart.defaults.plugins.tooltip,{backgroundColor:'#0f172a',titleFont:{weight:600},bodyFont:{size:12},padding:10,cornerRadius:8,displayColors:false,caretSize:0});
+  Chart.defaults.plugins.legend.labels.boxWidth=8;
+  Chart.defaults.plugins.legend.labels.usePointStyle=true;
+  Chart.defaults.elements.bar.borderRadius=4;
+  Chart.defaults.elements.bar.borderSkipped='bottom';
+}catch(e){}
 
 const fmtW = v => { v=Number(v)||0; return v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만원':Math.round(v).toLocaleString()+'원'; };
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -927,6 +1035,9 @@ function renderOverview(){
 
   // 이번달 회계+예정
   renderThisMonth();
+
+  // 스코어보드 히어로 + 인사이트 (이미 계산된 로컬만 전달)
+  try{ _renderScoreboard(f,t,{totalC,totalI,totalPrev,allPend,domC,domI,domPrev,intl,intlPend,intlI,intlPrev,etcC}); }catch(e){ console.warn('scoreboard',e); }
 }
 function renderChannelMix(f,t){
   const pend=_pendingAgg(2026);
@@ -1275,6 +1386,68 @@ function openDrill(dk){
 }
 function closeDrill(){ const b=document.getElementById('rpt-dbg'); if(b)b.classList.remove('on'); if(_drillChart){_drillChart.destroy();_drillChart=null;} }
 
+// ── 전사 스코어보드(히어로) + 자동 인사이트 칩 ─────────────────
+// renderOverview가 이미 계산한 로컬만 받아 표시(데이터 로직 무변경). SALEST 0건·전년 0 가드.
+const _ovTgt=(f,t)=>{let s=0;(SALEST||[]).forEach(r=>{if(+r.year===2026&&+r.month>=f&&+r.month<=t)s+=Number(r.amount||0);});return s;};
+function _renderScoreboard(f,t,d){
+  const host=document.getElementById('ov-hero'), insHost=document.getElementById('ov-insights');
+  if(!host) return;
+  const hb=v=>v===null?'<b>-</b>':(v>=0?'<b class="up">▲'+Math.abs(v).toFixed(1)+'%</b>':'<b class="dn">▼'+Math.abs(v).toFixed(1)+'%</b>');
+  const yTgt=_ovTgt(1,12), cTgt=_ovTgt(1,t);
+  const yAch=yTgt>0?d.totalI/yTgt*100:null, cAch=cTgt>0?d.totalI/cTgt*100:null;
+  const paceP=Math.round(t/12*100);
+  const domShare=d.totalI>0?Math.round(d.domI/d.totalI*100):0, intlShare=d.totalI>0?Math.round(d.intlI/d.totalI*100):0;
+  const pl=f===t?(f+'월'):(f+'~'+t+'월');
+  const gauge = yTgt>0
+    ? '<div class="sb-gauge"><div class="fill" style="width:'+Math.min(yAch,100).toFixed(1)+'%"></div><div class="pace" style="left:'+paceP+'%" title="시간 진도 '+t+'/12개월"></div></div>'
+      +'<div class="sb-s">연간 목표 '+fmtW(yTgt)+' · 누적 달성 '+(cAch===null?'-':cAch.toFixed(1)+'%')+' · <b class="wr">시간진도 '+paceP+'%</b></div>'
+    : '<div class="sb-s" style="margin-top:12px">목표(sales_targets) 미적재</div>';
+  host.innerHTML=
+    '<div class="sb-head"><span class="sb-title"><i class="bi bi-lightning-charge-fill me-1"></i>WONTECH 전사 스코어보드 · '+pl+'</span>'
+    +'<span class="sb-note">실적 = 회계 확정 + 미반영 · 기준일 '+esc(CONS.updatedAt||DEVICE.updatedAt||'')+'</span></div>'
+    +'<div class="sb-grid">'
+    +'<div class="sb-cell"><div class="sb-l"><i class="bi bi-currency-won"></i>전사 매출</div><div class="sb-v">'+fmtW(d.totalI)+'</div>'
+      +'<div class="sb-s">회계 '+fmtW(d.totalC)+' + 미반영 '+fmtW(d.allPend)+' · 전년比 '+hb(pct(d.totalC,d.totalPrev))+'</div></div>'
+    +'<div class="sb-cell"><div class="sb-l"><i class="bi bi-bullseye"></i>연간 목표 진도</div><div class="sb-v">'+(yAch===null?'-':yAch.toFixed(1)+'%')+'</div>'+gauge+'</div>'
+    +'<div class="sb-cell sm"><div class="sb-l"><i class="bi bi-hospital"></i>국내</div><div class="sb-v">'+fmtW(d.domI)+'</div>'
+      +'<div class="sb-s">'+hb(pct(d.domC,d.domPrev))+' · 비중 '+domShare+'%</div></div>'
+    +'<div class="sb-cell sm"><div class="sb-l"><i class="bi bi-globe-americas"></i>해외</div><div class="sb-v">'+fmtW(d.intlI)+'</div>'
+      +'<div class="sb-s">'+hb(pct(d.intl,d.intlPrev))+' · 비중 '+intlShare+'%</div></div>'
+    +'</div>';
+  if(!insHost) return;
+  const chips=[];
+  if(cTgt>0&&cAch!==null){
+    if(cAch<95) chips.push({k:'slump',i:'bi-graph-down-arrow',t:'누적 목표 대비 '+fmtW(cTgt-d.totalI)+' 미달 (달성률 '+cAch.toFixed(1)+'%)',go:'goals'});
+    else if(cAch>=105) chips.push({k:'drive',i:'bi-award',t:'누적 목표 초과 달성 '+cAch.toFixed(1)+'%',go:'goals'});
+  }
+  const dY=pct(d.domC,d.domPrev), iY=pct(d.intl,d.intlPrev);
+  if(dY!==null&&dY<=-5) chips.push({k:'slump',i:'bi-hospital',t:'국내 전년比 ▼'+Math.abs(dY).toFixed(1)+'% — 원인 상세',go:'query'});
+  if(iY!==null&&iY<=-5) chips.push({k:'slump',i:'bi-globe-americas',t:'해외 전년比 ▼'+Math.abs(iY).toFixed(1)+'% — 원인 상세',go:'query'});
+  if(d.totalI>0&&d.allPend/d.totalI>=0.15) chips.push({k:'risk',i:'bi-hourglass-split',t:'미반영 '+fmtW(d.allPend)+' (전사의 '+Math.round(d.allPend/d.totalI*100)+'%) — 확정 지연 주의'});
+  try{ // 기한경과: 예정형만(완료형=회계 반영 대기라 과거일자 정상)
+    const _n=new Date(), ts=_n.getFullYear()+'-'+String(_n.getMonth()+1).padStart(2,'0')+'-'+String(_n.getDate()).padStart(2,'0');
+    const over=(ILBO_PEND||[]).filter(p=>p.type!=='완료'&&(p.expectedDate||'')&&p.expectedDate<ts);
+    if(over.length){ const mx=over.slice().sort((a,b)=>Number(b.amount||0)-Number(a.amount||0))[0];
+      chips.push({k:'risk',i:'bi-alarm',t:'미반영 기한경과 '+over.length+'건 · 최대 '+esc(mx.customer||'')+' '+fmtW(Number(mx.amount||0))}); }
+  }catch(e){}
+  try{ // 성장 견인 세그먼트: 국내 제품/소모품 + 해외 지역·법인 델타 1위
+    const reg26=(_ovRegMo&&Object.keys(_ovRegMo).length)?_ovRegMo:_intlRegionMonthly(INTL);
+    const reg25=_intlRegionMonthly(INTL.data2025||{});
+    const cand=[['국내 제품',sumMo(DEVICE.monthly2026,f,t),sumMo(DEVICE.monthly2025,f,t)],['국내 소모품',sumMo(CONS.monthly2026,f,t),sumMo(CONS.monthly2025,f,t)]];
+    Object.keys(reg26||{}).forEach(r=>cand.push(['해외 '+r,sumMo(reg26[r],f,t),sumMo((reg25||{})[r],f,t)]));
+    const up=cand.map(c=>({n:c[0],d:c[1]-c[2]})).filter(x=>isFinite(x.d)).sort((a,b)=>b.d-a.d)[0];
+    if(up&&up.d>0) chips.push({k:'drive',i:'bi-rocket-takeoff',t:'『'+esc(up.n)+'』 전년比 +'+fmtW(up.d)+' — 성장 견인',go:'report'});
+  }catch(e){}
+  try{ // 모멘텀: 최근 확정월 vs 직전 3개월 평균
+    const mT=m=>(Number(CONS.monthly2026&&CONS.monthly2026[m])||0)+(Number(DEVICE.monthly2026&&DEVICE.monthly2026[m])||0)+(Number(CONS.etcMonthly2026&&CONS.etcMonthly2026[m])||0)+(Number(INTL.monthly&&INTL.monthly[m])||0);
+    if(t>=4){ const avg=(mT(t-1)+mT(t-2)+mT(t-3))/3; if(avg>0&&mT(t)>=avg*1.15) chips.push({k:'drive',i:'bi-fire',t:t+'월 '+fmtW(mT(t))+' — 최근 3개월 평균比 +'+Math.round((mT(t)/avg-1)*100)+'%'}); }
+  }catch(e){}
+  if(chips.length<2) chips.push({k:'info',i:'bi-pie-chart',t:'채널 비중 국내 '+domShare+'% · 해외 '+intlShare+'%'});
+  const ord={slump:0,risk:1,drive:2,info:3};
+  chips.sort((a,b)=>ord[a.k]-ord[b.k]);
+  insHost.innerHTML=chips.slice(0,4).map(c=>'<span class="ins-chip '+c.k+(c.go?' clk':'')+'"'+(c.go?(' onclick="showPage(\''+c.go+'\',document.getElementById(\'nav-'+c.go+'\'))"'):'')+'><i class="bi '+c.i+'"></i>'+c.t+'</span>').join('');
+  insHost.style.display=chips.length?'':'none';
+}
 function renderThisMonth(){
   const tmo=_curMonth();   // 보고 기준월(데이터 없는 새 달로 롤오버 방지)
   document.getElementById('tm-title').textContent=tmo+'월 매출 관리 (회계 확정 + 예정분)';
