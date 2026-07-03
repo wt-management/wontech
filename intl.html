@@ -553,7 +553,7 @@ function renderOverview(){
   const cur=yr===2026?INTL:INTL.data2025, pre=yr===2026?INTL.data2025:null;
   const tot=ytd(cur.monthly,f,t), totU=ytd(cur.monthly_usd,f,t);
   const ptot=pre?ytd(pre.monthly,f,t):0, yoy=pct(tot,ptot);
-  const pAgg=(yr===2026)?_pendCombined(2026):{monthly:{},total:0}; const pendYtd=(yr===2026)?(pAgg.total||0):0;
+  const pAgg=(yr===2026)?_pendCombined(2026):{monthly:{},total:0}; const pendYtd=(yr===2026)?ytd(pAgg.monthly,f,t):0;  // 조회기간(f~t) 필터 — 종합사이트와 정합(기간밖 예정분 제외)
   const nct=Object.values(cur.countries||{}).filter(c=>Object.keys(c.m||{}).some(m=>+m>=f&&+m<=t&&c.m[m]>0)).length;
   document.getElementById('upd-label').textContent='기준일 '+(INTL.updatedAt||'');
   const pl=f===t?f+'월':f+'~'+t+'월';
