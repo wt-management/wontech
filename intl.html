@@ -1363,13 +1363,20 @@ function renderDealers(){
   var ag=_dealerAgg(); var arr=Object.values(ag).filter(function(o){return !kw||((o.name+o.country).toLowerCase().indexOf(kw)>=0);}).sort(function(a,b){return (b.won+b.openAmt)-(a.won+a.openAmt);});
   var cnt=document.getElementById('dl-count'); if(cnt)cnt.textContent=arr.length+'개사';
   el.innerHTML='<div class="row g-2">'+arr.map(function(o){var info=INTL_DEALERS[o.name]||{};var ar=_dealerActual(o.name);
-    return '<div class="col-md-6 col-lg-4"><div class="card dl-card p-3 h-100" style="cursor:pointer" onclick="openDealer(\''+o.name.replace(/'/g,"\\'")+'\')">'+
-      '<div style="display:flex;justify-content:space-between;align-items:start"><div><div style="font-size:13px;font-weight:700">'+_esc(o.name)+(info.tier?' <span style="font-size:9px;font-weight:700;color:#fff;background:'+_tierColor(info.tier)+';border-radius:5px;padding:1px 6px;vertical-align:middle">'+_esc(info.tier)+'</span>':'')+'</div><div style="font-size:11px;color:#94a3b8">'+_esc(o.country||'')+'</div></div>'+(o.sales?'<span style="font-size:10px;color:#64748b">'+_esc(o.sales)+'</span>':'')+'</div>'+
-      '<div style="display:flex;gap:12px;margin-top:8px;font-size:11px">'+
-        '<div><div style="color:#94a3b8">진행딜</div><div style="font-weight:700;color:#0891b2">'+o.open+'건 '+_fmtUSD(o.openAmt)+'</div></div>'+
-        '<div><div style="color:#94a3b8">누계</div><div style="font-weight:700;color:#16a34a">'+_fmtUSD(o.won)+'</div></div>'+(ar.krw>0?'<div><div style="color:#94a3b8">회계매출</div><div style="font-weight:700;color:#2563eb">'+fmtW(ar.krw)+'</div></div>':'')+
+    return '<div class="col-md-6 col-lg-4"><div class="card dl-card h-100" style="cursor:pointer;padding:14px 16px;border-radius:12px" onclick="openDealer(\''+o.name.replace(/'/g,"\\'")+'\')">'+
+      '<div style="display:flex;align-items:center;gap:10px">'+
+        '<div style="width:38px;height:38px;border-radius:10px;background:'+_tierColor(info.tier||'')+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0">'+_esc((o.name||'?').slice(0,1).toUpperCase())+'</div>'+
+        '<div style="flex:1;min-width:0">'+
+          '<div style="font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px">'+_esc(o.name)+(info.tier?'<span style="font-size:9px;font-weight:700;color:#fff;background:'+_tierColor(info.tier)+';border-radius:5px;padding:1px 6px">'+_esc(info.tier)+'</span>':'')+'</div>'+
+          '<div style="font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+_esc(o.country||'')+(o.sales?' · '+_esc(o.sales):'')+'</div>'+
+        '</div>'+
       '</div>'+
-      '<div style="font-size:10px;color:#9ca3af;margin-top:6px">활동 '+o.acts+'회'+(o.lastAct?' · 최근 '+o.lastAct.slice(5):'')+'</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:12px">'+
+        '<div style="background:#f8fafc;border-radius:8px;padding:7px 9px"><div style="font-size:10px;color:#94a3b8">진행 딜</div><div style="font-size:13px;font-weight:700;color:#0891b2">'+o.open+'건</div><div style="font-size:10px;color:#64748b">'+_fmtUSD(o.openAmt)+'</div></div>'+
+        '<div style="background:#f8fafc;border-radius:8px;padding:7px 9px"><div style="font-size:10px;color:#94a3b8">계약 누계</div><div style="font-size:13px;font-weight:700;color:#16a34a">'+_fmtUSD(o.won)+'</div></div>'+
+        '<div style="background:#eff6ff;border-radius:8px;padding:7px 9px"><div style="font-size:10px;color:#94a3b8">실제매출</div><div style="font-size:13px;font-weight:700;color:#2563eb">'+(ar.krw>0?fmtW(ar.krw):'-')+'</div></div>'+
+      '</div>'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:10px;color:#9ca3af"><span><i class="bi bi-journal-text me-1"></i>활동 '+o.acts+'회</span><span>'+(o.lastAct?'최근 '+o.lastAct.slice(5):'활동 없음')+'</span></div>'+
     '</div></div>';
   }).join('')+'</div>'||'';
   if(!arr.length)el.innerHTML='<div class="card p-4 text-center text-muted" style="font-size:13px">딜러가 없습니다. 수주관리에서 딜을 추가하거나 활동일지를 기록하면 자동 집계됩니다.</div>';
