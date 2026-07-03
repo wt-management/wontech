@@ -953,6 +953,14 @@ async function _afterLogin(user) {
   await _loadIntlPipe();
   await _loadIntlCrm();
   _loadQuotes();
+  // 조회기간 종료월을 데이터 마지막월로 동적 세팅(하드코딩 5월 → 실제 마지막 데이터월, 종합사이트와 정합)
+  try{
+    var _im=Object.keys((INTL&&INTL.monthly)||{}).map(Number).filter(function(m){return m>=1&&m<=12;});
+    var _lastMo=_im.length?Math.max.apply(null,_im):6;
+    var _off=document.getElementById('ov-from'), _oft=document.getElementById('ov-to');
+    if(_off) _off.value=1;
+    if(_oft) _oft.value=_lastMo;
+  }catch(e){}
   var _sameDoc=false; try{ _sameDoc = !!document.referrer && new URL(document.referrer).pathname===location.pathname; }catch(e){ _sameDoc=false; }
   // 다른 사이트/페이지에서 진입(또는 토큰 해시)하면 종합현황, intl 자체 새로고침이면 마지막 페이지 유지
   var _nav=(performance.getEntriesByType('navigation')[0]||{}).type;   // reload=새로고침 / navigate=신규진입

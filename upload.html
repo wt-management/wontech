@@ -305,21 +305,25 @@ function renderPreview(s){
   document.getElementById('previewBox').style.display='block';
 }
 
-// 미반영(ilbo_pending) ↔ 새 회계(ilbo_acc.lines) 정확일치 대조 → 반영처리(자동 제외). ilbo.html flagMatches 동일 규칙.
+// 미반영(ilbo_pending) ↔ 새 회계(ilbo_acc.lines) 대조 → 반영처리(자동제외). ilbo.html flagMatches와 동일 규칙: 국내=거래처, 해외=국가(법인/딜러 표기달라도)+제품+금액정확(±2%)만 자동, 근접은 확인필요.
 function _upNorm(s){ return String(s==null?'':s).replace(/[\s()（）\[\]·.,_\/\-]/g,'').toLowerCase(); }
+function _upCtry(name){ name=String(name||''); var i=name.indexOf('/'); if(i>=0) return _upNorm(name.slice(0,i)); var m=name.match(/^(.+?)법인/); return m?_upNorm(m[1]):''; }
 function reconcilePending(rows, ilboAcc){
   var lines=(ilboAcc&&ilboAcc.lines)||[]; var auto=0,near=0,autoAmt=0;
   rows.forEach(function(p){
     if((p.status&&p.status!=='대기')||p.lock) return;
     var pc=_upNorm(p.customer),pp=_upNorm(p.product),pa=Math.round(Number(p.amount)||0),pq=Number(p.qty)||0;
     if(!pc) return;
+    var isIntl=(p.region==='해외'), pcty=isIntl?(_upCtry(p.customer)||_upNorm(p.country||'')):null;
     var hit=null, cand=0;
     lines.forEach(function(l){
-      if(_upNorm(l.customer)!==pc) return;
       var la=Math.round(l.amount), lq=Number(l.qty)||0, prodEq=pp&&_upNorm(l.product)===pp;
-      if(prodEq&&la===pa&&(pq===0||lq===pq)){ if(!hit) hit=l; }            // 거래처+제품+금액 정확 → 자동
-      else if(prodEq&&pa>0&&Math.abs(la-pa)<=pa*0.1){ if(!hit) hit=l; }    // 거래처+제품 일치+금액±10% → 자동
-      else if(pa>0&&Math.abs(la-pa)<=pa*0.1){ cand++; }                    // 제품명 다름·금액근접 → 추정
+      var custOk = isIntl ? (pcty&&_upCtry(l.customer)===pcty) : (_upNorm(l.customer)===pc);
+      if(custOk){
+        if(prodEq&&la===pa&&(pq===0||lq===pq)){ if(!hit) hit=l; }            // 거래처/국가+제품+금액 정확 → 자동
+        else if(prodEq&&pa>0&&Math.abs(la-pa)<=pa*0.02){ if(!hit) hit=l; }   // +금액±2%(반올림흡수) → 자동
+        else if(pa>0&&Math.abs(la-pa)<=pa*0.1){ cand++; }                    // 금액근접 → 확인필요
+      } else if(isIntl&&prodEq&&pa>0&&Math.abs(la-pa)<=pa*0.1){ cand++; }    // 국가다르나 제품+금액근접 → 확인필요
     });
     if(hit){ p.status='반영됨'; p.reflectedDate=(ilboAcc.reportDate||''); p.matchAmt=Math.round(hit.amount); p.matchAuto=true; p.matchLines=[{d:hit.date,c:hit.customer,p:hit.product,q:hit.qty,a:hit.amount}]; auto++; autoAmt+=pa; }
     else if(cand){ near++; }
