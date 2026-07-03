@@ -7,7 +7,7 @@
 <title>wontech - 해외</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%230d9488'/><g transform='translate(13,36) scale(0.144)' fill='%23fff'><rect width='110' height='110' rx='28'/><rect x='204' width='110' height='110' rx='28'/><rect x='408' width='110' height='110' rx='28'/><rect x='102' y='97' width='110' height='110' rx='28'/><rect x='306' y='97' width='110' height='110' rx='28'/></g></svg>">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"><style>#page-crm-dash .card,#page-sales .card,#page-dealers .card,#page-quotes .card,#page-activities .card{border:1px solid #eef2f7;box-shadow:0 1px 3px rgba(2,6,23,.05)}.is-card{transition:transform .12s,box-shadow .12s}.is-card:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(2,6,23,.12)!important}.dl-card{transition:transform .12s,box-shadow .12s}.dl-card:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(2,6,23,.12)!important;border-color:#cbd5e1!important}.is-col{transition:background .15s}#page-activities .table tbody tr:hover,#page-quotes .table tbody tr:hover{background:#f8fafc}.kpi-card{border:1px solid #eef2f7}</style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -1239,7 +1239,7 @@ function renderSales(){
   board.innerHTML=STAGES_INTL.map(function(st){
     var cards=list.filter(function(d){return d.stage===st;}).sort(function(a,b){return Number(b.amount||0)-Number(a.amount||0);});
     var sum=cards.reduce(function(s,d){return s+Number(d.amount||0);},0);
-    return '<div class="is-col" style="min-width:210px;flex:1;background:#f1f5f9;border-radius:10px;padding:8px" ondragover="event.preventDefault()" ondrop="_dropDeal(\''+st+'\')">'+
+    return '<div class="is-col" style="min-width:212px;flex:1;background:#f8fafc;border:1px solid #eef2f7;border-top:3px solid '+SC_INTL[st]+';border-radius:10px;padding:9px 8px 5px" ondragover="event.preventDefault()" ondrop="_dropDeal(\''+st+'\')">'+
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:0 4px"><span style="font-size:12px;font-weight:700"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+SC_INTL[st]+';margin-right:5px"></span>'+st+'</span><span style="font-size:10px;color:#64748b">'+cards.length+'건 · '+_fmtUSD(sum)+'</span></div>'+
       cards.map(_dealCard).join('')+'</div>';
   }).join('');
@@ -1248,7 +1248,7 @@ function _dealCard(d){
   var today=new Date().toISOString().slice(0,10);
   var days=d.stageUpdatedAt?Math.floor((Date.now()-new Date(d.stageUpdatedAt).getTime())/864e5):null;
   var overdue=d.expectedShip&&d.expectedShip<today&&d.stage!=='선적/납품';
-  return '<div draggable="true" ondragstart="_dragId=\''+d.id+'\'" onclick="openDeal(\''+d.id+'\')" style="background:#fff;border-radius:8px;padding:8px 10px;margin-bottom:7px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.06)">'+
+  return '<div class="is-card" draggable="true" ondragstart="_dragId=\''+d.id+'\'" onclick="openDeal(\''+d.id+'\')" style="background:#fff;border:1px solid #f1f5f9;border-radius:8px;padding:9px 11px;margin-bottom:7px;cursor:pointer;box-shadow:0 1px 2px rgba(2,6,23,.05)">'+
     '<div style="display:flex;justify-content:space-between;align-items:start;gap:6px"><div style="font-size:12px;font-weight:700">'+_esc(d.dealer||'-')+' <span style="font-size:10px;color:#94a3b8">'+_esc(d.country||'')+'</span></div>'+(days!=null?'<span style="font-size:9px;color:'+(days>=30?'#dc2626':'#94a3b8')+';white-space:nowrap" title="단계 체류일">'+days+'일</span>':'')+'</div>'+
     (d.product?'<div style="font-size:11px;color:#475569">'+_esc(d.product)+'</div>':'')+
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:3px"><span style="font-size:12px;font-weight:700;color:#0d9488">'+_fmtUSD(d.amount)+'</span><span style="font-size:10px;color:#64748b">'+(d.sales||'')+(d.prob?' · '+d.prob+'%':'')+'</span></div>'+
@@ -1362,7 +1362,7 @@ function renderDealers(){
   var ag=_dealerAgg(); var arr=Object.values(ag).filter(function(o){return !kw||((o.name+o.country).toLowerCase().indexOf(kw)>=0);}).sort(function(a,b){return (b.won+b.openAmt)-(a.won+a.openAmt);});
   var cnt=document.getElementById('dl-count'); if(cnt)cnt.textContent=arr.length+'개사';
   el.innerHTML='<div class="row g-2">'+arr.map(function(o){var info=INTL_DEALERS[o.name]||{};
-    return '<div class="col-md-6 col-lg-4"><div class="card p-3 h-100" style="cursor:pointer" onclick="openDealer(\''+o.name.replace(/'/g,"\\'")+'\')">'+
+    return '<div class="col-md-6 col-lg-4"><div class="card dl-card p-3 h-100" style="cursor:pointer" onclick="openDealer(\''+o.name.replace(/'/g,"\\'")+'\')">'+
       '<div style="display:flex;justify-content:space-between;align-items:start"><div><div style="font-size:13px;font-weight:700">'+o.name+'</div><div style="font-size:11px;color:#94a3b8">'+(o.country||'')+(info.tier?' · '+info.tier+'등급':'')+'</div></div>'+(o.sales?'<span style="font-size:10px;color:#64748b">'+o.sales+'</span>':'')+'</div>'+
       '<div style="display:flex;gap:12px;margin-top:8px;font-size:11px">'+
         '<div><div style="color:#94a3b8">진행딜</div><div style="font-weight:700;color:#0891b2">'+o.open+'건 '+_fmtUSD(o.openAmt)+'</div></div>'+
