@@ -421,6 +421,12 @@ button,.nav-link,.seg button,.qpreset,.sw-item{transition:background-color .15s 
 .ins-chip.risk{border-color:#fde68a;background:#fffbeb;color:#92400e}.ins-chip.risk i{color:#d97706}
 .ins-chip.info{color:var(--ink-3)}
 .ins-chip.clk{cursor:pointer}.ins-chip.clk:hover{box-shadow:var(--sh-2)}
+/* 클릭 가능 요소 공통 어포던스 */
+.sb-cell.clk{cursor:pointer;border-radius:10px;transition:background .15s ease}
+.sb-cell.clk:hover{background:rgba(148,163,184,.10)}
+.kpi-card.clk,.tm-box.clk,.dl-row.clk,.g-row.clk,.ovp-row.clk,tr.lb-clk,tr.qs-clk{cursor:pointer}
+.dl-row.clk:hover,.g-row.clk:hover,.ovp-row.clk:hover{background:var(--surface-2)}
+tr.lb-clk:hover td,tr.qs-clk:hover td{background:var(--surface-2)}
 @media(max-width:900px){.sb-grid{grid-template-columns:1fr 1fr;gap:16px 0}.sb-cell{border-left:none;padding-left:0}.sb-cell:nth-child(even){border-left:1px solid var(--hero-line);padding-left:16px}.sb-v{font-size:1.8rem}}
 @media print{
   .scoreboard{-webkit-print-color-adjust:exact;print-color-adjust:exact;break-inside:avoid}
@@ -984,20 +990,20 @@ function renderOverview(){
   const devTot=(domDevC+sumMo(pend.devMonthly,f,t))+_intlDev, consTot=(domConsC+sumMo(pend.consMonthly,f,t))+_intlCons, _cd=devTot+consTot||1;
   // KPI 3종(미반영 포함=메인 / 회계=우측) + 장비vs소모품
   const kpis=[
-    {l:'전사 매출 ('+periodLbl+')',i:'bi-currency-won',c:'#0f172a',conf:totalC,inc:totalI,prev:totalPrev,pend:allPend},
-    {l:'국내 매출',i:'bi-hospital',c:DOM_BLUE,conf:domC,inc:domI,prev:domPrev,pend:domPend,share:totalI>0?Math.round(domI/totalI*100):0},
-    {l:'해외 매출',i:'bi-globe-americas',c:INTL_TEAL,conf:intl,inc:intlI,prev:intlPrev,pend:intlPend,share:totalI>0?Math.round(intlI/totalI*100):0},
+    {l:'전사 매출 ('+periodLbl+')',i:'bi-currency-won',c:'#0f172a',conf:totalC,inc:totalI,prev:totalPrev,pend:allPend,go:'all'},
+    {l:'국내 매출',i:'bi-hospital',c:DOM_BLUE,conf:domC,inc:domI,prev:domPrev,pend:domPend,share:totalI>0?Math.round(domI/totalI*100):0,go:'dom'},
+    {l:'해외 매출',i:'bi-globe-americas',c:INTL_TEAL,conf:intl,inc:intlI,prev:intlPrev,pend:intlPend,share:totalI>0?Math.round(intlI/totalI*100):0,go:'intl'},
   ];
   const _dualHtml=kpis.map(c=>{
     const y=pct(c.conf,c.prev);   // 성장률=회계 like-for-like
     const sub=(c.share!=null?('전체의 '+c.share+'% · '):'')+'전년比 '+badge(y);
     const side='<div class="kpi-side"><div class="kpi-side-label">회계 기준</div><div class="kpi-side-value" style="color:#64748b">'+fmtW(c.conf)+'</div><div class="kpi-side-sub">'+(c.pend>0?('+미반영 '+fmtW(c.pend)):'미반영 없음')+'</div></div>';
-    return '<div class="col-12 col-md-6 col-xl-3"><div class="kpi-card kpi-dual">'+
-      '<div class="kpi-main"><div class="kpi-label"><i class="bi '+c.i+' me-1" style="color:'+c.c+'"></i>'+c.l+'</div>'+
+    return '<div class="col-12 col-md-6 col-xl-3"><div class="kpi-card kpi-dual clk" onclick="qGo(\''+c.go+'\',\'all\')" title="상세 조회로 이동">'+
+      '<div class="kpi-main"><div class="kpi-label"><i class="bi '+c.i+' me-1" style="color:'+c.c+'"></i>'+c.l+' <span style="color:#cbd5e1">›</span></div>'+
       '<div class="kpi-value" style="color:'+c.c+';font-size:1.4rem">'+fmtW(c.inc)+'</div>'+
       '<div class="kpi-sub">'+sub+'</div></div>'+side+'</div></div>';
   }).join('');
-  const _catRow=(lbl,v,col)=>{ const p=Math.round(v/_cd*100); return '<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:12px;margin-top:5px"><span style="font-weight:700;color:'+col+'">'+lbl+'</span><span><b style="font-size:1.05rem;color:#0f172a">'+fmtW(v)+'</b> <span style="color:#94a3b8">'+p+'%</span></span></div><div style="height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden;margin-top:3px"><div style="width:'+p+'%;height:100%;background:'+col+'"></div></div>'; };
+  const _catRow=(lbl,v,col)=>{ const p=Math.round(v/_cd*100); return '<div class="clk" style="cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;font-size:12px;margin-top:5px" onclick="qGo(\'all\',\''+lbl+'\')" title="'+lbl+' 상세 조회"><span style="font-weight:700;color:'+col+'">'+lbl+' <span style="color:#cbd5e1">›</span></span><span><b style="font-size:1.05rem;color:#0f172a">'+fmtW(v)+'</b> <span style="color:#94a3b8">'+p+'%</span></span></div><div style="height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden;margin-top:3px"><div style="width:'+p+'%;height:100%;background:'+col+'"></div></div>'; };
   const _catHtml='<div class="col-12 col-md-6 col-xl-3"><div class="kpi-card" style="height:100%"><div class="kpi-label"><i class="bi bi-boxes me-1" style="color:#7c3aed"></i>장비 vs 소모품 <span style="font-weight:500;color:#cbd5e1;font-size:10px">미반영 포함</span></div>'+_catRow('장비',devTot,'#7c3aed')+_catRow('소모품',consTot,'#0891b2')+'</div></div>';
   const _etcNote = etcC>0?('<div class="col-12"><div style="font-size:11px;color:#94a3b8;margin-top:2px"><i class="bi bi-info-circle me-1"></i>전사 합계엔 <b style="color:#64748b">기타(의료기기·서지컬·B2C·고객만족) '+fmtW(etcC)+'</b> 포함(회계 전체 정합) · 국내 카드는 한국영업(소모품·제품)만 표시</div></div>'):'';
   document.getElementById('ov-kpi').innerHTML=_dualHtml+_catHtml+_etcNote;
@@ -1021,6 +1027,7 @@ function renderOverview(){
       {type:'line',label:'전년 합계',data:prevVals,borderColor:'#94a3b8',borderWidth:2,borderDash:[5,4],pointRadius:2,pointBackgroundColor:'#94a3b8',tension:0},
     ]},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      onClick:(e,els)=>{ if(els&&els.length){ const m=els[0].index+1; if(m<=_curMonth()) openOvDetail(m,'total'); } },
       plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y||0)+'억'}}},
       scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:'#f3f4f6'},ticks:{callback:v=>v+'억'}}}}
   });
@@ -1085,29 +1092,32 @@ function renderOvMonthly(){
       '<td style="color:#64748b">'+fmtW(yp)+'</td><td>'+(yt===null?'-':badge(yt))+'</td></tr></tfoot>';
 }
 function openOvDetail(m,type){
+  if(!_ovRegMo||!Object.keys(_ovRegMo).length){ try{_ovRegMo=_intlRegionMonthly(INTL);}catch(e){_ovRegMo={};} }  // 타 페이지에서 첫 호출 대비
   const pend=_pendingAgg(2026), isCur=(m===_curMonth()), rows=[];
-  const add=(label,v,col)=>{ if(v) rows.push({label,v,col}); };
+  const add=(label,v,col,dk)=>{ if(v) rows.push({label,v,col,dk}); };
   if(type==='dom'||type==='total'){
-    add('국내 소모품',(CONS.monthly2026&&CONS.monthly2026[m]||0),CONS_CYAN);
-    add('국내 제품',(DEVICE.monthly2026&&DEVICE.monthly2026[m]||0),DEV_PURPLE);
+    add('국내 소모품',(CONS.monthly2026&&CONS.monthly2026[m]||0),CONS_CYAN,'국내영업|소모품');
+    add('국내 제품',(DEVICE.monthly2026&&DEVICE.monthly2026[m]||0),DEV_PURPLE,'국내영업|제품');
     if(isCur){ add('국내 미반영·소모품',(pend.consMonthly[m]||0),'#0891b2'); add('국내 미반영·제품',(pend.devMonthly[m]||0),'#7c3aed'); }
   }
   if(type==='intl'||type==='total'){
     const REGS=['동남아','중화','중동','유럽','미주','태국법인','미국법인','일본법인','기타'];
-    REGS.forEach(r=>add('해외 '+r,(_ovRegMo[r]&&_ovRegMo[r][m])||0,INTL_TEAL));
+    REGS.forEach(r=>add('해외 '+r,(_ovRegMo[r]&&_ovRegMo[r][m])||0,INTL_TEAL,'해외영업|'+(r==='기타'?'기타·미분류':r)));
     if(isCur){ const ip=_pendForReport().intl; REGS.forEach(r=>add('해외 미반영·'+r,(ip[r]&&ip[r][m])||0,'#0d9488')); }
   }
   if(type==='total'){ add('기타(의료기기·서지컬·B2C·고객만족)',(CONS.etcMonthly2026&&CONS.etcMonthly2026[m]||0),'#94a3b8'); }
   const sum=rows.reduce((s,x)=>s+x.v,0), den=sum||1;
   document.getElementById('ovd-title').textContent=m+'월 '+(type==='dom'?'국내':type==='intl'?'해외':'전사')+' 내역 '+(isCur?'(미반영 포함)':'(회계반영)');
   document.getElementById('ovd-body').innerHTML=
-    (rows.sort((a,b)=>b.v-a.v).map(x=>'<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f1f5f9;font-size:13px">'+
+    (rows.sort((a,b)=>b.v-a.v).map(x=>'<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f1f5f9;font-size:13px'+(x.dk?';cursor:pointer':'')+'"'+(x.dk?(' onclick="closeOvDetail();openDrill(\''+x.dk+'\')" title="세그먼트 상세 드릴다운"'):'')+'>'+
       '<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:'+x.col+'"></span>'+
-      '<span style="flex:1">'+x.label+'</span><span style="font-weight:700">'+fmtW(x.v)+'</span>'+
+      '<span style="flex:1">'+x.label+(x.dk?' <span style="color:#cbd5e1;font-weight:700">›</span>':'')+'</span><span style="font-weight:700">'+fmtW(x.v)+'</span>'+
       '<span style="width:48px;text-align:right;color:#94a3b8;font-size:11px">'+(x.v/den*100).toFixed(1)+'%</span></div>').join('')
       ||'<div style="color:#94a3b8;font-size:13px;padding:10px">내역 없음</div>')+
     '<div style="display:flex;justify-content:space-between;padding:10px 0 2px;font-weight:800;font-size:14px;border-top:2px solid #e2e8f0;margin-top:4px"><span>합계</span><span>'+fmtW(sum)+'</span></div>';
-  document.getElementById('ovDetailModal').style.display='flex';
+  const _ovm=document.getElementById('ovDetailModal');
+  if(_ovm.parentElement!==document.body) document.body.appendChild(_ovm);  // #page-overview 밖에서도 표시
+  _ovm.style.display='flex';
 }
 function closeOvDetail(){ document.getElementById('ovDetailModal').style.display='none'; }
 function _scale(o,f,t){ const full=sumMo(o,1,12); return full>0?sumMo(o,f,t)/full:0; }
@@ -1117,9 +1127,10 @@ function renderOvProds(f,t,pend){
   const arr=Object.entries(map).map(([n,o])=>({n,v:o.dom+o.intl,cat:o.cat})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,10);
   const max=arr.length?arr[0].v:1;
   const cols={'장비':DEV_PURPLE,'소모품':CONS_CYAN,'기타':'#64748b'};
-  document.getElementById('ov-prods').innerHTML=arr.map(x=>{
+  _ovProdN=arr.map(x=>x.n);
+  document.getElementById('ov-prods').innerHTML=arr.map((x,i)=>{
     const col=cols[x.cat]||'#64748b';
-    return '<div style="padding:6px 0;border-bottom:1px solid #f3f4f6"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:12px;font-weight:600"><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:'+col+';margin-right:6px"></span>'+x.n+'</span><span style="font-size:12px;font-weight:700;color:'+col+'">'+fmtW(x.v)+'</span></div><div style="background:#f3f4f6;border-radius:3px;height:5px;overflow:hidden"><div style="width:'+(x.v/max*100).toFixed(1)+'%;height:100%;background:'+col+'"></div></div></div>';
+    return '<div class="ovp-row clk" style="padding:6px 0;border-bottom:1px solid #f3f4f6" onclick="openProdInfo(_ovProdN['+i+'])" title="제품 상세"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:12px;font-weight:600"><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:'+col+';margin-right:6px"></span>'+esc(x.n)+' <span style="color:#cbd5e1">›</span></span><span style="font-size:12px;font-weight:700;color:'+col+'">'+fmtW(x.v)+'</span></div><div style="background:#f3f4f6;border-radius:3px;height:5px;overflow:hidden"><div style="width:'+(x.v/max*100).toFixed(1)+'%;height:100%;background:'+col+'"></div></div></div>';
   }).join('')||'<div class="text-muted" style="font-size:12px">데이터 없음</div>';
 }
 
@@ -1246,11 +1257,19 @@ function _krCleanMo(which){
   const o26={},o25={}; for(let m=1;m<=12;m++){ o26[m]=(Number((CONS.monthly2026||{})[m])||0)*(1-as26/t26); o25[m]=(Number((CONS.monthly2025||{})[m])||0)*(1-as25/t25); }
   return {y26:o26,y25:o25};
 }
+// 드릴 캐시 자가부트 — 매출현황 안 거쳐도 어느 페이지서든 openDrill 가능
+function _rptBuildCache(force){
+  if(!force && _rptCache.reg26) return _rptCache;
+  _rptCache={reg26:_intlRegionMonthly(INTL), reg25:_intlRegionMonthly(INTL.data2025||{}),
+             pend:_pendForReport(), kpC:_krCleanMo('제품'), kcC:_krCleanMo('소모품')};
+  return _rptCache;
+}
 function renderReport(){
   const tbl=document.getElementById('report-table');
   if(!SALEST.length){ tbl.innerHTML='<tbody><tr><td style="padding:16px;color:#94a3b8">목표(sales_targets) 데이터가 없습니다. SQL 적재를 확인하세요.</td></tr></tbody>'; return; }
-  const reg26=_intlRegionMonthly(INTL), reg25=_intlRegionMonthly(INTL.data2025||{}), pend=_pendForReport();
-  const _kpC=_krCleanMo('제품'), _kcC=_krCleanMo('소모품');
+  const C0=_rptBuildCache(true);
+  const reg26=C0.reg26, reg25=C0.reg25, pend=C0.pend;
+  const _kpC=C0.kpC, _kcC=C0.kcC;
   const kProd=_rowVals(_kpC.y26,pend.kr['제품'],_kpC.y25,'국내영업','제품');
   const kCons=_rowVals(_kcC.y26,pend.kr['소모품'],_kcC.y25,'국내영업','소모품');
   const kSum=_sumV([kProd,kCons]);
@@ -1296,7 +1315,6 @@ function renderReport(){
   h+='</tbody>';
   tbl.innerHTML=h;
   // 캐시(드릴다운용) + 임원 요약
-  _rptCache={reg26,reg25,pend,kpC:_kpC,kcC:_kcC};
   _rptHero(totalSum,[{n:'국내 제품',v:kProd},{n:'국내 소모품',v:kCons}].concat(regRows.map(x=>({n:x.r,v:x.v}))).concat(corpRows.map(x=>({n:x.r,v:x.v}))),pend);
 }
 let _rptCache={};
@@ -1336,7 +1354,10 @@ function _drillSeg(dept,item){
 }
 let _drillChart=null;
 function openDrill(dk){
-  if(!_rptCache.reg26){ return; }
+  if(!_rptCache.reg26){ if(!(CONS.updatedAt||DEVICE.updatedAt||INTL.updatedAt)) return; try{_rptBuildCache();}catch(e){return;} }
+  // 모달이 #page-report 안에 있어 타 페이지(display:none)에선 안 보임 → body로 재부착
+  const _dbgEl=document.getElementById('rpt-dbg');
+  if(_dbgEl&&_dbgEl.parentElement!==document.body) document.body.appendChild(_dbgEl);
   const parts=String(dk).split('|'), dept=parts[0], item=parts[1];
   const seg=_drillSeg(dept,item), P=_rptPeriods();
   const sm=(o,f,t)=>{let s=0;for(let m=f;m<=t;m++)s+=Number((o||{})[m]||0);return s;};
@@ -1398,12 +1419,12 @@ function _renderScoreboard(f,t,d){
     '<div class="sb-head"><span class="sb-title"><i class="bi bi-lightning-charge-fill me-1"></i>WONTECH 전사 스코어보드 · '+pl+'</span>'
     +'<span class="sb-note">실적 = 회계 확정 + 미반영 · 기준일 '+esc(CONS.updatedAt||DEVICE.updatedAt||'')+'</span></div>'
     +'<div class="sb-grid">'
-    +'<div class="sb-cell"><div class="sb-l"><i class="bi bi-currency-won"></i>전사 매출</div><div class="sb-v">'+fmtW(d.totalI)+'</div>'
+    +'<div class="sb-cell clk" onclick="qGo(\'all\',\'all\')" title="전사 상세 조회로 이동"><div class="sb-l"><i class="bi bi-currency-won"></i>전사 매출 <span style="color:#475569">›</span></div><div class="sb-v">'+fmtW(d.totalI)+'</div>'
       +'<div class="sb-s">회계 '+fmtW(d.totalC)+' + 미반영 '+fmtW(d.allPend)+' · 전년比 '+hb(pct(d.totalC,d.totalPrev))+'</div></div>'
-    +'<div class="sb-cell"><div class="sb-l"><i class="bi bi-bullseye"></i>연간 목표 진도</div><div class="sb-v">'+(yAch===null?'-':yAch.toFixed(1)+'%')+'</div>'+gauge+'</div>'
-    +'<div class="sb-cell sm"><div class="sb-l"><i class="bi bi-hospital"></i>국내</div><div class="sb-v">'+fmtW(d.domI)+'</div>'
+    +'<div class="sb-cell clk" onclick="showPage(\'goals\',document.getElementById(\'nav-goals\'))" title="목표 달성률 상세로 이동"><div class="sb-l"><i class="bi bi-bullseye"></i>연간 목표 진도 <span style="color:#475569">›</span></div><div class="sb-v">'+(yAch===null?'-':yAch.toFixed(1)+'%')+'</div>'+gauge+'</div>'
+    +'<div class="sb-cell sm clk" onclick="qGo(\'dom\',\'all\')" title="국내 상세 조회로 이동"><div class="sb-l"><i class="bi bi-hospital"></i>국내 <span style="color:#475569">›</span></div><div class="sb-v">'+fmtW(d.domI)+'</div>'
       +'<div class="sb-s">'+hb(pct(d.domC,d.domPrev))+' · 비중 '+domShare+'%</div></div>'
-    +'<div class="sb-cell sm"><div class="sb-l"><i class="bi bi-globe-americas"></i>해외</div><div class="sb-v">'+fmtW(d.intlI)+'</div>'
+    +'<div class="sb-cell sm clk" onclick="qGo(\'intl\',\'all\')" title="해외 상세 조회로 이동"><div class="sb-l"><i class="bi bi-globe-americas"></i>해외 <span style="color:#475569">›</span></div><div class="sb-v">'+fmtW(d.intlI)+'</div>'
       +'<div class="sb-s">'+hb(pct(d.intl,d.intlPrev))+' · 비중 '+intlShare+'%</div></div>'
     +'</div>';
 }
@@ -1420,9 +1441,9 @@ function renderThisMonth(){
   const rate=tgt>0?Math.round(manage/tgt*100):0;
   document.getElementById('tm-target').textContent=tgt>0?(tmo+'월 국내목표 '+fmtW(tgt)):'';
   document.getElementById('tm-cards').innerHTML=[
-    '<div class="tm-box"><div class="tm-l"><i class="bi bi-check-circle me-1" style="color:#0f172a"></i>회계 확정 (전사)</div><div class="tm-v" style="color:#0f172a">'+fmtW(conf)+'</div><div class="tm-s">국내 '+fmtW(domConf)+' · 해외 '+fmtW(intlConf)+'</div></div>',
-    '<div class="tm-box"><div class="tm-l"><i class="bi bi-hourglass-split me-1" style="color:#0891b2"></i>예정분 (미반영)</div><div class="tm-v" style="color:#0891b2">+'+fmtW(pendMo)+'</div><div class="tm-s">국내 '+pend.count+'건 · 해외 '+pend.intlCount+'건</div></div>',
-    '<div class="tm-box accent"><div class="tm-l"><i class="bi bi-bullseye me-1" style="color:#0f766e"></i>관리 합계 (확정+예정)</div><div class="tm-v" style="color:#0f766e">'+fmtW(manage)+'</div>'+(tgt>0?('<div class="tm-s">국내목표 대비 '+rate+'%</div><div class="tm-prog"><div style="width:'+Math.min(100,rate)+'%"></div></div>'):'<div class="tm-s">확정+예정</div>')+'</div>',
+    '<div class="tm-box clk" onclick="openOvDetail('+tmo+',\'total\')" title="'+tmo+'월 내역 조회"><div class="tm-l"><i class="bi bi-check-circle me-1" style="color:#0f172a"></i>회계 확정 (전사) <span style="color:#cbd5e1">›</span></div><div class="tm-v" style="color:#0f172a">'+fmtW(conf)+'</div><div class="tm-s">국내 '+fmtW(domConf)+' · 해외 '+fmtW(intlConf)+'</div></div>',
+    '<div class="tm-box clk" onclick="openOvDetail('+tmo+',\'total\')" title="'+tmo+'월 내역 조회(미반영 포함)"><div class="tm-l"><i class="bi bi-hourglass-split me-1" style="color:#0891b2"></i>예정분 (미반영) <span style="color:#cbd5e1">›</span></div><div class="tm-v" style="color:#0891b2">+'+fmtW(pendMo)+'</div><div class="tm-s">국내 '+pend.count+'건 · 해외 '+pend.intlCount+'건</div></div>',
+    '<div class="tm-box accent clk" onclick="showPage(\'goals\',document.getElementById(\'nav-goals\'))" title="목표 달성률 상세"><div class="tm-l"><i class="bi bi-bullseye me-1" style="color:#0f766e"></i>관리 합계 (확정+예정) <span style="color:#cbd5e1">›</span></div><div class="tm-v" style="color:#0f766e">'+fmtW(manage)+'</div>'+(tgt>0?('<div class="tm-s">국내목표 대비 '+rate+'%</div><div class="tm-prog"><div style="width:'+Math.min(100,rate)+'%"></div></div>'):'<div class="tm-s">확정+예정</div>')+'</div>',
   ].join('');
 }
 function _monthTarget(mo){
@@ -1456,6 +1477,10 @@ function renderQuery(){
   let _accF=0,_accP=0,_pendF=0;
   if(qState.ch!=='intl'){ if(_incC){_accF+=sumMo(CONS.monthly2026,_f,_t);_accP+=sumMo(CONS.monthly2025,_f,_t);_pendF+=sumMo(_pg.consMonthly,_f,_t);} if(_incD){_accF+=sumMo(DEVICE.monthly2026,_f,_t);_accP+=sumMo(DEVICE.monthly2025,_f,_t);_pendF+=sumMo(_pg.devMonthly,_f,_t);} }
   if(qState.ch!=='dom'){ _accF+=_iSplit(INTL.monthly);_accP+=_iSplit((INTL.data2025||{}).monthly);_pendF+=_iSplit(_pg.intlMonthly); }
+  // 기타(의료기기·서지컬·B2C·고객만족): 전사·전체 조회일 때만 합산 — 종합(totalI)과 숫자 정합
+  const _etcF=(qState.ch==='all'&&qState.cat==='all')?sumMo(CONS.etcMonthly2026,_f,_t):0;
+  const _etcP=(qState.ch==='all'&&qState.cat==='all')?sumMo(CONS.etcMonthly2025,_f,_t):0;
+  _accF+=_etcF; _accP+=_etcP;
   const tot=_accF+_pendF, totPrev=_accP;
   const chName=qState.ch==='dom'?'국내':qState.ch==='intl'?'해외':'전사';
   const totDelta=_accF-_accP, totY=pct(_accF,_accP);
@@ -1465,7 +1490,7 @@ function renderQuery(){
   const tabLbl=qState.tab==='prod'?'제품별':qState.tab==='geo'?'지역별':'담당자별';
   document.getElementById('q-head').innerHTML='<div class="eh-l">'+chName+' '+tabLbl+' <span style="font-weight:500;color:#94a3b8">· '+qState.f+'~'+qState.t+'월 누적</span></div>'+
     '<div class="eh-v">'+fmtW(tot)+' <span style="font-size:1rem">'+(totY===null?'':badge(totY))+'</span> <span style="font-size:1rem;color:'+(totDelta>=0?'#86efac':'#fca5a5')+'">'+fmtD(totDelta)+'</span></div>'+
-    '<div class="eh-l" style="color:#94a3b8;font-weight:500">전년 동기 '+fmtW(totPrev)+' · 회계 '+fmtW(_accF)+' + 미반영 '+fmtW(_pendF)+' <span style="color:#cbd5e1">· 아래 분해는 회계 확정 기준</span></div>'+
+    '<div class="eh-l" style="color:#94a3b8;font-weight:500">전년 동기 '+fmtW(totPrev)+' · 회계 '+fmtW(_accF)+' + 미반영 '+fmtW(_pendF)+(_etcF>0?' <span style="color:#cbd5e1">(기타 '+fmtW(_etcF)+' 포함)</span>':'')+' <span style="color:#cbd5e1">· 아래 분해는 회계 확정 기준</span></div>'+
     execNarr(G.map(x=>({name:x.name,delta:x.d,val:x.val,prev:x.prev})));
   document.getElementById('q-kpi').innerHTML=[
     {l:'전년 동기 대비 순증감',v:fmtD(totDelta),c:_yoyCol(totY)},
@@ -1664,9 +1689,9 @@ const _num=v=>Math.round(Number(v)||0).toLocaleString();
 function renderGoals(){
   const f=1,t=_execT(), pend=_pendingAgg(2026), regMo=_intlRegionMonthly(INTL), ipend=(_pendForReport().intl)||{};
   const items=[];
-  items.push({label:'국내 제품',g:'국내',act:sumMo(DEVICE.monthly2026,f,t),pnd:sumMo(pend.devMonthly,f,t),tgt:_tgt('국내영업','제품',f,t)});
-  items.push({label:'국내 소모품',g:'국내',act:sumMo(CONS.monthly2026,f,t),pnd:sumMo(pend.consMonthly,f,t),tgt:_tgt('국내영업','소모품',f,t)});
-  EXEC_REGS.forEach(rg=>items.push({label:'해외 '+rg,g:'해외',act:sumMo(regMo[rg],f,t),pnd:sumMo(ipend[rg],f,t),tgt:_tgt('해외영업',rg,f,t)}));
+  items.push({label:'국내 제품',g:'국내',dk:'국내영업|제품',act:sumMo(DEVICE.monthly2026,f,t),pnd:sumMo(pend.devMonthly,f,t),tgt:_tgt('국내영업','제품',f,t)});
+  items.push({label:'국내 소모품',g:'국내',dk:'국내영업|소모품',act:sumMo(CONS.monthly2026,f,t),pnd:sumMo(pend.consMonthly,f,t),tgt:_tgt('국내영업','소모품',f,t)});
+  EXEC_REGS.forEach(rg=>items.push({label:'해외 '+rg,g:'해외',dk:'해외영업|'+rg,act:sumMo(regMo[rg],f,t),pnd:sumMo(ipend[rg],f,t),tgt:_tgt('해외영업',rg,f,t)}));
   const dom=items.filter(x=>x.g==='국내'), intl=items.filter(x=>x.g==='해외');
   const S=(arr,k)=>arr.reduce((s,x)=>s+x[k],0);
   const totAct=S(items,'act'), totPnd=S(items,'pnd'), totTgt=S(items,'tgt');
@@ -1691,12 +1716,12 @@ function renderGoals(){
   ].map(c=>'<div class="col-6 col-md-3"><div class="kpi-card acc-card" style="padding:12px 14px;border-left-color:'+c.c+'"><div class="kpi-label">'+c.l+'</div><div class="kpi-value" style="font-size:1.15rem;color:'+c.c+'">'+c.v+'</div></div></div>').join('')+'</div>';
   h+='<div class="g-twin">'+_goalMini('국내 합계',S(dom,'act')+S(dom,'pnd'),S(dom,'tgt'))+_goalMini('해외 합계',S(intl,'act')+S(intl,'pnd'),S(intl,'tgt'))+'</div>';
   const gc=(x,kind)=>{const col=kind==='s'?'#dc2626':'#16a34a';
-    return '<div class="dl-row"><span class="dl-dot" style="background:'+col+'"></span><span class="dl-name">'+x.label+'</span><span class="dl-d" style="color:'+col+'">'+x.r.toFixed(0)+'%</span><span class="dl-sub" style="color:'+col+'">'+(kind==='s'?'갭 '+fmtD(x.gap):'+'+fmtW(x.gap))+'</span></div>'; };
+    return '<div class="dl-row clk"'+(x.dk?(' onclick="openDrill(\''+x.dk+'\')" title="세그먼트 상세 드릴다운"'):'')+'><span class="dl-dot" style="background:'+col+'"></span><span class="dl-name">'+x.label+' <span style="color:#cbd5e1">›</span></span><span class="dl-d" style="color:'+col+'">'+x.r.toFixed(0)+'%</span><span class="dl-sub" style="color:'+col+'">'+(kind==='s'?'갭 '+fmtD(x.gap):'+'+fmtW(x.gap))+'</span></div>'; };
   const dcol=(title,arr,kind)=>'<div><div class="dl-h" style="color:'+(kind==='s'?'#b91c1c':'#15803d')+'">'+title+'</div>'+(arr.length?arr.map(x=>gc(x,kind)).join(''):'<div class="muted" style="font-size:12px;padding:10px 4px">해당 없음</div>')+'</div>';
   h+='<div class="card p-3 mb-3" style="margin-top:14px"><div style="font-size:13.5px;font-weight:800;margin-bottom:10px"><i class="bi bi-flag-fill me-1" style="color:#4f46e5"></i>집중 드라이브 ↔ 초과 견인</div>'+
     '<div class="dual-grid">'+dcol('🔴 미달 (메워야 할 갭)',short.slice(0,4),'s')+dcol('🟢 초과 견인',over.slice(0,4),'o')+'</div></div>';
   const bar=x=>{ const a=x.act+x.pnd, r=x.tgt>0?a/x.tgt*100:null, rc=x.tgt>0?Math.min(x.act/x.tgt*100,100):0, rg=x.tgt>0?Math.min(Math.max(a/x.tgt*100-x.act/x.tgt*100,0),100-rc):0, gap=x.tgt>0?a-x.tgt:null;
-    return '<div class="g-row"><div class="g-rl">'+x.label+'</div>'+
+    return '<div class="g-row clk"'+(x.dk?(' onclick="openDrill(\''+x.dk+'\')" title="세그먼트 상세 드릴다운"'):'')+'><div class="g-rl">'+x.label+'</div>'+
       '<div class="g-rb"><div class="g-rf" style="width:'+rc+'%;background:'+_achCol(r)+'"></div><div class="g-rg" style="width:'+rg+'%"></div></div>'+
       '<div class="g-rv">'+fmtW(a)+' <span class="muted">/ '+fmtW(x.tgt)+'</span></div>'+
       '<div class="g-rp" style="color:'+_achCol(r)+'">'+(r==null?'<span class="muted" style="font-size:10px">목표미설정</span>':r.toFixed(0)+'%'+(gap!=null?' <span style="font-size:10px;font-weight:600;color:'+(gap>=0?'#16a34a':'#dc2626')+'">'+fmtD(gap)+'</span>':''))+'</div></div>'; };
@@ -1756,8 +1781,9 @@ function renderUnits(){
   const models=Object.entries(mmap).map(([n,o])=>({n,q26:Math.round(o.q26),q25:Math.round(o.q25),d:Math.round(o.q26-o.q25)})).filter(x=>x.q26>0||x.q25>0);
   const maxAbs=Math.max(1,...models.map(x=>Math.abs(x.d)));
   const utop=models.filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,6), ubot=models.filter(x=>x.d<0).sort((a,b)=>a.d-b.d).slice(0,6);
-  const mrow=x=>{ const y=pct(x.q26,x.q25);
-    return '<div class="dl-row"><span class="dl-dot" style="background:'+_yoyCol(y)+'"></span><span class="dl-name">'+x.n+'</span>'+divBar(x.d,maxAbs)+'<span class="dl-d" style="color:'+_yoyCol(y)+'">'+(x.d>=0?'+':'')+_num(x.d)+'대</span><span class="dl-sub">'+_num(x.q26)+'대</span></div>'; };
+  _unProdN=[];
+  const mrow=x=>{ const y=pct(x.q26,x.q25); const gi=_unProdN.push(x.n)-1;
+    return '<div class="dl-row clk" onclick="openProdInfo(_unProdN['+gi+'])" title="제품 상세"><span class="dl-dot" style="background:'+_yoyCol(y)+'"></span><span class="dl-name">'+esc(x.n)+' <span style="color:#cbd5e1">›</span></span>'+divBar(x.d,maxAbs)+'<span class="dl-d" style="color:'+_yoyCol(y)+'">'+(x.d>=0?'+':'')+_num(x.d)+'대</span><span class="dl-sub">'+_num(x.q26)+'대</span></div>'; };
   document.getElementById('units-prods').innerHTML=dualList(utop,ubot,mrow,['🟢 물량 성장 Top','🔴 물량 감소 Top']);
   const ub=models.slice().sort((a,b)=>b.d-a.d)[0], uw=models.slice().sort((a,b)=>a.d-b.d)[0];
   const posU=models.filter(x=>x.d>0).reduce((s,x)=>s+x.d,0)||1;
@@ -1819,7 +1845,8 @@ function renderQuarters(){
   let hm='<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:#94a3b8;font-size:11px;text-align:right"><th style="text-align:left;padding:4px 6px">채널</th><th>1Q</th><th>2Q(전망)</th><th style="text-align:center;padding:4px 8px">QoQ</th><th style="text-align:center">YoY</th></tr>';
   chs.forEach(c=>{ const c1=sumMo(c.m26,1,3), c2=sumMo(c.m26,4,6)+sumMo(c.pnd,4,6), c1p=sumMo(c.m25,1,3), c2p=sumMo(c.m25,4,6);
     const qq=pct(c2,c1), yy=pct(c2,c2p);
-    hm+='<tr style="border-top:1px solid #f1f5f9"><td style="padding:7px 6px;font-weight:700"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:'+c.col+';margin-right:6px"></span>'+c.n+'</td>'+
+    const _qsClk=c.n==='국내 제품'?"openDrill('국내영업|제품')":c.n==='국내 소모품'?"openDrill('국내영업|소모품')":"qGo('intl','all')";
+    hm+='<tr class="qs-clk" style="border-top:1px solid #f1f5f9;cursor:pointer" onclick="'+_qsClk+'" title="채널 상세"><td style="padding:7px 6px;font-weight:700"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:'+c.col+';margin-right:6px"></span>'+c.n+' <span style="color:#cbd5e1">›</span></td>'+
       '<td style="text-align:right">'+fmtW(c1)+'</td><td style="text-align:right">'+fmtW(c2)+'</td>'+
       '<td style="text-align:center;padding:4px 8px">'+hc(qq)+'</td><td style="text-align:center">'+hc(yy)+'</td></tr>';
   });
@@ -1842,7 +1869,7 @@ function renderLeaderboard(){
   });
   const rowsD=Object.values(dm).map(o=>{ const v=Object.keys(o.m26).length?sumMo(o.m26,f,t):(o.y26||0), pv=Object.keys(o.m25).length?sumMo(o.m25,f,t):(o.y25||0);
     const tp=Object.entries(o.prods).sort((a,b)=>b[1]-a[1])[0];
-    return {n:o.n,team:'국내',v,pv,d:v-pv,yoy:pct(v,pv),cust:o.cust,cust25:o.cust25,qty:o.qty,top:tp?tp[0]:''};
+    return {n:o.n,team:'국내',v,pv,d:v-pv,yoy:pct(v,pv),cust:o.cust,cust25:o.cust25,qty:o.qty,top:tp?tp[0]:'',m26:o.m26,m25:o.m25,prods:o.prods};
   });
   const im={};
   const iadd=(reps,yr)=>{ Object.entries(reps||{}).forEach(([n,r])=>{ const b=_repBase(n); if(!b) return;
@@ -1855,8 +1882,9 @@ function renderLeaderboard(){
   iadd(INTL.reps,26); iadd((INTL.data2025||{}).reps,25);
   const rowsI=Object.values(im).map(o=>{ const v=Object.keys(o.m26).length?sumMo(o.m26,f,t):(o.tot26||0), pv=Object.keys(o.m25).length?sumMo(o.m25,f,t):(o.tot25||0);
     const tp=Object.entries(o.prods).sort((a,b)=>b[1]-a[1])[0];
-    return {n:o.n,team:'해외',v,pv,d:v-pv,yoy:pct(v,pv),cust:o.cust,cust25:o.cust25,qty:null,top:tp?tp[0]:'',ctry:o.ctry};
+    return {n:o.n,team:'해외',v,pv,d:v-pv,yoy:pct(v,pv),cust:o.cust,cust25:o.cust25,qty:null,top:tp?tp[0]:'',ctry:o.ctry,m26:o.m26,m25:o.m25,prods:o.prods};
   });
+  _lbRows=[];   // 담당자 드릴 캐시(인덱스 onclick — 이름 인젝션 방지)
   const all=rowsD.concat(rowsI).filter(x=>x.v>0);
   const grew=all.filter(x=>x.yoy!=null&&x.yoy>=5).length, decl=all.filter(x=>x.yoy!=null&&x.yoy<=-5).length;
   const _sortedRep=all.slice().sort((a,b)=>b.d-a.d), mvp=_sortedRep[0], watch=_sortedRep.length>1?_sortedRep[_sortedRep.length-1]:null;
@@ -1864,15 +1892,16 @@ function renderLeaderboard(){
     '<div class="eh-v">'+all.length+'명 <span style="font-size:1rem;color:#86efac">↑성장 '+grew+'</span> <span style="font-size:1rem;color:#fca5a5">↓역성장 '+decl+'</span></div>'+
     execNarr(all.map(x=>({name:x.n,delta:x.d,val:x.v,prev:x.pv})));
   const card=(x,kind)=>{ if(!x) return '<div class="card p-3"><div class="muted" style="padding:6px">해당 없음</div></div>'; const col=kind==='mvp'?'#16a34a':'#dc2626', cd=x.cust-x.cust25;
-    return '<div class="card acc-card p-3" style="border-left-color:'+col+'"><div style="font-size:11px;font-weight:800;color:'+col+'">'+(kind==='mvp'?'🏆 성장 MVP':'⚠️ 점검 대상')+'</div>'+
-      '<div style="font-size:1.3rem;font-weight:800;margin:3px 0">'+x.n+' <span style="font-size:11px;color:#94a3b8">'+x.team+'</span></div>'+
+    const gi=_lbRows.push(x)-1;
+    return '<div class="card acc-card p-3 clk" style="border-left-color:'+col+'" onclick="openRepInfo('+gi+')" title="담당자 상세"><div style="font-size:11px;font-weight:800;color:'+col+'">'+(kind==='mvp'?'🏆 성장 MVP':'⚠️ 점검 대상')+'</div>'+
+      '<div style="font-size:1.3rem;font-weight:800;margin:3px 0">'+esc(x.n)+' <span style="font-size:11px;color:#94a3b8">'+x.team+' ›</span></div>'+
       '<div style="font-size:12.5px">매출 '+fmtW(x.v)+' · <b style="color:'+col+'">'+fmtD(x.d)+'</b> '+(x.yoy===null?'(신규)':badge(x.yoy))+'</div>'+
       '<div style="font-size:11.5px;color:#64748b;margin-top:3px">거래처 '+x.cust+'개 ('+(cd>=0?'+':'')+cd+') · 주력 '+(x.top||'-')+'</div></div>'; };
   document.getElementById('lb-mvp').innerHTML='<div class="dual-grid">'+card(mvp,'mvp')+card(watch,'watch')+'</div>';
   const mk=(rows,hasQty)=>{ rows=rows.filter(x=>x.v>0).sort((a,b)=>b.d-a.d); const maxAbs=Math.max(1,...rows.map(x=>Math.abs(x.d)));
     const head='<tr><th></th><th>담당자</th><th class="r">매출</th><th class="r">전년比(Δ)</th><th class="r">거래처</th>'+(hasQty?'<th class="r">대수</th>':'<th class="r">담당국가</th>')+'<th>주력제품</th></tr>';
-    const body=rows.map(x=>{ const cd=x.cust-x.cust25;
-      return '<tr><td style="width:14px"><span class="dl-dot" style="display:inline-block;background:'+_yoyCol(x.yoy)+'"></span></td><td style="font-weight:700">'+x.n+'</td>'+
+    const body=rows.map(x=>{ const cd=x.cust-x.cust25; const gi=_lbRows.push(x)-1;
+      return '<tr class="lb-clk" onclick="openRepInfo('+gi+')" title="담당자 상세"><td style="width:14px"><span class="dl-dot" style="display:inline-block;background:'+_yoyCol(x.yoy)+'"></span></td><td style="font-weight:700">'+esc(x.n)+' <span style="color:#cbd5e1">›</span></td>'+
       '<td class="r" style="font-weight:700">'+fmtW(x.v)+'</td>'+
       '<td class="r"><span style="display:inline-flex;align-items:center;gap:6px">'+divBar(x.d,maxAbs)+'<span style="color:'+_yoyCol(x.yoy)+';font-weight:700;min-width:48px;text-align:right">'+(x.yoy===null?'신규':arrow(x.yoy))+'</span></span></td>'+
       '<td class="r">'+x.cust+'개'+(cd?' <span style="font-size:10px;color:'+(cd>0?'#16a34a':'#dc2626')+'">'+(cd>0?'+':'')+cd+'</span>':'')+'</td>'+
@@ -1912,13 +1941,113 @@ function renderCustomers(){
     card('상위10 집중도',conc.toFixed(0)+'%','롱테일 '+(100-conc).toFixed(0)+'% · 이탈 시 충격','#f59e0b')+
     card('해외 거래처','<b>'+intlActive+'</b>개','국가별 디스트리뷰터/거래처','#0d9488');
   const maxRev=names.length?names[0].v:1, maxLoss=Math.max(1,...risk.slice(0,7).map(x=>Math.abs(x.d)));
-  const lrow=x=>'<div class="dl-row"><span class="dl-dot" style="background:#2563eb"></span><span class="dl-name">'+x.nm+'</span><div style="width:78px;height:7px;background:#f1f5f9;border-radius:4px;overflow:hidden;flex-shrink:0"><div style="width:'+Math.min(x.v/maxRev*100,100).toFixed(0)+'%;height:100%;background:#2563eb;border-radius:3px"></div></div><span class="dl-d" style="color:#1d4ed8">'+fmtW(x.v)+'</span></div>';
-  const rrow=x=>'<div class="dl-row"><span class="dl-dot" style="background:#dc2626"></span><span class="dl-name">'+x.nm+'</span>'+divBar(x.d,maxLoss)+'<span class="dl-d" style="color:#dc2626">'+fmtD(x.d)+'</span><span class="dl-sub">'+(x.y26<=0?'올해 미구매':fmtW(x.y26))+'</span></div>';
+  _custRows=[];   // 거래처 드릴 캐시(인덱스 onclick)
+  const lrow=x=>{ const gi=_custRows.push(x.nm)-1;
+    return '<div class="dl-row clk" onclick="openCustInfo('+gi+')" title="거래처 상세"><span class="dl-dot" style="background:#2563eb"></span><span class="dl-name">'+esc(x.nm)+' <span style="color:#cbd5e1">›</span></span><div style="width:78px;height:7px;background:#f1f5f9;border-radius:4px;overflow:hidden;flex-shrink:0"><div style="width:'+Math.min(x.v/maxRev*100,100).toFixed(0)+'%;height:100%;background:#2563eb;border-radius:3px"></div></div><span class="dl-d" style="color:#1d4ed8">'+fmtW(x.v)+'</span></div>'; };
+  const rrow=x=>{ const gi=_custRows.push(x.nm)-1;
+    return '<div class="dl-row clk" onclick="openCustInfo('+gi+')" title="거래처 상세"><span class="dl-dot" style="background:#dc2626"></span><span class="dl-name">'+esc(x.nm)+' <span style="color:#cbd5e1">›</span></span>'+divBar(x.d,maxLoss)+'<span class="dl-d" style="color:#dc2626">'+fmtD(x.d)+'</span><span class="dl-sub">'+(x.y26<=0?'올해 미구매':fmtW(x.y26))+'</span></div>'; };
   const dcol=(title,arr,rfn,c)=>'<div><div class="dl-h" style="color:'+c+'">'+title+'</div>'+(arr.length?arr.map(rfn).join(''):'<div class="muted" style="font-size:12px;padding:10px 4px">해당 없음</div>')+'</div>';
   document.getElementById('cust-churn').innerHTML='<div class="dual-grid">'+dcol('🔵 주력 거래처 Top (올해 매출)',names.slice(0,7),lrow,'#1d4ed8')+dcol('🟠 재구매 필요 (둔화·미구매)',risk.slice(0,7),rrow,'#b45309')+'</div>'+
     '<div class="muted" style="font-size:10.5px;margin-top:8px">※ ‘재구매 필요’=전년 거래처 중 올해 누적을 연환산(×'+ann.toFixed(1)+')해도 전년 미만이거나 올해 미구매. 올해 1~'+t+'월 누적 기준.</div>';
   const riskAmt=risk.slice(0,2).reduce((s,x)=>s+Math.abs(x.d),0);
   document.getElementById('cust-insight').innerHTML='<i class="bi bi-lightbulb-fill me-1" style="color:#f59e0b"></i>활성 <b>'+active+'개사</b> · 신규 <b>+'+nw+'개사</b>('+fmtW(nwAmt)+') · 매출의 <b>'+conc.toFixed(0)+'%</b>가 상위10 집중 → 이탈 시 충격'+(risk[0]?(' · <b style="color:#dc2626">'+risk[0].nm+(risk[1]?'·'+risk[1].nm:'')+'</b> 등 '+fmtW(riskAmt)+' 둔화 → 키어카운트 재방문'):'');
+}
+
+// ══ "누르면 조회" 공통 인프라: 페이지 점프 + 범용 엔티티 드릴(제품·담당자·거래처) ══
+let _infoChart=null, _lbRows=[], _custRows=[], _ovProdN=[], _unProdN=[];
+// 상세조회 페이지로 채널/카테고리 프리셋 점프
+function qGo(ch,cat){ qState.ch=ch||'all'; qState.cat=cat||'all'; try{syncQ();}catch(e){} showPage('query',document.getElementById('nav-query')); }
+function closeInfo(){ const b=document.getElementById('info-dbg'); if(b)b.classList.remove('on'); if(_infoChart){_infoChart.destroy();_infoChart=null;} }
+function _infoShow(d){
+  let el=document.getElementById('info-dbg');
+  if(!el){ el=document.createElement('div'); el.id='info-dbg'; el.className='rpt-dbg';
+    el.innerHTML='<div class="rpt-drill" id="info-drill"></div>';
+    el.addEventListener('click',function(e){ if(e.target===el) closeInfo(); });
+    document.body.appendChild(el); }
+  const bar=(n,v,mx,col)=>'<div class="dr-bar"><span class="n" title="'+esc(n)+'">'+esc(n)+'</span><span class="t"><span class="f" style="width:'+(mx>0?Math.max(v/mx*100,1):0).toFixed(1)+'%;background:'+col+'"></span></span><span class="vv">'+_fM(v)+'</span></div>';
+  let html='<div class="dr-hd"><div><h3>'+esc(d.title)+'</h3><div style="font-size:11.5px;color:#94a3b8;margin-top:2px">'+(d.sub||'')+'</div></div><button class="dr-x" onclick="closeInfo()">✕</button></div>';
+  if(d.kpi&&d.kpi.length) html+='<div class="dr-kpi">'+d.kpi.map(k=>'<div class="dr-k"><div class="l">'+k.l+'</div><div class="v"'+(k.c?' style="color:'+k.c+'"':'')+'>'+k.v+'</div></div>').join('')+'</div>';
+  const hasMo=d.mo26&&Object.keys(d.mo26).some(k=>d.mo26[k]);
+  if(hasMo) html+='<div class="dr-sec-t">월별 추이 <span style="font-weight:500;color:#94a3b8">· 2026 vs 전년 · 단위 백만원</span></div><div style="position:relative;height:190px"><canvas id="info-chart"></canvas></div>';
+  if(d.cols&&d.cols.length) html+='<div class="dr-col">'+d.cols.map(c=>{ const mx=c.rows.length?c.rows[0][1]:1;
+    return '<div><div class="dr-sec-t">'+c.t+'</div>'+(c.rows.length?c.rows.map(r=>bar(r[0],r[1],mx,c.col||'#0d9488')).join(''):'<div style="font-size:12px;color:#94a3b8">데이터 없음</div>')+'</div>'; }).join('')+'</div>';
+  if(d.txns&&d.txns.length) html+='<div class="dr-sec-t" style="margin-top:16px">최근 거래 <span style="font-weight:500;color:#94a3b8">· 최근 '+d.txns.length+'건</span></div>'+
+    d.txns.map(t=>'<div class="dr-pend"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(t[0])+'</span><span style="color:#94a3b8">'+esc(t[1]||'')+'</span><span style="font-weight:700;width:70px;text-align:right">'+fmtW(t[2])+'</span></div>').join('');
+  document.getElementById('info-drill').innerHTML=html;
+  el.classList.add('on');
+  if(_infoChart){_infoChart.destroy();_infoChart=null;}
+  if(hasMo){ const lb=[],a=[],p=[]; for(let m=1;m<=12;m++){ lb.push(m+'월'); a.push(Math.round((Number(d.mo26[m])||0)/1e6)); p.push(Math.round((Number((d.mo25||{})[m])||0)/1e6)); }
+    _infoChart=new Chart(document.getElementById('info-chart'),{data:{labels:lb,datasets:[
+      {type:'bar',label:'2026',data:a,backgroundColor:d.color||'#0d9488',borderRadius:3,maxBarThickness:22},
+      {type:'line',label:'전년',data:p,borderColor:'#94a3b8',borderWidth:2,borderDash:[5,4],pointRadius:0,tension:.3}
+    ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y+'백만'}}},
+      scales:{x:{grid:{display:false}},y:{grid:{color:'#f3f4f6'},ticks:{font:{size:10}}}}}});
+  }
+}
+// 제품 드릴: 국내(장비 월별·병원별) + 해외(월별·국가별) 합산
+function openProdInfo(p){
+  if(!p) return;
+  const dMo=(DEVICE.prodMo2026||{})[p]||{}, dMo25=(DEVICE.prodMo2025||{})[p]||{};
+  const iMo=(INTL.prodMo||{})[p]||{}, iMo25=(((INTL.data2025||{}).prodMo)||{})[p]||{};
+  const mo26={},mo25={};
+  for(let m=1;m<=12;m++){ const v=(+dMo[m]||0)+(+iMo[m]||0); if(v)mo26[m]=v; const pv=(+dMo25[m]||0)+(+iMo25[m]||0); if(pv)mo25[m]=pv; }
+  const i25=INTL.data2025||{};
+  const tot=(Number((DEVICE.products2026||{})[p])||0)+(Number((CONS.products2026||{})[p])||0)+(Number((INTL.prods_dev||{})[p])||0)+(Number((INTL.prods_cons||{})[p])||0);
+  const tot25=(Number((DEVICE.products2025||{})[p])||0)+(Number((CONS.products2025||{})[p])||0)+(Number((i25.prods_dev||{})[p])||0)+(Number((i25.prods_cons||{})[p])||0);
+  // YoY는 동기간 비교(올해 마지막 데이터월까지) — 누적 vs 전년연간 착시 방지. 월별 없으면 연간표기·YoY 생략
+  const _lm=Object.keys(mo26).map(Number).filter(x=>x>=1&&x<=12);
+  const lastM=_lm.length?Math.max.apply(null,_lm):0;
+  const cum26=Object.values(mo26).reduce((s,v)=>s+v,0);
+  let cum25=0; for(let m=1;m<=lastM;m++) cum25+=(+mo25[m]||0);
+  const hasMo=lastM>0, y=hasMo?pct(cum26,cum25):null;
+  let qty=Number((DEVICE.prodQty2026||{})[p])||0; const q=(INTL.prodMoQty||{})[p]; if(q) qty+=Object.values(q).reduce((s,v)=>s+(+v||0),0);
+  const ctys=[]; Object.entries(INTL.countries||{}).forEach(([cc,c])=>{ const v=Number((c.prods||{})[p])||0; if(v>0) ctys.push([cc,v]); }); ctys.sort((a,b)=>b[1]-a[1]);
+  const hosp=[]; const scanH=hs=>{ for(const nm in(hs||{})){ const v=Number(((hs[nm]||{}).prods2026||{})[p])||0; if(v>0) hosp.push([nm,v]); } };
+  scanH(DEVICE.hospitals); scanH(CONS.hospitals); hosp.sort((a,b)=>b[1]-a[1]);
+  _infoShow({title:p, sub:'제품 상세 · 국내+해외 합산'+(hasMo?' · YoY는 1~'+lastM+'월 동기간':''), color:'#7c3aed',
+    kpi:[{l:'2026 누적',v:fmtW(tot)},{l:hasMo?('전년 동기(1~'+lastM+'월)'):'전년 (연간)',v:fmtW(hasMo?cum25:tot25),c:'#64748b'},{l:'YoY (동기간)',v:(y===null?'-':arrow(y)),c:_yoyCol(y)},{l:'출고 대수',v:qty?_num(qty)+'대':'-',c:'#7c3aed'}],
+    mo26,mo25, cols:[{t:'국가별 (해외)',rows:ctys.slice(0,8),col:'#0d9488'},{t:'거래처별 (국내)',rows:hosp.slice(0,8),col:'#4f46e5'}]});
+}
+// 담당자 드릴 (리더보드 캐시 인덱스)
+function openRepInfo(gi){
+  const x=_lbRows[gi]; if(!x) return;
+  const cd=(x.cust||0)-(x.cust25||0);
+  const pr=Object.entries(x.prods||{}).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  _infoShow({title:x.n, sub:'담당자 상세 · '+x.team+' · 1~'+_execT()+'월 누적', color:x.team==='국내'?'#7c3aed':'#0d9488',
+    kpi:[{l:'2026 매출',v:fmtW(x.v)},{l:'전년',v:fmtW(x.pv),c:'#64748b'},{l:'YoY',v:(x.yoy===null?'신규':arrow(x.yoy)),c:_yoyCol(x.yoy)},
+         {l:'거래처',v:(x.cust||0)+'개'+(cd?' ('+(cd>0?'+':'')+cd+')':''),c:'#0f172a'}],
+    mo26:x.m26||{}, mo25:x.m25||{}, cols:[{t:'취급 제품 Top',rows:pr,col:'#0891b2'}]});
+}
+// 거래처 드릴 (국내 병원 → 해외 클라이언트 폴백)
+function openCustInfo(gi){
+  const nm=_custRows[gi]; if(!nm) return;
+  const hC=(CONS.hospitals||{})[nm], hD=(DEVICE.hospitals||{})[nm];
+  const mo26={},mo25={}; const addMo=(src,dst)=>{ for(const k in(src||{})) dst[k]=(dst[k]||0)+(+src[k]||0); };
+  let y26=0,y25=0,last='';
+  if(hC){ addMo(hC.m2026,mo26); addMo(hC.m2025,mo25); y26+=Number(hC.y2026)||0; y25+=Number(hC.y2025)||0; last=hC.lastDate||last; }
+  if(hD){ addMo(hD.m2026,mo26); addMo(hD.m2025,mo25); y26+=Number(hD.y2026)||0; y25+=Number(hD.y2025)||0; last=hD.lastDate||last; }
+  const prods={}; [(hC||{}).prods2026,(hD||{}).prods2026].forEach(o=>{ for(const k in(o||{})) prods[k]=(prods[k]||0)+(+o[k]||0); });
+  const txns=[];
+  ((hC&&hC.txns2026)||[]).forEach(t=>txns.push([t[2]||'',t[1]||'',+t[3]||0]));      // CONS [월,날짜,품명,금액,수량]
+  ((hD&&hD.txns2026)||[]).forEach(t=>txns.push([t[3]||'',t[1]||'',+t[4]||0]));      // DEVICE [월,날짜,거래처,품명,금액,수량]
+  txns.sort((a,b)=>String(b[1]).localeCompare(String(a[1])));
+  let sub='거래처 상세 · 국내';
+  if(!hC&&!hD){ // 해외 클라이언트
+    for(const cc in(INTL.countries||{})){ const cd=(INTL.countries[cc].clientData||{})[nm];
+      if(cd){ addMo(cd.m,mo26); y26=Number(cd.total)||0; sub='거래처 상세 · 해외 ('+esc(cc)+')';
+        const c25=(((INTL.data2025||{}).countries||{})[cc]||{}).clientData; const p=c25&&c25[nm];
+        if(p){ addMo(p.m,mo25); y25=Number(p.total)||0; } break; } }
+  }
+  // 동기간 YoY(월별 있으면) — 올해 누적 vs 전년연간 착시 방지
+  const _cm=Object.keys(mo26).map(Number).filter(x=>x>=1&&x<=12);
+  const _clm=_cm.length?Math.max.apply(null,_cm):0;
+  let _c25=0; for(let m=1;m<=_clm;m++) _c25+=(+mo25[m]||0);
+  const yy=_clm>0?pct(Object.values(mo26).reduce((s,v)=>s+v,0),_c25):null;
+  _infoShow({title:nm, sub:sub+(_clm>0?' · YoY는 1~'+_clm+'월 동기간':''), color:'#2563eb',
+    kpi:[{l:'2026 누적',v:fmtW(y26)},{l:_clm>0?('전년 동기(1~'+_clm+'월)'):'전년 (연간)',v:fmtW(_clm>0?_c25:y25),c:'#64748b'},{l:'YoY (동기간)',v:(yy===null?'-':arrow(yy)),c:_yoyCol(yy)},{l:'최근 거래',v:esc(last||'-'),c:'#0f172a'}],
+    mo26,mo25, cols:Object.keys(prods).length?[{t:'구매 제품 Top',rows:Object.entries(prods).sort((a,b)=>b[1]-a[1]).slice(0,8),col:'#0891b2'}]:[],
+    txns:txns.slice(0,8)});
 }
 
 // ── 수출의 탑 ──────────────────────────────────────────────
@@ -2112,6 +2241,7 @@ async function exPersist(){
 }
 document.addEventListener('click',function(e){ const m=document.getElementById('ex-edit-modal'); if(m&&m.style.display==='flex'&&e.target===m) exCloseEdit(); });
 document.addEventListener('keydown',function(e){ if(e.key!=='Escape') return;
+  const inf=document.getElementById('info-dbg'); if(inf&&inf.classList.contains('on')){ closeInfo(); return; }
   const dbg=document.getElementById('rpt-dbg'); if(dbg&&dbg.classList.contains('on')){ closeDrill(); return; }
   const ov=document.getElementById('ovDetailModal'); if(ov&&ov.style.display==='flex'){ closeOvDetail(); return; }
   const em=document.getElementById('ex-edit-modal'); if(em&&em.style.display==='flex'){ exCloseEdit(); return; }
