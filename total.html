@@ -1741,8 +1741,21 @@ let _unitChart=null;
 function _intlDevSet(src){ // 대당단가 100만원↑ = 장비(소모품 팁 제외). prodMo/prodMoQty는 전 제품 포함
   const pm=src.prodMo||{}, pmq=src.prodMoQty||{}, set=[];
   for(const p in pmq){ const a=sumVals(pm[p]), q=sumVals(pmq[p]); if(q>0 && a/q>=1000000) set.push(p); } return set; }
-function _intlDevQtyMo(){ const pmq=INTL.prodMoQty||{}, out={}; _intlDevSet(INTL).forEach(p=>{const mm=pmq[p]||{};for(const m in mm)out[m]=(out[m]||0)+Number(mm[m]||0);}); return out; }
-function _intlDevQtyMo25(){ const i25=INTL.data2025||{}, pmq=i25.prodMoQty||{}, out={}; _intlDevSet(i25).forEach(p=>{const mm=pmq[p]||{};for(const m in mm)out[m]=(out[m]||0)+Number(mm[m]||0);}); return out; }
+// 제품×월 대수 보정: 그 달 평균단가 <100만이면 저가품(오일·액세서리 등) 혼입 → 클린 월들의 장비 평균단가로 환산
+// 실사례: 6월 '브라질/Oligio 오일 ^1,000대 $1,000'이 프로젝트 Oligio로 잡혀 1,000대 뻥튀기 → 금액÷장비단가=실제 8대
+function _devQtyFix(pm,pmq){
+  const out={}; if(!pmq) return out;
+  let cA=0,cQ=0;
+  for(const m in pmq){ const q=Number(pmq[m])||0, a=Number((pm||{})[m])||0; if(q>0&&a/q>=1e6){cA+=a;cQ+=q;} }
+  const avg=cQ>0?cA/cQ:null;
+  for(const m in pmq){ const q=Number(pmq[m])||0, a=Number((pm||{})[m])||0; if(q<=0)continue;
+    if(a/q>=1e6) out[m]=(out[m]||0)+q;
+    else if(avg&&a>0){ const est=Math.round(a/avg); if(est>0) out[m]=(out[m]||0)+est; }
+  }
+  return out;
+}
+function _intlDevQtyMo(){ const pm=INTL.prodMo||{}, pmq=INTL.prodMoQty||{}, out={}; _intlDevSet(INTL).forEach(p=>{const mm=_devQtyFix(pm[p],pmq[p]);for(const m in mm)out[m]=(out[m]||0)+mm[m];}); return out; }
+function _intlDevQtyMo25(){ const i25=INTL.data2025||{}, pm=i25.prodMo||{}, pmq=i25.prodMoQty||{}, out={}; _intlDevSet(i25).forEach(p=>{const mm=_devQtyFix(pm[p],pmq[p]);for(const m in mm)out[m]=(out[m]||0)+mm[m];}); return out; }
 function renderUnits(){
   const f=1,t=_execT();
   const domMo=DEVICE.monthlyQty2026||{}, domMo25=DEVICE.monthlyQty2025||{};
@@ -1776,9 +1789,11 @@ function renderUnits(){
   const dsc=_scale(DEVICE.monthlyQty2026,f,t), dsc25=_scale(DEVICE.monthlyQty2025,f,t);
   for(const p in (DEVICE.prodQty2026||{})) addm(p,'q26',Number(DEVICE.prodQty2026[p]||0)*dsc);
   for(const p in (DEVICE.prodQty2025||{})) addm(p,'q25',Number(DEVICE.prodQty2025[p]||0)*dsc25);
-  _intlDevSet(INTL).forEach(p=>addm(p,'q26',sumMo((INTL.prodMoQty||{})[p]||{},f,t)));
-  _intlDevSet(i25).forEach(p=>addm(p,'q25',sumMo((i25.prodMoQty||{})[p]||{},f,t)));
-  const models=Object.entries(mmap).map(([n,o])=>({n,q26:Math.round(o.q26),q25:Math.round(o.q25),d:Math.round(o.q26-o.q25)})).filter(x=>x.q26>0||x.q25>0);
+  _intlDevSet(INTL).forEach(p=>addm(p,'q26',sumMo(_devQtyFix((INTL.prodMo||{})[p],(INTL.prodMoQty||{})[p]),f,t)));
+  _intlDevSet(i25).forEach(p=>addm(p,'q25',sumMo(_devQtyFix((i25.prodMo||{})[p],(i25.prodMoQty||{})[p]),f,t)));
+  // 소모품·부자재성 항목은 '장비 모델' 리스트에서 제외(A/S소모품·의료기기·오일 등 — 대수 개념 아님)
+  const _notDev=/오일|의료기기|소모품|팁|tip|cartridge|카트리지|A\/S/i;
+  const models=Object.entries(mmap).map(([n,o])=>({n,q26:Math.round(o.q26),q25:Math.round(o.q25),d:Math.round(o.q26-o.q25)})).filter(x=>(x.q26>0||x.q25>0)&&!_notDev.test(x.n));
   const maxAbs=Math.max(1,...models.map(x=>Math.abs(x.d)));
   const utop=models.filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,6), ubot=models.filter(x=>x.d<0).sort((a,b)=>a.d-b.d).slice(0,6);
   _unProdN=[];
@@ -2001,7 +2016,7 @@ function openProdInfo(p){
   const cum26=Object.values(mo26).reduce((s,v)=>s+v,0);
   let cum25=0; for(let m=1;m<=lastM;m++) cum25+=(+mo25[m]||0);
   const hasMo=lastM>0, y=hasMo?pct(cum26,cum25):null;
-  let qty=Number((DEVICE.prodQty2026||{})[p])||0; const q=(INTL.prodMoQty||{})[p]; if(q) qty+=Object.values(q).reduce((s,v)=>s+(+v||0),0);
+  let qty=Number((DEVICE.prodQty2026||{})[p])||0; const q=(INTL.prodMoQty||{})[p]; if(q) qty+=Object.values(_devQtyFix((INTL.prodMo||{})[p],q)).reduce((s,v)=>s+(+v||0),0);   // 저가품 혼입 대수 보정
   const ctys=[]; Object.entries(INTL.countries||{}).forEach(([cc,c])=>{ const v=Number((c.prods||{})[p])||0; if(v>0) ctys.push([cc,v]); }); ctys.sort((a,b)=>b[1]-a[1]);
   const hosp=[]; const scanH=hs=>{ for(const nm in(hs||{})){ const v=Number(((hs[nm]||{}).prods2026||{})[p])||0; if(v>0) hosp.push([nm,v]); } };
   scanH(DEVICE.hospitals); scanH(CONS.hospitals); hosp.sort((a,b)=>b[1]-a[1]);
