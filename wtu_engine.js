@@ -165,7 +165,7 @@ function aggIntl2026(rows26){
     if(co){ var c=ct[co]; if(!c){ c={total:0,usd:0,orders:0,clients:{},prods:{},m:{},clientData:{}}; ct[co]=c; }
       c.total+=amt; c.usd+=usd; c.orders++; c.clients[nm]=1;
       if(p) c.prods[p]=(c.prods[p]||0)+amt; if(m) c.m[m]=(c.m[m]||0)+amt;
-      var cd=c.clientData[nm]; if(!cd){ cd={total:0,m:{}}; c.clientData[nm]=cd; } cd.total+=amt; if(m) cd.m[m]=(cd.m[m]||0)+amt;
+      var cd=c.clientData[nm]; if(!cd){ cd={total:0,m:{},prods:{},cnt:0,last:""}; c.clientData[nm]=cd; } cd.total+=amt; if(m) cd.m[m]=(cd.m[m]||0)+amt; if(p)cd.prods[p]=(cd.prods[p]||0)+amt; cd.cnt++; var _cds=String(r["날짜"]||"").slice(0,10); if(_cds>cd.last)cd.last=_cds;
     }
     if(sl){ var s=rp[sl]; if(!s){ s={total:0,usd:0,orders:0,clients:{},cset:{},prods:{},m:{}}; rp[sl]=s; }
       s.total+=amt; s.usd+=usd; s.orders++; s.clients[nm]=1; s.cset[co]=1;
@@ -173,7 +173,7 @@ function aggIntl2026(rows26){
     }
   });
   function fct(ctm){ var out={}; Object.keys(ctm).map(function(k){return [k,ctm[k]];}).sort(function(a,b){return b[1].total-a[1].total;}).forEach(function(p){
-    var v=p[1]; var cdo={}; Object.keys(v.clientData).forEach(function(ck){ var cv=v.clientData[ck]; cdo[ck]={total:Math.round(cv.total),m:cv.m}; });
+    var v=p[1]; var cdo={}; Object.keys(v.clientData).forEach(function(ck){ var cv=v.clientData[ck]; cdo[ck]={total:Math.round(cv.total),m:cv.m,prods:topN(cv.prods||{},5),cnt:cv.cnt||0,last:cv.last||""}; });
     out[p[0]]={total:Math.round(v.total),usd:Math.round(v.usd),orders:v.orders,clients:Object.keys(v.clients).length,prods:topN(v.prods,4),m:v.m,clientData:cdo};
   }); return out; }
   function frp(rpm){ var out={}; Object.keys(rpm).map(function(k){return [k,rpm[k]];}).sort(function(a,b){return b[1].total-a[1].total;}).forEach(function(p){
