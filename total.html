@@ -516,7 +516,6 @@ button,.nav-link,.seg button,.qpreset,.sw-item{transition:background-color .15s 
     </div>
 
     <section class="scoreboard" id="ov-hero" aria-label="전사 스코어보드"></section>
-    <div class="sb-insights" id="ov-insights"></div>
 
     <div class="row g-2 mb-3" id="ov-kpi"></div>
 
@@ -587,7 +586,6 @@ button,.nav-link,.seg button,.qpreset,.sw-item{transition:background-color .15s 
   <!-- ===== 글로벌영업 매출현황 ===== -->
   <div id="page-report" class="page">
     <div class="rpt-hero" id="rpt-hero"></div>
-    <div class="rpt-narr" id="rpt-narr"></div>
     <div class="card p-3 mb-2">
       <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px;margin-bottom:8px">
         <div class="fw-bold" style="font-size:14px"><i class="bi bi-table me-1" style="color:#4f46e5"></i>2026년 글로벌영업 매출현황 <span style="font-size:11px;font-weight:500;color:#94a3b8">· 행을 클릭하면 상세 분석</span></div>
@@ -1312,12 +1310,6 @@ function _rptHero(g,rows,pend){
     hk('달성률',(g.h1.ach==null?'-':g.h1.ach.toFixed(1)+'%'),'예정 포함 전망',_achCol(g.h1.ach))+
     hk('전년 성장',(g.h1.grw==null?'-':(g.h1.grw>=0?'▲':'▼')+Math.abs(g.h1.grw).toFixed(1)+'%'),'전년 동기 대비',g.h1.grw==null?null:(g.h1.grw>=0?'#16a34a':'#dc2626'))+
     hk('미반영 포함분','+'+_fM(pendTot)+'<span style="font-size:13px;font-weight:600"> 백만</span>','회계 미마감·예정분','#0d9488');
-  const mv=rows.map(r=>({n:r.n,d:(r.v.h1.act||0)-(r.v.h1.prev||0)})).filter(x=>isFinite(x.d));
-  const up=mv.slice().sort((a,b)=>b.d-a.d)[0], dn=mv.slice().sort((a,b)=>a.d-b.d)[0];
-  let n='';
-  if(up&&up.d>0) n+='<b class="up">'+up.n+' +'+_fM(up.d)+'백만</b> 견인';
-  if(dn&&dn.d<0) n+=(n?' · ':'')+'<b class="dn">'+dn.n+' '+_fM(dn.d)+'백만</b> 부진';
-  document.getElementById('rpt-narr').innerHTML=(n?('<i class="bi bi-lightning-charge-fill me-1" style="color:#f59e0b"></i>'+n+' <span style="color:#94a3b8">· 전년 동기 대비 증감</span>'):'표의 각 행을 클릭하면 거래처·제품·월추이를 분석합니다.');
 }
 // ── 드릴다운 ──
 function _tgtMo(dept,item){ const o={}; (SALEST||[]).forEach(r=>{ if(r.dept===dept&&r.item===item&&+r.year===2026) o[+r.month]=(o[+r.month]||0)+Number(r.amount||0); }); return o; }
@@ -1390,7 +1382,7 @@ function closeDrill(){ const b=document.getElementById('rpt-dbg'); if(b)b.classL
 // renderOverview가 이미 계산한 로컬만 받아 표시(데이터 로직 무변경). SALEST 0건·전년 0 가드.
 const _ovTgt=(f,t)=>{let s=0;(SALEST||[]).forEach(r=>{if(+r.year===2026&&+r.month>=f&&+r.month<=t)s+=Number(r.amount||0);});return s;};
 function _renderScoreboard(f,t,d){
-  const host=document.getElementById('ov-hero'), insHost=document.getElementById('ov-insights');
+  const host=document.getElementById('ov-hero');
   if(!host) return;
   const hb=v=>v===null?'<b>-</b>':(v>=0?'<b class="up">▲'+Math.abs(v).toFixed(1)+'%</b>':'<b class="dn">▼'+Math.abs(v).toFixed(1)+'%</b>');
   const yTgt=_ovTgt(1,12), cTgt=_ovTgt(1,t);
@@ -1414,39 +1406,6 @@ function _renderScoreboard(f,t,d){
     +'<div class="sb-cell sm"><div class="sb-l"><i class="bi bi-globe-americas"></i>해외</div><div class="sb-v">'+fmtW(d.intlI)+'</div>'
       +'<div class="sb-s">'+hb(pct(d.intl,d.intlPrev))+' · 비중 '+intlShare+'%</div></div>'
     +'</div>';
-  if(!insHost) return;
-  const chips=[];
-  if(cTgt>0&&cAch!==null){
-    if(cAch<95) chips.push({k:'slump',i:'bi-graph-down-arrow',t:'누적 목표 대비 '+fmtW(cTgt-d.totalI)+' 미달 (달성률 '+cAch.toFixed(1)+'%)',go:'goals'});
-    else if(cAch>=105) chips.push({k:'drive',i:'bi-award',t:'누적 목표 초과 달성 '+cAch.toFixed(1)+'%',go:'goals'});
-  }
-  const dY=pct(d.domC,d.domPrev), iY=pct(d.intl,d.intlPrev);
-  if(dY!==null&&dY<=-5) chips.push({k:'slump',i:'bi-hospital',t:'국내 전년比 ▼'+Math.abs(dY).toFixed(1)+'% — 원인 상세',go:'query'});
-  if(iY!==null&&iY<=-5) chips.push({k:'slump',i:'bi-globe-americas',t:'해외 전년比 ▼'+Math.abs(iY).toFixed(1)+'% — 원인 상세',go:'query'});
-  if(d.totalI>0&&d.allPend/d.totalI>=0.15) chips.push({k:'risk',i:'bi-hourglass-split',t:'미반영 '+fmtW(d.allPend)+' (전사의 '+Math.round(d.allPend/d.totalI*100)+'%) — 확정 지연 주의'});
-  try{ // 기한경과: 예정형만(완료형=회계 반영 대기라 과거일자 정상)
-    const _n=new Date(), ts=_n.getFullYear()+'-'+String(_n.getMonth()+1).padStart(2,'0')+'-'+String(_n.getDate()).padStart(2,'0');
-    const over=(ILBO_PEND||[]).filter(p=>p.type!=='완료'&&(p.expectedDate||'')&&p.expectedDate<ts);
-    if(over.length){ const mx=over.slice().sort((a,b)=>Number(b.amount||0)-Number(a.amount||0))[0];
-      chips.push({k:'risk',i:'bi-alarm',t:'미반영 기한경과 '+over.length+'건 · 최대 '+esc(mx.customer||'')+' '+fmtW(Number(mx.amount||0))}); }
-  }catch(e){}
-  try{ // 성장 견인 세그먼트: 국내 제품/소모품 + 해외 지역·법인 델타 1위
-    const reg26=(_ovRegMo&&Object.keys(_ovRegMo).length)?_ovRegMo:_intlRegionMonthly(INTL);
-    const reg25=_intlRegionMonthly(INTL.data2025||{});
-    const cand=[['국내 제품',sumMo(DEVICE.monthly2026,f,t),sumMo(DEVICE.monthly2025,f,t)],['국내 소모품',sumMo(CONS.monthly2026,f,t),sumMo(CONS.monthly2025,f,t)]];
-    Object.keys(reg26||{}).forEach(r=>cand.push(['해외 '+r,sumMo(reg26[r],f,t),sumMo((reg25||{})[r],f,t)]));
-    const up=cand.map(c=>({n:c[0],d:c[1]-c[2]})).filter(x=>isFinite(x.d)).sort((a,b)=>b.d-a.d)[0];
-    if(up&&up.d>0) chips.push({k:'drive',i:'bi-rocket-takeoff',t:'『'+esc(up.n)+'』 전년比 +'+fmtW(up.d)+' — 성장 견인',go:'report'});
-  }catch(e){}
-  try{ // 모멘텀: 최근 확정월 vs 직전 3개월 평균
-    const mT=m=>(Number(CONS.monthly2026&&CONS.monthly2026[m])||0)+(Number(DEVICE.monthly2026&&DEVICE.monthly2026[m])||0)+(Number(CONS.etcMonthly2026&&CONS.etcMonthly2026[m])||0)+(Number(INTL.monthly&&INTL.monthly[m])||0);
-    if(t>=4){ const avg=(mT(t-1)+mT(t-2)+mT(t-3))/3; if(avg>0&&mT(t)>=avg*1.15) chips.push({k:'drive',i:'bi-fire',t:t+'월 '+fmtW(mT(t))+' — 최근 3개월 평균比 +'+Math.round((mT(t)/avg-1)*100)+'%'}); }
-  }catch(e){}
-  if(chips.length<2) chips.push({k:'info',i:'bi-pie-chart',t:'채널 비중 국내 '+domShare+'% · 해외 '+intlShare+'%'});
-  const ord={slump:0,risk:1,drive:2,info:3};
-  chips.sort((a,b)=>ord[a.k]-ord[b.k]);
-  insHost.innerHTML=chips.slice(0,4).map(c=>'<span class="ins-chip '+c.k+(c.go?' clk':'')+'"'+(c.go?(' onclick="showPage(\''+c.go+'\',document.getElementById(\'nav-'+c.go+'\'))"'):'')+'><i class="bi '+c.i+'"></i>'+c.t+'</span>').join('');
-  insHost.style.display=chips.length?'':'none';
 }
 function renderThisMonth(){
   const tmo=_curMonth();   // 보고 기준월(데이터 없는 새 달로 롤오버 방지)
