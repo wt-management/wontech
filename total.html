@@ -615,6 +615,7 @@ let _ovChart=null;
 const DOM_BLUE='#2563eb', INTL_TEAL='#0d9488', DEV_PURPLE='#7c3aed', CONS_CYAN='#0891b2';
 
 const fmtW = v => { v=Number(v)||0; return v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만원':Math.round(v).toLocaleString()+'원'; };
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 const sumMo = (o,f,t)=>{ if(!o) return 0; let s=0; for(let m=f;m<=t;m++) s+=Number(o[m]||0); return s; };
 const sumVals = o => o?Object.values(o).reduce((s,v)=>s+(Number(v)||0),0):0;
 const pct = (v,p)=> p>0?(v/p-1)*100:null;
@@ -701,7 +702,9 @@ async function afterLogin(user){
 }
 
 // ── 데이터 로드 ──────────────────────────────────────────
+let _loadErr=false;
 async function loadAll(){
+  _loadErr=false;
   try{
     const [m,d,i]=await Promise.all([
       _sb.from('cons_cache').select('data').eq('key','main').maybeSingle(),
@@ -712,7 +715,7 @@ async function loadAll(){
     DEVICE=(d.data&&d.data.data)||{};
     const ib=(i.data&&i.data.data)||{};
     INTL=Object.assign({}, ib.INTL2026||{}, {data2025:ib.INTL2025||{}, updatedAt:ib.updatedAt||''});
-  }catch(e){ console.warn('cons_cache load', e); }
+  }catch(e){ console.warn('cons_cache load', e); _loadErr=true; }
   try{ const {data:pd}=await _sb.from('pending_sales').select('*'); PENDING=pd||[]; }catch(e){ PENDING=[]; }
   try{ const {data:ip}=await _sb.from('cons_cache').select('data').eq('key','ilbo_pending').maybeSingle(); ILBO_PEND=((ip&&ip.data&&ip.data.rows)||[]).filter(function(p){return p.status!=='반영됨'&&p.status!=='취소';}); }catch(e){ ILBO_PEND=[]; }
   try{ const {data:td}=await _sb.from('targets').select('id,data'); TARGETS=(td||[]).map(r=>r.data); }catch(e){ TARGETS=[]; }
@@ -721,7 +724,9 @@ async function loadAll(){
   try{ const {data:rm}=await _sb.from('cons_cache').select('data').eq('key','region_map').maybeSingle(); REGMAP=(rm&&rm.data)||REGMAP; }catch(e){}
   try{ const {data:ex}=await _sb.from('cons_cache').select('data').eq('key','export_tower').maybeSingle(); exLoadData((ex&&ex.data)||null); }catch(e){ exLoadData(null); }
   const upd=CONS.updatedAt||DEVICE.updatedAt||INTL.updatedAt||'';
-  document.getElementById('updated-label').textContent=upd?('기준일 '+upd):'';
+  const _ul=document.getElementById('updated-label');
+  if(_loadErr){ _ul.innerHTML='<span style="color:#b91c1c;font-weight:700"><i class="bi bi-exclamation-triangle-fill me-1"></i>데이터 로드 실패 · 새로고침 해주세요</span>'; }
+  else { _ul.textContent=upd?('기준일 '+upd):''; }
 }
 
 // ── 예정분(국내) ─────────────────────────────────────────
@@ -1167,10 +1172,11 @@ function renderReport(){
 let _rptCache={};
 function _rptHero(g,rows,pend){
   const hk=(l,v,s,c)=>'<div class="rpt-hk"'+(c?' style="background:linear-gradient(135deg,'+c+'22,'+c+'08);color:#0f172a;border:1px solid '+c+'33"':'')+'><div class="l"'+(c?' style="color:#64748b"':'')+'>'+l+'</div><div class="v"'+(c?' style="color:'+c+'"':'')+'>'+v+'</div><div class="s">'+(s||'')+'</div></div>';
-  const pH=o=>{let s=0;for(let m=1;m<=6;m++)s+=Number((o||{})[m]||0);return s;};
+  const P=_rptPeriods();
+  const pH=o=>{let s=0;for(let m=P.hf;m<=P.ht;m++)s+=Number((o||{})[m]||0);return s;};
   let pendTot=pH(pend.kr['제품'])+pH(pend.kr['소모품']); Object.values(pend.intl||{}).forEach(o=>pendTot+=pH(o));
   document.getElementById('rpt-hero').innerHTML=
-    hk('전사 실적 (상반기)',_fM(g.h1.act)+'<span style="font-size:13px;font-weight:600"> 백만</span>','목표 '+_fM(g.h1.tgt)+' 백만')+
+    hk('전사 실적 ('+P.hLbl+')',_fM(g.h1.act)+'<span style="font-size:13px;font-weight:600"> 백만</span>','목표 '+_fM(g.h1.tgt)+' 백만')+
     hk('달성률',(g.h1.ach==null?'-':g.h1.ach.toFixed(1)+'%'),'예정 포함 전망',_achCol(g.h1.ach))+
     hk('전년 성장',(g.h1.grw==null?'-':(g.h1.grw>=0?'▲':'▼')+Math.abs(g.h1.grw).toFixed(1)+'%'),'전년 동기 대비',g.h1.grw==null?null:(g.h1.grw>=0?'#16a34a':'#dc2626'))+
     hk('미반영 포함분','+'+_fM(pendTot)+'<span style="font-size:13px;font-weight:600"> 백만</span>','회계 미마감·예정분','#0d9488');
@@ -1210,15 +1216,15 @@ function openDrill(dk){
   const parts=String(dk).split('|'), dept=parts[0], item=parts[1];
   const seg=_drillSeg(dept,item), P=_rptPeriods();
   const sm=(o,f,t)=>{let s=0;for(let m=f;m<=t;m++)s+=Number((o||{})[m]||0);return s;};
-  const act=sm(seg.mo26,1,P.ht)+sm(seg.pend,1,P.ht), prev=sm(seg.mo25,1,P.ht), tg=sm(seg.tgt,1,P.ht);
+  const act=sm(seg.mo26,P.hf,P.ht)+sm(seg.pend,P.hf,P.ht), prev=sm(seg.mo25,P.hf,P.ht), tg=sm(seg.tgt,P.hf,P.ht);
   const ach=tg>0?act/tg*100:null, grw=prev>0?(act/prev-1)*100:null;
   const title=(dept==='국내영업'?'한국영업 · '+item:'해외영업 · '+item);
   const custTop=Object.entries(seg.custs).sort((a,b)=>b[1]-a[1]).slice(0,8);
   const prodTop=Object.entries(seg.prods).sort((a,b)=>b[1]-a[1]).slice(0,8);
   const cmax=custTop.length?custTop[0][1]:1, pmax=prodTop.length?prodTop[0][1]:1;
-  const bar=(n,v,mx,col)=>'<div class="dr-bar"><span class="n" title="'+n+'">'+n+'</span><span class="t"><span class="f" style="width:'+(mx>0?Math.max(v/mx*100,1):0).toFixed(1)+'%;background:'+col+'"></span></span><span class="vv">'+_fM(v)+'</span></div>';
+  const bar=(n,v,mx,col)=>'<div class="dr-bar"><span class="n" title="'+esc(n)+'">'+esc(n)+'</span><span class="t"><span class="f" style="width:'+(mx>0?Math.max(v/mx*100,1):0).toFixed(1)+'%;background:'+col+'"></span></span><span class="vv">'+_fM(v)+'</span></div>';
   const pendTot=seg.pendRows.reduce((s,p)=>s+Number(p.amount||0),0);
-  let html='<div class="dr-hd"><div><h3>'+title+'</h3><div style="font-size:11.5px;color:#94a3b8;margin-top:2px">상반기 누적 · 실적=회계+미반영 · 단위 백만원</div></div><button class="dr-x" onclick="closeDrill()">✕</button></div>';
+  let html='<div class="dr-hd"><div><h3>'+title+'</h3><div style="font-size:11.5px;color:#94a3b8;margin-top:2px">'+P.hLbl+' 누적 · 실적=회계+미반영 · 단위 백만원</div></div><button class="dr-x" onclick="closeDrill()">✕</button></div>';
   html+='<div class="dr-kpi"><div class="dr-k"><div class="l">실적</div><div class="v">'+_fM(act)+'</div></div>'+
     '<div class="dr-k"><div class="l">목표</div><div class="v" style="color:#64748b">'+_fM(tg)+'</div></div>'+
     '<div class="dr-k"><div class="l">달성률</div><div class="v" style="color:'+_achCol(ach)+'">'+(ach==null?'-':ach.toFixed(1)+'%')+'</div></div>'+
@@ -1229,7 +1235,7 @@ function openDrill(dk){
   if(seg.pendRows.length){
     const top=seg.pendRows.slice().sort((a,b)=>Number(b.amount)-Number(a.amount)).slice(0,8);
     html+='<div class="dr-sec-t" style="margin-top:16px">미반영 내역 <span style="font-weight:500;color:#94a3b8">· '+seg.pendRows.length+'건 합 '+_fM(pendTot)+'백만</span></div>'+
-      top.map(p=>'<div class="dr-pend"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+((p.customer||p.country||'')+' · '+(p.product||''))+'</span><span style="color:#94a3b8">'+(p.expectedDate||'')+'</span><span style="font-weight:700;width:62px;text-align:right">'+_fM(Number(p.amount||0))+'</span></div>').join('');
+      top.map(p=>'<div class="dr-pend"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc((p.customer||p.country||'')+' · '+(p.product||''))+'</span><span style="color:#94a3b8">'+esc(p.expectedDate||'')+'</span><span style="font-weight:700;width:62px;text-align:right">'+_fM(Number(p.amount||0))+'</span></div>').join('');
   }
   document.getElementById('rpt-drill').innerHTML=html;
   document.getElementById('rpt-dbg').classList.add('on');
@@ -1681,7 +1687,7 @@ function renderLeaderboard(){
     o.y26+=r.y2026||0; o.y25+=r.y2025||0; o.cust+=r.cust2026||0; o.cust25+=r.cust2025||0; o.qty+=r.qty2026||0;
     for(const k in(r.prods2026||{})) o.prods[k]=(o.prods[k]||0)+(+r.prods2026[k]||0);
   });
-  const rowsD=Object.values(dm).map(o=>{ const v=sumMo(o.m26,f,t)||o.y26||0, pv=sumMo(o.m25,f,t)||o.y25||0;
+  const rowsD=Object.values(dm).map(o=>{ const v=Object.keys(o.m26).length?sumMo(o.m26,f,t):(o.y26||0), pv=Object.keys(o.m25).length?sumMo(o.m25,f,t):(o.y25||0);
     const tp=Object.entries(o.prods).sort((a,b)=>b[1]-a[1])[0];
     return {n:o.n,team:'국내',v,pv,d:v-pv,yoy:pct(v,pv),cust:o.cust,cust25:o.cust25,qty:o.qty,top:tp?tp[0]:''};
   });
@@ -1694,7 +1700,7 @@ function renderLeaderboard(){
     else { o.tot25+=r.total||0; o.cust25+=r.clients||0; }
   }); };
   iadd(INTL.reps,26); iadd((INTL.data2025||{}).reps,25);
-  const rowsI=Object.values(im).map(o=>{ const v=sumMo(o.m26,f,t)||o.tot26||0, pv=sumMo(o.m25,f,t)||o.tot25||0;
+  const rowsI=Object.values(im).map(o=>{ const v=Object.keys(o.m26).length?sumMo(o.m26,f,t):(o.tot26||0), pv=Object.keys(o.m25).length?sumMo(o.m25,f,t):(o.tot25||0);
     const tp=Object.entries(o.prods).sort((a,b)=>b[1]-a[1])[0];
     return {n:o.n,team:'해외',v,pv,d:v-pv,yoy:pct(v,pv),cust:o.cust,cust25:o.cust25,qty:null,top:tp?tp[0]:'',ctry:o.ctry};
   });
@@ -1809,7 +1815,7 @@ function exElapsed(cyc){ const keys=exCycleMonths(cyc.start),sd=new Date(keys[0]
 function exAccUSD(key){ const p=key.split('-').map(Number); let src=null; if(p[0]===2026) src=INTL.monthly_usd; else if(p[0]===2025) src=INTL.data2025&&INTL.data2025.monthly_usd; if(!src) return null; const v=src[p[1]]; return (v!=null&&v!=='')?Number(v):null; }
 function exPendUSD(){ const cur=exCurKey(); let krw=0;
   (PENDING||[]).forEach(p=>{ if((p.channel||'korea')!=='intl') return; if(p.status==='취소'||p.status==='반영됨') return; if(String(p.expected_date||'').slice(0,7)===cur) krw+=Number(p.amount||0); });
-  (ILBO_PEND||[]).forEach(p=>{ const d=p.expectedDate||p.expected_date||''; if(String(d).slice(0,7)===cur) krw+=Number(p.amount||0); });
+  (ILBO_PEND||[]).forEach(p=>{ if(p.region!=='해외') return; const d=p.expectedDate||p.expected_date||''; if(String(d).slice(0,7)===cur) krw+=Number(p.amount||0); });
   const r=Number(EXPORT.rate)||0; return r>0?krw/r:0; }
 function exMonVal(cyc,key){ const ov=cyc.months[key]; if(ov!=null&&ov!=='') return Number(ov); const acc=exAccUSD(key); let v=acc!=null?acc:0; if(key===exCurKey()) v+=exPendUSD(); return v; }
 function exIsProv(cyc,key){ const ov=cyc.months[key]; return (ov==null||ov==='')&&key===exCurKey()&&exMonVal(cyc,key)>0; }
@@ -1837,7 +1843,8 @@ function exUpdProv(){
   const acc=exAccUSD(exCurKey())||0, pend=exPendUSD();
   document.getElementById('ex-prov-calc').textContent='(회계 '+exUsd(acc)+' + 미반영 '+exUsd(pend)+')';
 }
-function exOnRate(){ EXPORT.rate=Number(document.getElementById('ex-rate').value)||0; exUpdProv(); exRenderKPI(); exRenderTables(); exPersist(); }
+let _exRateTimer=null;
+function exOnRate(){ EXPORT.rate=Number(document.getElementById('ex-rate').value)||0; exUpdProv(); exRenderKPI(); exRenderTables(); clearTimeout(_exRateTimer); _exRateTimer=setTimeout(exPersist,600); }
 
 function exRenderKPI(){
   const el=document.getElementById('ex-kpis'); el.innerHTML='';
@@ -1948,9 +1955,14 @@ function exSaveEdit(){
 }
 async function exPersist(){
   EXPORT.updatedAt=new Date().toISOString();
-  try{ await _sb.from('cons_cache').delete().eq('key','export_tower'); await _sb.from('cons_cache').insert({key:'export_tower',data:EXPORT}); }catch(e){ console.warn('export 저장',e); }
+  try{ const {error}=await _sb.from('cons_cache').upsert({key:'export_tower',data:EXPORT},{onConflict:'key'}); if(error) throw error; }catch(e){ console.warn('export 저장',e); alert('수출의 탑 저장에 실패했습니다. 다시 시도해주세요.'); }
 }
 document.addEventListener('click',function(e){ const m=document.getElementById('ex-edit-modal'); if(m&&m.style.display==='flex'&&e.target===m) exCloseEdit(); });
+document.addEventListener('keydown',function(e){ if(e.key!=='Escape') return;
+  const dbg=document.getElementById('rpt-dbg'); if(dbg&&dbg.classList.contains('on')){ closeDrill(); return; }
+  const ov=document.getElementById('ovDetailModal'); if(ov&&ov.style.display==='flex'){ closeOvDetail(); return; }
+  const em=document.getElementById('ex-edit-modal'); if(em&&em.style.display==='flex'){ exCloseEdit(); return; }
+});
 
 // ── 세션 부팅 ────────────────────────────────────────────
 (async()=>{
