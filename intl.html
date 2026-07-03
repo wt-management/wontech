@@ -87,7 +87,7 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
       <li><a class="nav-link" onclick="showPage('by-country',this)"><i class="bi bi-globe"></i>국가별 분석</a></li>
       <li><a class="nav-link" onclick="showPage('by-product',this)"><i class="bi bi-box-seam"></i>제품별 분석</a></li>
       <li><a class="nav-link" onclick="showPage('by-cons',this)"><i class="bi bi-capsule"></i>소모품 분석</a></li>
-      <li><a class="nav-link" onclick="showPage('pending',this)"><i class="bi bi-hourglass-split"></i>예정분 관리</a></li>
+      <li><a class="nav-link" onclick="showPage('pending',this)"><i class="bi bi-hourglass-split"></i>회계미반영분</a></li>
       <li style="border-top:1px solid #1e293b;margin-top:6px;padding-top:6px"><a class="nav-link" onclick="showPage('crm-dash',this)"><i class="bi bi-speedometer2"></i>영업 현황판</a></li>
       <li><a class="nav-link" onclick="showPage('sales',this)"><i class="bi bi-kanban"></i>수주관리</a></li>
       <li><a class="nav-link" onclick="showPage('dealers',this)"><i class="bi bi-buildings"></i>딜러 관리</a></li>
@@ -423,30 +423,10 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
   </div>
 </div>
 <div id="page-pending" class="page">
-  <div class="page-header"><h5><i class="bi bi-hourglass-split" style="color:#f59e0b"></i>해외 예정분 관리 <span style="font-size:12px;font-weight:400;color:#9ca3af">회계 미반영 매출</span></h5>
-    <button class="btn btn-sm" style="background:#0d9488;color:#fff" onclick="openPendForm()"><i class="bi bi-plus-lg me-1"></i>예정분 추가</button>
-  </div>
-  <div style="padding:9px 13px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:9px;font-size:12px;color:#0d9488;margin-bottom:14px">
-    <i class="bi bi-info-circle me-1"></i>해외 예정분(회계 미반영)을 지역·법인별로 입력하면 해외 매출의 <b>미반영 포함(관리매출)</b>과 전사 종합에 합산됩니다. 회계에 잡히면 <b>「반영처리」</b>를 눌러 합산에서 제외하세요.
-  </div>
-  <div class="row g-2 mb-3" id="pend-summary"></div>
-  <div style="display:flex;flex-direction:row;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-    <select id="pend-f-region" class="form-select form-select-sm" style="width:130px" onchange="renderPending()"><option value="">전체 지역</option></select>
-    <input type="text" id="pend-f-kw" class="form-control form-control-sm" style="width:190px" placeholder="거래처·제품 검색" oninput="renderPending()">
-    <label style="font-size:12px;color:#6b7280;display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap"><input type="checkbox" id="pend-f-mine" onchange="renderPending()" style="width:14px;height:14px"> 내 입력만</label>
-  </div>
-  <div class="card p-0" style="overflow-x:auto">
-    <table class="table table-sm table-hover mb-0 align-middle" style="font-size:13px;min-width:880px">
-      <thead><tr style="background:#f8fafc;font-size:12px;color:#6b7280">
-        <th style="padding:9px 12px">예정일</th><th>지역</th><th>구분</th><th>제품</th><th>거래처</th>
-        <th style="text-align:right">금액</th><th style="text-align:center">상태</th><th>담당</th><th style="text-align:center">관리</th>
-      </tr></thead>
-      <tbody id="pend-tbody"></tbody>
-    </table>
-    <div id="pend-empty" style="display:none" class="text-center text-muted py-5">등록된 해외 예정분이 없습니다.</div>
+  <div class="page-header"><h5><i class="bi bi-hourglass-split" style="color:#f59e0b"></i>회계미반영분 <span style="font-size:12px;font-weight:400;color:#9ca3af">일보 입력 연동 · 출고/선적예정만 해외에서 기입</span></h5>
   </div>
   <!-- ilbo pending view -->
-  <div class="card p-0 mt-3" style="overflow-x:auto">
+  <div class="card p-0" style="overflow-x:auto">
     <div style="padding:10px 13px;background:#f0fdfa;border-bottom:1px solid #ccfbf1;font-size:13px;font-weight:700;color:#0f766e">
       <i class="bi bi-eye me-1"></i>일매출일보 미반영분 (해외) · 조회 <span id="ilbo-pend-sum" style="font-weight:400;color:#6b7280;font-size:12px"></span>
     </div>
@@ -2359,6 +2339,9 @@ function _autoCountry(dealer,targetId){
   openAct=function(id){ _syncCrmLists(); oa(id); };
   openQuote=function(id,fd){ _syncCrmLists(); oq(id,fd); };
 })();
+</script>
+<script>
+function renderPending(){ if(typeof _renderIlboRows==="function")_renderIlboRows(); }
 </script>
 </body>
 </html>
