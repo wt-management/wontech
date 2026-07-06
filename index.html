@@ -376,6 +376,14 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
             style="display:none;margin-top:2px;border-radius:6px;padding:8px 12px;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
             onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#f59e0b;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">JP</span><span style="flex:1">일본법인 관리</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i>
           </div>
+          <div onclick="location.href='https://wt-management.github.io/wt-corps/us.html'"
+            style="margin-top:2px;border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
+            onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#1e3a8a;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">US</span><span style="flex:1">미국법인 관리</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i>
+          </div>
+          <div onclick="location.href='https://wt-management.github.io/wt-corps/th.html'"
+            style="margin-top:2px;border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
+            onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#b45309;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">TH</span><span style="flex:1">태국법인 관리</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i>
+          </div>
           <div id="switcher-intl-item" onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wontech/intl.html';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()"
             style="display:none;margin-top:2px;border-radius:6px;padding:8px 12px;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
             onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#0d9488;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">INT</span><span style="flex:1">해외 영업</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i>
@@ -2087,6 +2095,32 @@ async function _showLauncherOrApp(user) {
             <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">장비 통합관리</div>
             <div style="font-size:11px;color:#64748b;line-height:1.6">데모·출하·보상<br>재고·실사</div>
             <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#7dd3fc;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
+          </div>
+        </div>` : '',
+      _isAdmin ? `
+        <div onclick="location.href='https://wt-management.github.io/wt-corps/us.html'"
+          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
+          <div style="height:5px;background:linear-gradient(90deg,#1e3a8a,#3b82f6)"></div>
+          <div style="padding:28px 24px">
+            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#1e3a8a,#3b82f6);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(30,58,138,.35)">
+              <i class="bi bi-building-fill" style="font-size:22px;color:#fff"></i>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">미국법인 관리</div>
+            <div style="font-size:11px;color:#64748b;line-height:1.6">매출 · 물류<br>자금 ERP</div>
+            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#60a5fa;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
+          </div>
+        </div>` : '',
+      _isAdmin ? `
+        <div onclick="location.href='https://wt-management.github.io/wt-corps/th.html'"
+          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
+          <div style="height:5px;background:linear-gradient(90deg,#b45309,#d97706)"></div>
+          <div style="padding:28px 24px">
+            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#b45309,#d97706);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(180,83,9,.35)">
+              <i class="bi bi-building-fill" style="font-size:22px;color:#fff"></i>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">태국법인 관리</div>
+            <div style="font-size:11px;color:#64748b;line-height:1.6">매출 · 물류<br>자금 ERP</div>
+            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#fbbf24;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
           </div>
         </div>` : '',
     ].join('');
@@ -6735,6 +6769,32 @@ function _renderLauncherCards(access) {
             <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">장비 통합관리</div>
             <div style="font-size:11px;color:#64748b;line-height:1.6">데모·출하·보상<br>재고·실사</div>
             <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#7dd3fc;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
+          </div>
+        </div>` : '',
+      _isAdmin ? `
+        <div onclick="location.href='https://wt-management.github.io/wt-corps/us.html'"
+          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
+          <div style="height:5px;background:linear-gradient(90deg,#1e3a8a,#3b82f6)"></div>
+          <div style="padding:28px 24px">
+            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#1e3a8a,#3b82f6);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(30,58,138,.35)">
+              <i class="bi bi-building-fill" style="font-size:22px;color:#fff"></i>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">미국법인 관리</div>
+            <div style="font-size:11px;color:#64748b;line-height:1.6">매출 · 물류<br>자금 ERP</div>
+            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#60a5fa;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
+          </div>
+        </div>` : '',
+      _isAdmin ? `
+        <div onclick="location.href='https://wt-management.github.io/wt-corps/th.html'"
+          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
+          <div style="height:5px;background:linear-gradient(90deg,#b45309,#d97706)"></div>
+          <div style="padding:28px 24px">
+            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#b45309,#d97706);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(180,83,9,.35)">
+              <i class="bi bi-building-fill" style="font-size:22px;color:#fff"></i>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">태국법인 관리</div>
+            <div style="font-size:11px;color:#64748b;line-height:1.6">매출 · 물류<br>자금 ERP</div>
+            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#fbbf24;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
           </div>
         </div>` : '',
   ].join('');

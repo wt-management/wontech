@@ -421,6 +421,14 @@ button,.nav-link,.seg button,.qpreset,.sw-item{transition:background-color .15s 
 .ins-chip.risk{border-color:#fde68a;background:#fffbeb;color:#92400e}.ins-chip.risk i{color:#d97706}
 .ins-chip.info{color:var(--ink-3)}
 .ins-chip.clk{cursor:pointer}.ins-chip.clk:hover{box-shadow:var(--sh-2)}
+/* 법인별 상세 — 히어로·분기표·거래처변동 칩 */
+.corp-hero{border-radius:var(--r-md);padding:16px 20px;color:var(--hero-ink);margin-bottom:14px}
+.corp-pq-t{width:100%;font-size:12px;border-collapse:collapse}
+.corp-pq-t th{font-size:10.5px;color:var(--ink-3);font-weight:600;padding:4px 8px;border-bottom:1px solid var(--line-strong);text-align:right}
+.corp-pq-t th:first-child{text-align:left}
+.corp-pq-t td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--line-soft);font-variant-numeric:tabular-nums}
+.corp-pq-t td:first-child{text-align:left}
+.corp-cl-chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;border-radius:99px;padding:3px 10px;margin-right:6px}
 /* 클릭 가능 요소 공통 어포던스 */
 .sb-cell.clk{cursor:pointer;border-radius:10px;transition:background .15s ease}
 .sb-cell.clk:hover{background:rgba(148,163,184,.10)}
@@ -491,6 +499,8 @@ tr.lb-clk:hover td,tr.qs-clk:hover td{background:var(--surface-2)}
           <div class="sw-item" onclick="goSite('https://wt-management.github.io/wontech/','&app=korea')"><span class="sw-badge" style="background:#0891b2">KR</span><span style="flex:1">한국 영업</span><i class="bi bi-arrow-right sw-ar"></i></div>
           <div class="sw-item" onclick="goSite('https://wt-management.github.io/wontech/intl.html','')"><span class="sw-badge" style="background:#0d9488">INT</span><span style="flex:1">해외 영업</span><i class="bi bi-arrow-right sw-ar"></i></div>
           <div class="sw-item" onclick="goSite('https://wt-management.github.io/wtj-management/','')"><span class="sw-badge" style="background:#f59e0b">JP</span><span style="flex:1">일본법인 관리</span><i class="bi bi-arrow-right sw-ar"></i></div>
+          <div class="sw-item" onclick="location.href='https://wt-management.github.io/wt-corps/us.html'"><span class="sw-badge" style="background:#1e3a8a">US</span><span style="flex:1">미국법인 관리</span><i class="bi bi-arrow-right sw-ar"></i></div>
+          <div class="sw-item" onclick="location.href='https://wt-management.github.io/wt-corps/th.html'"><span class="sw-badge" style="background:#b45309">TH</span><span style="flex:1">태국법인 관리</span><i class="bi bi-arrow-right sw-ar"></i></div>
           <div class="sw-item" onclick="location.href='https://wt-management.github.io/wt-consumables/ilbo.html'"><span class="sw-badge" style="background:#16a34a">일보</span><span style="flex:1">일일매출보고</span><i class="bi bi-arrow-right sw-ar"></i></div>
           <div class="sw-item" onclick="location.href='https://wt-management.github.io/pm-planner/'"><span class="sw-badge" style="background:#8b5cf6">기획</span><span style="flex:1">상품기획 PM</span><i class="bi bi-arrow-right sw-ar"></i></div>
           <div class="sw-item" onclick="location.href='https://wt-management.github.io/sales-portfolio/'"><span class="sw-badge" style="background:#3f5e7a">PF</span><span style="flex:1">Sales Portfolio</span><i class="bi bi-arrow-right sw-ar"></i></div>
@@ -650,15 +660,21 @@ tr.lb-clk:hover td,tr.qs-clk:hover td{background:var(--surface-2)}
       <div style="position:relative;height:230px"><canvas id="corp-cmp-chart"></canvas></div>
     </div>
     <div class="card p-3 mb-3">
-      <div id="corp-detail-head" style="margin-bottom:10px"></div>
+      <div id="corp-hero"></div>
       <div class="row g-2 mb-3" id="corp-kpi"></div>
-      <div style="font-size:12.5px;font-weight:800;margin-bottom:6px">월별 추이 <span style="font-weight:500;color:#94a3b8;font-size:11px">· 회계+미반영 vs 목표 vs 전년 · 백만원</span></div>
+      <div id="corp-pq" class="mb-3"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px">
+        <div style="font-size:12.5px;font-weight:800">월별 추이 <span style="font-weight:500;color:#94a3b8;font-size:11px">· 회계+미반영 vs 목표 vs 전년 · 백만원</span></div>
+        <button class="btn btn-sm btn-light" style="font-size:11px;font-weight:700;border:1px solid var(--line)" id="corp-cum-btn" onclick="corpToggleCum()">누적 보기</button>
+      </div>
       <div style="position:relative;height:220px"><canvas id="corp-chart"></canvas></div>
       <div class="dr-col" style="margin-top:16px">
         <div><div class="dr-sec-t">거래처 Top</div><div id="corp-custs"></div></div>
-        <div><div class="dr-sec-t">제품 Top <span style="font-weight:500;color:#94a3b8;font-size:10px">· 소속 국가 기준(참고)</span></div><div id="corp-prods"></div></div>
+        <div><div class="dr-sec-t">제품 Top <span style="font-weight:500;color:#94a3b8;font-size:10px">· 법인 거래처 구매 기준</span></div><div id="corp-prods"></div></div>
       </div>
+      <div id="corp-clients"></div>
       <div id="corp-pend"></div>
+      <div class="exec-ins" id="corp-insight" style="margin-top:14px"></div>
     </div>
   </div>
 
@@ -2073,9 +2089,10 @@ function openCustInfo(gi){
 }
 
 // ── 법인별 상세현황 (태국·미국·일본법인) — _drillSeg 재사용, 회계+미반영 기준 ──
-let _corpSel='태국법인', _corpChart=null, _corpCmpChart=null;
+let _corpSel='태국법인', _corpChart=null, _corpCmpChart=null, _corpCum=false;
 const _CORPS=[{n:'태국법인',c:'#0d9488',i:'bi-building'},{n:'미국법인',c:'#4f46e5',i:'bi-building'},{n:'일본법인',c:'#f59e0b',i:'bi-building'}];
 function corpGo(n){ if(_CORPS.some(x=>x.n===n)) _corpSel=n; renderCorps(); }
+function corpToggleCum(){ _corpCum=!_corpCum; renderCorps(); }
 function renderCorps(){
   try{ _rptBuildCache(); }catch(e){ return; }
   const P=_rptPeriods(), f=1, t=P.mo;
@@ -2105,43 +2122,132 @@ function renderCorps(){
       scales:{x:{grid:{display:false}},y:{grid:{color:'#f3f4f6'},ticks:{callback:v=>v+'억',font:{size:10}}}}}});
   // 선택 법인 상세
   const sel=segs.find(s=>s.cp.n===_corpSel)||segs[0];
-  document.getElementById('corp-detail-head').innerHTML=
-    '<span style="font-size:15px;font-weight:800;color:'+sel.cp.c+'"><i class="bi '+sel.cp.i+' me-1"></i>'+sel.cp.n+' 상세</span>'+
-    ' <span style="font-size:11.5px;color:#94a3b8">· 1~'+t+'월 누적 · 실적 = 회계 + 미반영</span>';
+  // ── 히어로: 연간 목표 게이지+시간진도 마커 + USD 근사 + (일본) 관리사이트 버튼
+  const yTgt=sm(sel.seg.tgt,1,12), yAch=yTgt>0?sel.act/yTgt*100:null, paceP=Math.round(t/12*100);
+  const _rate=(typeof EXPORT!=='undefined'&&EXPORT&&Number(EXPORT.rate))||1450;
+  const _usd=v=>{const u=v/_rate;return u>=1e6?'$'+(u/1e6).toFixed(2)+'M':'$'+Math.round(u/1e3).toLocaleString()+'K';};
+  const gapP=yAch==null?null:yAch-paceP;
+  document.getElementById('corp-hero').innerHTML=
+    '<div class="corp-hero" style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 60%,'+sel.cp.c+'59 145%)">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">'+
+    '<span style="font-size:14px;font-weight:800"><i class="bi '+sel.cp.i+' me-1" style="color:'+sel.cp.c+'"></i>'+sel.cp.n+' 상세 <span style="font-size:11px;font-weight:500;color:var(--hero-sub)">· 1~'+t+'월 누적 · 실적 = 회계 + 미반영</span></span>'+
+    (sel.cp.n==='일본법인'?'<button class="btn btn-sm" style="background:#f59e0b;color:#fff;font-weight:700;font-size:11.5px" onclick="goSite(\'https://wt-management.github.io/wtj-management/\',\'\')"><i class="bi bi-box-arrow-up-right me-1"></i>일본법인 관리 사이트</button>':'')+
+    '</div>'+
+    '<div style="display:flex;gap:20px;align-items:baseline;margin-top:8px;flex-wrap:wrap">'+
+    '<span style="font-size:1.8rem;font-weight:750;font-variant-numeric:tabular-nums">'+fmtW(sel.act)+'</span>'+
+    '<span style="font-size:11.5px;color:var(--hero-sub)">≈ '+_usd(sel.act)+' <span style="font-size:10px">(₩'+_rate.toLocaleString()+'/$ 근사)</span></span>'+
+    '<span style="font-size:12px;color:#cbd5e1">연간 목표 '+(yTgt>0?fmtW(yTgt):'미설정')+'</span></div>'+
+    (yTgt>0?
+      '<div class="sb-gauge"><div class="fill" style="width:'+Math.min(yAch,100).toFixed(1)+'%;background:linear-gradient(90deg,'+sel.cp.c+',#5eead4)"></div><div class="pace" style="left:'+paceP+'%" title="시간 진도 '+t+'/12개월"></div></div>'+
+      '<div style="font-size:11px;color:var(--hero-sub)">연간 달성 <b style="color:'+(gapP>=0?'var(--pos-hero)':'var(--warn-hero)')+'">'+yAch.toFixed(1)+'%</b> · 시간진도 '+paceP+'% 대비 '+(gapP>=0?'+':'')+gapP.toFixed(1)+'%p</div>'
+      :'<div style="font-size:11px;color:var(--hero-sub);margin-top:8px">목표(sales_targets) 미설정</div>')+
+    '</div>';
+  // ── 법인 거래처(2026) 정밀 집계: 거래처수·주문건수·제품 — 국가 근사가 아닌 법인 소속 거래처만(_regionOf 필터)
+  const corpProds={}; let corpCnt=0, corpClients=0;
+  Object.entries(INTL.countries||{}).forEach(([cc,c])=>Object.entries(c.clientData||{}).forEach(([nm,cd])=>{
+    if(_regionOf(cc,nm)!==sel.cp.n) return;
+    corpClients++; corpCnt+=Number(cd.cnt)||0;
+    Object.entries(cd.prods||{}).forEach(([p,v])=>{ corpProds[p]=(corpProds[p]||0)+(Number(v)||0); });
+  }));
   const kpi=[
-    {l:'누적 실적',v:fmtW(sel.act),c:sel.cp.c},
+    {l:'거래처 · 주문',v:corpClients+'개 · '+corpCnt+'건',c:sel.cp.c},
     {l:'회계 / 미반영',v:fmtW(sel.acc)+' <span style="font-size:.8em;color:#7c3aed">+'+fmtW(sel.pnd)+'</span>',c:'#0f172a'},
     {l:'전년 동기 (YoY)',v:fmtW(sel.prev)+' <span style="font-size:.8em">'+badge(sel.yoy)+'</span>',c:'#64748b'},
-    {l:'목표 / 달성률',v:(sel.tg>0?fmtW(sel.tg)+' <b style="color:'+_achCol(sel.ach)+'">'+sel.ach.toFixed(0)+'%</b>':'미설정'),c:_achCol(sel.ach)},
+    {l:'누적 목표 / 달성',v:(sel.tg>0?fmtW(sel.tg)+' <b style="color:'+_achCol(sel.ach)+'">'+sel.ach.toFixed(0)+'%</b>':'미설정'),c:_achCol(sel.ach)},
     {l:'해외 내 비중',v:sel.share+'%',c:'#0d9488'},
   ];
   document.getElementById('corp-kpi').innerHTML=kpi.map(c=>'<div class="col-6 col-md"><div class="kpi-card acc-card" style="padding:12px 14px;border-left-color:'+c.c+'"><div class="kpi-label">'+c.l+'</div><div class="kpi-value" style="font-size:1.12rem;color:'+c.c+'">'+c.v+'</div></div></div>').join('');
-  // 월별 상세 차트 (백만원): 회계+미반영 스택 / 목표·전년 라인
+  // ── 분기·반기 미니표 (실적·전년=동기간, 목표=기간 전체 — YoY 착시 방지)
+  const pers=[{l:'1분기',f:1,t:3},{l:'2분기',f:4,t:6},{l:'상반기',f:1,t:6},{l:'3분기',f:7,t:9},{l:'4분기',f:10,t:12},{l:'하반기',f:7,t:12}].filter(p=>p.f<=t);
+  document.getElementById('corp-pq').innerHTML=
+    '<div class="dr-sec-t">분기·반기 실적 <span style="font-weight:500;color:#94a3b8;font-size:10px">· 백만원 · 실적=회계+미반영 · 전년은 동기간</span></div>'+
+    '<div style="overflow-x:auto"><table class="corp-pq-t"><thead><tr><th>기간</th><th>실적</th><th>전년</th><th>YoY</th><th>목표</th><th>달성</th></tr></thead><tbody>'+
+    pers.map(p=>{
+      const tt=Math.min(p.t,t), run=p.t>t;
+      const a=sm(sel.seg.mo26,p.f,tt)+sm(sel.seg.pend,p.f,tt), pv=sm(sel.seg.mo25,p.f,tt), tg=sm(sel.seg.tgt,p.f,p.t);
+      const y=pct(a,pv), ach=tg>0?a/tg*100:null;
+      return '<tr><td style="font-weight:700">'+p.l+(run?' <span style="font-size:10px;color:#94a3b8">(진행중)</span>':'')+'</td>'+
+        '<td style="font-weight:700">'+_fM(a)+'</td><td style="color:#64748b">'+_fM(pv)+'</td>'+
+        '<td style="color:'+_yoyCol(y)+';font-weight:700">'+(y==null?'-':arrow(y))+'</td>'+
+        '<td style="color:#64748b">'+_fM(tg)+'</td>'+
+        '<td style="color:'+_achCol(ach)+';font-weight:700">'+(ach==null?'-':ach.toFixed(0)+'%')+'</td></tr>';
+    }).join('')+'</tbody></table></div>';
+  // ── 월별/누적 차트 (토글): 월별=회계+미반영 스택+목표·전년 라인 / 누적=3라인(실적은 데이터월까지)
   const r6=v=>Math.round((Number(v)||0)/1e6);
+  const _cbtn=document.getElementById('corp-cum-btn'); if(_cbtn) _cbtn.textContent=_corpCum?'월별 보기':'누적 보기';
   if(_corpChart){_corpChart.destroy();_corpChart=null;}
-  _corpChart=new Chart(document.getElementById('corp-chart'),{type:'bar',
-    data:{labels:m12.map(m=>m+'월'),datasets:[
+  let dsets, chOpts;
+  if(_corpCum){
+    let sA=0,sT=0,sP=0;
+    const aC=m12.map(m=>{ if(m>t) return null; sA+=r6((sel.seg.mo26[m]||0)+(sel.seg.pend[m]||0)); return sA; });
+    const tC=m12.map(m=>{ sT+=r6(sel.seg.tgt[m]); return sT; });
+    const pC=m12.map(m=>{ sP+=r6(sel.seg.mo25[m]); return sP; });
+    dsets=[
+      {type:'line',label:'누적 실적',data:aC,borderColor:sel.cp.c,backgroundColor:sel.cp.c+'22',borderWidth:2.5,pointRadius:2,fill:true,tension:.25,spanGaps:false},
+      {type:'line',label:'누적 목표',data:tC,borderColor:'#f59e0b',borderWidth:2,pointRadius:0,tension:.25},
+      {type:'line',label:'누적 전년',data:pC,borderColor:'#94a3b8',borderWidth:2,borderDash:[5,4],pointRadius:0,tension:.25}];
+    chOpts={x:{grid:{display:false}},y:{grid:{color:'#f3f4f6'},ticks:{font:{size:10}}}};
+  } else {
+    dsets=[
       {label:'회계',data:m12.map(m=>r6(sel.seg.mo26[m])),backgroundColor:sel.cp.c,stack:'s',borderRadius:2,maxBarThickness:22},
       {label:'미반영',data:m12.map(m=>r6(sel.seg.pend[m])),backgroundColor:'#a5b4fc',stack:'s',borderRadius:2,maxBarThickness:22},
       {type:'line',label:'목표',data:m12.map(m=>r6(sel.seg.tgt[m])),borderColor:'#f59e0b',borderWidth:2,pointRadius:0,tension:.3},
-      {type:'line',label:'전년',data:m12.map(m=>r6(sel.seg.mo25[m])),borderColor:'#94a3b8',borderWidth:2,borderDash:[5,4],pointRadius:0,tension:.3}
-    ]},
+      {type:'line',label:'전년',data:m12.map(m=>r6(sel.seg.mo25[m])),borderColor:'#94a3b8',borderWidth:2,borderDash:[5,4],pointRadius:0,tension:.3}];
+    chOpts={x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:'#f3f4f6'},ticks:{font:{size:10}}}};
+  }
+  _corpChart=new Chart(document.getElementById('corp-chart'),{type:'bar',
+    data:{labels:m12.map(m=>m+'월'),datasets:dsets},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
       plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y+'백만'}}},
-      scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:'#f3f4f6'},ticks:{font:{size:10}}}}}});
-  // 거래처/제품 Top + 미반영 내역 (openDrill 마크업 재사용)
+      scales:chOpts}});
+  // ── 거래처/제품 Top (제품=법인 거래처 구매분 정밀, 없으면 국가 근사 폴백)
   const bar=(n,v,mx,col)=>'<div class="dr-bar"><span class="n" title="'+esc(n)+'">'+esc(n)+'</span><span class="t"><span class="f" style="width:'+(mx>0?Math.max(v/mx*100,1):0).toFixed(1)+'%;background:'+col+'"></span></span><span class="vv">'+_fM(v)+'</span></div>';
   const custTop=Object.entries(sel.seg.custs).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  const prodTop=Object.entries(sel.seg.prods).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const prodSrc=Object.keys(corpProds).length?corpProds:sel.seg.prods;
+  const prodTop=Object.entries(prodSrc).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const cmax=custTop.length?custTop[0][1]:1, pmax=prodTop.length?prodTop[0][1]:1;
   document.getElementById('corp-custs').innerHTML=custTop.length?custTop.map(c=>bar(c[0],c[1],cmax,sel.cp.c)).join(''):'<div style="font-size:12px;color:#94a3b8">데이터 없음</div>';
   document.getElementById('corp-prods').innerHTML=prodTop.length?prodTop.map(c=>bar(c[0],c[1],pmax,'#7c3aed')).join(''):'<div style="font-size:12px;color:#94a3b8">데이터 없음</div>';
+  // ── 거래처 변동: 신규/유지/올해 미거래 (2026 vs 2025, _rnorm 키로 표기차 흡수)
+  const _cl=(src,out)=>Object.entries((src&&src.countries)||{}).forEach(([cc,c])=>Object.entries(c.clientData||{}).forEach(([nm,cd])=>{
+    if(_regionOf(cc,nm)!==sel.cp.n) return; const k=_rnorm(nm);
+    out[k]={n:nm,v:((out[k]||{}).v||0)+(Number(cd.total)||0)};
+  }));
+  const curC={},prvC={}; _cl(INTL,curC); _cl(INTL.data2025||{},prvC);
+  const nw=Object.keys(curC).filter(k=>!prvC[k]).sort((a,b)=>curC[b].v-curC[a].v);
+  const kpN=Object.keys(curC).filter(k=>prvC[k]).length;
+  const lost=Object.keys(prvC).filter(k=>!curC[k]).sort((a,b)=>prvC[b].v-prvC[a].v);
+  const chip=(l,n,c)=>'<span class="corp-cl-chip" style="background:'+c+'18;color:'+c+'">'+l+' '+n+'</span>';
+  const li=(o,col)=>'<div class="dr-pend"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(o.n)+'</span><span style="font-weight:700;color:'+col+'">'+fmtW(o.v)+'</span></div>';
+  document.getElementById('corp-clients').innerHTML=
+    '<div class="dr-sec-t" style="margin-top:16px">거래처 변동 <span style="font-weight:500;color:#94a3b8;font-size:10px">· 2026 vs 2025 거래 기준</span></div>'+
+    '<div style="margin-bottom:8px">'+chip('신규',nw.length,'#16a34a')+chip('유지',kpN,'#64748b')+chip('올해 미거래',lost.length,'#dc2626')+'</div>'+
+    '<div class="dr-col">'+
+    '<div><div style="font-size:11px;font-weight:700;color:#16a34a;margin-bottom:4px">신규 거래처 Top</div>'+(nw.length?nw.slice(0,8).map(k=>li(curC[k],'#16a34a')).join(''):'<div style="font-size:11.5px;color:#94a3b8">없음</div>')+'</div>'+
+    '<div><div style="font-size:11px;font-weight:700;color:#dc2626;margin-bottom:4px">올해 미거래 <span style="font-weight:500;color:#94a3b8">(전년 매출)</span></div>'+(lost.length?lost.slice(0,8).map(k=>li(prvC[k],'#dc2626')).join(''):'<div style="font-size:11.5px;color:#94a3b8">없음</div>')+'</div>'+
+    '</div>';
+  // ── 미반영 내역
   const pr=(sel.seg.pendRows||[]).slice().sort((a,b)=>Number(b.amount||0)-Number(a.amount||0));
   const pendTot=pr.reduce((s,p)=>s+Number(p.amount||0),0);
   document.getElementById('corp-pend').innerHTML=pr.length?(
     '<div class="dr-sec-t" style="margin-top:16px">미반영 내역 <span style="font-weight:500;color:#94a3b8">· '+pr.length+'건 합 '+_fM(pendTot)+'백만</span></div>'+
     pr.slice(0,8).map(p=>'<div class="dr-pend"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc((p.customer||p.country||'')+' · '+(p.product||''))+'</span><span style="color:#94a3b8">'+esc(p.expectedDate||'')+'</span><span style="font-weight:700;width:62px;text-align:right">'+_fM(Number(p.amount||0))+'</span></div>').join('')
   ):'';
+  // ── 자동 인사이트 1줄
+  const mv=m12.map(m=>(Number(sel.seg.mo26[m])||0)+(Number(sel.seg.pend[m])||0)), bm=mv.indexOf(Math.max.apply(null,mv))+1;
+  const custSum=Object.values(sel.seg.custs).reduce((s,v)=>s+v,0);
+  const conc=custTop.length&&custSum>0?Math.round(custTop[0][1]/custSum*100):0;
+  const need=(yTgt>sel.act&&t<12)?(yTgt-sel.act)/(12-t):0;
+  const ins=[];
+  if(Math.max.apply(null,mv)>0) ins.push('최대월 '+bm+'월('+_fM(mv[bm-1])+'백만)');
+  if(need>0) ins.push('연간 목표까지 잔여 '+(12-t)+'개월 월평균 <b>'+_fM(need)+'백만</b> 필요');
+  else if(yTgt>0&&sel.act>=yTgt) ins.push('<b style="color:#16a34a">연간 목표 조기 달성</b>');
+  if(conc>=40&&custTop.length&&corpClients>1) ins.push('최대 거래처 편중 <b style="color:#f59e0b">'+conc+'%</b>');
+  if(nw.length) ins.push('신규 거래처 '+nw.length+'개');
+  if(lost.length>=3) ins.push('<b style="color:#dc2626">올해 미거래 '+lost.length+'개 점검 필요</b>');
+  const insEl=document.getElementById('corp-insight');
+  insEl.innerHTML=ins.length?('<i class="bi bi-lightbulb-fill me-1" style="color:#f59e0b"></i>'+ins.join(' · ')):'';
+  insEl.style.display=ins.length?'':'none';
 }
 
 // ── 수출의 탑 ──────────────────────────────────────────────
