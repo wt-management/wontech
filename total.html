@@ -670,7 +670,7 @@ tr.lb-clk:hover td,tr.qs-clk:hover td{background:var(--surface-2)}
       </div>
       <div style="position:relative;height:220px"><canvas id="corp-chart"></canvas></div>
       <div class="dr-col" style="margin-top:16px">
-        <div><div class="dr-sec-t">거래처 Top</div><div id="corp-custs"></div></div>
+        <div><div class="dr-sec-t" style="display:flex;justify-content:space-between;align-items:baseline">거래처 Top <a onclick="corpClientsAll()" style="font-size:11px;font-weight:700;color:var(--brand-strong);cursor:pointer">전체 보기 ›</a></div><div id="corp-custs"></div></div>
         <div><div class="dr-sec-t">제품 Top <span style="font-weight:500;color:#94a3b8;font-size:10px">· 법인 거래처 구매 기준</span></div><div id="corp-prods"></div></div>
       </div>
       <div id="corp-clients"></div>
@@ -2073,11 +2073,15 @@ function openCustInfo(gi){
   ((hD&&hD.txns2026)||[]).forEach(t=>txns.push([t[3]||'',t[1]||'',+t[4]||0]));      // DEVICE [월,날짜,거래처,품명,금액,수량]
   txns.sort((a,b)=>String(b[1]).localeCompare(String(a[1])));
   let sub='거래처 상세 · 국내';
-  if(!hC&&!hD){ // 해외 클라이언트
+  if(!hC&&!hD){ // 해외 클라이언트 (2026 → 없으면 2025 폴백: '올해 미거래' 거래처도 조회 가능)
+    let _found=false;
     for(const cc in(INTL.countries||{})){ const cd=(INTL.countries[cc].clientData||{})[nm];
-      if(cd){ addMo(cd.m,mo26); y26=Number(cd.total)||0; sub='거래처 상세 · 해외 ('+esc(cc)+')';
+      if(cd){ addMo(cd.m,mo26); y26=Number(cd.total)||0; last=cd.last||last; sub='거래처 상세 · 해외 ('+esc(cc)+')';
+        Object.entries(cd.prods||{}).forEach(([k,v])=>{ prods[k]=(prods[k]||0)+(+v||0); });
         const c25=(((INTL.data2025||{}).countries||{})[cc]||{}).clientData; const p=c25&&c25[nm];
-        if(p){ addMo(p.m,mo25); y25=Number(p.total)||0; } break; } }
+        if(p){ addMo(p.m,mo25); y25=Number(p.total)||0; } _found=true; break; } }
+    if(!_found){ for(const cc in(((INTL.data2025||{}).countries)||{})){ const p=((INTL.data2025.countries[cc]||{}).clientData||{})[nm];
+      if(p){ addMo(p.m,mo25); y25=Number(p.total)||0; sub='거래처 상세 · 해외 ('+esc(cc)+') · <b style="color:#dc2626">올해 미거래</b>'; break; } } }
   }
   // 동기간 YoY(월별 있으면) — 올해 누적 vs 전년연간 착시 방지
   const _cm=Object.keys(mo26).map(Number).filter(x=>x>=1&&x<=12);
@@ -2091,10 +2095,70 @@ function openCustInfo(gi){
 }
 
 // ── 법인별 상세현황 (태국·미국·일본법인) — _drillSeg 재사용, 회계+미반영 기준 ──
-let _corpSel='태국법인', _corpChart=null, _corpCmpChart=null, _corpCum=false;
+let _corpSel='태국법인', _corpChart=null, _corpCmpChart=null, _corpCum=false, _corpProdN=[];
 const _CORPS=[{n:'태국법인',c:'#0d9488',i:'bi-building'},{n:'미국법인',c:'#4f46e5',i:'bi-building'},{n:'일본법인',c:'#f59e0b',i:'bi-building'}];
 function corpGo(n){ if(_CORPS.some(x=>x.n===n)) _corpSel=n; renderCorps(); }
 function corpToggleCum(){ _corpCum=!_corpCum; renderCorps(); }
+// 월별 차트 막대 클릭 → 그 달 법인 거래처별 내역 (행 클릭=거래처 드릴 2단계)
+function corpMonthDetail(m){
+  const cp=_CORPS.find(x=>x.n===_corpSel)||_CORPS[0];
+  const rows=[];
+  Object.entries(INTL.countries||{}).forEach(([cc,c])=>Object.entries(c.clientData||{}).forEach(([nm,cd])=>{
+    if(_regionOf(cc,nm)!==cp.n) return; const v=Number((cd.m||{})[m])||0; if(v>0) rows.push({nm,v});
+  }));
+  const pend=(ILBO_PEND||[]).filter(p=>{ if(p.region!=='해외') return false;
+    const ds=String(p.expectedDate||p.expected_date||''); if(ds.slice(0,4)!=='2026') return false;
+    return parseInt(ds.slice(5,7),10)===m && _pendRegion(p.country)===cp.n; });
+  rows.sort((a,b)=>b.v-a.v);
+  const sum=rows.reduce((s,x)=>s+x.v,0)+pend.reduce((s,p)=>s+Number(p.amount||0),0), den=sum||1;
+  document.getElementById('ovd-title').textContent=cp.n+' · '+m+'월 거래처별 내역';
+  document.getElementById('ovd-body').innerHTML=
+    ((rows.length||pend.length)?(
+      rows.map(x=>{ const gi=_custRows.push(x.nm)-1;
+        return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f1f5f9;font-size:13px;cursor:pointer" onclick="closeOvDetail();openCustInfo('+gi+')" title="거래처 상세">'+
+        '<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:'+cp.c+'"></span>'+
+        '<span style="flex:1">'+esc(x.nm)+' <span style="color:#cbd5e1">›</span></span><span style="font-weight:700">'+fmtW(x.v)+'</span>'+
+        '<span style="width:44px;text-align:right;color:#94a3b8;font-size:11px">'+(x.v/den*100).toFixed(0)+'%</span></div>'; }).join('')+
+      pend.map(p=>'<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f1f5f9;font-size:12.5px">'+
+        '<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#7c3aed"></span>'+
+        '<span style="flex:1;color:#6d28d9">'+esc((p.customer||p.country||'')+' · '+(p.product||''))+' <span style="font-size:10px;color:#a78bfa">미반영</span></span>'+
+        '<span style="font-weight:700;color:#6d28d9">'+fmtW(Number(p.amount||0))+'</span></div>').join('')
+    ):'<div style="color:#94a3b8;font-size:13px;padding:10px">내역 없음</div>')+
+    '<div style="display:flex;justify-content:space-between;padding:10px 0 2px;font-weight:800;font-size:14px;border-top:2px solid #e2e8f0;margin-top:4px"><span>합계</span><span>'+fmtW(sum)+'</span></div>';
+  const _ovm=document.getElementById('ovDetailModal');
+  if(_ovm.parentElement!==document.body) document.body.appendChild(_ovm);
+  _ovm.style.display='flex';
+}
+// 거래처 전체 목록 모달 (2026vs2025 YoY·주문·최근거래, 행 클릭=거래처 드릴)
+function corpClientsAll(){
+  const cp=_CORPS.find(x=>x.n===_corpSel)||_CORPS[0];
+  const map={};
+  const scan=(src,yr)=>Object.entries((src&&src.countries)||{}).forEach(([cc,c])=>Object.entries(c.clientData||{}).forEach(([nm,cd])=>{
+    if(_regionOf(cc,nm)!==cp.n) return; const k=_rnorm(nm); const o=map[k]||(map[k]={n:nm,v26:0,v25:0,cnt:0,last:''});
+    if(yr===26){ o.n=nm; o.v26+=Number(cd.total)||0; o.cnt+=Number(cd.cnt)||0; const l=cd.last||''; if(l>o.last)o.last=l; }
+    else { o.v25+=Number(cd.total)||0; if(!o.n)o.n=nm; }
+  }));
+  scan(INTL,26); scan(INTL.data2025||{},25);
+  const list=Object.values(map).sort((a,b)=>b.v26-a.v26||b.v25-a.v25);
+  let el=document.getElementById('info-dbg');
+  if(!el){ el=document.createElement('div'); el.id='info-dbg'; el.className='rpt-dbg';
+    el.innerHTML='<div class="rpt-drill" id="info-drill"></div>';
+    el.addEventListener('click',function(e){ if(e.target===el) closeInfo(); });
+    document.body.appendChild(el); }
+  if(_infoChart){_infoChart.destroy();_infoChart=null;}
+  const tot26=list.reduce((s,o)=>s+o.v26,0), act=list.filter(o=>o.v26>0).length;
+  const rowsH=list.map(o=>{ const y=pct(o.v26,o.v25); const gi=_custRows.push(o.n)-1;
+    return '<tr class="lb-clk" onclick="openCustInfo('+gi+')" title="거래처 상세"><td style="font-weight:600;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(o.n)+' <span style="color:#cbd5e1">›</span></td>'+
+    '<td class="r" style="font-weight:700">'+(o.v26?fmtW(o.v26):'<span style="color:#cbd5e1">-</span>')+'</td>'+
+    '<td class="r" style="color:#64748b">'+(o.v25?fmtW(o.v25):'-')+'</td>'+
+    '<td class="r" style="color:'+_yoyCol(y)+';font-weight:700">'+((o.v26&&o.v25)?arrow(y):(o.v26?'<span style="color:#16a34a">신규</span>':'<span style="color:#dc2626">미거래</span>'))+'</td>'+
+    '<td class="r" style="color:#94a3b8;font-size:11px">'+(o.cnt||'-')+'</td>'+
+    '<td class="r" style="color:#94a3b8;font-size:11px">'+esc(o.last||'-')+'</td></tr>'; }).join('');
+  document.getElementById('info-drill').innerHTML=
+    '<div class="dr-hd"><div><h3>'+esc(cp.n)+' · 거래처 전체</h3><div style="font-size:11.5px;color:#94a3b8;margin-top:2px">활성 '+act+'개 / 전체 '+list.length+'개 · 2026 누적 '+fmtW(tot26)+' · 행 클릭 시 거래처 상세</div></div><button class="dr-x" onclick="closeInfo()">✕</button></div>'+
+    '<div style="overflow-x:auto;margin-top:10px"><table class="lb-table"><tr><th>거래처</th><th class="r">2026</th><th class="r">2025</th><th class="r">YoY</th><th class="r">주문</th><th class="r">최근거래</th></tr>'+rowsH+'</table></div>';
+  el.classList.add('on');
+}
 function renderCorps(){
   try{ _rptBuildCache(); }catch(e){ return; }
   const P=_rptPeriods(), f=1, t=P.mo;
@@ -2120,6 +2184,7 @@ function renderCorps(){
   _corpCmpChart=new Chart(document.getElementById('corp-cmp-chart'),{type:'bar',
     data:{labels:m12.map(m=>m+'월'),datasets:segs.map(s=>({label:s.cp.n,data:m12.map(m=>+(((s.seg.mo26[m]||0)+(s.seg.pend[m]||0))/1e8).toFixed(2)),backgroundColor:s.cp.c+'cc',borderRadius:3,maxBarThickness:16}))},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      onClick:(e,els)=>{ if(els&&els.length){ const ds=els[0].datasetIndex, m=els[0].index+1; if(_CORPS[ds]){ corpGo(_CORPS[ds].n); corpMonthDetail(m); } } },
       plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y||0)+'억'}}},
       scales:{x:{grid:{display:false}},y:{grid:{color:'#f3f4f6'},ticks:{callback:v=>v+'억',font:{size:10}}}}}});
   // 선택 법인 상세
@@ -2152,13 +2217,13 @@ function renderCorps(){
     Object.entries(cd.prods||{}).forEach(([p,v])=>{ corpProds[p]=(corpProds[p]||0)+(Number(v)||0); });
   }));
   const kpi=[
-    {l:'거래처 · 주문',v:corpClients+'개 · '+corpCnt+'건',c:sel.cp.c},
+    {l:'거래처 · 주문',v:corpClients+'개 · '+corpCnt+'건 <span style="color:#cbd5e1">›</span>',c:sel.cp.c,fn:'corpClientsAll()',tt:'거래처 전체 목록'},
     {l:'회계 / 미반영',v:fmtW(sel.acc)+' <span style="font-size:.8em;color:#7c3aed">+'+fmtW(sel.pnd)+'</span>',c:'#0f172a'},
     {l:'전년 동기 (YoY)',v:fmtW(sel.prev)+' <span style="font-size:.8em">'+badge(sel.yoy)+'</span>',c:'#64748b'},
-    {l:'누적 목표 / 달성',v:(sel.tg>0?fmtW(sel.tg)+' <b style="color:'+_achCol(sel.ach)+'">'+sel.ach.toFixed(0)+'%</b>':'미설정'),c:_achCol(sel.ach)},
+    {l:'누적 목표 / 달성',v:(sel.tg>0?fmtW(sel.tg)+' <b style="color:'+_achCol(sel.ach)+'">'+sel.ach.toFixed(0)+'%</b>':'미설정'),c:_achCol(sel.ach),fn:"showPage('goals',document.getElementById('nav-goals'))",tt:'목표 달성률 상세'},
     {l:'해외 내 비중',v:sel.share+'%',c:'#0d9488'},
   ];
-  document.getElementById('corp-kpi').innerHTML=kpi.map(c=>'<div class="col-6 col-md"><div class="kpi-card acc-card" style="padding:12px 14px;border-left-color:'+c.c+'"><div class="kpi-label">'+c.l+'</div><div class="kpi-value" style="font-size:1.12rem;color:'+c.c+'">'+c.v+'</div></div></div>').join('');
+  document.getElementById('corp-kpi').innerHTML=kpi.map(c=>'<div class="col-6 col-md"><div class="kpi-card acc-card'+(c.fn?' clk':'')+'" style="padding:12px 14px;border-left-color:'+c.c+'"'+(c.fn?(' onclick="'+c.fn+'" title="'+(c.tt||'')+'"'):'')+'><div class="kpi-label">'+c.l+'</div><div class="kpi-value" style="font-size:1.12rem;color:'+c.c+'">'+c.v+'</div></div></div>').join('');
   // ── 분기·반기 미니표 (실적·전년=동기간, 목표=기간 전체 — YoY 착시 방지)
   const pers=[{l:'1분기',f:1,t:3},{l:'2분기',f:4,t:6},{l:'상반기',f:1,t:6},{l:'3분기',f:7,t:9},{l:'4분기',f:10,t:12},{l:'하반기',f:7,t:12}].filter(p=>p.f<=t);
   document.getElementById('corp-pq').innerHTML=
@@ -2200,6 +2265,7 @@ function renderCorps(){
   _corpChart=new Chart(document.getElementById('corp-chart'),{type:'bar',
     data:{labels:m12.map(m=>m+'월'),datasets:dsets},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      onClick:(e,els)=>{ if(els&&els.length){ const m=els[0].index+1; if(m<=t) corpMonthDetail(m); } },
       plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y+'백만'}}},
       scales:chOpts}});
   // ── 거래처/제품 Top (제품=법인 거래처 구매분 정밀, 없으면 국가 근사 폴백)
@@ -2208,8 +2274,11 @@ function renderCorps(){
   const prodSrc=Object.keys(corpProds).length?corpProds:sel.seg.prods;
   const prodTop=Object.entries(prodSrc).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const cmax=custTop.length?custTop[0][1]:1, pmax=prodTop.length?prodTop[0][1]:1;
-  document.getElementById('corp-custs').innerHTML=custTop.length?custTop.map(c=>bar(c[0],c[1],cmax,sel.cp.c)).join(''):'<div style="font-size:12px;color:#94a3b8">데이터 없음</div>';
-  document.getElementById('corp-prods').innerHTML=prodTop.length?prodTop.map(c=>bar(c[0],c[1],pmax,'#7c3aed')).join(''):'<div style="font-size:12px;color:#94a3b8">데이터 없음</div>';
+  _corpProdN=prodTop.map(c=>c[0]);
+  document.getElementById('corp-custs').innerHTML=custTop.length?custTop.map(c=>{ const gi=_custRows.push(c[0])-1;
+    return '<div class="clk" style="cursor:pointer" onclick="openCustInfo('+gi+')" title="거래처 상세">'+bar(c[0],c[1],cmax,sel.cp.c)+'</div>'; }).join(''):'<div style="font-size:12px;color:#94a3b8">데이터 없음</div>';
+  document.getElementById('corp-prods').innerHTML=prodTop.length?prodTop.map((c,i)=>
+    '<div class="clk" style="cursor:pointer" onclick="openProdInfo(_corpProdN['+i+'])" title="제품 상세">'+bar(c[0],c[1],pmax,'#7c3aed')+'</div>').join(''):'<div style="font-size:12px;color:#94a3b8">데이터 없음</div>';
   // ── 거래처 변동: 신규/유지/올해 미거래 (2026 vs 2025, _rnorm 키로 표기차 흡수)
   const _cl=(src,out)=>Object.entries((src&&src.countries)||{}).forEach(([cc,c])=>Object.entries(c.clientData||{}).forEach(([nm,cd])=>{
     if(_regionOf(cc,nm)!==sel.cp.n) return; const k=_rnorm(nm);
@@ -2220,7 +2289,8 @@ function renderCorps(){
   const kpN=Object.keys(curC).filter(k=>prvC[k]).length;
   const lost=Object.keys(prvC).filter(k=>!curC[k]).sort((a,b)=>prvC[b].v-prvC[a].v);
   const chip=(l,n,c)=>'<span class="corp-cl-chip" style="background:'+c+'18;color:'+c+'">'+l+' '+n+'</span>';
-  const li=(o,col)=>'<div class="dr-pend"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(o.n)+'</span><span style="font-weight:700;color:'+col+'">'+fmtW(o.v)+'</span></div>';
+  const li=(o,col)=>{ const gi=_custRows.push(o.n)-1;
+    return '<div class="dr-pend clk" style="cursor:pointer" onclick="openCustInfo('+gi+')" title="거래처 상세"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(o.n)+' <span style="color:#cbd5e1">›</span></span><span style="font-weight:700;color:'+col+'">'+fmtW(o.v)+'</span></div>'; };
   document.getElementById('corp-clients').innerHTML=
     '<div class="dr-sec-t" style="margin-top:16px">거래처 변동 <span style="font-weight:500;color:#94a3b8;font-size:10px">· 2026 vs 2025 거래 기준</span></div>'+
     '<div style="margin-bottom:8px">'+chip('신규',nw.length,'#16a34a')+chip('유지',kpN,'#64748b')+chip('올해 미거래',lost.length,'#dc2626')+'</div>'+
