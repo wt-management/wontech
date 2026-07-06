@@ -341,7 +341,6 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
     <ul class="nav flex-column gap-0">
       <li><a class="nav-link" onclick="showPage('customers',this)"><i class="bi bi-building"></i>고객사</a></li>
       <li><a class="nav-link" onclick="showPage('equipments',this)"><i class="bi bi-cpu"></i>장비</a></li>
-      <li><a class="nav-link" onclick="showPage('inventory',this)"><i class="bi bi-box-seam"></i>재고관리</a></li>
 
       <li><a class="nav-link" onclick="showPage('products',this)"><i class="bi bi-box-seam"></i>제품</a></li>
       <li id="nav-device-reps" style="display:none"><a class="nav-link" onclick="showPage('device-reps',this)"><i class="bi bi-person-badge"></i>담당자별 분석 <span style="font-size:9px;background:#334155;color:#cbd5e1;border-radius:4px;padding:1px 5px;margin-left:2px">파트장</span></a></li>
@@ -779,11 +778,6 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
   </div>
 
   <!-- 일정 (방문·콜 스케줄) -->
-  <div id="page-inventory" class="page">
-    <div class="page-header"><h5><i class="bi bi-box-seam me-2"></i>재고관리 <span class="text-muted" style="font-size:12px;font-weight:400">· 본사 재고 · 팀 공용 저장</span></h5></div>
-    <div id="inv-root"></div>
-  </div>
-
   <div id="page-schedule" class="page">
     <div class="page-header"><h5><i class="bi bi-calendar-week me-2"></i>일정 <span class="text-muted" style="font-size:12px;font-weight:400">· 누가 오늘 어디 가는지</span></h5><button class="btn btn-primary btn-sm" onclick="openSchedule()"><i class="bi bi-plus-lg me-1"></i>일정 추가</button></div>
     <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
@@ -2247,14 +2241,13 @@ function showPage(name, el, noPush) {
   if(el) el.classList.add('active');
   else { const links = document.querySelectorAll('.nav-link');
     links.forEach(l=>{ if(l.textContent.trim().includes(
-      {'sales-overview':'종합',dashboard:'현황판',sales:'수주관리',quotes:'견적서',schedule:'일정',inventory:'재고관리',roi:'ROI 계산기',speech:'Sales Speech',customers:'고객사',equipments:'장비',logs:'상담일지',products:'제품',consumables:'소모품 매출','cons-hospitals':'병원별','device-sales':'제품 매출','device-reps':'담당자별',region:'지역별 분석',pending:'회계 미반영 매출','cons-accounts':'거래처'}[name]||''
+      {'sales-overview':'종합',dashboard:'현황판',sales:'수주관리',quotes:'견적서',schedule:'일정',roi:'ROI 계산기',speech:'Sales Speech',customers:'고객사',equipments:'장비',logs:'상담일지',products:'제품',consumables:'소모품 매출','cons-hospitals':'병원별','device-sales':'제품 매출','device-reps':'담당자별',region:'지역별 분석',pending:'회계 미반영 매출','cons-accounts':'거래처'}[name]||''
     )) l.classList.add('active'); }); }
   if(name==='sales-overview') renderSalesOverview();
   else if(name==='dashboard') renderDashboard();
   else if(name==='sales'||name==='pipeline'||name==='performance') renderSalesPage(name);
   else if(name==='quotes') renderQuotes();
   else if(name==='schedule'){ renderSchedule(); _loadDemoSched().then(renderSchedule); }
-  else if(name==='inventory') WT_INV.render();
   else if(name==='roi'){ if(!window._roiInit){ roiInit(); window._roiInit=1; } }
   else if(name==='speech'){ if(!window._speechInit){ buildSpeechGrid(); window._speechInit=1; } var _sd=document.getElementById('speech-detail-view'),_sg=document.getElementById('speech-grid-view'); if(_sd&&_sg){_sd.style.display='none';_sg.style.display='';} }
   else if(name==='customers') renderCustomers();
@@ -8010,126 +8003,5 @@ window.addEventListener('popstate', function(e) {
 })();
 function printPDF(){var t=document.title;var r=function(){document.title=t;window.removeEventListener('afterprint',r);};window.addEventListener('afterprint',r);window.print();}</script>
 <button id="pdf-fab" onclick="printPDF()" title="이 페이지를 PDF로 추출">📄 PDF</button>
-<script>
-// ── 재고관리 모듈 (WT_INV) — cons_cache key='inv_kr' 팀 공용, 자체 UI ──
-window.WT_INV=(function(){
-  var KEY='inv_kr', D={items:[],moves:[]}, loaded=false, q='';
-  var css='#wtinv-mbg{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;z-index:11000;padding:20px}'
-    +'#wtinv-mbg .wm{background:#fff;border-radius:14px;width:460px;max-width:96vw;max-height:90vh;overflow:auto;box-shadow:0 24px 70px rgba(0,0,0,.3);color:#1e293b;text-align:left}'
-    +'#wtinv-mbg .wmh{padding:15px 20px;border-bottom:1px solid #e8ebf0;display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:15px}'
-    +'#wtinv-mbg .wmb{padding:16px 20px}#wtinv-mbg .wmf{padding:13px 20px;border-top:1px solid #e8ebf0;display:flex;justify-content:space-between;gap:8px}'
-    +'#wtinv-mbg label{display:block;font-size:12px;font-weight:600;color:#475569;margin:9px 0 4px}'
-    +'#wtinv-mbg input,#wtinv-mbg select{width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fafbfc;color:#1e293b}'
-    +'.wtinv-btn{border:1px solid #e2e8f0;background:#fff;border-radius:8px;padding:7px 12px;font-weight:600;font-size:12.5px;color:#1e293b;cursor:pointer}'
-    +'.wtinv-btn.pri{background:#2563eb;border-color:#2563eb;color:#fff}'
-    +'.wtinv-chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700}'
-    +'.wtinv-kpi{background:#fff;border:1px solid #e8ebf0;border-radius:12px;padding:13px 15px;flex:1;min-width:130px}'
-    +'.wtinv-kpi .v{font-size:21px;font-weight:800;color:#0f172a;line-height:1}.wtinv-kpi .l{font-size:11.5px;color:#94a3b8;margin-top:5px}'
-    +'.wtinv-card{background:#fff;border:1px solid #e8ebf0;border-radius:12px;overflow:auto}'
-    +'.wtinv-card table{width:100%;border-collapse:collapse;font-size:12.5px;color:#334155}'
-    +'.wtinv-card th{background:#f8fafc;color:#64748b;font-weight:600;font-size:11px;text-align:left;padding:8px 11px;border-bottom:1px solid #eef1f5;white-space:nowrap}'
-    +'.wtinv-card td{padding:8px 11px;border-bottom:1px solid #f1f5f9;white-space:nowrap}'
-    +'.wtinv-card tbody tr{cursor:pointer}.wtinv-card tbody tr:hover td{background:#f8f9ff}'
-    +'.wtinv-sect{font-size:13.5px;font-weight:800;color:#0f172a;padding:13px 15px 5px}';
-  function ensure(){
-    if(!document.getElementById('wtinv-style')){var st=document.createElement('style');st.id='wtinv-style';st.textContent=css;document.head.appendChild(st);}
-    if(!document.getElementById('wtinv-mbg')){var d=document.createElement('div');d.id='wtinv-mbg';d.innerHTML='<div class="wm" id="wtinv-modal"></div>';document.body.appendChild(d);
-      d.addEventListener('click',function(e){if(e.target.id==='wtinv-mbg')closeM();});}
-  }
-  function esc(s){return(s==null?'':String(s)).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-  function uid(){return (window.crypto&&crypto.randomUUID)?crypto.randomUUID():'id'+Date.now()+Math.random().toString(16).slice(2);}
-  function today(){return new Date().toISOString().slice(0,10);}
-  function qty(name){var it=null,i;for(i=0;i<D.items.length;i++)if(D.items[i].name===name)it=D.items[i];var v=it?(Number(it.qty0)||0):0;
-    for(i=0;i<D.moves.length;i++){var m=D.moves[i];if(m.item===name)v+=(m.type==='입고'?1:-1)*(Number(m.qty)||0);}return v;}
-  async function load(){
-    if(loaded)return;
-    try{var r=await _sb.from('cons_cache').select('data').eq('key',KEY).maybeSingle();
-      if(r&&r.data&&r.data.data){D.items=r.data.data.items||[];D.moves=r.data.data.moves||[];}}catch(e){}
-    loaded=true;
-  }
-  async function save(){
-    try{var r=await _sb.from('cons_cache').upsert({key:KEY,data:D});
-      if(r&&r.error){alert('저장 실패: '+r.error.message);return false;}}catch(e){alert('저장 실패');return false;}
-    return true;
-  }
-  var _onSave=null,_onDel=null;
-  function openM(title,body,onSave,onDel){ensure();_onSave=onSave;_onDel=onDel;
-    document.getElementById('wtinv-modal').innerHTML='<div class="wmh"><span>'+title+'</span><button class="wtinv-btn" style="border:0;font-size:18px;line-height:1" onclick="WT_INV._close()">×</button></div>'
-      +'<div class="wmb">'+body+'</div>'
-      +'<div class="wmf"><div>'+(onDel?'<button class="wtinv-btn" style="color:#dc2626" onclick="WT_INV._del()">삭제</button>':'')+'</div>'
-      +'<div style="display:flex;gap:8px"><button class="wtinv-btn" onclick="WT_INV._close()">취소</button><button class="wtinv-btn pri" onclick="WT_INV._save()">저장</button></div></div>';
-    document.getElementById('wtinv-mbg').style.display='flex';
-  }
-  function closeM(){var d=document.getElementById('wtinv-mbg');if(d)d.style.display='none';}
-  async function saveM(){if(_onSave&&await _onSave()===false)return;closeM();render();}
-  async function delM(){if(!confirm('삭제할까요?'))return;if(_onDel)await _onDel();closeM();render();}
-  function g(id){var el=document.getElementById(id);return el?el.value:'';}
-  function mItem(id){var it=null,i;for(i=0;i<D.items.length;i++)if(D.items[i].id===id)it=D.items[i];
-    it=it||{name:'',unit:'개',qty0:'',safety:'',loc:''};
-    openM(id?'품목 수정':'품목 추가',
-      '<label>품목명</label><input id="wi-name" value="'+esc(it.name)+'">'
-      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px"><div><label>기초 수량</label><input id="wi-q0" type="number" value="'+(it.qty0||'')+'"></div><div><label>단위</label><input id="wi-unit" value="'+esc(it.unit||'개')+'"></div><div><label>안전재고</label><input id="wi-safe" type="number" value="'+(it.safety||'')+'"></div></div>'
-      +'<label>보관 위치</label><input id="wi-loc" value="'+esc(it.loc||'')+'" placeholder="예: 본사창고 A-3">',
-      async function(){var rec={id:id||uid(),name:g('wi-name').trim(),qty0:Number(g('wi-q0'))||0,unit:g('wi-unit').trim(),safety:Number(g('wi-safe'))||0,loc:g('wi-loc').trim()};
-        if(!rec.name){alert('품목명을 입력하세요');return false;}
-        var idx=-1;for(var j=0;j<D.items.length;j++)if(D.items[j].id===rec.id)idx=j;
-        if(idx>=0)D.items[idx]=rec;else D.items.push(rec);
-        return await save();},
-      id?async function(){D.items=D.items.filter(function(x){return x.id!==id;});await save();}:null);
-  }
-  function mMove(id){var m=null,i;for(i=0;i<D.moves.length;i++)if(D.moves[i].id===id)m=D.moves[i];
-    m=m||{date:today(),type:'입고',item:'',qty:'',ref:''};
-    var opts='<option value="">선택…</option>';
-    for(i=0;i<D.items.length;i++)opts+='<option'+(m.item===D.items[i].name?' selected':'')+'>'+esc(D.items[i].name)+'</option>';
-    openM(id?'입출고 수정':'입출고 등록',
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label>날짜</label><input id="wi-date" type="date" value="'+(m.date||today())+'"></div><div><label>구분</label><select id="wi-type"><option'+(m.type==='입고'?' selected':'')+'>입고</option><option'+(m.type==='출고'?' selected':'')+'>출고</option></select></div></div>'
-      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label>품목</label><select id="wi-item">'+opts+'</select></div><div><label>수량</label><input id="wi-qty" type="number" value="'+(m.qty||'')+'"></div></div>'
-      +'<label>참조 (선적번호/거래처/사유)</label><input id="wi-ref" value="'+esc(m.ref||'')+'">',
-      async function(){var rec={id:id||uid(),date:g('wi-date'),type:g('wi-type'),item:g('wi-item'),qty:Number(g('wi-qty'))||0,ref:g('wi-ref').trim()};
-        if(!rec.item){alert('품목을 선택하세요');return false;}
-        if(!rec.qty){alert('수량을 입력하세요');return false;}
-        var idx=-1;for(var j=0;j<D.moves.length;j++)if(D.moves[j].id===rec.id)idx=j;
-        if(idx>=0)D.moves[idx]=rec;else D.moves.push(rec);
-        return await save();},
-      id?async function(){D.moves=D.moves.filter(function(x){return x.id!==id;});await save();}:null);
-  }
-  function render(){
-    ensure();
-    var root=document.getElementById('inv-root');if(!root)return;
-    if(!loaded){root.innerHTML='<div style="padding:30px;color:#94a3b8;font-size:13px">재고 데이터 불러오는 중…</div>';load().then(render);return;}
-    var cm=today().slice(0,7);
-    var items=D.items.filter(function(x){return !q||x.name.toLowerCase().indexOf(q.toLowerCase())>=0;});
-    var low=D.items.filter(function(x){return qty(x.name)<(Number(x.safety)||0);});
-    var inM=0,outM=0;D.moves.forEach(function(m){if((m.date||'').slice(0,7)===cm){if(m.type==='입고')inM+=Number(m.qty)||0;else outM+=Number(m.qty)||0;}});
-    var iRows='';
-    items.forEach(function(it){var v=qty(it.name);var isLow=v<(Number(it.safety)||0);
-      iRows+='<tr onclick="WT_INV._mi(\''+it.id+'\')"><td><b style="color:#0f172a">'+esc(it.name)+'</b></td><td style="text-align:right;font-weight:700">'+v.toLocaleString()+' '+esc(it.unit||'')+'</td><td style="text-align:right;color:#94a3b8">'+(Number(it.safety)||0).toLocaleString()+'</td><td>'+esc(it.loc||'-')+'</td><td>'+(isLow?'<span class="wtinv-chip" style="background:#fee2e2;color:#b91c1c">부족</span>':'<span class="wtinv-chip" style="background:#dcfce7;color:#15803d">정상</span>')+'</td></tr>';});
-    if(!iRows)iRows='<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:26px">품목이 없습니다. [+ 품목]으로 등록하세요.</td></tr>';
-    var mv=D.moves.slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'');}).slice(0,60);
-    var mRows='';
-    mv.forEach(function(m){mRows+='<tr onclick="WT_INV._mm(\''+m.id+'\')"><td>'+esc(m.date)+'</td><td>'+(m.type==='입고'?'<span class="wtinv-chip" style="background:#dcfce7;color:#15803d">입고</span>':'<span class="wtinv-chip" style="background:#fef3c7;color:#b45309">출고</span>')+'</td><td><b style="color:#0f172a">'+esc(m.item)+'</b></td><td style="text-align:right;font-weight:700">'+(Number(m.qty)||0).toLocaleString()+'</td><td style="color:#64748b">'+esc(m.ref||'')+'</td></tr>';});
-    if(!mRows)mRows='<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:26px">입출고 이력이 없습니다.</td></tr>';
-    root.innerHTML=
-      '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center">'
-      +'<input placeholder="🔍 품목 검색" value="'+esc(q)+'" oninput="WT_INV._q(this.value)" style="padding:8px 11px;border:1px solid #e2e8f0;border-radius:8px;font-size:12.5px;background:#fff;color:#1e293b;width:180px">'
-      +'<span style="flex:1"></span>'
-      +'<button class="wtinv-btn" onclick="WT_INV._mi()">+ 품목</button>'
-      +'<button class="wtinv-btn pri" onclick="WT_INV._mm()">+ 입출고</button></div>'
-      +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">'
-      +'<div class="wtinv-kpi"><div class="v">'+D.items.length+'</div><div class="l">등록 품목</div></div>'
-      +'<div class="wtinv-kpi"><div class="v" style="color:'+(low.length?'#dc2626':'#0f172a')+'">'+low.length+'</div><div class="l">안전재고 미달</div></div>'
-      +'<div class="wtinv-kpi"><div class="v" style="color:#15803d">+'+inM.toLocaleString()+'</div><div class="l">이번달 입고</div></div>'
-      +'<div class="wtinv-kpi"><div class="v" style="color:#b45309">-'+outM.toLocaleString()+'</div><div class="l">이번달 출고</div></div></div>'
-      +'<div style="display:grid;grid-template-columns:1fr 1.15fr;gap:12px" class="wtinv-grid2">'
-      +'<div class="wtinv-card"><div class="wtinv-sect">📦 품목별 재고 <span style="font-weight:500;color:#94a3b8;font-size:11px">현재고 = 기초 + 입고 − 출고 · 행 클릭 수정</span></div>'
-      +'<table><thead><tr><th>품목</th><th style="text-align:right">현재고</th><th style="text-align:right">안전재고</th><th>위치</th><th>상태</th></tr></thead><tbody>'+iRows+'</tbody></table></div>'
-      +'<div class="wtinv-card"><div class="wtinv-sect">🚚 입출고 이력 <span style="font-weight:500;color:#94a3b8;font-size:11px">최근 60건</span></div>'
-      +'<table><thead><tr><th>날짜</th><th>구분</th><th>품목</th><th style="text-align:right">수량</th><th>참조</th></tr></thead><tbody>'+mRows+'</tbody></table></div></div>'
-      +'<style>@media(max-width:900px){.wtinv-grid2{grid-template-columns:1fr!important}}</style>';
-  }
-  return {render:render,_mi:mItem,_mm:mMove,_close:closeM,_save:saveM,_del:delM,_q:function(v){q=v;render();}};
-})();
-
-</script>
 </body>
 </html>
