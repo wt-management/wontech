@@ -401,7 +401,8 @@ button,.nav-link,.seg button,.qpreset,.sw-item{transition:background-color .15s 
 .sb-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px;flex-wrap:wrap}
 .sb-title{font-size:12px;font-weight:700;color:var(--hero-sub);letter-spacing:.04em}
 .sb-note{font-size:11px;color:var(--hero-sub)}
-.sb-grid{display:grid;grid-template-columns:1.5fr 1.3fr 1fr 1fr;gap:0}
+.sb-grid{display:grid;grid-template-columns:1.35fr 1.25fr .95fr .95fr 1.15fr;gap:0}
+.sb-cat{margin-top:7px}
 .sb-cell{padding:2px 20px 0;border-left:1px solid var(--hero-line);min-width:0}
 .sb-cell:first-child{padding-left:0;border-left:none}
 .sb-l{font-size:11px;font-weight:600;color:var(--hero-sub);display:flex;align-items:center;gap:6px}
@@ -1024,25 +1025,9 @@ function renderOverview(){
   const _rc=Object.values(INTL.prods_cons||{}).reduce((a,x)=>a+(+x||0),0), _rd=Object.values(INTL.prods_dev||{}).reduce((a,x)=>a+(+x||0),0), _rs=_rc+_rd;
   const _intlCons=_rs>0?intlI*_rc/_rs:0, _intlDev=_rs>0?intlI*_rd/_rs:intlI;
   const devTot=(domDevC+sumMo(pend.devMonthly,f,t))+_intlDev, consTot=(domConsC+sumMo(pend.consMonthly,f,t))+_intlCons, _cd=devTot+consTot||1;
-  // KPI 3종(미반영 포함=메인 / 회계=우측) + 장비vs소모품
-  const kpis=[
-    {l:'전사 매출 ('+periodLbl+')',i:'bi-currency-won',c:'#0f172a',conf:totalC,inc:totalI,prev:totalPrev,pend:allPend,go:'all'},
-    {l:'국내 매출',i:'bi-hospital',c:DOM_BLUE,conf:domC,inc:domI,prev:domPrev,pend:domPend,share:totalI>0?Math.round(domI/totalI*100):0,go:'dom'},
-    {l:'해외 매출',i:'bi-globe-americas',c:INTL_TEAL,conf:intl,inc:intlI,prev:intlPrev,pend:intlPend,share:totalI>0?Math.round(intlI/totalI*100):0,go:'intl'},
-  ];
-  const _dualHtml=kpis.map(c=>{
-    const y=pct(c.conf,c.prev);   // 성장률=회계 like-for-like
-    const sub=(c.share!=null?('전체의 '+c.share+'% · '):'')+'전년比 '+badge(y);
-    const side='<div class="kpi-side"><div class="kpi-side-label">회계 기준</div><div class="kpi-side-value" style="color:#64748b">'+fmtW(c.conf)+'</div><div class="kpi-side-sub">'+(c.pend>0?('+미반영 '+fmtW(c.pend)):'미반영 없음')+'</div></div>';
-    return '<div class="col-12 col-md-6 col-xl-3"><div class="kpi-card kpi-dual clk" onclick="qGo(\''+c.go+'\',\'all\')" title="상세 조회로 이동">'+
-      '<div class="kpi-main"><div class="kpi-label"><i class="bi '+c.i+' me-1" style="color:'+c.c+'"></i>'+c.l+' <span style="color:#cbd5e1">›</span></div>'+
-      '<div class="kpi-value" style="color:'+c.c+';font-size:1.4rem">'+fmtW(c.inc)+'</div>'+
-      '<div class="kpi-sub">'+sub+'</div></div>'+side+'</div></div>';
-  }).join('');
-  const _catRow=(lbl,v,col)=>{ const p=Math.round(v/_cd*100); return '<div class="clk" style="cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;font-size:12px;margin-top:5px" onclick="qGo(\'all\',\''+lbl+'\')" title="'+lbl+' 상세 조회"><span style="font-weight:700;color:'+col+'">'+lbl+' <span style="color:#cbd5e1">›</span></span><span><b style="font-size:1.05rem;color:#0f172a">'+fmtW(v)+'</b> <span style="color:#94a3b8">'+p+'%</span></span></div><div style="height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden;margin-top:3px"><div style="width:'+p+'%;height:100%;background:'+col+'"></div></div>'; };
-  const _catHtml='<div class="col-12 col-md-6 col-xl-3"><div class="kpi-card" style="height:100%"><div class="kpi-label"><i class="bi bi-boxes me-1" style="color:#7c3aed"></i>장비 vs 소모품 <span style="font-weight:500;color:#cbd5e1;font-size:10px">미반영 포함</span></div>'+_catRow('장비',devTot,'#7c3aed')+_catRow('소모품',consTot,'#0891b2')+'</div></div>';
-  const _etcNote = etcC>0?('<div class="col-12"><div style="font-size:11px;color:#94a3b8;margin-top:2px"><i class="bi bi-info-circle me-1"></i>전사 합계엔 <b style="color:#64748b">기타(의료기기·서지컬·B2C·고객만족) '+fmtW(etcC)+'</b> 포함(회계 전체 정합) · 국내 카드는 한국영업(소모품·제품)만 표시</div></div>'):'';
-  document.getElementById('ov-kpi').innerHTML=_dualHtml+_catHtml+_etcNote;
+  // KPI 카드 줄은 스코어보드와 중복이라 제거 — 기타 포함 안내문만 유지 (장비vs소모품은 스코어보드 5번째 셀로 이동)
+  const _etcNote = etcC>0?('<div class="col-12"><div style="font-size:11px;color:#94a3b8;margin-top:2px"><i class="bi bi-info-circle me-1"></i>전사 합계엔 <b style="color:#64748b">기타(의료기기·서지컬·B2C·고객만족) '+fmtW(etcC)+'</b> 포함(회계 전체 정합) · 국내는 한국영업(소모품·제품)만 표시</div></div>'):'';
+  document.getElementById('ov-kpi').innerHTML=_etcNote;
 
   // 월별 추이
   const m12=Array.from({length:12},(_,i)=>i+1);
@@ -1078,7 +1063,7 @@ function renderOverview(){
   renderThisMonth();
 
   // 스코어보드 히어로 + 인사이트 (이미 계산된 로컬만 전달)
-  try{ _renderScoreboard(f,t,{totalC,totalI,totalPrev,allPend,domC,domI,domPrev,intl,intlPend,intlI,intlPrev,etcC}); }catch(e){ console.warn('scoreboard',e); }
+  try{ _renderScoreboard(f,t,{totalC,totalI,totalPrev,allPend,domC,domI,domPrev,intl,intlPend,intlI,intlPrev,etcC,devTot,consTot}); }catch(e){ console.warn('scoreboard',e); }
 }
 function renderChannelMix(f,t){
   const pend=_pendingAgg(2026);
@@ -1438,6 +1423,20 @@ function closeDrill(){ const b=document.getElementById('rpt-dbg'); if(b)b.classL
 // ── 전사 스코어보드(히어로) + 자동 인사이트 칩 ─────────────────
 // renderOverview가 이미 계산한 로컬만 받아 표시(데이터 로직 무변경). SALEST 0건·전년 0 가드.
 const _ovTgt=(f,t)=>{let s=0;(SALEST||[]).forEach(r=>{if(+r.year===2026&&+r.month>=f&&+r.month<=t)s+=Number(r.amount||0);});return s;};
+// 장비 vs 소모품 셀 (스코어보드용 — 다크 배경 미니바, 클릭=카테고리 조회)
+function _sbCat(d){
+  const dev=Number(d.devTot)||0, cons=Number(d.consTot)||0, cd=dev+cons||1;
+  const row=(lbl,v,col)=>{ const p=Math.round(v/cd*100);
+    return '<div class="sb-cat clk" onclick="qGo(\'all\',\''+lbl+'\')" title="'+lbl+' 상세 조회">'+
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:6px">'+
+      '<span style="font-size:11px;font-weight:700;color:'+col+'">'+lbl+' <span style="color:#475569">›</span></span>'+
+      '<span style="font-size:12px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums">'+fmtW(v)+' <span style="font-size:10px;color:var(--hero-sub);font-weight:600">'+p+'%</span></span></div>'+
+      '<div style="height:5px;background:rgba(148,163,184,.22);border-radius:99px;overflow:hidden;margin-top:3px"><div style="width:'+p+'%;height:100%;border-radius:99px;background:'+col+'"></div></div></div>';
+  };
+  if(!(dev>0||cons>0)) return '';
+  return '<div class="sb-cell sm"><div class="sb-l"><i class="bi bi-boxes"></i>장비 vs 소모품 <span style="font-size:9.5px;color:#475569">미반영 포함</span></div>'+
+    row('장비',dev,'#a78bfa')+row('소모품',cons,'#67e8f9')+'</div>';
+}
 function _renderScoreboard(f,t,d){
   const host=document.getElementById('ov-hero');
   if(!host) return;
@@ -1459,9 +1458,12 @@ function _renderScoreboard(f,t,d){
       +'<div class="sb-s">회계 '+fmtW(d.totalC)+' + 미반영 '+fmtW(d.allPend)+' · 전년比 '+hb(pct(d.totalC,d.totalPrev))+'</div></div>'
     +'<div class="sb-cell clk" onclick="showPage(\'goals\',document.getElementById(\'nav-goals\'))" title="목표 달성률 상세로 이동"><div class="sb-l"><i class="bi bi-bullseye"></i>연간 목표 진도 <span style="color:#475569">›</span></div><div class="sb-v">'+(yAch===null?'-':yAch.toFixed(1)+'%')+'</div>'+gauge+'</div>'
     +'<div class="sb-cell sm clk" onclick="qGo(\'dom\',\'all\')" title="국내 상세 조회로 이동"><div class="sb-l"><i class="bi bi-hospital"></i>국내 <span style="color:#475569">›</span></div><div class="sb-v">'+fmtW(d.domI)+'</div>'
-      +'<div class="sb-s">'+hb(pct(d.domC,d.domPrev))+' · 비중 '+domShare+'%</div></div>'
+      +'<div class="sb-s">'+hb(pct(d.domC,d.domPrev))+' · 비중 '+domShare+'%</div>'
+      +'<div class="sb-s" style="font-size:10.5px;margin-top:1px">회계 '+fmtW(d.domC)+' + 미반영 '+fmtW(d.domI-d.domC)+'</div></div>'
     +'<div class="sb-cell sm clk" onclick="qGo(\'intl\',\'all\')" title="해외 상세 조회로 이동"><div class="sb-l"><i class="bi bi-globe-americas"></i>해외 <span style="color:#475569">›</span></div><div class="sb-v">'+fmtW(d.intlI)+'</div>'
-      +'<div class="sb-s">'+hb(pct(d.intl,d.intlPrev))+' · 비중 '+intlShare+'%</div></div>'
+      +'<div class="sb-s">'+hb(pct(d.intl,d.intlPrev))+' · 비중 '+intlShare+'%</div>'
+      +'<div class="sb-s" style="font-size:10.5px;margin-top:1px">회계 '+fmtW(d.intl)+' + 미반영 '+fmtW(d.intlI-d.intl)+'</div></div>'
+    +_sbCat(d)
     +'</div>';
 }
 function renderThisMonth(){
