@@ -430,6 +430,15 @@ button,.nav-link,.seg button,.qpreset,.sw-item{transition:background-color .15s 
 .corp-pq-t td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--line-soft);font-variant-numeric:tabular-nums}
 .corp-pq-t td:first-child{text-align:left}
 .corp-cl-chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;border-radius:99px;padding:3px 10px;margin-right:6px}
+/* CEO 브리핑 카드 */
+.cb-card{padding:15px 17px;height:100%;cursor:pointer}
+.cb-status{font-size:10.5px;font-weight:800;border-radius:99px;padding:3px 10px;letter-spacing:.02em}
+.cb-num{font-size:1.55rem;font-weight:750;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.cb-gauge{height:6px;background:var(--line-soft);border-radius:99px;overflow:hidden;margin:9px 0 3px}
+.cb-gauge>div{height:100%;border-radius:99px}
+.cb-li{display:flex;gap:7px;font-size:11.8px;color:var(--ink-2);margin-top:7px;line-height:1.45}
+.cb-li i{flex-shrink:0;margin-top:1px;font-size:12px}
+.corp-pq-t tr.clk:hover td{background:var(--surface-2)}
 /* 클릭 가능 요소 공통 어포던스 */
 .sb-cell.clk{cursor:pointer;border-radius:10px;transition:background .15s ease}
 .sb-cell.clk:hover{background:rgba(148,163,184,.10)}
@@ -655,10 +664,13 @@ tr.lb-clk:hover td,tr.qs-clk:hover td{background:var(--surface-2)}
 
   <!-- ===== 법인별 상세현황 (태국·미국·일본) ===== -->
   <div id="page-corps" class="page">
+    <div class="muted" style="font-size:11px;margin-bottom:8px"><i class="bi bi-info-circle me-1"></i>실적 = <b>본사 회계 기준 법인향 매출(선적)</b> + 미반영 · 일본법인은 법인 경유 클리닉 직판 포함 · 법인의 현지 판매(sell-out)와는 다를 수 있음</div>
     <div class="row g-2 mb-3" id="corp-cards"></div>
     <div class="card p-3 mb-3">
-      <div style="font-size:13.5px;font-weight:800;margin-bottom:8px"><i class="bi bi-bar-chart-line me-1" style="color:#0d9488"></i>법인별 월별 비교 <span style="font-weight:500;color:#94a3b8;font-size:11px">· 회계+미반영 · 억원</span></div>
-      <div style="position:relative;height:230px"><canvas id="corp-cmp-chart"></canvas></div>
+      <div style="font-size:13.5px;font-weight:800;margin-bottom:8px"><i class="bi bi-table me-1" style="color:#0d9488"></i>법인 비교 <span style="font-weight:500;color:#94a3b8;font-size:11px">· 1~데이터월 누적 · 행 클릭 시 해당 법인 상세</span></div>
+      <div id="corp-cmp-tbl" style="overflow-x:auto;margin-bottom:14px"></div>
+      <div style="font-size:12px;font-weight:700;color:#64748b;margin-bottom:6px">월별 비교 <span style="font-weight:500;color:#94a3b8;font-size:10.5px">· 회계+미반영 · 억원 · 막대 클릭 시 그 달 내역</span></div>
+      <div style="position:relative;height:210px"><canvas id="corp-cmp-chart"></canvas></div>
     </div>
     <div class="card p-3 mb-3">
       <div id="corp-hero"></div>
@@ -2168,16 +2180,75 @@ function renderCorps(){
   const segs=_CORPS.map(cp=>{
     const seg=_drillSeg('해외영업',cp.n);
     const acc=sm(seg.mo26,f,t), pnd=sm(seg.pend,f,t), act=acc+pnd, prev=sm(seg.mo25,f,t), tg=sm(seg.tgt,f,t);
-    return {cp,seg,acc,pnd,act,prev,tg,ach:tg>0?act/tg*100:null,yoy:pct(acc,prev),share:Math.round(act/intlDen*100)};
+    // 법인 인텔: 거래처·주문·제품(법인 소속 거래처만)·신규/미거래·모멘텀·미반영
+    const prods={}; let cnt=0, cl26=0; const _cur={}, _prv={};
+    Object.entries(INTL.countries||{}).forEach(([cc,c])=>Object.entries(c.clientData||{}).forEach(([nm,cd])=>{
+      if(_regionOf(cc,nm)!==cp.n) return; cl26++; cnt+=Number(cd.cnt)||0; _cur[_rnorm(nm)]=1;
+      Object.entries(cd.prods||{}).forEach(([p,v])=>{ prods[p]=(prods[p]||0)+(+v||0); });
+    }));
+    Object.entries(((INTL.data2025||{}).countries)||{}).forEach(([cc,c])=>Object.entries(c.clientData||{}).forEach(([nm,cd])=>{
+      if(_regionOf(cc,nm)!==cp.n) return; _prv[_rnorm(nm)]=1;
+    }));
+    const nwN=Object.keys(_cur).filter(k=>!_prv[k]).length, lostN=Object.keys(_prv).filter(k=>!_cur[k]).length;
+    const mT=m=>(Number(seg.mo26[m])||0)+(Number(seg.pend[m])||0);
+    let mom=null; if(t>=4){ const avg=(mT(t-1)+mT(t-2)+mT(t-3))/3; if(avg>0) mom=(mT(t)/avg-1)*100; }
+    const pendTot=(seg.pendRows||[]).reduce((s,p)=>s+Number(p.amount||0),0);
+    const pe=Object.entries(prods).sort((a,b)=>b[1]-a[1]); const topP=pe[0]||null;
+    const prodSum=pe.reduce((s,x)=>s+x[1],0);
+    return {cp,seg,acc,pnd,act,prev,tg,ach:tg>0?act/tg*100:null,yoy:pct(acc,prev),share:Math.round(act/intlDen*100),
+            cl26,cnt,nwN,lostN,mom,pendTot,topP,prodSum};
   });
-  // 요약 카드 3장 (클릭=법인 전환)
+  // ── CEO 브리핑 카드 3장: 신호등 판정 + 큰 숫자 + 자동 브리핑 3줄 (클릭=법인 전환)
   document.getElementById('corp-cards').innerHTML=segs.map(s=>{
     const on=s.cp.n===_corpSel;
-    return '<div class="col-12 col-md-4"><div class="kpi-card clk" style="border-left:4px solid '+s.cp.c+(on?';box-shadow:0 0 0 2px '+s.cp.c+' inset,var(--sh-1)':'')+'" onclick="corpGo(\''+s.cp.n+'\')" title="'+s.cp.n+' 상세 보기">'+
-      '<div class="kpi-label"><i class="bi '+s.cp.i+' me-1" style="color:'+s.cp.c+'"></i>'+s.cp.n+' <span style="color:#cbd5e1">›</span></div>'+
-      '<div class="kpi-value" style="color:'+s.cp.c+';font-size:1.35rem">'+fmtW(s.act)+'</div>'+
-      '<div class="kpi-sub">전년 '+fmtW(s.prev)+' '+badge(s.yoy)+(s.ach!=null?' · 달성 <b style="color:'+_achCol(s.ach)+'">'+s.ach.toFixed(0)+'%</b>':'')+' · 해외의 '+s.share+'%</div></div></div>';
+    const st=s.tg>0?(s.ach>=105?{t:'초과 달성',c:'#16a34a',bg:'#f0fdf4'}:s.ach>=85?{t:'목표 근접',c:'#b45309',bg:'#fffbeb'}:{t:'목표 미달',c:'#dc2626',bg:'#fef2f2'}):{t:'목표 미설정',c:'#94a3b8',bg:'#f8fafc'};
+    // 브리핑 ①성과 ②드라이버 ③리스크·주목
+    const b1='누적 <b>'+fmtW(s.act)+'</b> · 전년比 <b style="color:'+_yoyCol(s.yoy)+'">'+(s.yoy===null?'신규':arrow(s.yoy))+'</b>'+(s.tg>0?' · 목표 대비 <b style="color:'+st.c+'">'+(s.ach>=100?'+':'')+(s.ach-100).toFixed(0)+'%p</b>':'');
+    const mix=(s.topP&&s.prodSum>0)?Math.round(s.topP[1]/s.prodSum*100):0;
+    const b2=(s.topP?('주력 <b>'+esc(s.topP[0])+'</b> '+fmtW(s.topP[1])+' (믹스 '+mix+'%)'):'제품 데이터 없음')+(s.cp.n==='일본법인'?(' · 클리닉 '+s.cl26+'곳'+(s.nwN?' (신규 '+s.nwN+')':'')):'');
+    let b3, b3i='bi-check-circle', b3c='#94a3b8';
+    if(s.tg>0&&s.ach<85){ b3='목표 갭 <b>'+fmtW(s.tg-s.act)+'</b> — 만회 플랜 필요'; b3i='bi-exclamation-triangle-fill'; b3c='#dc2626'; }
+    else if(s.mom!==null&&s.mom<=-25){ b3='최근월 모멘텀 <b>'+arrow(s.mom)+'</b> 하락 — 원인 점검'; b3i='bi-graph-down-arrow'; b3c='#dc2626'; }
+    else if(s.lostN>=10){ b3='올해 미거래 <b>'+s.lostN+'곳</b> — 재활성 필요'; b3i='bi-person-dash-fill'; b3c='#f59e0b'; }
+    else if(s.pendTot>0){ b3='미반영 <b>'+fmtW(s.pendTot)+'</b> 유입 대기'; b3i='bi-hourglass-split'; b3c='#7c3aed'; }
+    else if(s.mom!==null&&s.mom>=25){ b3='최근월 모멘텀 <b style="color:#16a34a">'+arrow(s.mom)+'</b> 가속'; b3i='bi-fire'; b3c='#16a34a'; }
+    else { b3='특이 리스크 없음'; }
+    return '<div class="col-12 col-md-4"><div class="kpi-card cb-card clk" style="border-top:3px solid '+s.cp.c+(on?';box-shadow:0 0 0 2px '+s.cp.c+' inset,var(--sh-1)':'')+'" onclick="corpGo(\''+s.cp.n+'\')" title="'+s.cp.n+' 상세 보기">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'+
+      '<span style="font-size:13.5px;font-weight:800"><i class="bi '+s.cp.i+' me-1" style="color:'+s.cp.c+'"></i>'+s.cp.n+' <span style="color:#cbd5e1">›</span></span>'+
+      '<span class="cb-status" style="background:'+st.bg+';color:'+st.c+'">'+st.t+'</span></div>'+
+      '<div style="display:flex;align-items:baseline;gap:10px;margin-top:8px"><span class="cb-num" style="color:'+s.cp.c+'">'+fmtW(s.act)+'</span>'+badge(s.yoy)+'<span style="font-size:11px;color:#94a3b8">해외의 '+s.share+'%</span></div>'+
+      (s.tg>0?('<div class="cb-gauge"><div style="width:'+Math.min(s.ach,100).toFixed(0)+'%;background:'+_achCol(s.ach)+'"></div></div>'+
+        '<div style="font-size:10.5px;color:#94a3b8">누적 목표 '+fmtW(s.tg)+' · 달성 <b style="color:'+_achCol(s.ach)+'">'+s.ach.toFixed(0)+'%</b></div>'):'')+
+      '<div style="border-top:1px solid var(--line-soft);margin-top:9px;padding-top:2px">'+
+      '<div class="cb-li"><i class="bi bi-graph-up-arrow" style="color:'+s.cp.c+'"></i><span>'+b1+'</span></div>'+
+      '<div class="cb-li"><i class="bi bi-box-seam" style="color:#7c3aed"></i><span>'+b2+'</span></div>'+
+      '<div class="cb-li"><i class="bi '+b3i+'" style="color:'+b3c+'"></i><span>'+b3+'</span></div>'+
+      '</div></div></div>';
   }).join('');
+  // ── 법인 비교 표 (행 클릭=전환)
+  const _cmpRow=s=>{ const on=s.cp.n===_corpSel;
+    return '<tr class="clk'+(on?'" style="background:'+s.cp.c+'0d"':'"')+' onclick="corpGo(\''+s.cp.n+'\')">'+
+    '<td style="font-weight:700"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:'+s.cp.c+';margin-right:6px"></span>'+s.cp.n+'</td>'+
+    '<td style="font-weight:700">'+_fM(s.act)+'</td>'+
+    '<td style="color:'+_yoyCol(s.yoy)+';font-weight:700">'+(s.yoy===null?'-':arrow(s.yoy))+'</td>'+
+    '<td style="color:#64748b">'+_fM(s.tg)+'</td>'+
+    '<td style="color:'+_achCol(s.ach)+';font-weight:700">'+(s.ach==null?'-':s.ach.toFixed(0)+'%')+'</td>'+
+    '<td>'+_fM((Number(s.seg.mo26[t])||0)+(Number(s.seg.pend[t])||0))+'</td>'+
+    '<td style="color:'+_yoyCol(s.mom)+';font-weight:700">'+(s.mom==null?'-':arrow(s.mom))+'</td>'+
+    '<td style="color:#64748b">'+s.cl26+'개</td>'+
+    '<td style="color:#64748b">'+s.share+'%</td></tr>'; };
+  const _totS={act:segs.reduce((s,x)=>s+x.act,0),tg:segs.reduce((s,x)=>s+x.tg,0),prev:segs.reduce((s,x)=>s+x.prev,0),acc:segs.reduce((s,x)=>s+x.acc,0)};
+  const _totAch=_totS.tg>0?_totS.act/_totS.tg*100:null, _totY=pct(_totS.acc,_totS.prev);
+  document.getElementById('corp-cmp-tbl').innerHTML=
+    '<table class="corp-pq-t"><thead><tr><th>법인</th><th>누적 실적</th><th>YoY</th><th>누적 목표</th><th>달성</th><th>'+t+'월</th><th>모멘텀</th><th>거래처</th><th>해외 비중</th></tr></thead><tbody>'+
+    segs.map(_cmpRow).join('')+
+    '<tr style="border-top:2px solid var(--line-strong)"><td style="font-weight:800">법인 합계</td><td style="font-weight:800">'+_fM(_totS.act)+'</td>'+
+    '<td style="color:'+_yoyCol(_totY)+';font-weight:700">'+(_totY===null?'-':arrow(_totY))+'</td>'+
+    '<td style="color:#64748b">'+_fM(_totS.tg)+'</td>'+
+    '<td style="color:'+_achCol(_totAch)+';font-weight:800">'+(_totAch==null?'-':_totAch.toFixed(0)+'%')+'</td>'+
+    '<td colspan="4" style="color:#94a3b8;font-size:11px;text-align:left;padding-left:14px">모멘텀 = 최근월 vs 직전 3개월 평균</td></tr>'+
+    '</tbody></table>';
   // 법인 비교 차트 (월별 회계+미반영, 억원)
   const m12=Array.from({length:12},(_,i)=>i+1);
   if(_corpCmpChart){_corpCmpChart.destroy();_corpCmpChart=null;}
