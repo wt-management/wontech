@@ -2029,6 +2029,19 @@ function _infoShow(d){
     return '<div><div class="dr-sec-t">'+c.t+'</div>'+(c.rows.length?c.rows.map(r=>bar(r[0],r[1],mx,c.col||'#0d9488')).join(''):'<div style="font-size:12px;color:#94a3b8">데이터 없음</div>')+'</div>'; }).join('')+'</div>';
   if(d.txns&&d.txns.length) html+='<div class="dr-sec-t" style="margin-top:16px">최근 거래 <span style="font-weight:500;color:#94a3b8">· 최근 '+d.txns.length+'건</span></div>'+
     d.txns.map(t=>'<div class="dr-pend"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(t[0])+'</span><span style="color:#94a3b8">'+esc(t[1]||'')+'</span><span style="font-weight:700;width:70px;text-align:right">'+fmtW(t[2])+'</span></div>').join('');
+  // 거래 원장 테이블 (날짜·제품·수량·금액·USD) — 회계 원본 라인 단위
+  if(d.ledger&&d.ledger.length){
+    const L=d.ledger.slice().sort((a,b)=>a[0]<b[0]?1:-1);   // 최신순
+    const usdSum=L.reduce((s,t)=>s+(Number(t[4])||0),0);
+    html+='<div class="dr-sec-t" style="margin-top:16px">거래 원장 <span style="font-weight:500;color:#94a3b8">· '+L.length+'건'+(usdSum>0?' · 합 $'+usdSum.toLocaleString():'')+' · 회계 원본 기준</span></div>'+
+      '<div style="max-height:300px;overflow-y:auto"><table class="corp-pq-t"><thead><tr><th>날짜</th><th style="text-align:left">'+(d.ledgerCol2||'제품')+'</th><th>수량</th><th>금액</th><th>USD</th></tr></thead><tbody>'+
+      L.map(t=>'<tr><td style="color:#64748b;font-size:11px">'+esc(t[0])+'</td>'+
+        '<td style="text-align:left;font-weight:600">'+esc(t[1]||'-')+'</td>'+
+        '<td>'+(Number(t[2])?Number(t[2]).toLocaleString():'-')+'</td>'+
+        '<td style="font-weight:700'+(Number(t[3])<0?';color:#dc2626':'')+'">'+fmtW(Number(t[3])||0)+'</td>'+
+        '<td style="color:#0d9488;font-size:11px">'+(Number(t[4])?'$'+Number(t[4]).toLocaleString():'-')+'</td></tr>').join('')+
+      '</tbody></table></div>';
+  }
   document.getElementById('info-drill').innerHTML=html;
   el.classList.add('on');
   if(_infoChart){_infoChart.destroy();_infoChart=null;}
@@ -2061,9 +2074,16 @@ function openProdInfo(p){
   const ctys=[]; Object.entries(INTL.countries||{}).forEach(([cc,c])=>{ const v=Number((c.prods||{})[p])||0; if(v>0) ctys.push([cc,v]); }); ctys.sort((a,b)=>b[1]-a[1]);
   const hosp=[]; const scanH=hs=>{ for(const nm in(hs||{})){ const v=Number(((hs[nm]||{}).prods2026||{})[p])||0; if(v>0) hosp.push([nm,v]); } };
   scanH(DEVICE.hospitals); scanH(CONS.hospitals); hosp.sort((a,b)=>b[1]-a[1]);
+  // 해외 거래 원장에서 이 제품 주문 추출 (누가·언제·얼마) → [날짜,거래처,수량,금액,USD]
+  const pled=[]; let pusd=0;
+  Object.values(INTL.countries||{}).forEach(c=>Object.entries(c.clientData||{}).forEach(([nm,cd])=>{
+    (cd.txns||[]).forEach(t=>{ if(String(t[1])===p){ pled.push([t[0],nm,t[2],t[3],t[4]]); pusd+=Number(t[4])||0; } });
+  }));
+  const _kpi=[{l:'2026 누적',v:fmtW(tot)},{l:hasMo?('전년 동기(1~'+lastM+'월)'):'전년 (연간)',v:fmtW(hasMo?cum25:tot25),c:'#64748b'},{l:'YoY (동기간)',v:(y===null?'-':arrow(y)),c:_yoyCol(y)},{l:'출고 대수',v:qty?_num(qty)+'대':'-',c:'#7c3aed'}];
+  if(pusd>0) _kpi.push({l:'해외 USD',v:'$'+Math.round(pusd/1e3).toLocaleString()+'K',c:'#0d9488'});
   _infoShow({title:p, sub:'제품 상세 · 국내+해외 합산'+(hasMo?' · YoY는 1~'+lastM+'월 동기간':''), color:'#7c3aed',
-    kpi:[{l:'2026 누적',v:fmtW(tot)},{l:hasMo?('전년 동기(1~'+lastM+'월)'):'전년 (연간)',v:fmtW(hasMo?cum25:tot25),c:'#64748b'},{l:'YoY (동기간)',v:(y===null?'-':arrow(y)),c:_yoyCol(y)},{l:'출고 대수',v:qty?_num(qty)+'대':'-',c:'#7c3aed'}],
-    mo26,mo25, cols:[{t:'국가별 (해외)',rows:ctys.slice(0,8),col:'#0d9488'},{t:'거래처별 (국내)',rows:hosp.slice(0,8),col:'#4f46e5'}]});
+    kpi:_kpi, mo26,mo25, cols:[{t:'국가별 (해외)',rows:ctys.slice(0,8),col:'#0d9488'},{t:'거래처별 (국내)',rows:hosp.slice(0,8),col:'#4f46e5'}],
+    ledger:pled, ledgerCol2:'거래처'});
 }
 // 담당자 드릴 (리더보드 캐시 인덱스)
 function openRepInfo(gi){
@@ -2084,30 +2104,34 @@ function openCustInfo(gi){
   if(hC){ addMo(hC.m2026,mo26); addMo(hC.m2025,mo25); y26+=Number(hC.y2026)||0; y25+=Number(hC.y2025)||0; last=hC.lastDate||last; }
   if(hD){ addMo(hD.m2026,mo26); addMo(hD.m2025,mo25); y26+=Number(hD.y2026)||0; y25+=Number(hD.y2025)||0; last=hD.lastDate||last; }
   const prods={}; [(hC||{}).prods2026,(hD||{}).prods2026].forEach(o=>{ for(const k in(o||{})) prods[k]=(prods[k]||0)+(+o[k]||0); });
-  const txns=[];
-  ((hC&&hC.txns2026)||[]).forEach(t=>txns.push([t[2]||'',t[1]||'',+t[3]||0]));      // CONS [월,날짜,품명,금액,수량]
-  ((hD&&hD.txns2026)||[]).forEach(t=>txns.push([t[3]||'',t[1]||'',+t[4]||0]));      // DEVICE [월,날짜,거래처,품명,금액,수량]
-  txns.sort((a,b)=>String(b[1]).localeCompare(String(a[1])));
+  let ledger=[], usdSum=0, ordN=0;
+  ((hC&&hC.txns2026)||[]).forEach(t=>ledger.push([t[1]||'',t[2]||'',+t[4]||0,+t[3]||0,0]));   // CONS [월,날짜,품명,금액,수량] → [날짜,제품,수량,금액,USD]
+  ((hD&&hD.txns2026)||[]).forEach(t=>ledger.push([t[1]||'',t[3]||'',+t[5]||0,+t[4]||0,0]));   // DEVICE [월,날짜,거래처,품명,금액,수량]
   let sub='거래처 상세 · 국내';
   if(!hC&&!hD){ // 해외 클라이언트 (2026 → 없으면 2025 폴백: '올해 미거래' 거래처도 조회 가능)
     let _found=false;
     for(const cc in(INTL.countries||{})){ const cd=(INTL.countries[cc].clientData||{})[nm];
-      if(cd){ addMo(cd.m,mo26); y26=Number(cd.total)||0; last=cd.last||last; sub='거래처 상세 · 해외 ('+esc(cc)+')';
+      if(cd){ addMo(cd.m,mo26); y26=Number(cd.total)||0; last=cd.last||last; ordN=Number(cd.cnt)||0; sub='거래처 상세 · 해외 ('+esc(cc)+')';
         Object.entries(cd.prods||{}).forEach(([k,v])=>{ prods[k]=(prods[k]||0)+(+v||0); });
+        (cd.txns||[]).forEach(t=>{ ledger.push(t); usdSum+=Number(t[4])||0; });   // [날짜,제품,수량,금액,USD] — 회계 원장
         const c25=(((INTL.data2025||{}).countries||{})[cc]||{}).clientData; const p=c25&&c25[nm];
         if(p){ addMo(p.m,mo25); y25=Number(p.total)||0; } _found=true; break; } }
     if(!_found){ for(const cc in(((INTL.data2025||{}).countries)||{})){ const p=((INTL.data2025.countries[cc]||{}).clientData||{})[nm];
       if(p){ addMo(p.m,mo25); y25=Number(p.total)||0; sub='거래처 상세 · 해외 ('+esc(cc)+') · <b style="color:#dc2626">올해 미거래</b>'; break; } } }
   }
+  ledger.sort((a,b)=>String(b[0]).localeCompare(String(a[0])));
   // 동기간 YoY(월별 있으면) — 올해 누적 vs 전년연간 착시 방지
   const _cm=Object.keys(mo26).map(Number).filter(x=>x>=1&&x<=12);
   const _clm=_cm.length?Math.max.apply(null,_cm):0;
   let _c25=0; for(let m=1;m<=_clm;m++) _c25+=(+mo25[m]||0);
   const yy=_clm>0?pct(Object.values(mo26).reduce((s,v)=>s+v,0),_c25):null;
+  const _kpi=[{l:'2026 누적',v:fmtW(y26)},{l:_clm>0?('전년 동기(1~'+_clm+'월)'):'전년 (연간)',v:fmtW(_clm>0?_c25:y25),c:'#64748b'},{l:'YoY (동기간)',v:(yy===null?'-':arrow(yy)),c:_yoyCol(yy)}];
+  if(usdSum>0) _kpi.push({l:'누적 USD',v:'$'+Math.round(usdSum/1e3).toLocaleString()+'K',c:'#0d9488'});
+  _kpi.push({l:'주문 · 최근',v:(ordN||ledger.length)+'건 · '+esc(String(last||'-').slice(0,10)),c:'#0f172a'});
   _infoShow({title:nm, sub:sub+(_clm>0?' · YoY는 1~'+_clm+'월 동기간':''), color:'#2563eb',
-    kpi:[{l:'2026 누적',v:fmtW(y26)},{l:_clm>0?('전년 동기(1~'+_clm+'월)'):'전년 (연간)',v:fmtW(_clm>0?_c25:y25),c:'#64748b'},{l:'YoY (동기간)',v:(yy===null?'-':arrow(yy)),c:_yoyCol(yy)},{l:'최근 거래',v:esc(last||'-'),c:'#0f172a'}],
-    mo26,mo25, cols:Object.keys(prods).length?[{t:'구매 제품 Top',rows:Object.entries(prods).sort((a,b)=>b[1]-a[1]).slice(0,8),col:'#0891b2'}]:[],
-    txns:txns.slice(0,8)});
+    kpi:_kpi, mo26,mo25,
+    cols:Object.keys(prods).length?[{t:'구매 제품 Top',rows:Object.entries(prods).sort((a,b)=>b[1]-a[1]).slice(0,8),col:'#0891b2'}]:[],
+    ledger:ledger});
 }
 
 // ── 법인별 상세현황 (태국·미국·일본법인) — _drillSeg 재사용, 회계+미반영 기준 ──
