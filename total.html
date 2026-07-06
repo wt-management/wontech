@@ -2530,14 +2530,16 @@ document.addEventListener('keydown',function(e){ if(e.key!=='Escape') return;
     history.replaceState(null,'',location.pathname);
   }
   const {data:{session}}=await _sb.auth.getSession();
-  document.getElementById('app-loading').style.display='none';
   if(session){
-    await afterLogin(session.user);
-    const _nav=(performance.getEntriesByType('navigation')[0]||{}).type;   // reload=새로고침 / navigate=신규진입
-    let _t=_initPage||((_nav==='reload')?(sessionStorage.getItem('total_page')||''):'');   // #p(외부) 우선·새로고침이면 머문 페이지·신규는 첫메뉴
-    if(_t && _t!=='overview' && document.getElementById('page-'+_t)) showPage(_t, document.getElementById('nav-'+_t));
+    // 로딩 오버레이는 저장된 페이지로 전환 완료 후에 해제 — 새로고침 시 '전사 종합 잠깐 보였다가 이동' 플래시 방지
+    try{
+      await afterLogin(session.user);
+      const _nav=(performance.getEntriesByType('navigation')[0]||{}).type;   // reload=새로고침 / navigate=신규진입
+      let _t=_initPage||((_nav==='reload')?(sessionStorage.getItem('total_page')||''):'');   // #p(외부) 우선·새로고침이면 머문 페이지·신규는 첫메뉴
+      if(_t && _t!=='overview' && document.getElementById('page-'+_t)) showPage(_t, document.getElementById('nav-'+_t));
+    } finally { document.getElementById('app-loading').style.display='none'; }
   }
-  else location.href='https://wt-management.github.io/wontech/';
+  else { document.getElementById('app-loading').style.display='none'; location.href='https://wt-management.github.io/wontech/'; }
 })();
 
 // bfcache(뒤로/앞으로 캐시) 복원 시에도 머물던 페이지 유지
