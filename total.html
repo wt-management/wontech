@@ -439,6 +439,11 @@ button,.nav-link,.seg button,.qpreset,.sw-item{transition:background-color .15s 
 .cb-li{display:flex;gap:7px;font-size:11.8px;color:var(--ink-2);margin-top:7px;line-height:1.45}
 .cb-li i{flex-shrink:0;margin-top:1px;font-size:12px}
 .corp-pq-t tr.clk:hover td{background:var(--surface-2)}
+.corp-pq-t tr.cpq-q td{background:var(--surface-2);font-weight:800;border-top:1px solid var(--line-strong)}
+.corp-pq-t tr.cpq-m td{font-weight:500;color:var(--ink-2)}
+.corp-pq-t tr.cpq-m td:first-child{color:var(--ink-3);font-weight:500}
+.corp-pq-t.pq-fold tr.cpq-m{display:none}
+.corp-pq-t tr.cpq-fut td{color:#cbd5e1!important}
 /* 클릭 가능 요소 공통 어포던스 */
 .sb-cell.clk{cursor:pointer;border-radius:10px;transition:background .15s ease}
 .sb-cell.clk:hover{background:rgba(148,163,184,.10)}
@@ -678,17 +683,14 @@ tr.lb-clk:hover td,tr.qs-clk:hover td{background:var(--surface-2)}
       <div id="corp-pq" class="mb-3"></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;flex-wrap:wrap">
         <div style="font-size:12.5px;font-weight:800">월별 추이 <span style="font-weight:500;color:#94a3b8;font-size:11px">· 회계+미반영 vs 목표 vs 전년 · 백만원 · 막대 클릭=그 달 내역</span></div>
-        <div style="display:flex;gap:6px">
-          <button class="btn btn-sm btn-light" style="font-size:11px;font-weight:700;border:1px solid var(--line)" id="corp-motbl-btn" onclick="corpToggleMoTbl()">월별 표</button>
-          <button class="btn btn-sm btn-light" style="font-size:11px;font-weight:700;border:1px solid var(--line)" id="corp-cum-btn" onclick="corpToggleCum()">누적 보기</button>
-        </div>
+        <button class="btn btn-sm btn-light" style="font-size:11px;font-weight:700;border:1px solid var(--line)" id="corp-cum-btn" onclick="corpToggleCum()">누적 보기</button>
       </div>
       <div style="position:relative;height:220px"><canvas id="corp-chart"></canvas></div>
-      <div id="corp-mo-tbl" style="display:none;overflow-x:auto;margin-top:10px"></div>
       <div class="dr-sec-t" style="margin-top:18px;display:flex;justify-content:space-between;align-items:baseline"><span>거래처 상세 <span style="font-weight:500;color:#94a3b8;font-size:10px">· 행 클릭=거래처 드릴</span></span><a onclick="corpClientsAll()" style="font-size:11px;font-weight:700;color:var(--brand-strong);cursor:pointer">전체 보기 ›</a></div>
       <div id="corp-custs" style="overflow-x:auto"></div>
-      <div class="dr-sec-t" style="margin-top:18px">제품 상세 <span style="font-weight:500;color:#94a3b8;font-size:10px">· 법인 거래처 구매 기준 · 행 클릭=제품 드릴</span></div>
+      <div class="dr-sec-t" style="margin-top:18px">제품 상세 <span style="font-weight:500;color:#94a3b8;font-size:10px">· 이 법인 구매 기준 · 행 클릭=이 법인의 해당 제품 상세</span></div>
       <div id="corp-prods" style="overflow-x:auto"></div>
+      <div id="corp-ledger"></div>
       <div id="corp-clients"></div>
       <div id="corp-pend"></div>
       <div class="exec-ins" id="corp-insight" style="margin-top:14px"></div>
@@ -2135,10 +2137,39 @@ function openCustInfo(gi){
 }
 
 // ── 법인별 상세현황 (태국·미국·일본법인) — _drillSeg 재사용, 회계+미반영 기준 ──
-let _corpSel='태국법인', _corpChart=null, _corpCmpChart=null, _corpCum=false, _corpProdN=[], _corpMoTbl=false;
-function corpToggleMoTbl(){ _corpMoTbl=!_corpMoTbl;
-  const d=document.getElementById('corp-mo-tbl'); if(d) d.style.display=_corpMoTbl?'':'none';
-  const b=document.getElementById('corp-motbl-btn'); if(b) b.textContent=_corpMoTbl?'표 닫기':'월별 표'; }
+let _corpSel='태국법인', _corpChart=null, _corpCmpChart=null, _corpCum=false, _corpProdN=[], _corpPqFold=false, _corpLedFold=true;
+function corpPqToggle(){ _corpPqFold=!_corpPqFold; renderCorps(); }
+function corpLedToggle(){ _corpLedFold=!_corpLedFold; renderCorps(); }
+// 제품 드릴 — 현재 선택 법인 범위로만 (전세계 아님)
+function openCorpProdInfo(gi){
+  const p=_corpProdN[gi]; if(!p) return;
+  const cp=_CORPS.find(x=>x.n===_corpSel)||_CORPS[0], t=_rptPeriods().mo;
+  const mo26={}, byClient={}, ledger=[]; let tot=0,usd=0,qty=0;
+  const own2025={};   // 이 법인이 온전히 점유한 국가 → 전년 제품값 귀속
+  Object.entries(INTL.countries||{}).forEach(([cc,c])=>Object.entries(c.clientData||{}).forEach(([nm,cd])=>{
+    if(_regionOf(cc,nm)!==cp.n) return;
+    (cd.txns||[]).forEach(t2=>{ if(String(t2[1])!==p) return;
+      const mm=parseInt(String(t2[0]).slice(5,7),10); if(mm) mo26[mm]=(mo26[mm]||0)+(Number(t2[3])||0);
+      tot+=Number(t2[3])||0; usd+=Number(t2[4])||0; qty+=Number(t2[2])||0;
+      byClient[nm]=(byClient[nm]||0)+(Number(t2[3])||0);
+      ledger.push([t2[0],nm,t2[2],t2[3],t2[4]]);
+    });
+  }));
+  // 전년(동기간 불가—2025 원장 없음)·연간: 이 법인 온전점유 국가의 prods25 합
+  const c25=(INTL.data2025||{}).countries||{}; let prev=0, mo25={};
+  Object.entries(c25).forEach(([cc,c])=>{ const names=Object.keys(c.clientData||{});
+    if(names.length && names.every(nm=>_regionOf(cc,nm)===cp.n)){ prev+=Number((c.prods||{})[p])||0;
+      Object.values(c.clientData||{}).forEach(cd=>{ if(cd.prods&&cd.prods[p]!=null){ for(const m in(cd.m||{})) mo25[m]=(mo25[m]||0)+0; } }); } });
+  const y=prev>0?pct(tot,prev):null;
+  const cliRows=Object.entries(byClient).sort((a,b)=>b[1]-a[1]);
+  const _kpi=[{l:'이 법인 누적',v:fmtW(tot),c:cp.c},{l:'출고 수량',v:qty?_num(qty)+'대/개':'-',c:'#7c3aed'}];
+  if(usd>0) _kpi.push({l:'USD',v:'$'+Math.round(usd/1e3).toLocaleString()+'K',c:'#0d9488'});
+  if(prev>0) _kpi.push({l:'전년(연간)·YoY',v:fmtW(prev)+' '+(y==null?'':arrow(y)),c:_yoyCol(y)});
+  _infoShow({title:esc(cp.n)+' · '+p, sub:'법인 제품 상세 · 이 법인 거래처 구매만 · 회계 원본 기준', color:cp.c,
+    kpi:_kpi, mo26, mo25:{},
+    cols:cliRows.length?[{t:'거래처별',rows:cliRows.slice(0,10),col:cp.c}]:[],
+    ledger:ledger, ledgerCol2:'거래처'});
+}
 const _CORPS=[{n:'태국법인',c:'#0d9488',i:'bi-building'},{n:'미국법인',c:'#4f46e5',i:'bi-building'},{n:'일본법인',c:'#f59e0b',i:'bi-building'}];
 function corpGo(n){ if(_CORPS.some(x=>x.n===n)) _corpSel=n; renderCorps(); }
 function corpToggleCum(){ _corpCum=!_corpCum; renderCorps(); }
@@ -2212,14 +2243,16 @@ function renderCorps(){
   const segs=_CORPS.map(cp=>{
     const seg=_drillSeg('해외영업',cp.n);
     const acc=sm(seg.mo26,f,t), pnd=sm(seg.pend,f,t), act=acc+pnd, prev=sm(seg.mo25,f,t), tg=sm(seg.tgt,f,t);
-    // 법인 인텔: 거래처 원장·주문·제품(법인 소속 거래처만)·신규/미거래·모멘텀·미반영
-    const prods={}, clients=[], prvM={}; let cnt=0, lastD='';
+    // 법인 인텔: 거래처 원장·제품·거래원장(법인 소속 거래처만)·USD·신규/미거래·모멘텀·미반영
+    const prods={}, clients=[], prvM={}, allTxns=[]; let cnt=0, lastD='', usd=0;
     Object.entries(INTL.countries||{}).forEach(([cc,c])=>Object.entries(c.clientData||{}).forEach(([nm,cd])=>{
       if(_regionOf(cc,nm)!==cp.n) return;
       const v26=Number(cd.total)||0, cc2=Number(cd.cnt)||0, ld=cd.last||'';
-      clients.push({n:nm,v26,cnt:cc2,last:ld}); cnt+=cc2; if(ld>lastD) lastD=ld;
+      let cUsd=0; (cd.txns||[]).forEach(tx=>{ cUsd+=Number(tx[4])||0; allTxns.push([tx[0],nm,tx[1],tx[2],tx[3],tx[4]]); });   // [날짜,거래처,제품,수량,금액,USD]
+      usd+=cUsd; clients.push({n:nm,v26,cnt:cc2,last:ld,usd:cUsd,txns:cd.txns||[]}); cnt+=cc2; if(ld>lastD) lastD=ld;
       Object.entries(cd.prods||{}).forEach(([p,v])=>{ prods[p]=(prods[p]||0)+(+v||0); });
     }));
+    allTxns.sort((a,b)=>a[0]<b[0]?1:-1);
     Object.entries(((INTL.data2025||{}).countries)||{}).forEach(([cc,c])=>Object.entries(c.clientData||{}).forEach(([nm,cd])=>{
       if(_regionOf(cc,nm)!==cp.n) return; const k=_rnorm(nm);
       let s=0; for(let m=1;m<=t;m++) s+=Number((cd.m||{})[m])||0;   // 동기간(1~t월) — YTD vs 연간 착시 방지
@@ -2244,7 +2277,7 @@ function renderCorps(){
     const pe=Object.entries(prods).sort((a,b)=>b[1]-a[1]); const topP=pe[0]||null;
     const prodSum=pe.reduce((s,x)=>s+x[1],0);
     return {cp,seg,acc,pnd,act,prev,tg,ach:tg>0?act/tg*100:null,yoy:pct(acc,prev),share:Math.round(act/intlDen*100),
-            cl26:clients.length,cnt,nwN,lostN,mom,avg3,pendTot,topP,prodSum,clients,prvM,prods,prods25,lastD};
+            cl26:clients.length,cnt,nwN,lostN,mom,avg3,pendTot,topP,prodSum,clients,prvM,prods,prods25,lastD,usd,allTxns};
   });
   // ── CEO 브리핑 카드 3장: 신호등 판정 + 큰 숫자 + 자동 브리핑 3줄 (클릭=법인 전환)
   document.getElementById('corp-cards').innerHTML=segs.map(s=>{
@@ -2337,36 +2370,37 @@ function renderCorps(){
           :(yTgt>0?'<span><b style="color:var(--pos-hero)">연간 목표 이미 달성</b></span>':''))+
         '</div>'; })()+
     '</div>';
-  // ── KPI 6종 (segs 인텔 재사용): 거래처·주문 / 평균 주문액 / 최근 거래일 / 회계·미반영 / 전년동기 / 누적목표·달성
-  const avgOrd=sel.cnt>0?sel.act/sel.cnt:0;
+  // ── KPI 4종: 회계·미반영 / 전년동기 YoY / 누적목표·달성 / 해외 USD (거래처·주문/평균주문액/최근거래일 제거)
   const kpi=[
-    {l:'거래처 · 주문',v:sel.cl26+'개 · '+sel.cnt+'건 <span style="color:#cbd5e1">›</span>',c:sel.cp.c,fn:'corpClientsAll()',tt:'거래처 전체 목록'},
-    {l:'평균 주문액',v:fmtW(avgOrd),c:'#0f172a'},
-    {l:'최근 거래일',v:esc(sel.lastD||'-'),c:'#64748b'},
     {l:'회계 / 미반영',v:fmtW(sel.acc)+' <span style="font-size:.8em;color:#7c3aed">+'+fmtW(sel.pnd)+'</span>',c:'#0f172a'},
     {l:'전년 동기 (YoY)',v:fmtW(sel.prev)+' <span style="font-size:.8em">'+badge(sel.yoy)+'</span>',c:'#64748b'},
     {l:'누적 목표 / 달성',v:(sel.tg>0?fmtW(sel.tg)+' <b style="color:'+_achCol(sel.ach)+'">'+sel.ach.toFixed(0)+'%</b>':'미설정'),c:_achCol(sel.ach),fn:"showPage('goals',document.getElementById('nav-goals'))",tt:'목표 달성률 상세'},
+    {l:'누적 USD',v:sel.usd>0?'$'+Math.round(sel.usd/1e3).toLocaleString()+'K':'-',c:'#0d9488'},
   ];
-  document.getElementById('corp-kpi').innerHTML=kpi.map(c=>'<div class="col-6 col-md-2"><div class="kpi-card acc-card'+(c.fn?' clk':'')+'" style="padding:12px 14px;border-left-color:'+c.c+';height:100%"'+(c.fn?(' onclick="'+c.fn+'" title="'+(c.tt||'')+'"'):'')+'><div class="kpi-label">'+c.l+'</div><div class="kpi-value" style="font-size:1.08rem;color:'+c.c+'">'+c.v+'</div></div></div>').join('');
-  // ── 분기·반기 미니표 (실적·전년=동기간, 목표=기간 전체 — YoY 착시 방지)
-  const pers=[{l:'1분기',f:1,t:3},{l:'2분기',f:4,t:6},{l:'상반기',f:1,t:6},{l:'3분기',f:7,t:9},{l:'4분기',f:10,t:12},{l:'하반기',f:7,t:12}].filter(p=>p.f<=t);
+  document.getElementById('corp-kpi').innerHTML=kpi.map(c=>'<div class="col-6 col-md-3"><div class="kpi-card acc-card'+(c.fn?' clk':'')+'" style="padding:12px 14px;border-left-color:'+c.c+';height:100%"'+(c.fn?(' onclick="'+c.fn+'" title="'+(c.tt||'')+'"'):'')+'><div class="kpi-label">'+c.l+'</div><div class="kpi-value" style="font-size:1.08rem;color:'+c.c+'">'+c.v+'</div></div></div>').join('');
+  // ── 월별·분기 실적 표 (분기 소계 + 월 상세, 접기 토글) — 데이터 마지막월 기준(달력 롤오버 노이즈 방지)
+  let _lastMo=0; for(let m=1;m<=12;m++){ if((Number(sel.seg.mo26[m])||0)+(Number(sel.seg.pend[m])||0)>0) _lastMo=m; }
+  const row=(lbl,f2,t2,cls)=>{
+    const notStarted=f2>_lastMo;                       // 데이터가 아직 안 닿은 미래 기간
+    const tt=Math.min(t2,_lastMo), run=(f2<=_lastMo&&t2>_lastMo);
+    const a=notStarted?0:(sm(sel.seg.mo26,f2,tt)+sm(sel.seg.pend,f2,tt)), pv=notStarted?0:sm(sel.seg.mo25,f2,tt), tg=sm(sel.seg.tgt,f2,t2);
+    if(notStarted){ return '<tr class="'+cls+' cpq-fut"><td>'+lbl+'</td><td>-</td><td>-</td><td>-</td><td>'+_fM(tg)+'</td><td>-</td></tr>'; }
+    const y=pct(a,pv), ach=tg>0?a/tg*100:null;
+    return '<tr class="'+cls+'"><td>'+lbl+(run?' <span style="font-size:9.5px;color:#94a3b8">(진행중)</span>':'')+'</td>'+
+      '<td style="font-weight:700">'+_fM(a)+'</td><td style="color:#64748b">'+_fM(pv)+'</td>'+
+      '<td style="color:'+_yoyCol(y)+';font-weight:700">'+(y==null?'-':arrow(y))+'</td>'+
+      '<td style="color:#64748b">'+_fM(tg)+'</td>'+
+      '<td style="color:'+_achCol(ach)+';font-weight:700">'+(ach==null?'-':ach.toFixed(0)+'%')+'</td></tr>';
+  };
+  let body='';
+  [[1,3,'1분기'],[4,6,'2분기'],[7,9,'3분기'],[10,12,'4분기']].forEach(q=>{
+    body+=row('<b>'+q[2]+'</b>',q[0],q[1],'cpq-q');   // 분기 소계
+    for(let m=q[0];m<=q[1];m++) body+=row('　'+m+'월',m,m,'cpq-m');  // 월 상세
+  });
   document.getElementById('corp-pq').innerHTML=
-    '<div class="dr-sec-t">분기·반기 실적 <span style="font-weight:500;color:#94a3b8;font-size:10px">· 백만원 · 실적=회계+미반영 · 전년은 동기간</span></div>'+
-    '<div style="overflow-x:auto"><table class="corp-pq-t"><thead><tr><th>기간</th><th>실적</th><th>전년</th><th>YoY</th><th>목표</th><th>달성</th></tr></thead><tbody>'+
-    pers.map(p=>{
-      const tt=Math.min(p.t,t), run=p.t>t;
-      const a=sm(sel.seg.mo26,p.f,tt)+sm(sel.seg.pend,p.f,tt), pv=sm(sel.seg.mo25,p.f,tt), tg=sm(sel.seg.tgt,p.f,p.t);
-      if(a<=0&&run){ // 아직 실적 없는 진행 기간 — ▼100%·0% 노이즈 대신 조용히
-        return '<tr><td style="font-weight:600;color:#94a3b8">'+p.l+' <span style="font-size:10px">(시작 전)</span></td>'+
-          '<td style="color:#cbd5e1">-</td><td style="color:#cbd5e1">-</td><td style="color:#cbd5e1">-</td>'+
-          '<td style="color:#94a3b8">'+_fM(tg)+'</td><td style="color:#cbd5e1">-</td></tr>'; }
-      const y=pct(a,pv), ach=tg>0?a/tg*100:null;
-      return '<tr><td style="font-weight:700">'+p.l+(run?' <span style="font-size:10px;color:#94a3b8">(진행중)</span>':'')+'</td>'+
-        '<td style="font-weight:700">'+_fM(a)+'</td><td style="color:#64748b">'+_fM(pv)+'</td>'+
-        '<td style="color:'+_yoyCol(y)+';font-weight:700">'+(y==null?'-':arrow(y))+'</td>'+
-        '<td style="color:#64748b">'+_fM(tg)+'</td>'+
-        '<td style="color:'+_achCol(ach)+';font-weight:700">'+(ach==null?'-':ach.toFixed(0)+'%')+'</td></tr>';
-    }).join('')+'</tbody></table></div>';
+    '<div class="dr-sec-t" style="display:flex;justify-content:space-between;align-items:baseline"><span>월별·분기 실적 <span style="font-weight:500;color:#94a3b8;font-size:10px">· 백만원 · 실적=회계+미반영 · 전년은 동기간</span></span>'+
+    '<a onclick="corpPqToggle()" id="corp-pq-tog" style="font-size:11px;font-weight:700;color:var(--brand-strong);cursor:pointer">'+(_corpPqFold?'월 펼치기 ▾':'월 접기 ▴')+'</a></div>'+
+    '<div style="overflow-x:auto"><table class="corp-pq-t'+(_corpPqFold?' pq-fold':'')+'"><thead><tr><th>기간</th><th>실적</th><th>전년</th><th>YoY</th><th>목표</th><th>달성</th></tr></thead><tbody>'+body+'</tbody></table></div>';
   // ── 월별/누적 차트 (토글): 월별=회계+미반영 스택+목표·전년 라인 / 누적=3라인(실적은 데이터월까지)
   const r6=v=>Math.round((Number(v)||0)/1e6);
   const _cbtn=document.getElementById('corp-cum-btn'); if(_cbtn) _cbtn.textContent=_corpCum?'월별 보기':'누적 보기';
@@ -2396,26 +2430,7 @@ function renderCorps(){
       onClick:(e,els)=>{ if(els&&els.length){ const m=els[0].index+1; if(m<=t) corpMonthDetail(m); } },
       plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y+'백만'}}},
       scales:chOpts}});
-  // ── 월별 상세 표 (차트 병행 숫자 — 실적/전년/YoY/목표/달성/누적, 미래월은 목표만)
-  (function(){
-    let cum=0;
-    const rowsH=m12.map(m=>{
-      const a=(Number(sel.seg.mo26[m])||0)+(Number(sel.seg.pend[m])||0), pv=Number(sel.seg.mo25[m])||0, tgm=Number(sel.seg.tgt[m])||0;
-      const fut=m>t; if(!fut) cum+=a;
-      const y=fut?null:pct(a,pv), achM=(!fut&&tgm>0)?a/tgm*100:null;
-      return '<tr'+(fut?' style="color:#cbd5e1"':'')+'><td style="font-weight:600'+(fut?';color:#94a3b8':'')+'">'+m+'월</td>'+
-        '<td style="font-weight:700">'+(fut?'-':_fM(a))+'</td><td style="color:#64748b">'+_fM(pv)+'</td>'+
-        '<td style="color:'+_yoyCol(y)+';font-weight:700">'+(y==null?'-':arrow(y))+'</td>'+
-        '<td style="color:#64748b">'+_fM(tgm)+'</td>'+
-        '<td style="color:'+_achCol(achM)+';font-weight:700">'+(achM==null?'-':achM.toFixed(0)+'%')+'</td>'+
-        '<td style="color:#64748b;font-weight:600">'+(fut?'-':_fM(cum))+'</td></tr>';
-    }).join('');
-    const mo=document.getElementById('corp-mo-tbl');
-    mo.innerHTML='<table class="corp-pq-t"><thead><tr><th>월</th><th>실적</th><th>전년</th><th>YoY</th><th>목표</th><th>달성</th><th>누적</th></tr></thead><tbody>'+rowsH+'</tbody></table>';
-    mo.style.display=_corpMoTbl?'':'none';
-    const mb=document.getElementById('corp-motbl-btn'); if(mb) mb.textContent=_corpMoTbl?'표 닫기':'월별 표';
-  })();
-  // ── 거래처 상세 표 (2026/전년/YoY/주문/평균주문액/최근거래, 행 클릭=드릴)
+  // ── 거래처 상세 표 (2026/전년동기/YoY/주문/평균주문액/최근거래, 행 클릭=드릴)
   const clis=sel.clients.slice().sort((a,b)=>b.v26-a.v26);
   document.getElementById('corp-custs').innerHTML=clis.length?(
     '<table class="corp-pq-t"><thead><tr><th>거래처</th><th>2026 누적</th><th>전년 동기</th><th>YoY</th><th>주문</th><th>평균 주문액</th><th>최근 거래</th></tr></thead><tbody>'+
@@ -2436,13 +2451,31 @@ function renderCorps(){
     '<table class="corp-pq-t"><thead><tr><th>제품</th><th>2026 누적</th><th>믹스</th><th>전년</th><th>YoY</th></tr></thead><tbody>'+
     pe2.map((c,i)=>{ const v25=has25?(Number(sel.prods25[c[0]])||0):null, y=(v25!=null&&v25>0)?pct(c[1],v25):null;
       const mixP=sel.prodSum>0?Math.round(c[1]/sel.prodSum*100):0;
-      return '<tr class="clk" onclick="openProdInfo(_corpProdN['+i+'])" title="제품 상세"><td style="font-weight:600">'+esc(c[0])+' <span style="color:#cbd5e1">›</span></td>'+
+      return '<tr class="clk" onclick="openCorpProdInfo('+i+')" title="이 법인의 '+esc(c[0])+' 상세"><td style="font-weight:600">'+esc(c[0])+' <span style="color:#cbd5e1">›</span></td>'+
       '<td style="font-weight:700">'+_fM(c[1])+'</td>'+
       '<td><span style="display:inline-block;vertical-align:middle;width:52px;height:5px;background:var(--line-soft);border-radius:99px;overflow:hidden;margin-right:5px"><span style="display:block;width:'+mixP+'%;height:100%;background:#7c3aed;border-radius:99px"></span></span><span style="color:#64748b">'+mixP+'%</span></td>'+
       '<td style="color:#64748b">'+(v25!=null?(v25?_fM(v25):'-'):'<span style="color:#cbd5e1">-</span>')+'</td>'+
       '<td style="color:'+_yoyCol(y)+';font-weight:700">'+(y==null?(v25!=null&&c[1]>0&&!v25?'<span style="color:#16a34a">신규</span>':'-'):arrow(y))+'</td></tr>'; }).join('')+
     '</tbody></table>'+(has25?'':'<div style="font-size:10.5px;color:#94a3b8;margin-top:6px">※ 전년 제품 비교는 법인 단독 국가만 가능(미국은 딜러 혼재로 분리 불가)</div>')
   ):'<div style="font-size:12px;color:#94a3b8">데이터 없음</div>';
+  // ── 법인 거래 원장 전체 (이 법인 모든 거래 한 건씩 — 접기, 기본 접힘)
+  (function(){
+    const tx=sel.allTxns||[];   // [날짜,거래처,제품,수량,금액,USD] 최신순
+    const el=document.getElementById('corp-ledger'); if(!el) return;
+    if(!tx.length){ el.innerHTML=''; return; }
+    const usdSum=tx.reduce((s,x)=>s+(Number(x[5])||0),0), krwSum=tx.reduce((s,x)=>s+(Number(x[4])||0),0);
+    const show=_corpLedFold?tx.slice(0,12):tx;
+    el.innerHTML='<div class="dr-sec-t" style="margin-top:18px;display:flex;justify-content:space-between;align-items:baseline"><span>거래 원장 <span style="font-weight:500;color:#94a3b8;font-size:10px">· '+tx.length+'건 · 회계 '+fmtW(krwSum)+(usdSum>0?' · $'+usdSum.toLocaleString():'')+' · 회계 원본</span></span>'+
+      '<a onclick="corpLedToggle()" style="font-size:11px;font-weight:700;color:var(--brand-strong);cursor:pointer">'+(_corpLedFold?('전체 '+tx.length+'건 ▾'):'접기 ▴')+'</a></div>'+
+      '<div style="overflow-x:auto'+(_corpLedFold?'':';max-height:340px;overflow-y:auto')+'"><table class="corp-pq-t"><thead><tr><th>날짜</th><th style="text-align:left">거래처</th><th style="text-align:left">제품</th><th>수량</th><th>금액</th><th>USD</th></tr></thead><tbody>'+
+      show.map(x=>'<tr><td style="color:#64748b;font-size:11px">'+esc(x[0])+'</td>'+
+        '<td style="text-align:left;font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(x[1])+'</td>'+
+        '<td style="text-align:left">'+esc(x[2]||'-')+'</td>'+
+        '<td>'+(Number(x[3])?Number(x[3]).toLocaleString():'-')+'</td>'+
+        '<td style="font-weight:700'+(Number(x[4])<0?';color:#dc2626':'')+'">'+fmtW(Number(x[4])||0)+'</td>'+
+        '<td style="color:#0d9488;font-size:11px">'+(Number(x[5])?'$'+Number(x[5]).toLocaleString():'-')+'</td></tr>').join('')+
+      '</tbody></table></div>'+(_corpLedFold&&tx.length>12?'<div style="font-size:11px;color:#94a3b8;margin-top:5px">최근 12건 표시 · 전체 '+tx.length+'건 보려면 위 펼치기</div>':'');
+  })();
   // ── 거래처 변동: 신규/유지/올해 미거래 (2026 vs 2025, _rnorm 키로 표기차 흡수)
   const _cl=(src,out)=>Object.entries((src&&src.countries)||{}).forEach(([cc,c])=>Object.entries(c.clientData||{}).forEach(([nm,cd])=>{
     if(_regionOf(cc,nm)!==sel.cp.n) return; const k=_rnorm(nm);
