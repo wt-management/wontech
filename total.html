@@ -465,6 +465,7 @@ tr.lb-clk:hover td,tr.qs-clk:hover td{background:var(--surface-2)}
     <a class="nav-link" id="nav-query" onclick="showPage('query',this)"><i class="bi bi-zoom-in"></i>상세 조회</a>
     <a class="nav-link" id="nav-report" onclick="showPage('report',this)"><i class="bi bi-table"></i>글로벌영업 매출현황</a>
     <a class="nav-link" id="nav-export" onclick="showPage('export',this)"><i class="bi bi-trophy"></i>수출의 탑</a>
+    <a class="nav-link" id="nav-corps" onclick="showPage('corps',this)"><i class="bi bi-buildings"></i>법인별 현황</a>
     <div class="nav-label" style="margin-top:12px">임원 리포트</div>
     <a class="nav-link" id="nav-goals" onclick="showPage('goals',this)"><i class="bi bi-speedometer2"></i>목표 달성률</a>
     <a class="nav-link" id="nav-quarters" onclick="showPage('quarters',this)"><i class="bi bi-calendar3"></i>분기·반기 요약</a>
@@ -638,6 +639,26 @@ tr.lb-clk:hover td,tr.qs-clk:hover td{background:var(--surface-2)}
     <div class="card p-3">
       <div style="font-size:13.5px;font-weight:800;margin-bottom:10px"><i class="bi bi-globe2 me-1" style="color:#0d9488"></i>최근 3개년 해외 실적 <span style="font-weight:500;font-size:11.5px;color:#94a3b8">· KITA 한국무역협회 기준</span></div>
       <div class="ex-kita" id="ex-kita"></div>
+    </div>
+  </div>
+
+  <!-- ===== 법인별 상세현황 (태국·미국·일본) ===== -->
+  <div id="page-corps" class="page">
+    <div class="row g-2 mb-3" id="corp-cards"></div>
+    <div class="card p-3 mb-3">
+      <div style="font-size:13.5px;font-weight:800;margin-bottom:8px"><i class="bi bi-bar-chart-line me-1" style="color:#0d9488"></i>법인별 월별 비교 <span style="font-weight:500;color:#94a3b8;font-size:11px">· 회계+미반영 · 억원</span></div>
+      <div style="position:relative;height:230px"><canvas id="corp-cmp-chart"></canvas></div>
+    </div>
+    <div class="card p-3 mb-3">
+      <div id="corp-detail-head" style="margin-bottom:10px"></div>
+      <div class="row g-2 mb-3" id="corp-kpi"></div>
+      <div style="font-size:12.5px;font-weight:800;margin-bottom:6px">월별 추이 <span style="font-weight:500;color:#94a3b8;font-size:11px">· 회계+미반영 vs 목표 vs 전년 · 백만원</span></div>
+      <div style="position:relative;height:220px"><canvas id="corp-chart"></canvas></div>
+      <div class="dr-col" style="margin-top:16px">
+        <div><div class="dr-sec-t">거래처 Top</div><div id="corp-custs"></div></div>
+        <div><div class="dr-sec-t">제품 Top <span style="font-weight:500;color:#94a3b8;font-size:10px">· 소속 국가 기준(참고)</span></div><div id="corp-prods"></div></div>
+      </div>
+      <div id="corp-pend"></div>
     </div>
   </div>
 
@@ -944,13 +965,14 @@ function showPage(name,el){
   document.getElementById('page-'+name).classList.add('on');
   document.querySelectorAll('.nav-link').forEach(n=>n.classList.remove('active'));
   if(el) el.classList.add('active');
-  const _titles={query:'전사 상세 조회',report:'글로벌영업 매출현황',export:'수출의 탑 진행현황',goals:'목표 달성률 종합',quarters:'분기·반기 요약',units:'장비 출고 대수 현황',leaderboard:'담당자·팀 실적 리더보드',customers:'거래처 신규·이탈 분석'};
+  const _titles={query:'전사 상세 조회',report:'글로벌영업 매출현황',export:'수출의 탑 진행현황',corps:'법인별 상세현황',goals:'목표 달성률 종합',quarters:'분기·반기 요약',units:'장비 출고 대수 현황',leaderboard:'담당자·팀 실적 리더보드',customers:'거래처 신규·이탈 분석'};
   document.getElementById('page-title').textContent=_titles[name]||'전사 종합 경영현황';
   var _mt=document.getElementById('m-title'); if(_mt) _mt.textContent=_titles[name]||'전사 종합';
   if(window.innerWidth<=820) toggleNav(false);
   if(name==='query') renderQuery();
   if(name==='report') renderReport();
   if(name==='export') renderExport();
+  if(name==='corps') renderCorps();
   if(name==='goals') renderGoals();
   if(name==='quarters') renderQuarters();
   if(name==='units') renderUnits();
@@ -2048,6 +2070,78 @@ function openCustInfo(gi){
     kpi:[{l:'2026 누적',v:fmtW(y26)},{l:_clm>0?('전년 동기(1~'+_clm+'월)'):'전년 (연간)',v:fmtW(_clm>0?_c25:y25),c:'#64748b'},{l:'YoY (동기간)',v:(yy===null?'-':arrow(yy)),c:_yoyCol(yy)},{l:'최근 거래',v:esc(last||'-'),c:'#0f172a'}],
     mo26,mo25, cols:Object.keys(prods).length?[{t:'구매 제품 Top',rows:Object.entries(prods).sort((a,b)=>b[1]-a[1]).slice(0,8),col:'#0891b2'}]:[],
     txns:txns.slice(0,8)});
+}
+
+// ── 법인별 상세현황 (태국·미국·일본법인) — _drillSeg 재사용, 회계+미반영 기준 ──
+let _corpSel='태국법인', _corpChart=null, _corpCmpChart=null;
+const _CORPS=[{n:'태국법인',c:'#0d9488',i:'bi-building'},{n:'미국법인',c:'#4f46e5',i:'bi-building'},{n:'일본법인',c:'#f59e0b',i:'bi-building'}];
+function corpGo(n){ if(_CORPS.some(x=>x.n===n)) _corpSel=n; renderCorps(); }
+function renderCorps(){
+  try{ _rptBuildCache(); }catch(e){ return; }
+  const P=_rptPeriods(), f=1, t=P.mo;
+  const sm=(o,a,b)=>{let s=0;for(let m=a;m<=b;m++)s+=Number((o||{})[m]||0);return s;};
+  const pendAll=_pendingAgg(2026);
+  const intlDen=sm(INTL.monthly,f,t)+sm(pendAll.intlMonthly,f,t)||1;   // 해외 전체(회계+미반영) — 비중 분모
+  const segs=_CORPS.map(cp=>{
+    const seg=_drillSeg('해외영업',cp.n);
+    const acc=sm(seg.mo26,f,t), pnd=sm(seg.pend,f,t), act=acc+pnd, prev=sm(seg.mo25,f,t), tg=sm(seg.tgt,f,t);
+    return {cp,seg,acc,pnd,act,prev,tg,ach:tg>0?act/tg*100:null,yoy:pct(acc,prev),share:Math.round(act/intlDen*100)};
+  });
+  // 요약 카드 3장 (클릭=법인 전환)
+  document.getElementById('corp-cards').innerHTML=segs.map(s=>{
+    const on=s.cp.n===_corpSel;
+    return '<div class="col-12 col-md-4"><div class="kpi-card clk" style="border-left:4px solid '+s.cp.c+(on?';box-shadow:0 0 0 2px '+s.cp.c+' inset,var(--sh-1)':'')+'" onclick="corpGo(\''+s.cp.n+'\')" title="'+s.cp.n+' 상세 보기">'+
+      '<div class="kpi-label"><i class="bi '+s.cp.i+' me-1" style="color:'+s.cp.c+'"></i>'+s.cp.n+' <span style="color:#cbd5e1">›</span></div>'+
+      '<div class="kpi-value" style="color:'+s.cp.c+';font-size:1.35rem">'+fmtW(s.act)+'</div>'+
+      '<div class="kpi-sub">전년 '+fmtW(s.prev)+' '+badge(s.yoy)+(s.ach!=null?' · 달성 <b style="color:'+_achCol(s.ach)+'">'+s.ach.toFixed(0)+'%</b>':'')+' · 해외의 '+s.share+'%</div></div></div>';
+  }).join('');
+  // 법인 비교 차트 (월별 회계+미반영, 억원)
+  const m12=Array.from({length:12},(_,i)=>i+1);
+  if(_corpCmpChart){_corpCmpChart.destroy();_corpCmpChart=null;}
+  _corpCmpChart=new Chart(document.getElementById('corp-cmp-chart'),{type:'bar',
+    data:{labels:m12.map(m=>m+'월'),datasets:segs.map(s=>({label:s.cp.n,data:m12.map(m=>+(((s.seg.mo26[m]||0)+(s.seg.pend[m]||0))/1e8).toFixed(2)),backgroundColor:s.cp.c+'cc',borderRadius:3,maxBarThickness:16}))},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y||0)+'억'}}},
+      scales:{x:{grid:{display:false}},y:{grid:{color:'#f3f4f6'},ticks:{callback:v=>v+'억',font:{size:10}}}}}});
+  // 선택 법인 상세
+  const sel=segs.find(s=>s.cp.n===_corpSel)||segs[0];
+  document.getElementById('corp-detail-head').innerHTML=
+    '<span style="font-size:15px;font-weight:800;color:'+sel.cp.c+'"><i class="bi '+sel.cp.i+' me-1"></i>'+sel.cp.n+' 상세</span>'+
+    ' <span style="font-size:11.5px;color:#94a3b8">· 1~'+t+'월 누적 · 실적 = 회계 + 미반영</span>';
+  const kpi=[
+    {l:'누적 실적',v:fmtW(sel.act),c:sel.cp.c},
+    {l:'회계 / 미반영',v:fmtW(sel.acc)+' <span style="font-size:.8em;color:#7c3aed">+'+fmtW(sel.pnd)+'</span>',c:'#0f172a'},
+    {l:'전년 동기 (YoY)',v:fmtW(sel.prev)+' <span style="font-size:.8em">'+badge(sel.yoy)+'</span>',c:'#64748b'},
+    {l:'목표 / 달성률',v:(sel.tg>0?fmtW(sel.tg)+' <b style="color:'+_achCol(sel.ach)+'">'+sel.ach.toFixed(0)+'%</b>':'미설정'),c:_achCol(sel.ach)},
+    {l:'해외 내 비중',v:sel.share+'%',c:'#0d9488'},
+  ];
+  document.getElementById('corp-kpi').innerHTML=kpi.map(c=>'<div class="col-6 col-md"><div class="kpi-card acc-card" style="padding:12px 14px;border-left-color:'+c.c+'"><div class="kpi-label">'+c.l+'</div><div class="kpi-value" style="font-size:1.12rem;color:'+c.c+'">'+c.v+'</div></div></div>').join('');
+  // 월별 상세 차트 (백만원): 회계+미반영 스택 / 목표·전년 라인
+  const r6=v=>Math.round((Number(v)||0)/1e6);
+  if(_corpChart){_corpChart.destroy();_corpChart=null;}
+  _corpChart=new Chart(document.getElementById('corp-chart'),{type:'bar',
+    data:{labels:m12.map(m=>m+'월'),datasets:[
+      {label:'회계',data:m12.map(m=>r6(sel.seg.mo26[m])),backgroundColor:sel.cp.c,stack:'s',borderRadius:2,maxBarThickness:22},
+      {label:'미반영',data:m12.map(m=>r6(sel.seg.pend[m])),backgroundColor:'#a5b4fc',stack:'s',borderRadius:2,maxBarThickness:22},
+      {type:'line',label:'목표',data:m12.map(m=>r6(sel.seg.tgt[m])),borderColor:'#f59e0b',borderWidth:2,pointRadius:0,tension:.3},
+      {type:'line',label:'전년',data:m12.map(m=>r6(sel.seg.mo25[m])),borderColor:'#94a3b8',borderWidth:2,borderDash:[5,4],pointRadius:0,tension:.3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y+'백만'}}},
+      scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:'#f3f4f6'},ticks:{font:{size:10}}}}}});
+  // 거래처/제품 Top + 미반영 내역 (openDrill 마크업 재사용)
+  const bar=(n,v,mx,col)=>'<div class="dr-bar"><span class="n" title="'+esc(n)+'">'+esc(n)+'</span><span class="t"><span class="f" style="width:'+(mx>0?Math.max(v/mx*100,1):0).toFixed(1)+'%;background:'+col+'"></span></span><span class="vv">'+_fM(v)+'</span></div>';
+  const custTop=Object.entries(sel.seg.custs).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const prodTop=Object.entries(sel.seg.prods).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const cmax=custTop.length?custTop[0][1]:1, pmax=prodTop.length?prodTop[0][1]:1;
+  document.getElementById('corp-custs').innerHTML=custTop.length?custTop.map(c=>bar(c[0],c[1],cmax,sel.cp.c)).join(''):'<div style="font-size:12px;color:#94a3b8">데이터 없음</div>';
+  document.getElementById('corp-prods').innerHTML=prodTop.length?prodTop.map(c=>bar(c[0],c[1],pmax,'#7c3aed')).join(''):'<div style="font-size:12px;color:#94a3b8">데이터 없음</div>';
+  const pr=(sel.seg.pendRows||[]).slice().sort((a,b)=>Number(b.amount||0)-Number(a.amount||0));
+  const pendTot=pr.reduce((s,p)=>s+Number(p.amount||0),0);
+  document.getElementById('corp-pend').innerHTML=pr.length?(
+    '<div class="dr-sec-t" style="margin-top:16px">미반영 내역 <span style="font-weight:500;color:#94a3b8">· '+pr.length+'건 합 '+_fM(pendTot)+'백만</span></div>'+
+    pr.slice(0,8).map(p=>'<div class="dr-pend"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc((p.customer||p.country||'')+' · '+(p.product||''))+'</span><span style="color:#94a3b8">'+esc(p.expectedDate||'')+'</span><span style="font-weight:700;width:62px;text-align:right">'+_fM(Number(p.amount||0))+'</span></div>').join('')
+  ):'';
 }
 
 // ── 수출의 탑 ──────────────────────────────────────────────
