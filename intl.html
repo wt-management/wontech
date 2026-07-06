@@ -584,7 +584,8 @@ function renderOverview(){
     +'<div><div style="font-size:10px;color:#7c3aed;margin-bottom:1px;font-weight:700">미반영 포함 <span style="color:#cbd5e1;font-weight:500">· 보고기준</span></div><div class="kpi-value" style="color:#111827;font-size:1.4rem;line-height:1.1">'+fmtW(tot+pendYtd)+'</div><div class="kpi-sub" style="margin-top:3px">전년 '+fmtW(ptot)+' '+bdg(yoy)+'</div></div>'
     +'<div style="text-align:right;border-left:1px solid #eef2f7;padding-left:11px"><div style="font-size:10px;color:#9ca3af;margin-bottom:1px;font-weight:600">회계반영</div><div style="font-size:1.32rem;font-weight:800;color:#374151;line-height:1.1">'+fmtW(tot)+'</div><div style="font-size:10px;color:#9ca3af;margin-top:3px">+ '+fmtW(pendYtd)+'</div></div>'
     +'</div></div></div>';
-  const _cm=(yr===2026)?Math.min(12,new Date().getMonth()+1):12;
+  var _dm=0; if(cur&&cur.monthly){ for(var _k=1;_k<=12;_k++){ if(Number(cur.monthly[_k])>0) _dm=_k; } } if(!_dm) _dm=12;
+  const _cm=(yr===2026)?Math.min(_dm,new Date().getMonth()+1):12;   // 기준월=min(달력월,데이터마지막월) — 월초 빈달 0원/▼100% 방지·자동 롤오버
   const _pmM=_cm>1?_cm-1:1;
   const _mCard=function(mo){
     var acc=(cur.monthly&&cur.monthly[mo])||0;
