@@ -6964,6 +6964,7 @@ async function toggleAccess(id, key, checked) {
   if(p) p.access = newAccess;
   const {error} = await _sb.from('crm_profiles').update({access: newAccess}).eq('id', id);
   if(error){ showToast('접근 권한 저장 실패: '+error.message, true, true); return; }
+  _refreshPresetSelect(id);
   showToast('접근 권한 변경됨', true);
 }
 async function toggleUpload(id, key, checked) {
@@ -6975,7 +6976,19 @@ async function toggleUpload(id, key, checked) {
   if(p) p.upload = newUpload;
   const {error} = await _sb.from('crm_profiles').update({upload: newUpload}).eq('id', id);
   if(error){ showToast('업로드 권한 저장 실패: '+error.message, true, true); return; }
+  _refreshPresetSelect(id);
   showToast('업로드 권한 변경됨', true);
+}
+function _refreshPresetSelect(id) {
+  // 체크박스로 접근/업로드 권한을 바꾼 뒤에도 프리셋 드롭다운 표시가 실제 값과 어긋나지 않도록 즉시 갱신
+  const p = _allProfiles.find(x=>x.id===id);
+  if(!p) return;
+  const matched = _matchPreset(p);
+  document.querySelectorAll(`select[onchange^="applyPreset('${id}',"]`).forEach(sel=>{
+    let opts = PERM_PRESETS.map(ps=>`<option ${ps.name===matched?'selected':''} style="background:#1e293b">${ps.name}</option>`).join('');
+    if(matched==='맞춤') opts += `<option selected style="background:#1e293b">맞춤</option>`;
+    sel.innerHTML = opts;
+  });
 }
 
 async function setUserPassword(id, email){
