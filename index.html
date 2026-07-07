@@ -6803,6 +6803,7 @@ function _renderLauncherCards(access) {
 }
 
 async function renderAdminUsers() {
+  try { const {data:{session:_ms}} = await _sb.auth.getSession(); if(_ms && _ms.user) _isMaster = _ms.user.email === 'pmw0406@gmail.com'; } catch(e){}
   const el = document.getElementById('admin-user-list');
   el.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:#64748b">불러오는 중...</td></tr>`;
   const {data: profiles} = await _sb.from('crm_profiles').select('*').order('dept').order('display_name');
