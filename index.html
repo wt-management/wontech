@@ -6908,7 +6908,7 @@ function _adminUserRow(p, iS, hidden) {
   const pwId='pw_'+p.id.replace(/-/g,'');
   const hasPw=p.temp_pw && p.temp_pw.trim();
   const pwCell = _isMaster
-    ? (hasPw ? `<span id="${pwId}" style="font-size:12px;color:#94a3b8;font-family:monospace;letter-spacing:2px">••••••••</span> <button onclick="togglePw('${pwId}','${p.temp_pw}')" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:13px" title="보기"><i class="bi bi-eye"></i></button>` : `<span style="font-size:11px;color:#475569">-</span>`)
+    ? (hasPw ? `<span data-pw="${(p.temp_pw||'').replace(/"/g,'&quot;')}" onclick="var sh=this.dataset.s==='1';this.textContent=sh?'●●●●':this.dataset.pw;this.dataset.s=sh?'0':'1'" style="font-size:13px;color:#cbd5e1;font-family:monospace;cursor:pointer;user-select:none;letter-spacing:2px" title="클릭하면 비밀번호 보기/가리기">●●●●</span>` : `<span style="font-size:11px;color:#475569">-</span>`)
     : `<span style="font-size:11px;color:#475569" title="마스터만 열람 가능">●●●●</span>`;
   return `<tr style="border-bottom:1px solid rgba(255,255,255,.06)${hidden?';display:none':''}">
     <td style="padding:10px 16px;font-size:12px;color:#e2e8f0;white-space:nowrap">${p.email||''}</td>
