@@ -6943,20 +6943,24 @@ async function updateUserAccess(id, access) {
   showToast('접근 권한 변경됨', true);
 }
 async function toggleAccess(id, key, checked) {
-  const {data:p} = await _sb.from('crm_profiles').select('access').eq('id',id).single();
-  const parts = (p?.access||'').split(',').map(s=>s.trim()).filter(Boolean);
+  // 로컬 캐시(_allProfiles) 기준으로 즉시 갱신 — 체크박스 연속 클릭 시 DB 재조회 레이스 컨디션 방지
+  const p = _allProfiles.find(x=>x.id===id);
+  const parts = ((p?.access)||'').split(',').map(s=>s.trim()).filter(Boolean);
   const set = new Set(parts);
   if(checked) set.add(key); else set.delete(key);
   const newAccess = [...set].sort().join(',');
-  await _sb.from('crm_profiles').update({access: newAccess}).eq('id', id);
+  if(p) p.access = newAccess;
+  const {error} = await _sb.from('crm_profiles').update({access: newAccess}).eq('id', id);
+  if(error){ showToast('접근 권한 저장 실패: '+error.message, true, true); return; }
   showToast('접근 권한 변경됨', true);
 }
 async function toggleUpload(id, key, checked) {
-  const {data:p} = await _sb.from('crm_profiles').select('upload').eq('id',id).single();
-  const parts = (p?.upload||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const p = _allProfiles.find(x=>x.id===id);
+  const parts = ((p?.upload)||'').split(',').map(s=>s.trim()).filter(Boolean);
   const set = new Set(parts);
   if(checked) set.add(key); else set.delete(key);
   const newUpload = [...set].sort().join(',');
+  if(p) p.upload = newUpload;
   const {error} = await _sb.from('crm_profiles').update({upload: newUpload}).eq('id', id);
   if(error){ showToast('업로드 권한 저장 실패: '+error.message, true, true); return; }
   showToast('업로드 권한 변경됨', true);
@@ -7704,6 +7708,46 @@ window.addEventListener('popstate', function(e) {
           </div>
           <div style="font-size:11px;font-weight:800;color:#1e293b;letter-spacing:-.2px">장비 통합관리</div>
           <div style="font-size:10px;color:#94a3b8;margin-top:2px">Equipment</div>
+        </div>
+        <div class="access-card" data-val="pm" onclick="toggleAccessCard(this)"
+          style="flex:1;min-width:90px;border:2px solid #e5e7eb;border-radius:14px;padding:14px 10px 12px;cursor:pointer;text-align:center;transition:all .18s;background:#fff">
+          <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#a855f7,#7c3aed);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px rgba(168,85,247,.25)">
+            <i class="bi bi-kanban-fill" style="font-size:18px;color:#fff"></i>
+          </div>
+          <div style="font-size:11px;font-weight:800;color:#1e293b;letter-spacing:-.2px">상품 PM</div>
+          <div style="font-size:10px;color:#94a3b8;margin-top:2px">Product PM</div>
+        </div>
+        <div class="access-card" data-val="portfolio" onclick="toggleAccessCard(this)"
+          style="flex:1;min-width:90px;border:2px solid #e5e7eb;border-radius:14px;padding:14px 10px 12px;cursor:pointer;text-align:center;transition:all .18s;background:#fff">
+          <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px rgba(236,72,153,.25)">
+            <i class="bi bi-diagram-3-fill" style="font-size:18px;color:#fff"></i>
+          </div>
+          <div style="font-size:11px;font-weight:800;color:#1e293b;letter-spacing:-.2px">SalesPF</div>
+          <div style="font-size:10px;color:#94a3b8;margin-top:2px">Portfolio</div>
+        </div>
+        <div class="access-card" data-val="us" onclick="toggleAccessCard(this)"
+          style="flex:1;min-width:90px;border:2px solid #e5e7eb;border-radius:14px;padding:14px 10px 12px;cursor:pointer;text-align:center;transition:all .18s;background:#fff">
+          <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#ef4444,#f59e0b);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px rgba(239,68,68,.25)">
+            <i class="bi bi-flag-fill" style="font-size:18px;color:#fff"></i>
+          </div>
+          <div style="font-size:11px;font-weight:800;color:#1e293b;letter-spacing:-.2px">미국법인</div>
+          <div style="font-size:10px;color:#94a3b8;margin-top:2px">US Corp</div>
+        </div>
+        <div class="access-card" data-val="th" onclick="toggleAccessCard(this)"
+          style="flex:1;min-width:90px;border:2px solid #e5e7eb;border-radius:14px;padding:14px 10px 12px;cursor:pointer;text-align:center;transition:all .18s;background:#fff">
+          <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#14b8a6,#0891b2);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px rgba(20,184,166,.25)">
+            <i class="bi bi-flag-fill" style="font-size:18px;color:#fff"></i>
+          </div>
+          <div style="font-size:11px;font-weight:800;color:#1e293b;letter-spacing:-.2px">태국법인</div>
+          <div style="font-size:10px;color:#94a3b8;margin-top:2px">Thailand Corp</div>
+        </div>
+        <div class="access-card" data-val="demo" onclick="toggleAccessCard(this)"
+          style="flex:1;min-width:90px;border:2px solid #e5e7eb;border-radius:14px;padding:14px 10px 12px;cursor:pointer;text-align:center;transition:all .18s;background:#fff">
+          <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#8b5cf6,#ec4899);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px rgba(139,92,246,.25)">
+            <i class="bi bi-calendar-event-fill" style="font-size:18px;color:#fff"></i>
+          </div>
+          <div style="font-size:11px;font-weight:800;color:#1e293b;letter-spacing:-.2px">데모 일정</div>
+          <div style="font-size:10px;color:#94a3b8;margin-top:2px">Demo</div>
         </div>
       </div>
       <div id="access-card-error" style="font-size:11px;color:#dc2626;margin-top:4px;display:none">최소 1개 선택하세요</div>
