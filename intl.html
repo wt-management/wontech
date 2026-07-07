@@ -1008,9 +1008,9 @@ async function _afterLogin(user) {
   if(veil) veil.style.display = 'none';
 }
 
-/* ── 자동 로그아웃: 60분 무동작 시 자동 로그아웃 ── */
+/* ── 자동 로그아웃: 30분 무동작 시 자동 로그아웃 ── */
 (function(){
-  var IDLE_MS=60*60*1000, _it;
+  var IDLE_MS=30*60*1000, _it;
   function _logout(){
     if(typeof doLogout==='function'){ doLogout(); return; }
     try{ _sb.auth.signOut().then(function(){ location.reload(); }); }catch(e){ location.reload(); }
