@@ -2128,13 +2128,18 @@ async function _showLauncherOrApp(user) {
     if(_isAdmin) document.getElementById('launcher-admin-btn').style.display = '';
     document.getElementById('launcher-screen').style.display = 'flex';
     _hideLoading();
-  } else if(access.includes('japan') || access.includes('jp')) {
-    const {data:{session:_s}} = await _sb.auth.getSession();
-    let _jurl = 'https://wt-management.github.io/wtj-management/';
-    if(_s) _jurl += '#at='+encodeURIComponent(_s.access_token)+'&rt='+encodeURIComponent(_s.refresh_token);
-    location.href = _jurl;
-  } else {
+  } else if(access.includes('korea')) {
     await _bootApp(access);
+  } else {
+    // 단일 권한(비한국·비관리자) → 해당 법인/사이트로 라우팅. 없으면 한국앱 폴백.
+    const BASE='https://wt-management.github.io/';
+    const PLAIN={us:'wt-corps/us.html',th:'wt-corps/th.html',pm:'pm-planner/',portfolio:'sales-portfolio/',equip:'demo-schedule/',demo:'demo-schedule/'};
+    const TOK={japan:'wtj-management/',jp:'wtj-management/',intl:'wontech/intl.html',total:'wontech/total.html',daily:'wt-consumables/ilbo.html'};
+    let dest=null,needTok=false;
+    for(const k of access){ if(PLAIN[k]){dest=BASE+PLAIN[k];break;} if(TOK[k]){dest=BASE+TOK[k];needTok=true;break;} }
+    if(!dest){ await _bootApp(access); return; }
+    if(needTok){ const {data:{session:_s}}=await _sb.auth.getSession(); if(_s)dest+='#at='+encodeURIComponent(_s.access_token)+'&rt='+encodeURIComponent(_s.refresh_token); }
+    location.href=dest;
   }
 }
 
