@@ -1971,7 +1971,12 @@ async function init() {
 
 async function _showLauncherOrApp(user) {
   const {data: profile} = await _sb.from('crm_profiles').select('access,role').eq('id', user.id).single();
-  const access = (profile?.access || 'korea').split(',').map(s=>s.trim());
+  if(!profile){
+    // 프로필 없음(삭제된 사용자 등) → 절대 기본권한 부여 금지, 즉시 로그아웃
+    await doLogout();
+    return;
+  }
+  const access = (profile.access || '').split(',').map(s=>s.trim()).filter(Boolean);
   _currentAccess = access;
   _isAdmin = profile?.role === 'admin';
   _isMgr   = _isAdmin || profile?.role === 'manager';
@@ -2031,7 +2036,7 @@ async function _showLauncherOrApp(user) {
               입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
           </div>
         </div>` : '',
-      (access.includes('korea') || _isAdmin) ? `
+      (access.includes('daily') || access.includes('korea') || _isAdmin) ? `
         <div onclick="location.href='https://wt-management.github.io/wt-consumables/ilbo.html'"
           style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
           <div style="height:5px;background:linear-gradient(90deg,#16a34a,#0d9488)"></div>
@@ -2044,7 +2049,7 @@ async function _showLauncherOrApp(user) {
             <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#16a34a;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
           </div>
         </div>` : '',
-      (_isAdmin || (access.includes('korea') && access.includes('intl'))) ? `
+      (_isAdmin || access.includes('total') || (access.includes('korea') && access.includes('intl'))) ? `
         <div onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wontech/total.html';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()"
           style="${cardStyle};order:-1" onmouseover="${cardHover}" onmouseout="${cardOut}">
           <div style="height:5px;background:linear-gradient(90deg,#4f46e5,#7c3aed)"></div>
@@ -2097,7 +2102,7 @@ async function _showLauncherOrApp(user) {
             <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#7dd3fc;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
           </div>
         </div>` : '',
-      _isAdmin ? `
+      (access.includes('us') || _isAdmin) ? `
         <div onclick="location.href='https://wt-management.github.io/wt-corps/us.html'"
           style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
           <div style="height:5px;background:linear-gradient(90deg,#1e3a8a,#3b82f6)"></div>
@@ -2110,7 +2115,7 @@ async function _showLauncherOrApp(user) {
             <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#60a5fa;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
           </div>
         </div>` : '',
-      _isAdmin ? `
+      (access.includes('th') || _isAdmin) ? `
         <div onclick="location.href='https://wt-management.github.io/wt-corps/th.html'"
           style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
           <div style="height:5px;background:linear-gradient(90deg,#b45309,#d97706)"></div>
@@ -2137,7 +2142,14 @@ async function _showLauncherOrApp(user) {
     const TOK={japan:'wtj-management/',jp:'wtj-management/',intl:'wontech/intl.html',total:'wontech/total.html',daily:'wt-consumables/ilbo.html'};
     let dest=null,needTok=false;
     for(const k of access){ if(PLAIN[k]){dest=BASE+PLAIN[k];break;} if(TOK[k]){dest=BASE+TOK[k];needTok=true;break;} }
-    if(!dest){ await _bootApp(access); return; }
+    if(!dest){
+      // 매핑되는 사이트가 하나도 없음(권한 미부여/삭제된 계정 등) → 한국앱 폴백 금지, 접근불가 안내
+      document.getElementById('launcher-cards').innerHTML = '';
+      document.getElementById('launcher-screen').innerHTML = '<div style="color:#e2e8f0;text-align:center;padding:80px 20px"><div style="font-size:16px;margin-bottom:16px">⚠ 부여된 접근 권한이 없습니다.<br>관리자에게 문의해주세요.</div><button onclick="doLogout()" style="background:#334155;color:#fff;border:none;padding:9px 22px;border-radius:8px;cursor:pointer;font-size:13px">로그아웃</button></div>';
+      document.getElementById('launcher-screen').style.display='flex';
+      _hideLoading();
+      return;
+    }
     if(needTok){ const {data:{session:_s}}=await _sb.auth.getSession(); if(_s)dest+='#at='+encodeURIComponent(_s.access_token)+'&rt='+encodeURIComponent(_s.refresh_token); }
     location.href=dest;
   }
@@ -6710,7 +6722,7 @@ function _renderLauncherCards(access) {
           <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#f59e0b;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
         </div>
       </div>` : '',
-      (access.includes('korea') || _isAdmin) ? `
+      (access.includes('daily') || access.includes('korea') || _isAdmin) ? `
         <div onclick="location.href='https://wt-management.github.io/wt-consumables/ilbo.html'"
           style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
           <div style="height:5px;background:linear-gradient(90deg,#16a34a,#0d9488)"></div>
@@ -6723,7 +6735,7 @@ function _renderLauncherCards(access) {
             <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#16a34a;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
           </div>
         </div>` : '',
-      (_isAdmin || (access.includes('korea') && access.includes('intl'))) ? `
+      (_isAdmin || access.includes('total') || (access.includes('korea') && access.includes('intl'))) ? `
         <div onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wontech/total.html';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()"
           style="${cardStyle};order:-1" onmouseover="${cardHover}" onmouseout="${cardOut}">
           <div style="height:5px;background:linear-gradient(90deg,#4f46e5,#7c3aed)"></div>
@@ -6776,7 +6788,7 @@ function _renderLauncherCards(access) {
             <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#7dd3fc;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
           </div>
         </div>` : '',
-      _isAdmin ? `
+      (access.includes('us') || _isAdmin) ? `
         <div onclick="location.href='https://wt-management.github.io/wt-corps/us.html'"
           style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
           <div style="height:5px;background:linear-gradient(90deg,#1e3a8a,#3b82f6)"></div>
@@ -6789,7 +6801,7 @@ function _renderLauncherCards(access) {
             <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#60a5fa;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
           </div>
         </div>` : '',
-      _isAdmin ? `
+      (access.includes('th') || _isAdmin) ? `
         <div onclick="location.href='https://wt-management.github.io/wt-corps/th.html'"
           style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
           <div style="height:5px;background:linear-gradient(90deg,#b45309,#d97706)"></div>
@@ -7018,10 +7030,26 @@ async function updateUserRole(id, role) {
 }
 
 async function deleteUser(id, email) {
-  if(!confirm(`${email} 사용자를 삭제하시겠습니까?`)) return;
-  await _sb.from('crm_profiles').delete().eq('id', id);
-  showToast('사용자 삭제됨', true);
-  renderUsers();
+  if(!confirm(`${email} 사용자를 삭제하시겠습니까?\n(로그인 계정 자체도 함께 삭제되어 다시 로그인할 수 없게 됩니다)`)) return;
+  const {data:{session}} = await _sb.auth.getSession();
+  if(!session){ showToast('세션 없음', true, true); return; }
+  try{
+    const res = await fetch('https://mhfacbsittfdkknwybhc.supabase.co/functions/v1/admin-delete-user', {
+      method:'POST',
+      headers:{'Content-Type':'application/json', 'Authorization':'Bearer '+session.access_token},
+      body: JSON.stringify({user_id:id})
+    });
+    let out={}; try{ out=await res.json(); }catch(e){}
+    if(!res.ok){
+      showToast('계정 완전삭제 실패: '+(out.error || ('HTTP '+res.status))+' — 프로필만 우선 삭제합니다 (Edge Function 배포 필요)', true, true);
+      await _sb.from('crm_profiles').delete().eq('id', id);
+      showToast('사용자 프로필 삭제됨 (로그인 계정은 남아있음, 관리자에게 문의)', true, true);
+      renderUsers();
+      return;
+    }
+    showToast('사용자 삭제됨 (로그인 계정 포함)', true);
+    renderUsers();
+  }catch(e){ showToast('오류: '+e.message, true, true); }
 }
 
 function toggleAccessCard(el) {
@@ -7076,8 +7104,8 @@ async function saveNewUser() {
 
   const userId = adminData.user?.id || adminData.id;
   if(userId) {
+    // 모달에서 직접 선택한 접근권한이 최우선 — 부서 기본권한으로 덮어쓰지 않음(전원적용 버튼으로 별도 적용 가능)
     await _sb.from('crm_profiles').upsert({id: userId, email, display_name: name||email.split('@')[0], dept, position, role, access, temp_pw: pw});
-    const _dp=_deptPerms[dept]; if(_dp && (_dp.access||_dp.upload)){ await _sb.from('crm_profiles').update({access:_dp.access, upload:_dp.upload}).eq('id',userId); }
   }
   bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
   showToast('사용자 추가됨!', true);
