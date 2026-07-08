@@ -4074,11 +4074,17 @@ function renderConsumables() {
   document.getElementById('cons-detail-ytd').innerHTML=renderDetailCol(spanMs,prevMs);
 
   if(consDonutChart){consDonutChart.destroy();consDonutChart=null;}
+
+  // 조회기간을 바꾸면, 이미 열려있는 아래 드릴 표도 자동으로 다시 조회(품목명 다시 안 눌러도 됨)
+  { const dp=document.getElementById('cons-drill-panel');
+    if(dp && dp.style.display!=='none' && window._consDrillLast)
+      showConsDrill(window._consDrillLast.prodKeys, window._consDrillLast.label, true); }
 }
 
 
-function showConsDrill(prodKeys, label) {
-  // prodKeys: 제품명 배열 또는 null(전체)
+function showConsDrill(prodKeys, label, noScroll) {
+  // prodKeys: 제품명 배열 또는 null(전체). noScroll: 조회기간 변경으로 자동갱신될 때 스크롤 생략
+  window._consDrillLast = {prodKeys, label};   // 기간 바뀌면 renderConsumables가 이 값으로 자동 재조회
   const fmtA = v => !v||v<=0?'-':v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만원':v.toLocaleString()+'원';
   // 조회기간 연동 — KPI 카드와 동일한 '선택 기간'의 세부내역을 보여줌(항상 YTD 아님)
   const P=_getPeriod('cons'), spanMs=_spanMonths(P), prevP=_yoyShift(P), prevMs=_spanMonths(prevP);
@@ -4130,7 +4136,7 @@ function showConsDrill(prodKeys, label) {
   document.getElementById('cons-drill-title').textContent = label;
   const panel = document.getElementById('cons-drill-panel');
   panel.style.display = 'block';
-  panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+  if(!noScroll) panel.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
 // ── 소모품 병원별 분석 ────────────────────────────────────────────────
