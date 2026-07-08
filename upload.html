@@ -215,9 +215,16 @@ function _mvNum(v){return Number(v)||0;}
 function _mvDt(v){ if(v instanceof Date) return v.toISOString().slice(0,10); return v||''; }
 // 미반영치 파싱: 국내(거래처4/제품11/수량16/미납품33/예정일39) 해외(거래처45/제품53/수량58/미선적78/예정일118)
 function parseMibanyong(wb){
-  // 월별 일보 시트 전부(6월·7월…) 파싱. 각 시트에서 납품(완료·회계미반영)+미납품(예정) 둘 다.
+  // ★최신 월 시트만 파싱★ — 과거 월 시트는 마감 이력(이미 회계 반영된 납품 상세)이라 파싱하면
+  // 가짜 미반영이 대량 유입됨(260707 실측: 전시트 파싱 시 283건 235억 vs 실제 미반영 22억).
+  // 일보팀이 미해결 완료건은 최신 시트로 이월(예: 6/30 원텍몰 납품이 7월 시트에 존재)하므로 최신 시트만으로 완전.
   const targets=wb.SheetNames.filter(n=>/일매출일보|미반영/.test(n));
-  const sheetList=targets.length?targets:[wb.SheetNames[0]];
+  let sheetList=targets.length?targets:[wb.SheetNames[0]];
+  if(sheetList.length>1){
+    const _mo=n=>{const m=String(n).match(/(\d{1,2})\s*월/);return m?+m[1]:0;};
+    const _mx=Math.max.apply(null,sheetList.map(_mo));
+    if(_mx>0) sheetList=sheetList.filter(n=>_mo(n)===_mx);
+  }
   const out=[]; let di=0, ii=0, foundAny=false;
   sheetList.forEach(function(sn){
     const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,raw:true,defval:null});
