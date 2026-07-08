@@ -1705,7 +1705,7 @@ function _qReps(){
     if(incCons) _repAcc(CONS.reps,CONS.monthly2026,f,t).forEach(r=>{ add(r.n,'dom',r.v); out[r.n].dom2=(out[r.n].dom2||0); _mergeProds(out[r.n].prods,r.prods); });
     if(incCons){ const p=_repAcc((CONS.data2025&&CONS.data2025.reps)||null,CONS.monthly2025,f,t); p.forEach(r=>{ if(!out[r.n]) add(r.n,'dom',0); out[r.n].domPrev+=r.v; }); }
     if(incDev) _repAcc(DEVICE.reps,DEVICE.monthly2026,f,t).forEach(r=>{ add(r.n,'dom',r.v); _mergeProds(out[r.n].prods,r.prods); });
-    if(incDev){ const p=_repAcc((DEVICE.data2025&&DEVICE.data2025.reps)||null,DEVICE.monthly2025,f,t); p.forEach(r=>{ if(!out[r.n]) add(r.n,'dom',0); out[r.n].domPrev+=r.v; }); }
+    if(incDev){ const p=Object.entries(DEVICE.reps||{}).map(([n,r])=>({n:_repBase(n),v:sumMo((r&&r.m2025)||{},f,t)})); p.forEach(r=>{ if(!(r.v>0)) return; if(!out[r.n]) add(r.n,'dom',0); out[r.n].domPrev+=r.v; }); }
   }
   if(qState.ch!=='dom'){
     _repAcc(INTL.reps,INTL.monthly,f,t).forEach(r=>{ add(r.n,'intl',r.v); _mergeProds(out[r.n].prods,r.prods); });
@@ -1730,8 +1730,9 @@ function _repAcc(reps,moRef,f,t){
   if(!reps) return [];
   const sc=_scale(moRef,f,t);
   return Object.entries(reps).map(([n,r])=>{
-    const v=r&&r.m?sumMo(r.m,f,t):((r&&r.total||0)*sc);
-    return {n:_repBase(n),v,prods:(r&&r.prods)||{}};
+    const mo=r&&(r.m||r.m2026);
+    const v=mo?sumMo(mo,f,t):((r&&(r.y2026!=null?r.y2026:r.total)||0)*sc);
+    return {n:_repBase(n),v,prods:(r&&(r.prods||r.prods2026))||{}};
   });
 }
 function _mergeProds(dst,src){ if(!src) return; for(const k in src) dst[k]=(dst[k]||0)+Number(src[k]||0); }
