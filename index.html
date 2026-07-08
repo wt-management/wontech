@@ -1824,6 +1824,39 @@ async function _loadSalesTeam(){
   }catch(e){}
 }
 function _isKorSales(name){ return KOR_SALES_TEAM.indexOf(name)>=0; }
+// ── 병원 담당자 단일 출처(SSOT) ──
+// HOSP_INFO.mgr(고객사에서 수정) 우선 → 없으면 회계 담당(sales). 이걸 전 페이지가 쓰면 mgr 수정이 즉시 반영됨.
+function _repOf(name){
+  try{
+    const m=((HOSP_INFO[name]||{}).mgr||'').trim(); if(m) return _sN(m);
+    const h=(CONS.hospitals&&CONS.hospitals[name])||(DEVICE.hospitals&&DEVICE.hospitals[name])||{};
+    return _sN(String(h.sales||'').trim());
+  }catch(e){ return ''; }
+}
+// 데이터에 실제 존재하는 담당자 전체(팀원 + 대리점) — 필터 드롭다운용
+function _allReps(){
+  const s=new Set(KOR_SALES_TEAM);
+  try{ Object.values(HOSP_INFO||{}).forEach(v=>{ const m=(v&&v.mgr||'').trim(); if(m) s.add(_sN(m)); }); }catch(e){}
+  return [...s].filter(Boolean);
+}
+// 거래처(hospitals) 실적을 담당자(_repOf) 기준으로 재집계 — mgr 오버라이드 반영(담당자별 분석용)
+function _repsByMgr(hmap){
+  const out={};
+  Object.entries(hmap||{}).forEach(function(pair){
+    const name=pair[0], h=pair[1]||{};
+    const r=_repOf(name); if(!r) return;
+    let o=out[r]; if(!o) o=out[r]={total:0,y2025:0,y2026:0,cust2025:0,cust2026:0,prods2025:{},prods2026:{},m2025:{},m2026:{},qty2025:0,qty2026:0};
+    o.total+=(h.total||0); o.y2025+=(h.y2025||0); o.y2026+=(h.y2026||0);
+    if((h.y2025||0)>0)o.cust2025++; if((h.y2026||0)>0)o.cust2026++;
+    for(const p in (h.prods2025||{}))o.prods2025[p]=(o.prods2025[p]||0)+(h.prods2025[p]||0);
+    for(const p in (h.prods2026||{}))o.prods2026[p]=(o.prods2026[p]||0)+(h.prods2026[p]||0);
+    for(const m in (h.m2025||{}))o.m2025[m]=(o.m2025[m]||0)+(h.m2025[m]||0);
+    for(const m in (h.m2026||{}))o.m2026[m]=(o.m2026[m]||0)+(h.m2026[m]||0);
+    (h.txns2025||[]).forEach(t=>o.qty2025+=(t[5]||0));
+    (h.txns2026||[]).forEach(t=>o.qty2026+=(t[5]||0));
+  });
+  return out;
+}
 // 장비 담당영업 표기 정리: 회계 원본 '조만식(영건)'='담당(대리점)', '17.조만식'=번호접두사.
 //  → 한국영업 담당자면 이름 진하게 + 대리점은 회색 꼬리표. 팀원 아니면(순수 대리점) 회색으로.
 function _eqSalesDisp(raw){
@@ -1865,7 +1898,12 @@ function _fillSalesFilter(sel, extra){
   if(!sel) return;
   const cur=sel.value;
   const ph=sel.querySelector('option[value=""]'); const phHtml=ph?ph.outerHTML:'';
-  sel.innerHTML=phHtml + KOR_SALES_TEAM.map(n=>'<option value="'+n.replace(/"/g,'&quot;')+'">'+n.replace(/</g,'&lt;')+'</option>').join('') + (extra||'');
+  const opt=n=>'<option value="'+n.replace(/"/g,'&quot;')+'">'+n.replace(/</g,'&lt;')+'</option>';
+  const dealers=_allReps().filter(n=>KOR_SALES_TEAM.indexOf(n)<0).sort((a,b)=>a.localeCompare(b,'ko'));  // 대리점·기타(실제 데이터의 담당자)
+  sel.innerHTML=phHtml
+    + KOR_SALES_TEAM.map(opt).join('')
+    + (dealers.length?'<optgroup label="대리점·기타">'+dealers.map(opt).join('')+'</optgroup>':'')
+    + (extra||'');
   if([...sel.options].some(o=>o.value===cur)) sel.value=cur;
 }
 function _mergeRep(a,b){
@@ -4476,7 +4514,7 @@ function renderHospRank() {
 
   let list=Object.entries(CONS.hospitals).filter(([n,h])=>{
     if(q&&!n.toLowerCase().includes(q))return false;
-    if(salesF&&h.sales!==salesF)return false;
+    if(salesF&&_repOf(n)!==salesF)return false;
     if(gradeF&&GRADE(h).g!==gradeF)return false;
     return true;
   });
@@ -4507,7 +4545,7 @@ function renderHospRank() {
       <td class="text-end">${chg!==null?`<span style="font-size:11px;font-weight:700;color:${chg>=0?'#16a34a':'#dc2626'}">${chg>=0?'+':''}${chg.toFixed(0)}%</span>`:'<span style="color:#d1d5db;font-size:11px">-</span>'}</td>
       <td style="font-size:11px;color:#6b7280;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${h.topProd||'-'}</td>
       <td style="font-size:11px;color:${dc}">${ds!==null?ds+'일전':'-'}</td>
-      <td style="font-size:11px;color:#6b7280">${h.sales||'-'}</td>
+      <td style="font-size:11px;color:#6b7280">${_repOf(name)||'-'}</td>
       <td class="text-end" style="font-size:12px">${h.orders||0}</td>
     </tr>`;
   }).join('');
@@ -7187,7 +7225,7 @@ function devRepExport() {
   const fromM = parseInt(document.getElementById('devrep-from-sel')?.value||'1');
   const toM   = parseInt(document.getElementById('devrep-to-sel')?.value||'6');
   const YTD   = Array.from({length:toM-fromM+1},(_,i)=>fromM+i);
-  const reps  = DEVICE.reps||{};
+  const reps  = _repsByMgr(DEVICE.hospitals);   // 화면과 동일하게 담당자(mgr) 기준
   const rows  = [['구분','소속','담당자','직급',`${yr-1}년YTD(만원)`,`${yr}년YTD(만원)`,'YoY(%)','대수(당해)','거래처수','주력제품']];
   const _emptyRep={m2025:{},m2026:{},prods2025:{},prods2026:{},qty2025:0,qty2026:0,cust2025:0,cust2026:0};
   const _allNames=[...new Set([...KOR_SALES_TEAM, ...Object.keys(reps)])];
@@ -7274,7 +7312,8 @@ function renderDevReps() {
   const _mY=(o,y)=>y===2026?(o.m2026||{}):(y===2025?(o.m2025||{}):{});
   const _spanV=(o,rng)=>rng.reduce((s,x)=>s+(_mY(o,x.y)[x.m]||0),0);
   const _endY=P.ey;   // 대수/거래처수/주력제품은 연단위 지표 → 종료연도 기준
-  const reps  = DEVICE.reps||{};
+  // 담당자 기준 재집계(HOSP_INFO.mgr 우선) — 고객사에서 담당자 바꾸면 여기 즉시 반영됨
+  const reps  = _repsByMgr(DEVICE.hospitals);
 
   if (!Object.keys(reps).length) return;
 
@@ -7318,7 +7357,7 @@ function showDevRepDetail(repName) {
   const _mY=(o,y)=>y===2026?(o.m2026||{}):(y===2025?(o.m2025||{}):{});
   const _spanV=(o,rng)=>rng.reduce((s,x)=>s+(_mY(o,x.y)[x.m]||0),0);
   const _endY=P.ey, yr=_endY;
-  const rep   = (DEVICE.reps||{})[repName];
+  const rep   = _repsByMgr(DEVICE.hospitals)[repName];
   if (!rep) return;
 
   // 모달 생성 또는 재사용
@@ -7346,7 +7385,7 @@ function showDevRepDetail(repName) {
     </div>`).join('') || '<div class="text-muted" style="font-size:12px">데이터 없음</div>';
 
   const hospList = Object.entries(DEVICE.hospitals||{})
-    .filter(([,h])=>h.sales===repName)
+    .filter(([name])=>_repOf(name)===repName)
     .map(([name,h]) => {
       const cur  = _spanV(h,_cur);
       const pre  = _spanV(h,_prev);
