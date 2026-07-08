@@ -1463,7 +1463,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <div class="d-flex align-items-center mb-2"><i class="bi bi-pencil-square me-1" style="color:#2563eb"></i><b style="font-size:13px">병원 정보 (담당자 직접 수정)</b><span class="text-muted ms-2" style="font-size:11px">실제와 다르면 고쳐 주세요 · 저장 시 모든 담당자에게 공유됩니다</span></div>
       <input type="hidden" id="hi-name">
       <div class="row g-2" style="max-width:760px">
-        <div class="col-6"><label class="form-label" style="font-size:12px"><i class="bi bi-person-badge me-1" style="color:#2563eb"></i>담당 영업 <span class="text-muted">(콜스케줄)</span></label><input type="text" id="hi-mgr" class="form-control form-control-sm" placeholder="예: 조만식 / 공동"></div>
+        <div class="col-6"><label class="form-label" style="font-size:12px"><i class="bi bi-person-badge me-1" style="color:#2563eb"></i>담당 영업 <span class="text-muted">(콜스케줄)</span><span id="hi-mgr-lock" style="display:none;color:#9ca3af;font-weight:400"> · <i class="bi bi-lock-fill"></i> 파트장만 변경</span></label><input type="text" id="hi-mgr" class="form-control form-control-sm" placeholder="예: 조만식 / 공동" list="_mgr-list"></div>
         <div class="col-6"><label class="form-label" style="font-size:12px">지역 (시도 구군)</label><input type="text" id="hi-region" class="form-control form-control-sm" placeholder="예: 서울 강남구" list="_region-list" onfocus="_ensureRegionList()" autocomplete="off"></div>
         <div class="col-6"><label class="form-label" style="font-size:12px">원장명</label><input type="text" id="hi-doctor" class="form-control form-control-sm"></div>
         <div class="col-6"><label class="form-label" style="font-size:12px">전화</label><input type="text" id="hi-tel" class="form-control form-control-sm"></div>
@@ -5602,7 +5602,7 @@ async function saveHospInfoTab(){
   const info=Object.assign({},HOSP_INFO[name]||{},{
     doctor:document.getElementById('hi-doctor').value.trim(), tel:document.getElementById('hi-tel').value.trim(),
     address:document.getElementById('hi-address').value.trim(), contact:document.getElementById('hi-contact').value.trim(),
-    note:document.getElementById('hi-note').value.trim(), mgr:document.getElementById('hi-mgr').value.trim(),
+    note:document.getElementById('hi-note').value.trim(), mgr:(_isMgr?document.getElementById('hi-mgr').value.trim():((HOSP_INFO[name]||{}).mgr||'')),
     contacts:_collectHospContacts(),
     tags:tagsRaw?tagsRaw.split(',').map(t=>t.trim()).filter(Boolean):[], region:region,
     updatedBy:(typeof currentUserName==='function'?currentUserName():(_meName||'사용자')), updatedAt:new Date().toISOString().slice(0,10)});
@@ -5626,7 +5626,7 @@ async function saveHospInfo(){
   const info=Object.assign({},HOSP_INFO[name]||{},{
     doctor:document.getElementById('cd-doctor').value.trim(), tel:document.getElementById('cd-tel').value.trim(),
     address:document.getElementById('cd-address').value.trim(), contact:document.getElementById('cd-contact').value.trim(),
-    note:document.getElementById('cd-note').value.trim(), mgr:document.getElementById('cd-mgr').value.trim(),
+    note:document.getElementById('cd-note').value.trim(), mgr:(_isMgr?document.getElementById('cd-mgr').value.trim():((HOSP_INFO[name]||{}).mgr||'')),
     tags:tagsRaw?tagsRaw.split(',').map(t=>t.trim()).filter(Boolean):[], region:region,
     updatedBy:(typeof currentUserName==='function'?currentUserName():(_meName||'사용자')), updatedAt:new Date().toISOString().slice(0,10)});
   HOSP_INFO[name]=info;
@@ -5746,6 +5746,14 @@ function showHospitalDetail(name){
   (function(){ const v=(id,val)=>{const e=document.getElementById(id); if(e)e.value=val||'';};
     const nm=document.getElementById('hi-name'); if(nm)nm.value=name;
     v('hi-mgr',_hinfo.mgr); v('hi-doctor',_hinfo.doctor); v('hi-tel',_hinfo.tel); v('hi-address',_hinfo.address); v('hi-contact',_hinfo.contact); v('hi-note',_hinfo.note);
+    // 담당 영업(배정)은 파트장/관리자만 수정 가능 — 팀원은 읽기전용
+    (function(){ const el=document.getElementById('hi-mgr'); if(!el) return; const lk=document.getElementById('hi-mgr-lock');
+      if(_isMgr){ el.readOnly=false; el.style.background=''; el.style.color=''; el.setAttribute('list','_mgr-list');
+        let dl=document.getElementById('_mgr-list'); if(!dl){ dl=document.createElement('datalist'); dl.id='_mgr-list'; document.body.appendChild(dl); }
+        dl.innerHTML=(KOR_SALES_TEAM||[]).map(n=>'<option value="'+_custEsc(n)+'">').join('')+'<option value="공동">';
+        if(lk)lk.style.display='none'; }
+      else{ el.readOnly=true; el.style.background='#f3f4f6'; el.style.color='#6b7280'; el.removeAttribute('list'); if(lk)lk.style.display='inline'; }
+    })();
     v('hi-region',_regStr==='지역 미분류'?'':_regStr);
     v('hi-tags',(_hinfo.tags||[]).join(', '));
     _renderHospContacts(_hinfo.contacts);
@@ -6003,7 +6011,9 @@ function showHospitalDetail(name){
 
   // 탭 초기화 (소모품 탭 먼저)
   hospTab('cons');
-  new bootstrap.Modal(document.getElementById('hospitalModal')).show();
+  // 이미 열려 있으면 다시 show() 하지 않음 — 재호출 시 백드롭이 중첩돼 화면이 먹통되는 문제 방지
+  const _hm=document.getElementById('hospitalModal');
+  if(!_hm.classList.contains('show')) bootstrap.Modal.getOrCreateInstance(_hm).show();
 }
 
 function editEquip(serial){
