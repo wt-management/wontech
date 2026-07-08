@@ -1121,6 +1121,14 @@ function renderChannelMix(f,t){
 }
 // 보고 기준월 = 달력상 현재월과 실제 데이터 마지막월 중 작은 값. 월초(데이터 없는 새 달)에 빈 현재월/분기/반기로 롤오버되는 것 방지.
 function _curMonth(){ const n=new Date(); const cal=n.getFullYear()===2026?(n.getMonth()+1):12; return Math.max(1,Math.min(cal,_lastDataMonth())); }
+// 보고 기준월(성숙월): 새 달 실적이 전월의 20% 미만이면 아직 '월초 소량'으로 보고 전월을 기준월로.
+// 매출현황 분기/반기 자동전환·목표달성률 분모·임원리포트가 월초에 텅 빈 새 분기/반기로 넘어가는 것 방지.
+// (누계 기간·이번달 관리 카드는 _curMonth 그대로 — 당월 진행분은 계속 보임)
+function _matureMonth(){
+  const t=_curMonth(); if(t<=1) return t;
+  const v=m=>(Number(CONS.monthly2026&&CONS.monthly2026[m])||0)+(Number(DEVICE.monthly2026&&DEVICE.monthly2026[m])||0)+(Number(INTL.monthly&&INTL.monthly[m])||0)+(Number(CONS.etcMonthly2026&&CONS.etcMonthly2026[m])||0);
+  return (v(t) >= v(t-1)*0.2) ? t : t-1;
+}
 let _ovRegMo={};
 // 국내·해외 월별 표 — 지난달=회계반영, 당월=미반영 포함. 숫자 클릭 시 내역.
 function renderOvMonthly(){
@@ -1273,8 +1281,8 @@ function _pendForReport(){   // 국내(제품/소모품) + 해외(지역별) 미
   return {kr,intl};
 }
 function _rptPeriods(){
-  // 시간 흐름에 따라 분기·반기·월 자동 변경 (회계연도 2026, _curMonth=진행월)
-  const mo=_curMonth(), Q=Math.ceil(mo/3), fh=mo<=6;
+  // 시간 흐름에 따라 분기·반기·월 자동 변경 — 기준월은 성숙월(_matureMonth): 월초 소량 데이터로 새 분기/반기 전환 방지
+  const mo=_matureMonth(), Q=Math.ceil(mo/3), fh=mo<=6;
   return {mo,Q,qf:(Q-1)*3+1,qt:Q*3,hf:fh?1:7,ht:fh?6:12,qLbl:Q+'분기',hLbl:fh?'상반기':'하반기',mLbl:'2026년 '+mo+'월'};
 }
 function _rowVals(act,pend,prev,dept,item){
@@ -1734,7 +1742,7 @@ function miniBar(label,v,max,col){
 
 // ════════ 임원용 대시보드 (목표달성·출고대수·분기요약·리더보드·거래처) ════════
 const EXEC_REGS=['동남아','중화','중동','유럽','미주','태국법인','미국법인','일본법인'];
-function _execT(){ return _curMonth(); }
+function _execT(){ return _matureMonth(); }   // 임원리포트 누적 상한 — 월초 왜곡(모멘텀 ▼100%·연환산 급변) 방지
 const _achCol=r=> r==null?'#94a3b8' : r>=100?'#16a34a' : r>=80?'#0d9488' : r>=60?'#f59e0b':'#dc2626';
 // 성장률 RAG 색 (급성장~급락)
 const _yoyCol=v=> v==null?'#94a3b8' : v>=30?'#15803d' : v>=5?'#16a34a' : v>=-5?'#94a3b8' : v>=-20?'#f59e0b':'#b91c1c';

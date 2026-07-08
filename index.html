@@ -2263,7 +2263,14 @@ function _dashPeriodYMs() {
 // ═══════ 기간 조회 엔진 (프리셋 + 직접설정, 연도경계 지원) — 분석페이지 공용 ═══════
 const _PDST = {};  // prefix -> {mode:'simple'|'custom'}
 const _RENDERFN = {ov:'renderSalesOverview', cons:'renderConsumables', dev:'renderDeviceSales', hosp:'renderConsHospitals', devrep:'renderDevReps', reg:'renderRegion'};
-function _dataMaxMonth(){ const ms=[].concat(Object.keys(CONS.monthly2026||{}),Object.keys(DEVICE.monthly2026||{})).map(Number).filter(m=>m>=1&&m<=12); return ms.length?Math.max.apply(null,ms):6; }
+function _dataMaxMonth(){
+  const ms=[].concat(Object.keys(CONS.monthly2026||{}),Object.keys(DEVICE.monthly2026||{})).map(Number).filter(m=>m>=1&&m<=12);
+  let t=ms.length?Math.max.apply(null,ms):6;
+  // 성숙월 캡: 새 달 실적이 전월의 20% 미만이면 월초 소량으로 보고 전월을 기준월로(최근월 헤드라인 ▼95% 왜곡·빈매출 방지)
+  const v=m=>(Number((CONS.monthly2026||{})[m])||0)+(Number((DEVICE.monthly2026||{})[m])||0);
+  if(t>1 && v(t) < v(t-1)*0.2) t=t-1;
+  return t;
+}
 function _renderPrefix(p){ const fn=window[_RENDERFN[p]]; if(fn) fn(); }
 function _gvN(id,d){ const e=document.getElementById(id); return e?(parseInt(e.value)||d):d; }
 function _normPeriod(sy,sm,ey,em){ if(ey<sy||(ey===sy&&em<sm)){ let t; t=sy;sy=ey;ey=t; t=sm;sm=em;em=t; } const cross=(sy!==ey); const lab=cross?(String(sy).slice(2)+'.'+sm+'~'+String(ey).slice(2)+'.'+em):(sm===em?sm+'월':sm+'-'+em+'월'); return {sy:sy,sm:sm,ey:ey,em:em,cross:cross,label:lab}; }
