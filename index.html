@@ -3877,7 +3877,11 @@ function renderConsumables() {
   const totYtd25  = spanMonthlySum(prevMs);
   const cartV25   = totFull25>0 ? Math.round(cartV25full * totYtd25 / totFull25) : 0;
 
+  const sumTot26 = oligTotal26 + cartV26;   // 소모품 합계 = Oligio Tip 전체 + Cartridge
+  const sumTot25 = oligTotal25 + cartV25;
   const kpiData = [
+    {hero:true,color:'#111827',icon:'bi-capsule', label:`소모품 합계 (${ytdLabel})`, value:fmtB(sumTot26), sub:`팁 전체 + 카트리지 · 전년 동기 ${fmtB(sumTot25)}`, chg:sumTot25>0?(sumTot26/sumTot25-1)*100:null,
+     drill:()=>showConsDrill(['Oligio Tip [F-4.0]','Oligio Tip [E-0.25]','Oligio Tip [XF-4.0]','Oligio Tip [XE-0.25]','Cartridge'],'소모품 합계(팁+카트리지) 구매 병원')},
     {color:'#ff4500',icon:'bi-star-fill',      label:`Oligio Tip 전체 (${ytdLabel})`, value:fmtB(oligTotal26), sub:`전년 동기 ${fmtB(oligTotal25)}`, chg:oligTotal25>0?(oligTotal26/oligTotal25-1)*100:null,
      drill:()=>showConsDrill(['Oligio Tip [F-4.0]','Oligio Tip [E-0.25]','Oligio Tip [XF-4.0]','Oligio Tip [XE-0.25]'],'Oligio Tip 전체 구매 병원')},
     {color:'#2563eb',icon:'bi-graph-up-arrow', label:`Oligio F·E (${ytdLabel})`,      value:fmtB(oligFe26),    sub:`전년 동기 ${fmtB(oligFe25)}`,    chg:oligFe25>0?(oligFe26/oligFe25-1)*100:null,
@@ -3885,14 +3889,14 @@ function renderConsumables() {
     {color:'#7c3aed',icon:'bi-bar-chart',      label:`Oligio X/XM (${ytdLabel})`,     value:fmtB(oligXm26),    sub:`전년 동기 ${fmtB(oligXm25)}`,    chg:oligXm25>0?(oligXm26/oligXm25-1)*100:null,
      drill:()=>showConsDrill(['Oligio Tip [XF-4.0]','Oligio Tip [XE-0.25]'],'Oligio X/XM 구매 병원')},
     {color:'#0891b2',icon:'bi-cpu',            label:`Cartridge (${ytdLabel})`,        value:fmtB(cartV26),     sub:`전년 동기 추정 ${fmtB(cartV25)}`, chg:cartV25>0?(cartV26/cartV25-1)*100:null,
-     drill:()=>showConsDrill(null,'Cartridge 구매 병원')},
+     drill:()=>showConsDrill(['Cartridge'],'Cartridge 구매 병원')},
   ];
   document.getElementById('cons-kpi').innerHTML = kpiData.map((k,i)=>`
-    <div class="col-6 col-lg-3">
-      <div class="card p-3" style="border-top:3px solid ${k.color};cursor:pointer" onclick="_consKpiDrill(${i})">
-        <div style="font-size:11px;font-weight:600;color:#6b7280;margin-bottom:6px"><i class="bi ${k.icon} me-1" style="color:${k.color}"></i>${k.label}</div>
-        <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#2563eb;text-decoration:underline dotted">${k.value}</div>
-        <div style="font-size:11px;color:#9ca3af">${k.sub}</div>
+    <div class="col-6 col-lg">
+      <div class="card p-3" style="${k.hero?'background:#111827;border:0;box-shadow:0 6px 18px -6px rgba(17,24,39,.4);':'border-top:3px solid '+k.color+';'}cursor:pointer;height:100%" onclick="_consKpiDrill(${i})">
+        <div style="font-size:11px;font-weight:600;color:${k.hero?'rgba(255,255,255,.72)':'#6b7280'};margin-bottom:6px"><i class="bi ${k.icon} me-1" style="color:${k.hero?'#fff':k.color}"></i>${k.label}</div>
+        <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:${k.hero?'#fff':'#2563eb'};text-decoration:underline dotted">${k.value}</div>
+        <div style="font-size:11px;color:${k.hero?'rgba(255,255,255,.6)':'#9ca3af'}">${k.sub}</div>
         ${k.chg!==null?`<div style="margin-top:5px">${chgBadge(k.chg,false)}</div>`:''}
       </div>
     </div>`).join('');
@@ -4038,30 +4042,33 @@ function renderConsumables() {
 function showConsDrill(prodKeys, label) {
   // prodKeys: 제품명 배열 또는 null(전체)
   const fmtA = v => !v||v<=0?'-':v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만원':v.toLocaleString()+'원';
-  const ytdMonths = Object.keys(CONS.monthly2026||{}).map(Number).filter(m=>m>=1&&m<=12);
+  // 조회기간 연동 — KPI 카드와 동일한 '선택 기간'의 세부내역을 보여줌(항상 YTD 아님)
+  const P=_getPeriod('cons'), spanMs=_spanMonths(P), prevP=_yoyShift(P), prevMs=_spanMonths(prevP);
+  const plab=p=>p.sy===p.ey?(p.sm===p.em?p.sy+'.'+p.sm:p.sy+'.'+p.sm+'~'+p.em):(p.sy+'.'+p.sm+'~'+p.ey+'.'+p.em);
+  const curLabel=plab(P), prevLabel=plab(prevP);
+  const filt = t => !prodKeys || prodKeys.includes(t[2]);
+  const sumRng = (h,rng)=>{ let tot=0,cnt=0; rng.forEach(x=>{ const arr = x.y===2026?h.txns2026:(x.y===2025?h.txns2025:null); if(arr) arr.forEach(t=>{ if(t[0]===x.m && filt(t)){ tot+=t[3]; cnt++; } }); }); return [tot,cnt]; };
 
   const rows = Object.entries(CONS.hospitals||{}).map(([name,h])=>{
-    const filter = t => !prodKeys || prodKeys.includes(t[2]);
-    const v25 = (h.txns2025||[]).filter(filter).reduce((s,t)=>s+t[3],0);
-    const v26 = (h.txns2026||[]).filter(filter).reduce((s,t)=>s+t[3],0);
-    const cnt = (h.txns2025||[]).filter(filter).length + (h.txns2026||[]).filter(filter).length;
+    const [v26,c26] = sumRng(h,spanMs);
+    const [v25] = sumRng(h,prevMs);
     if(!v25 && !v26) return null;
     const yoy = v25>0 ? ((v26/v25-1)*100).toFixed(0) : null;
-    return {name, v25, v26, yoy, cnt, last: h.lastDate};
+    return {name, v25, v26, yoy, cnt:c26, last: h.lastDate};
   }).filter(Boolean).sort((a,b)=>b.v26-a.v26);
 
   if(!rows.length) {
-    document.getElementById('cons-drill-content').innerHTML='<div class="text-muted text-center py-3">데이터 없음</div>';
+    document.getElementById('cons-drill-content').innerHTML='<div class="text-muted text-center py-3">선택한 기간에 데이터 없음</div>';
   } else {
     const daysSince = ds => ds ? Math.floor((Date.now()-new Date(ds))/864e5) : null;
     document.getElementById('cons-drill-content').innerHTML=`
-      <div style="font-size:12px;color:#6b7280;margin-bottom:8px">총 ${rows.length}개 병원 · 클릭하면 병원 상세로 이동</div>
+      <div style="font-size:12px;color:#6b7280;margin-bottom:8px">총 ${rows.length}개 병원 · <b style="color:#374151">${curLabel}</b> 기준 · 클릭하면 병원 상세로 이동</div>
       <div style="overflow-x:auto">
       <table class="table table-sm table-hover mb-0" style="font-size:12px">
         <thead class="table-light"><tr>
           <th style="min-width:180px">병원명</th>
-          <th class="text-end">2025 YTD</th>
-          <th class="text-end">2026 YTD</th>
+          <th class="text-end">${prevLabel}</th>
+          <th class="text-end">${curLabel}</th>
           <th class="text-end">YoY</th>
           <th class="text-end">건수</th>
           <th class="text-end">최근구매</th>
