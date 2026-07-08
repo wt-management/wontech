@@ -372,42 +372,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
       <div id="site-dropdown" style="display:none;position:absolute;bottom:110%;left:0;right:0;background:#1e293b;border:1px solid #334155;border-radius:10px;overflow:hidden;box-shadow:0 -8px 24px rgba(0,0,0,.5);z-index:200">
         <div style="padding:6px">
           <div style="border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:#0891b2;font-size:12px;font-weight:700;background:rgba(8,145,178,.12)"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#0891b2;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">KR</span><span style="flex:1">한국 영업</span><i class="bi bi-check2" style="font-size:12px"></i></div>
-          <div id="switcher-japan-item" onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wtj-management/';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()"
-            style="display:none;margin-top:2px;border-radius:6px;padding:8px 12px;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
-            onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#f59e0b;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">JP</span><span style="flex:1">일본법인 관리</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i>
-          </div>
-          <div onclick="location.href='https://wt-management.github.io/wt-corps/us.html'"
-            style="margin-top:2px;border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
-            onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#1e3a8a;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">US</span><span style="flex:1">미국법인 관리</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i>
-          </div>
-          <div onclick="location.href='https://wt-management.github.io/wt-corps/th.html'"
-            style="margin-top:2px;border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
-            onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#b45309;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">TH</span><span style="flex:1">태국법인 관리</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i>
-          </div>
-          <div id="switcher-intl-item" onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wontech/intl.html';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()"
-            style="display:none;margin-top:2px;border-radius:6px;padding:8px 12px;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
-            onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#0d9488;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">INT</span><span style="flex:1">해외 영업</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i>
-          </div>
-          <div id="switcher-total-item" onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wontech/total.html';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()"
-            style="display:none;margin-top:2px;border-radius:6px;padding:8px 12px;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
-            onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#4f46e5;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">종합</span><span style="flex:1">전사 종합 경영현황</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i>
-          </div>
-          <div id="switcher-cons-item" onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wt-consumables/ilbo.html';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()"
-            style="display:none;margin-top:2px;border-radius:6px;padding:8px 12px;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
-            onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#16a34a;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">일보</span><span style="flex:1">일일매출보고</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i>
-          </div>
-          <div onclick="location.href='https://wt-management.github.io/pm-planner/'"
-            style="margin-top:2px;border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
-            onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#8b5cf6;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">기획</span><span style="flex:1">상품기획 PM</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i>
-          </div>
-          <div onclick="location.href='https://wt-management.github.io/sales-portfolio/'"
-            style="margin-top:2px;border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
-            onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#3f5e7a;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">PF</span><span style="flex:1">Sales Portfolio</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i>
-          </div>
-          <div id="switcher-equip-item" onclick="location.href='https://wt-management.github.io/demo-schedule/'"
-            style="margin-top:2px;border-radius:6px;padding:8px 12px;display:none;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
-            onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#2563eb;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">장비</span><span style="flex:1">장비 통합관리</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i>
-          </div>
+          <div id="site-dropdown-dynamic"></div>
           <div id="switcher-admin-item" onclick="document.getElementById('site-dropdown').style.display='none';sessionStorage.setItem('wt_app','admin');document.getElementById('main-content').style.display='none';showAdminPanel();document.getElementById('launcher-screen').style.display='flex';"
             style="display:none;margin-top:2px;border-radius:6px;padding:8px 12px;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
             onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#6b7280;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">ADM</span><span style="flex:1">관리자 페이지</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i>
@@ -1754,6 +1719,21 @@ const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const STAGES = ['리드','상담중','견적발송','협의중','계약완료'];
 const SC = {'리드':'#adb5bd','상담중':'#4f8ef7','견적발송':'#fd7e14','협의중':'#6f42c1','계약완료':'#28a745'};
 
+// ── 사이트 레지스트리(신규 사이트 추가 시 코드 수정 없이 전 화면 자동 반영) ──
+let _siteRegistry = [];
+async function _loadSiteRegistry() {
+  if(_siteRegistry.length) return _siteRegistry;
+  try { const {data} = await _sb.from('site_registry').select('*').order('sort_order'); _siteRegistry = data || []; }
+  catch(e) { _siteRegistry = []; }
+  return _siteRegistry;
+}
+function _siteVisible(site, access, isAdmin) {
+  if(access.includes(site.key)) return true;
+  if(site.admin_bypass && isAdmin) return true;
+  if(site.extra_visible_rule) { try { return !!(new Function('access','isAdmin','return ('+site.extra_visible_rule+')'))(access, isAdmin); } catch(e) { return false; } }
+  return false;
+}
+
 // ── DB ──────────────────────────────────────────────────────
 const DB = {
   d: {customers:[],equipments:[],logs:[],products:[],pipeline:[],quotes:[],targets:[]},
@@ -1969,8 +1949,37 @@ async function init() {
   await _showLauncherOrApp(session.user);
 }
 
+function _buildLauncherCardsHTML(access) {
+  // site_registry 기반 — 신규 사이트는 DB row 추가만으로 여기 자동 반영됨
+  const cardStyle = 'background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(12px);border-radius:20px;width:200px;cursor:pointer;transition:transform .18s,box-shadow .18s,border-color .18s;overflow:hidden';
+  const cardHover = "this.style.transform='translateY(-6px)';this.style.boxShadow='0 24px 48px rgba(0,0,0,.5)';this.style.borderColor='rgba(255,255,255,.25)'";
+  const cardOut   = "this.style.transform='';this.style.boxShadow='';this.style.borderColor='rgba(255,255,255,.1)'";
+  return _siteRegistry.filter(s=>_siteVisible(s, access, _isAdmin)).map(s=>{
+    const onclick = s.url==='LOCAL'
+      ? "sessionStorage.setItem('wt_app','korea');history.replaceState({page:'launcher'},'',location.href);document.getElementById('launcher-screen').style.display='none';document.getElementById('app-loading').style.display='flex';_bootApp(_currentAccess);"
+      : (s.needs_token
+          ? `(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='${s.url}';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()`
+          : `location.href='${s.url}'`);
+    const order = s.key==='total' ? ';order:-1' : '';
+    return `<div onclick="${onclick.replace(/"/g,'&quot;')}" style="${cardStyle}${order}" onmouseover="${cardHover}" onmouseout="${cardOut}">
+      <div style="height:5px;background:linear-gradient(90deg,${s.grad_from},${s.grad_to})"></div>
+      <div style="padding:28px 24px">
+        <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,${s.grad_from},${s.grad_to});display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px ${s.grad_from}59">
+          <i class="bi ${s.icon}" style="font-size:22px;color:#fff"></i>
+        </div>
+        <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">${s.title}</div>
+        <div style="font-size:11px;color:#64748b;line-height:1.6">${s.body_html}</div>
+        <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:${s.accent_color};font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 async function _showLauncherOrApp(user) {
-  const {data: profile} = await _sb.from('crm_profiles').select('access,role').eq('id', user.id).single();
+  const [{data: profile}] = await Promise.all([
+    _sb.from('crm_profiles').select('access,role').eq('id', user.id).single(),
+    _loadSiteRegistry()
+  ]);
   if(!profile){
     // 프로필 없음(삭제된 사용자 등) → 절대 기본권한 부여 금지, 즉시 로그아웃
     await doLogout();
@@ -1990,167 +1999,24 @@ async function _showLauncherOrApp(user) {
   }
   if(access.length > 1 || _isAdmin) {
     // 여러 법인 접근 가능 or 관리자 → 런처 표시
-    const cardStyle = 'background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(12px);border-radius:20px;width:200px;cursor:pointer;transition:transform .18s,box-shadow .18s,border-color .18s;overflow:hidden';
-    const cardHover = "this.style.transform='translateY(-6px)';this.style.boxShadow='0 24px 48px rgba(0,0,0,.5)';this.style.borderColor='rgba(255,255,255,.25)'";
-    const cardOut   = "this.style.transform='';this.style.boxShadow='';this.style.borderColor='rgba(255,255,255,.1)'";
-    const cards = [
-      access.includes('korea') ? `
-        <div onclick="sessionStorage.setItem('wt_app','korea');history.replaceState({page:'launcher'},'',location.href);document.getElementById('launcher-screen').style.display='none';document.getElementById('app-loading').style.display='flex';_bootApp(_currentAccess);"
-          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
-          <div style="height:5px;background:linear-gradient(90deg,#0891b2,#0d9488)"></div>
-          <div style="padding:28px 24px">
-            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#0891b2,#0d9488);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(8,145,178,.35)">
-              <i class="bi bi-bar-chart-line-fill" style="font-size:22px;color:#fff"></i>
-            </div>
-            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">한국 영업</div>
-            <div style="font-size:11px;color:#64748b;line-height:1.6">영업관리 · 소모품<br>고객사 현황</div>
-            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#0891b2;font-weight:600">
-              입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
-          </div>
-        </div>` : '',
-      (access.includes('intl') || _isAdmin) ? `
-        <div onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wontech/intl.html';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()"
-          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
-          <div style="height:5px;background:linear-gradient(90deg,#7c3aed,#0891b2)"></div>
-          <div style="padding:28px 24px">
-            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#0891b2);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(124,58,237,.35)">
-              <i class="bi bi-globe-americas" style="font-size:22px;color:#fff"></i>
-            </div>
-            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">해외 영업</div>
-            <div style="font-size:11px;color:#64748b;line-height:1.6">국가별 · 제품별<br>담당자 현황</div>
-            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#a78bfa;font-weight:600">
-              입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
-          </div>
-        </div>` : '',
-      access.includes('japan') ? `
-        <div onclick="location.href='https://wt-management.github.io/wtj-management/'"
-          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
-          <div style="height:5px;background:linear-gradient(90deg,#f59e0b,#ef4444)"></div>
-          <div style="padding:28px 24px">
-            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(245,158,11,.35)">
-              <i class="bi bi-building-fill" style="font-size:22px;color:#fff"></i>
-            </div>
-            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">일본법인 관리</div>
-            <div style="font-size:11px;color:#64748b;line-height:1.6">매출 · 수주<br>임금 현황</div>
-            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#f59e0b;font-weight:600">
-              입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
-          </div>
-        </div>` : '',
-      (access.includes('daily') || access.includes('korea') || _isAdmin) ? `
-        <div onclick="location.href='https://wt-management.github.io/wt-consumables/ilbo.html'"
-          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
-          <div style="height:5px;background:linear-gradient(90deg,#16a34a,#0d9488)"></div>
-          <div style="padding:28px 24px">
-            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#16a34a,#0d9488);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(22,163,74,.35)">
-              <i class="bi bi-clipboard-data-fill" style="font-size:22px;color:#fff"></i>
-            </div>
-            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">일일매출보고</div>
-            <div style="font-size:11px;color:#64748b;line-height:1.6">소모품 일일<br>매출 현황</div>
-            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#16a34a;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
-          </div>
-        </div>` : '',
-      (_isAdmin || access.includes('total') || (access.includes('korea') && access.includes('intl'))) ? `
-        <div onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wontech/total.html';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()"
-          style="${cardStyle};order:-1" onmouseover="${cardHover}" onmouseout="${cardOut}">
-          <div style="height:5px;background:linear-gradient(90deg,#4f46e5,#7c3aed)"></div>
-          <div style="padding:28px 24px">
-            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(79,70,229,.35)">
-              <i class="bi bi-buildings-fill" style="font-size:22px;color:#fff"></i>
-            </div>
-            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">전사 종합</div>
-            <div style="font-size:11px;color:#64748b;line-height:1.6">국내+해외 통합<br>경영 현황</div>
-            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#818cf8;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
-          </div>
-        </div>` : '',
-      // ▼▼ 상품기획 PM 대시보드 (pm-planner) — 6번째 슬롯. 수출의 탑은 전사 종합 export 탭으로 이전됨 ▼▼
-      (access.includes('pm') || _isAdmin) ? `
-        <div onclick="location.href='https://wt-management.github.io/pm-planner/'"
-          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
-          <div style="height:5px;background:linear-gradient(90deg,#8b5cf6,#ec4899)"></div>
-          <div style="padding:28px 24px">
-            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#8b5cf6,#ec4899);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(139,92,246,.35)">
-              <i class="bi bi-kanban-fill" style="font-size:22px;color:#fff"></i>
-            </div>
-            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">상품기획 PM</div>
-            <div style="font-size:11px;color:#64748b;line-height:1.6">제품 파이프라인<br>업무 · 아이디어</div>
-            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#c084fc;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
-          </div>
-        </div>` : '',
-      (access.includes('portfolio') || _isAdmin) ? `
-        <div onclick="location.href='https://wt-management.github.io/sales-portfolio/'"
-          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
-          <div style="height:5px;background:linear-gradient(90deg,#3f5e7a,#5e8a73)"></div>
-          <div style="padding:28px 24px">
-            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#3f5e7a,#5e8a73);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(63,94,122,.35)">
-              <i class="bi bi-pie-chart-fill" style="font-size:22px;color:#fff"></i>
-            </div>
-            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">Sales Portfolio</div>
-            <div style="font-size:11px;color:#64748b;line-height:1.6">글로벌영업<br>제품 포트폴리오</div>
-            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#86a7c4;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
-          </div>
-        </div>` : '',
-      (access.includes('equip')) ? `
-        <div onclick="location.href='https://wt-management.github.io/demo-schedule/'"
-          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
-          <div style="height:5px;background:linear-gradient(90deg,#2563eb,#0891b2)"></div>
-          <div style="padding:28px 24px">
-            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#2563eb,#0891b2);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(37,99,235,.35)">
-              <i class="bi bi-hdd-stack-fill" style="font-size:22px;color:#fff"></i>
-            </div>
-            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">장비 통합관리</div>
-            <div style="font-size:11px;color:#64748b;line-height:1.6">데모·출하·보상<br>재고·실사</div>
-            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#7dd3fc;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
-          </div>
-        </div>` : '',
-      (access.includes('us') || _isAdmin) ? `
-        <div onclick="location.href='https://wt-management.github.io/wt-corps/us.html'"
-          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
-          <div style="height:5px;background:linear-gradient(90deg,#1e3a8a,#3b82f6)"></div>
-          <div style="padding:28px 24px">
-            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#1e3a8a,#3b82f6);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(30,58,138,.35)">
-              <i class="bi bi-building-fill" style="font-size:22px;color:#fff"></i>
-            </div>
-            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">미국법인 관리</div>
-            <div style="font-size:11px;color:#64748b;line-height:1.6">매출 · 물류<br>자금 ERP</div>
-            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#60a5fa;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
-          </div>
-        </div>` : '',
-      (access.includes('th') || _isAdmin) ? `
-        <div onclick="location.href='https://wt-management.github.io/wt-corps/th.html'"
-          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
-          <div style="height:5px;background:linear-gradient(90deg,#b45309,#d97706)"></div>
-          <div style="padding:28px 24px">
-            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#b45309,#d97706);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(180,83,9,.35)">
-              <i class="bi bi-building-fill" style="font-size:22px;color:#fff"></i>
-            </div>
-            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">태국법인 관리</div>
-            <div style="font-size:11px;color:#64748b;line-height:1.6">매출 · 물류<br>자금 ERP</div>
-            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#fbbf24;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
-          </div>
-        </div>` : '',
-    ].join('');
-    document.getElementById('launcher-cards').innerHTML = cards;
+    document.getElementById('launcher-cards').innerHTML = _buildLauncherCardsHTML(access);
     if(_isAdmin) document.getElementById('launcher-admin-btn').style.display = '';
     document.getElementById('launcher-screen').style.display = 'flex';
     _hideLoading();
   } else if(access.includes('korea')) {
     await _bootApp(access);
   } else {
-    // 단일 권한(비한국·비관리자) → 해당 법인/사이트로 라우팅. 없으면 한국앱 폴백.
-    const BASE='https://wt-management.github.io/';
-    const PLAIN={us:'wt-corps/us.html',th:'wt-corps/th.html',pm:'pm-planner/',portfolio:'sales-portfolio/',equip:'demo-schedule/',demo:'demo-schedule/'};
-    const TOK={japan:'wtj-management/',jp:'wtj-management/',intl:'wontech/intl.html',total:'wontech/total.html',daily:'wt-consumables/ilbo.html'};
-    let dest=null,needTok=false;
-    for(const k of access){ if(PLAIN[k]){dest=BASE+PLAIN[k];break;} if(TOK[k]){dest=BASE+TOK[k];needTok=true;break;} }
-    if(!dest){
-      // 매핑되는 사이트가 하나도 없음(권한 미부여/삭제된 계정 등) → 한국앱 폴백 금지, 접근불가 안내
+    // 단일 권한(비한국·비관리자) → 해당 법인/사이트로 라우팅. 없으면 접근불가 안내(한국앱 폴백 금지).
+    const site = _siteRegistry.find(s=>s.key!=='korea' && access.includes(s.key));
+    if(!site){
       document.getElementById('launcher-cards').innerHTML = '';
       document.getElementById('launcher-screen').innerHTML = '<div style="color:#e2e8f0;text-align:center;padding:80px 20px"><div style="font-size:16px;margin-bottom:16px">⚠ 부여된 접근 권한이 없습니다.<br>관리자에게 문의해주세요.</div><button onclick="doLogout()" style="background:#334155;color:#fff;border:none;padding:9px 22px;border-radius:8px;cursor:pointer;font-size:13px">로그아웃</button></div>';
       document.getElementById('launcher-screen').style.display='flex';
       _hideLoading();
       return;
     }
-    if(needTok){ const {data:{session:_s}}=await _sb.auth.getSession(); if(_s)dest+='#at='+encodeURIComponent(_s.access_token)+'&rt='+encodeURIComponent(_s.refresh_token); }
+    let dest = site.url;
+    if(site.needs_token){ const {data:{session:_s}}=await _sb.auth.getSession(); if(_s)dest+='#at='+encodeURIComponent(_s.access_token)+'&rt='+encodeURIComponent(_s.refresh_token); }
     location.href=dest;
   }
 }
@@ -2163,27 +2029,23 @@ function _hideLoading() {
 async function _bootApp(access) {
   document.title = 'wontech - 한국';
   await Promise.all([DB.load(), loadUserRole()]);
-  // ── 사이트 이동: 접근 권한 있는 사이트만 노출(권한 배열이 유일한 기준) ──
-  const _acc = new Set(access||[]);
+  // ── 사이트 이동: site_registry 기반 동적 생성(신규 사이트가 코드 수정 없이 자동 반영됨) ──
+  await _loadSiteRegistry();
+  const _switchItems = _siteRegistry.filter(s=>s.key!=='korea' && _siteVisible(s, access||[], _isAdmin))
+    .sort((a,b)=> (a.key==='total'?-1:b.key==='total'?1:a.sort_order-b.sort_order));
+  document.getElementById('site-dropdown-dynamic').innerHTML = _switchItems.map(s=>{
+    const onclick = s.needs_token
+      ? `(async()=>{const {data:{session:sess}}=await _sb.auth.getSession();let u='${s.url}';if(sess)u+='#at='+encodeURIComponent(sess.access_token)+'&rt='+encodeURIComponent(sess.refresh_token);location.href=u;})()`
+      : `location.href='${s.url}'`;
+    return `<div onclick="${onclick.replace(/"/g,'&quot;')}"
+      style="margin-top:2px;border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
+      onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:${s.grad_from};color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">${s.badge}</span><span style="flex:1">${s.title}</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i>
+    </div>`;
+  }).join('');
   const _showSw=(id,ok)=>{ const el=document.getElementById(id); if(el) el.style.display=ok?'flex':'none'; };
-  _showSw('switcher-intl-item',  _acc.has('intl'));
-  _showSw('switcher-japan-item', _acc.has('japan'));
-  _showSw('switcher-total-item', _acc.has('total'));
-  _showSw('switcher-cons-item',  _acc.has('daily'));
-  _showSw('switcher-equip-item', _acc.has('equip'));
   _showSw('switcher-admin-item', _isAdmin);
   // 전환 가능한 '다른' 사이트가 하나도 없으면(=한국 전용) 스위처 자체 숨김
-  const _hasOther = _acc.has('intl')||_acc.has('japan')||_acc.has('total')||_acc.has('daily')||_acc.has('equip')||_isAdmin;
-  document.getElementById('site-switcher').style.display = _hasOther ? 'block' : 'none';
-  // 표시 순서만 정렬(display는 위에서 결정 — 강제 표시 금지)
-  (function(){
-    var box=document.querySelector('#site-dropdown > div'); if(!box) return;
-    var kr=box.querySelector('div[style*="rgba(8,145,178"]'); if(kr) kr.style.display='flex';
-    ['switcher-total-item',null,'switcher-intl-item','switcher-japan-item','switcher-cons-item','switcher-admin-item'].forEach(function(id){
-      var el = id ? document.getElementById(id) : kr; if(!el) return;
-      el.style.marginTop='2px'; box.appendChild(el);
-    });
-  })();
+  document.getElementById('site-switcher').style.display = (_switchItems.length || _isAdmin) ? 'block' : 'none';
   // 팀장/관리자만 담당자별 분석 메뉴 표시
   if(_isMgr) {
     const rm = document.getElementById('nav-device-reps');
@@ -6679,143 +6541,7 @@ function hideAdminPanel() {
 }
 
 function _renderLauncherCards(access) {
-  const cardStyle = 'background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(12px);border-radius:20px;width:200px;cursor:pointer;transition:transform .18s,box-shadow .18s,border-color .18s;overflow:hidden';
-  const cardHover = "this.style.transform='translateY(-6px)';this.style.boxShadow='0 24px 48px rgba(0,0,0,.5)';this.style.borderColor='rgba(255,255,255,.25)'";
-  const cardOut   = "this.style.transform='';this.style.boxShadow='';this.style.borderColor='rgba(255,255,255,.1)'";
-  const cards = [
-    access.includes('korea') ? `
-      <div onclick="sessionStorage.setItem('wt_app','korea');document.getElementById('launcher-screen').style.display='none';document.getElementById('app-loading').style.display='flex';_bootApp(_currentAccess);"
-        style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
-        <div style="height:5px;background:linear-gradient(90deg,#0891b2,#0d9488)"></div>
-        <div style="padding:28px 24px">
-          <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#0891b2,#0d9488);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(8,145,178,.35)">
-            <i class="bi bi-bar-chart-line-fill" style="font-size:22px;color:#fff"></i>
-          </div>
-          <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">한국 영업</div>
-          <div style="font-size:11px;color:#64748b;line-height:1.6">영업관리 · 소모품<br>고객사 현황</div>
-          <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#0891b2;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
-        </div>
-      </div>` : '',
-    (access.includes('intl') || _isAdmin) ? `
-      <div onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wontech/intl.html';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()"
-        style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
-        <div style="height:5px;background:linear-gradient(90deg,#7c3aed,#0891b2)"></div>
-        <div style="padding:28px 24px">
-          <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#0891b2);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(124,58,237,.35)">
-            <i class="bi bi-globe-americas" style="font-size:22px;color:#fff"></i>
-          </div>
-          <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">해외 영업</div>
-          <div style="font-size:11px;color:#64748b;line-height:1.6">국가별 · 제품별<br>담당자 현황</div>
-          <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#a78bfa;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
-        </div>
-      </div>` : '',
-    access.includes('japan') ? `
-      <div onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wtj-management/';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()"
-        style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
-        <div style="height:5px;background:linear-gradient(90deg,#f59e0b,#ef4444)"></div>
-        <div style="padding:28px 24px">
-          <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(245,158,11,.35)">
-            <i class="bi bi-building-fill" style="font-size:22px;color:#fff"></i>
-          </div>
-          <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">일본법인 관리</div>
-          <div style="font-size:11px;color:#64748b;line-height:1.6">매출 · 수주<br>임금 현황</div>
-          <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#f59e0b;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
-        </div>
-      </div>` : '',
-      (access.includes('daily') || access.includes('korea') || _isAdmin) ? `
-        <div onclick="location.href='https://wt-management.github.io/wt-consumables/ilbo.html'"
-          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
-          <div style="height:5px;background:linear-gradient(90deg,#16a34a,#0d9488)"></div>
-          <div style="padding:28px 24px">
-            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#16a34a,#0d9488);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(22,163,74,.35)">
-              <i class="bi bi-clipboard-data-fill" style="font-size:22px;color:#fff"></i>
-            </div>
-            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">일일매출보고</div>
-            <div style="font-size:11px;color:#64748b;line-height:1.6">소모품 일일<br>매출 현황</div>
-            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#16a34a;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
-          </div>
-        </div>` : '',
-      (_isAdmin || access.includes('total') || (access.includes('korea') && access.includes('intl'))) ? `
-        <div onclick="(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='https://wt-management.github.io/wontech/total.html';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()"
-          style="${cardStyle};order:-1" onmouseover="${cardHover}" onmouseout="${cardOut}">
-          <div style="height:5px;background:linear-gradient(90deg,#4f46e5,#7c3aed)"></div>
-          <div style="padding:28px 24px">
-            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(79,70,229,.35)">
-              <i class="bi bi-buildings-fill" style="font-size:22px;color:#fff"></i>
-            </div>
-            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">전사 종합</div>
-            <div style="font-size:11px;color:#64748b;line-height:1.6">국내+해외 통합<br>경영 현황</div>
-            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#818cf8;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
-          </div>
-        </div>` : '',
-      // ▼▼ 상품기획 PM 대시보드 (pm-planner) — 6번째 슬롯. 수출의 탑은 전사 종합 export 탭으로 이전됨 ▼▼
-      (access.includes('pm') || _isAdmin) ? `
-        <div onclick="location.href='https://wt-management.github.io/pm-planner/'"
-          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
-          <div style="height:5px;background:linear-gradient(90deg,#8b5cf6,#ec4899)"></div>
-          <div style="padding:28px 24px">
-            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#8b5cf6,#ec4899);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(139,92,246,.35)">
-              <i class="bi bi-kanban-fill" style="font-size:22px;color:#fff"></i>
-            </div>
-            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">상품기획 PM</div>
-            <div style="font-size:11px;color:#64748b;line-height:1.6">제품 파이프라인<br>업무 · 아이디어</div>
-            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#c084fc;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
-          </div>
-        </div>` : '',
-      (access.includes('portfolio') || _isAdmin) ? `
-        <div onclick="location.href='https://wt-management.github.io/sales-portfolio/'"
-          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
-          <div style="height:5px;background:linear-gradient(90deg,#3f5e7a,#5e8a73)"></div>
-          <div style="padding:28px 24px">
-            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#3f5e7a,#5e8a73);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(63,94,122,.35)">
-              <i class="bi bi-pie-chart-fill" style="font-size:22px;color:#fff"></i>
-            </div>
-            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">Sales Portfolio</div>
-            <div style="font-size:11px;color:#64748b;line-height:1.6">글로벌영업<br>제품 포트폴리오</div>
-            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#86a7c4;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
-          </div>
-        </div>` : '',
-      (access.includes('equip')) ? `
-        <div onclick="location.href='https://wt-management.github.io/demo-schedule/'"
-          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
-          <div style="height:5px;background:linear-gradient(90deg,#2563eb,#0891b2)"></div>
-          <div style="padding:28px 24px">
-            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#2563eb,#0891b2);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(37,99,235,.35)">
-              <i class="bi bi-hdd-stack-fill" style="font-size:22px;color:#fff"></i>
-            </div>
-            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">장비 통합관리</div>
-            <div style="font-size:11px;color:#64748b;line-height:1.6">데모·출하·보상<br>재고·실사</div>
-            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#7dd3fc;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
-          </div>
-        </div>` : '',
-      (access.includes('us') || _isAdmin) ? `
-        <div onclick="location.href='https://wt-management.github.io/wt-corps/us.html'"
-          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
-          <div style="height:5px;background:linear-gradient(90deg,#1e3a8a,#3b82f6)"></div>
-          <div style="padding:28px 24px">
-            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#1e3a8a,#3b82f6);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(30,58,138,.35)">
-              <i class="bi bi-building-fill" style="font-size:22px;color:#fff"></i>
-            </div>
-            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">미국법인 관리</div>
-            <div style="font-size:11px;color:#64748b;line-height:1.6">매출 · 물류<br>자금 ERP</div>
-            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#60a5fa;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
-          </div>
-        </div>` : '',
-      (access.includes('th') || _isAdmin) ? `
-        <div onclick="location.href='https://wt-management.github.io/wt-corps/th.html'"
-          style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
-          <div style="height:5px;background:linear-gradient(90deg,#b45309,#d97706)"></div>
-          <div style="padding:28px 24px">
-            <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#b45309,#d97706);display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px rgba(180,83,9,.35)">
-              <i class="bi bi-building-fill" style="font-size:22px;color:#fff"></i>
-            </div>
-            <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">태국법인 관리</div>
-            <div style="font-size:11px;color:#64748b;line-height:1.6">매출 · 물류<br>자금 ERP</div>
-            <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:#fbbf24;font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
-          </div>
-        </div>` : '',
-  ].join('');
-  document.getElementById('launcher-cards').innerHTML = cards;
+  document.getElementById('launcher-cards').innerHTML = _buildLauncherCardsHTML(access);
   if(_isAdmin) document.getElementById('launcher-admin-btn').style.display = '';
 }
 
@@ -6912,9 +6638,8 @@ async function applyDeptToAll(dept){
   _paintUsers();
 }
 
-const WT_SITES = [['korea','한국','#0891b2'],['intl','해외','#0d9488'],['japan','일본','#f59e0b'],['total','종합','#4f46e5'],['daily','일보','#16a34a'],['pm','상품PM','#a855f7'],['portfolio','SalesPF','#ec4899'],['equip','장비관리','#2563eb'],['us','미국','#ef4444'],['th','태국','#14b8a6'],['demo','데모','#8b5cf6']];
 function _permDetail(p){
-  const cell=(field,fn)=>WT_SITES.map(([k,lbl,col])=>{const cur=(p[field]||'').split(',').map(s=>s.trim());return `<label style="display:inline-flex;flex-direction:column;align-items:center;gap:3px;font-size:9px;color:#94a3b8"><span>${lbl}</span><input type="checkbox" ${cur.includes(k)?'checked':''} onchange="${fn}('${p.id}','${k}',this.checked)" style="accent-color:${col};cursor:pointer;margin:0"></label>`;}).join('');
+  const cell=(field,fn)=>_siteRegistry.map(s=>{const {key:k,short_label:lbl,matrix_color:col}=s;const cur=(p[field]||'').split(',').map(s=>s.trim());return `<label style="display:inline-flex;flex-direction:column;align-items:center;gap:3px;font-size:9px;color:#94a3b8"><span>${lbl}</span><input type="checkbox" ${cur.includes(k)?'checked':''} onchange="${fn}('${p.id}','${k}',this.checked)" style="accent-color:${col};cursor:pointer;margin:0"></label>`;}).join('');
   return `<div style="display:flex;gap:24px;flex-wrap:wrap;padding:8px 4px"><div><div style="font-size:10px;color:#64748b;margin-bottom:5px;font-weight:700">접근</div><div style="display:flex;gap:12px">${cell('access','toggleAccess')}</div></div><div style="border-left:1px solid rgba(255,255,255,.08);padding-left:24px"><div style="font-size:10px;color:#64748b;margin-bottom:5px;font-weight:700">업로드</div><div style="display:flex;gap:12px">${cell('upload','toggleUpload')}</div></div></div>`;
 }
 
@@ -7071,10 +6796,24 @@ function toggleAccessCard(el) {
 function getSelectedAccess() {
   return [...document.querySelectorAll('#access-cards .access-card.selected')].map(c=>c.dataset.val).join(',');
 }
-function openAddUserModal() {
+function _renderAccessCards() {
+  const el = document.getElementById('access-cards');
+  if(!el) return;
+  el.innerHTML = _siteRegistry.map(s=>`
+    <div class="access-card" data-val="${s.key}" onclick="toggleAccessCard(this)"
+      style="flex:1;min-width:90px;border:2px solid #e5e7eb;border-radius:14px;padding:14px 10px 12px;cursor:pointer;text-align:center;transition:all .18s;background:#fff">
+      <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,${s.grad_from},${s.grad_to});display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px ${s.grad_from}40">
+        <i class="bi ${s.icon}" style="font-size:18px;color:#fff"></i>
+      </div>
+      <div style="font-size:11px;font-weight:800;color:#1e293b;letter-spacing:-.2px">${s.title}</div>
+      <div style="font-size:10px;color:#94a3b8;margin-top:2px">${s.short_label}</div>
+    </div>`).join('');
+}
+async function openAddUserModal() {
   ['new-user-email','new-user-pw','new-user-name','new-user-dept','new-user-position'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   const roleEl=document.getElementById('new-user-role'); if(roleEl) roleEl.value='user';
-  document.querySelectorAll('#access-cards .access-card').forEach(c=>c.classList.remove('selected'));
+  await _loadSiteRegistry();
+  _renderAccessCards();
   const errEl=document.getElementById('add-user-error'); if(errEl) errEl.style.display='none';
   const acErr=document.getElementById('access-card-error'); if(acErr) acErr.style.display='none';
   const modalEl=document.getElementById('addUserModal');
@@ -7701,96 +7440,7 @@ window.addEventListener('popstate', function(e) {
     </div>
     <div class="mb-3">
       <label class="form-label fw-bold" style="font-size:12px">접근 권한 <span style="font-weight:400;color:#6b7280">(복수 선택 가능)</span></label>
-      <div id="access-cards" style="display:flex;gap:10px;flex-wrap:wrap">
-        <div class="access-card" data-val="korea" onclick="toggleAccessCard(this)"
-          style="flex:1;min-width:90px;border:2px solid #e5e7eb;border-radius:14px;padding:14px 10px 12px;cursor:pointer;text-align:center;transition:all .18s;background:#fff">
-          <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#0891b2,#0d9488);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px rgba(8,145,178,.25)">
-            <i class="bi bi-bar-chart-line-fill" style="font-size:18px;color:#fff"></i>
-          </div>
-          <div style="font-size:11px;font-weight:800;color:#1e293b;letter-spacing:-.2px">한국 영업</div>
-          <div style="font-size:10px;color:#94a3b8;margin-top:2px">Korea CRM</div>
-        </div>
-        <div class="access-card" data-val="intl" onclick="toggleAccessCard(this)"
-          style="flex:1;min-width:90px;border:2px solid #e5e7eb;border-radius:14px;padding:14px 10px 12px;cursor:pointer;text-align:center;transition:all .18s;background:#fff">
-          <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#7c3aed,#0891b2);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px rgba(124,58,237,.25)">
-            <i class="bi bi-globe-americas" style="font-size:18px;color:#fff"></i>
-          </div>
-          <div style="font-size:11px;font-weight:800;color:#1e293b;letter-spacing:-.2px">해외 영업</div>
-          <div style="font-size:10px;color:#94a3b8;margin-top:2px">International</div>
-        </div>
-        <div class="access-card" data-val="japan" onclick="toggleAccessCard(this)"
-          style="flex:1;min-width:90px;border:2px solid #e5e7eb;border-radius:14px;padding:14px 10px 12px;cursor:pointer;text-align:center;transition:all .18s;background:#fff">
-          <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px rgba(245,158,11,.25)">
-            <i class="bi bi-building-fill" style="font-size:18px;color:#fff"></i>
-          </div>
-          <div style="font-size:11px;font-weight:800;color:#1e293b;letter-spacing:-.2px">일본법인</div>
-          <div style="font-size:10px;color:#94a3b8;margin-top:2px">Japan</div>
-        </div>
-        <div class="access-card" data-val="total" onclick="toggleAccessCard(this)"
-          style="flex:1;min-width:90px;border:2px solid #e5e7eb;border-radius:14px;padding:14px 10px 12px;cursor:pointer;text-align:center;transition:all .18s;background:#fff">
-          <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px rgba(79,70,229,.25)">
-            <i class="bi bi-pie-chart-fill" style="font-size:18px;color:#fff"></i>
-          </div>
-          <div style="font-size:11px;font-weight:800;color:#1e293b;letter-spacing:-.2px">전사 종합</div>
-          <div style="font-size:10px;color:#94a3b8;margin-top:2px">Total</div>
-        </div>
-        <div class="access-card" data-val="daily" onclick="toggleAccessCard(this)"
-          style="flex:1;min-width:90px;border:2px solid #e5e7eb;border-radius:14px;padding:14px 10px 12px;cursor:pointer;text-align:center;transition:all .18s;background:#fff">
-          <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#16a34a,#0d9488);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px rgba(22,163,74,.25)">
-            <i class="bi bi-receipt" style="font-size:18px;color:#fff"></i>
-          </div>
-          <div style="font-size:11px;font-weight:800;color:#1e293b;letter-spacing:-.2px">일일매출보고</div>
-          <div style="font-size:10px;color:#94a3b8;margin-top:2px">Daily</div>
-        </div>
-        <div class="access-card" data-val="equip" onclick="toggleAccessCard(this)"
-          style="flex:1;min-width:90px;border:2px solid #e5e7eb;border-radius:14px;padding:14px 10px 12px;cursor:pointer;text-align:center;transition:all .18s;background:#fff">
-          <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#2563eb,#0891b2);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px rgba(37,99,235,.25)">
-            <i class="bi bi-hdd-stack-fill" style="font-size:18px;color:#fff"></i>
-          </div>
-          <div style="font-size:11px;font-weight:800;color:#1e293b;letter-spacing:-.2px">장비 통합관리</div>
-          <div style="font-size:10px;color:#94a3b8;margin-top:2px">Equipment</div>
-        </div>
-        <div class="access-card" data-val="pm" onclick="toggleAccessCard(this)"
-          style="flex:1;min-width:90px;border:2px solid #e5e7eb;border-radius:14px;padding:14px 10px 12px;cursor:pointer;text-align:center;transition:all .18s;background:#fff">
-          <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#a855f7,#7c3aed);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px rgba(168,85,247,.25)">
-            <i class="bi bi-kanban-fill" style="font-size:18px;color:#fff"></i>
-          </div>
-          <div style="font-size:11px;font-weight:800;color:#1e293b;letter-spacing:-.2px">상품 PM</div>
-          <div style="font-size:10px;color:#94a3b8;margin-top:2px">Product PM</div>
-        </div>
-        <div class="access-card" data-val="portfolio" onclick="toggleAccessCard(this)"
-          style="flex:1;min-width:90px;border:2px solid #e5e7eb;border-radius:14px;padding:14px 10px 12px;cursor:pointer;text-align:center;transition:all .18s;background:#fff">
-          <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px rgba(236,72,153,.25)">
-            <i class="bi bi-diagram-3-fill" style="font-size:18px;color:#fff"></i>
-          </div>
-          <div style="font-size:11px;font-weight:800;color:#1e293b;letter-spacing:-.2px">SalesPF</div>
-          <div style="font-size:10px;color:#94a3b8;margin-top:2px">Portfolio</div>
-        </div>
-        <div class="access-card" data-val="us" onclick="toggleAccessCard(this)"
-          style="flex:1;min-width:90px;border:2px solid #e5e7eb;border-radius:14px;padding:14px 10px 12px;cursor:pointer;text-align:center;transition:all .18s;background:#fff">
-          <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#ef4444,#f59e0b);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px rgba(239,68,68,.25)">
-            <i class="bi bi-flag-fill" style="font-size:18px;color:#fff"></i>
-          </div>
-          <div style="font-size:11px;font-weight:800;color:#1e293b;letter-spacing:-.2px">미국법인</div>
-          <div style="font-size:10px;color:#94a3b8;margin-top:2px">US Corp</div>
-        </div>
-        <div class="access-card" data-val="th" onclick="toggleAccessCard(this)"
-          style="flex:1;min-width:90px;border:2px solid #e5e7eb;border-radius:14px;padding:14px 10px 12px;cursor:pointer;text-align:center;transition:all .18s;background:#fff">
-          <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#14b8a6,#0891b2);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px rgba(20,184,166,.25)">
-            <i class="bi bi-flag-fill" style="font-size:18px;color:#fff"></i>
-          </div>
-          <div style="font-size:11px;font-weight:800;color:#1e293b;letter-spacing:-.2px">태국법인</div>
-          <div style="font-size:10px;color:#94a3b8;margin-top:2px">Thailand Corp</div>
-        </div>
-        <div class="access-card" data-val="demo" onclick="toggleAccessCard(this)"
-          style="flex:1;min-width:90px;border:2px solid #e5e7eb;border-radius:14px;padding:14px 10px 12px;cursor:pointer;text-align:center;transition:all .18s;background:#fff">
-          <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#8b5cf6,#ec4899);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px rgba(139,92,246,.25)">
-            <i class="bi bi-calendar-event-fill" style="font-size:18px;color:#fff"></i>
-          </div>
-          <div style="font-size:11px;font-weight:800;color:#1e293b;letter-spacing:-.2px">데모 일정</div>
-          <div style="font-size:10px;color:#94a3b8;margin-top:2px">Demo</div>
-        </div>
-      </div>
+      <div id="access-cards" style="display:flex;gap:10px;flex-wrap:wrap"></div>
       <div id="access-card-error" style="font-size:11px;color:#dc2626;margin-top:4px;display:none">최소 1개 선택하세요</div>
     </div>
     <div class="mb-2"><label class="form-label fw-bold" style="font-size:12px">역할</label>
