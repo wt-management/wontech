@@ -1430,7 +1430,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <div class="text-muted mt-1" style="font-size:12px" id="hosp-modal-sub"></div>
       <div class="mt-1 d-flex flex-wrap gap-1" id="hosp-modal-contacts"></div>
     </div>
-    <button class="btn btn-outline-primary btn-sm" style="white-space:nowrap" onclick="openSchedule({custName:window._hospDetailName||document.getElementById('hosp-modal-name').textContent})"><i class="bi bi-calendar-plus me-1"></i>일정</button>
+    <button class="btn btn-outline-primary btn-sm" style="white-space:nowrap" onclick="openScheduleFromHospModal()"><i class="bi bi-calendar-plus me-1"></i>일정</button>
     <button class="btn btn-primary btn-sm ms-1" style="white-space:nowrap" onclick="openLogFromHospModal()"><i class="bi bi-journal-plus me-1"></i>상담일지 작성</button>
     <button type="button" class="btn-close ms-2" data-bs-dismiss="modal"></button>
   </div>
@@ -4522,6 +4522,13 @@ function openLogFromHospModal(){
   const m = bootstrap.Modal.getInstance(document.getElementById('hospitalModal'));
   if(m) m.hide();
   setTimeout(()=>openLogFromHosp(name), 350);
+}
+// 병원 상세 모달 위에 일정 모달을 바로 띄우면 백드롭이 겹쳐 화면이 먹통됨 → 먼저 병원 모달을 닫고 연다
+function openScheduleFromHospModal(){
+  const name = (window._hospDetailName||document.getElementById('hosp-modal-name').textContent||'');
+  const m = bootstrap.Modal.getInstance(document.getElementById('hospitalModal'));
+  if(m) m.hide();
+  setTimeout(()=>openSchedule({custName:name}), 350);
 }
 
 function renderConsAccounts() { renderConsHospitals(); }
