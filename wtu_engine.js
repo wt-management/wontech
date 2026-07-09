@@ -281,6 +281,16 @@ function build(sheets, existing){
   var _etcMo={};
   for(var _em=1;_em<=12;_em++){ var _ev=Math.round((_domAll[_em]||0)-(a26.monthly[_em]||0)-(d26.monthly2026[_em]||0)); if(_ev) _etcMo[_em]=_ev; }
   CONS.etcMonthly2026=_etcMo; CONS.etcMonthly2025=exMain.etcMonthly2025||{};
+  // 기타를 사용부서별로 분리(서지컬/B2C/고객만족/기타=의료기기·조정) — 매출현황 서지컬 행 표시용. 버킷합≠잔차분은 '기타'로 흡수해 etcMonthly와 정합 유지.
+  var _incSet=new Set(); consR.forEach(function(r){_incSet.add(r);}); devR.forEach(function(r){_incSet.add(r);});
+  var _dept={'서지컬':{},'B2C':{},'고객만족':{},'기타':{}};
+  rows26.forEach(function(r){ if(r['국내외']!=='국내'||_incSet.has(r)) return;
+    var _m2=monthNum(r['월']); var _a2=num(r['금액']); if(!_m2||!_a2) return;
+    var _d2=String(r['사용부서']||''); var _b=/지컬/.test(_d2)?'서지컬':(/B2C/i.test(_d2)?'B2C':(/고객만족|CS/.test(_d2)?'고객만족':'기타'));
+    _dept[_b][_m2]=(_dept[_b][_m2]||0)+_a2; });
+  for(var _em2=1;_em2<=12;_em2++){ var _bs=0; for(var _bk in _dept) _bs+=(_dept[_bk][_em2]||0); var _adj=(_etcMo[_em2]||0)-_bs; if(Math.round(_adj)) _dept['기타'][_em2]=(_dept['기타'][_em2]||0)+_adj; }
+  Object.keys(_dept).forEach(function(_k){ var _o={}; Object.keys(_dept[_k]).forEach(function(_m3){ var _v3=Math.round(_dept[_k][_m3]); if(_v3) _o[_m3]=_v3; }); _dept[_k]=_o; });
+  CONS.etcDept2026=_dept; CONS.etcDept2025=exMain.etcDept2025||{};
 
   var e8=function(x){return Math.round(x/1e8*10)/10;};
   var sum=function(o){var s=0;for(var k in o)s+=o[k];return s;};

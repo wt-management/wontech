@@ -1311,22 +1311,10 @@ function _rptRow(n1,n2,v,cls,dk){
   return '<tr class="'+cc+'"'+attr+'><td class="lbl dept">'+n1+'</td><td class="lbl sub">'+n2+'</td>'+
     grp(v.q2,true)+grp(v.h1,true)+grp(v.m6,false)+'</tr>';
 }
-function _rptBlank(n1,n2){
-  const d='<td class="rpt-na">—</td>';
-  return '<tr><td class="lbl dept" style="color:#cbd5e1">'+n1+'</td><td class="lbl sub" style="color:#cbd5e1">'+n2+'</td>'+
-    '<td class="gsep rpt-na">—</td>'+d+d+d+'<td class="gsep rpt-na">—</td>'+d+d+d+'<td class="gsep rpt-na">—</td>'+d+d+'</tr>';
-}
-// 기타매출(ASR 제품·A/S소모품) 제외 — 한국영업 순매출 월별. which='제품'|'소모품'
+// 한국영업 월별 = 회계 원본 그대로(ASR·A/S소모품 포함) — 한국영업 사이트·전사 종합과 숫자 정합(구 '순매출' 조정 폐지)
 function _krCleanMo(which){
-  if(which==='제품'){
-    const e26=(DEVICE.prodMo2026&&DEVICE.prodMo2026['ASR'])||{}, e25=(DEVICE.prodMo2025&&DEVICE.prodMo2025['ASR'])||{};
-    const o26={},o25={}; for(let m=1;m<=12;m++){ o26[m]=(Number((DEVICE.monthly2026||{})[m])||0)-(Number(e26[m])||0); o25[m]=(Number((DEVICE.monthly2025||{})[m])||0)-(Number(e25[m])||0); }
-    return {y26:o26,y25:o25};
-  }
-  const as26=Number((CONS.products2026||{})['A/S소모품'])||0, as25=Number((CONS.products2025||{})['A/S소모품'])||0;
-  const t26=Object.values(CONS.monthly2026||{}).reduce((s,v)=>s+(Number(v)||0),0)||1, t25=Object.values(CONS.monthly2025||{}).reduce((s,v)=>s+(Number(v)||0),0)||1;
-  const o26={},o25={}; for(let m=1;m<=12;m++){ o26[m]=(Number((CONS.monthly2026||{})[m])||0)*(1-as26/t26); o25[m]=(Number((CONS.monthly2025||{})[m])||0)*(1-as25/t25); }
-  return {y26:o26,y25:o25};
+  if(which==='제품') return {y26:DEVICE.monthly2026||{}, y25:DEVICE.monthly2025||{}};
+  return {y26:CONS.monthly2026||{}, y25:CONS.monthly2025||{}};
 }
 // 드릴 캐시 자가부트 — 매출현황 안 거쳐도 어느 페이지서든 openDrill 가능
 function _rptBuildCache(force){
@@ -1353,15 +1341,20 @@ function renderReport(){
   const ovSum=_sumV([regSum,corpSum]);              // 해외영업 합계
   const globalSum=_sumV([kSum,ovSum]);              // 글로벌영업실 합계 (서지컬 제외)
   const P=_rptPeriods();
-  // Wontech Total = 글로벌영업실 + 기타(서지컬·B2C·고객만족·의료기기) → 회계 전체 정합. 목표=전체 sales_targets.
+  // Wontech Total = 글로벌영업실 + 서지컬(국내) + 기타(의료기기·B2C·고객만족) → 회계 전체 정합. 목표=전체 sales_targets.
   const _smE=(o,ff,tt)=>{let s=0;for(let m=ff;m<=tt;m++)s+=Number((o||{})[m]||0);return s;};
   const _allT=(ff,tt)=>{let s=0;(SALEST||[]).forEach(r=>{if(+r.year===2026&&+r.month>=ff&&+r.month<=tt)s+=Number(r.amount||0);});return s;};
   const _perOf={q2:[P.qf,P.qt],h1:[P.hf,P.ht],m6:[P.mo,P.mo]};
-  const etcRow={}, totalSum={};
+  const etcRow={}, sgRow={}, totalSum={};
+  // 서지컬(국내)은 etcDept에서 분리 표시, 기타 행 = etc 전체 − 서지컬. 총합엔 etc 전체가 그대로 들어가 정합 유지.
+  const _sg26=(CONS.etcDept2026||{})['서지컬']||{}, _sg25=(CONS.etcDept2025||{})['서지컬']||{};
   ['q2','h1','m6'].forEach(k=>{ const ff=_perOf[k][0],tt=_perOf[k][1];
-    const eA=_smE(CONS.etcMonthly2026,ff,tt), eP=_smE(CONS.etcMonthly2025,ff,tt);
+    const eT=_smE(CONS.etcMonthly2026,ff,tt), pT=_smE(CONS.etcMonthly2025,ff,tt);
+    const sA=_smE(_sg26,ff,tt), sP=_smE(_sg25,ff,tt);
+    sgRow[k]={tgt:0,act:sA,prev:sP,ach:null,grw:sP>0?(sA/sP-1)*100:null};
+    const eA=eT-sA, eP=pT-sP;
     etcRow[k]={tgt:0,act:eA,prev:eP,ach:null,grw:eP>0?(eA/eP-1)*100:null};
-    const tg=_allT(ff,tt), ac=globalSum[k].act+eA, pv=globalSum[k].prev+eP;
+    const tg=_allT(ff,tt), ac=globalSum[k].act+eT, pv=globalSum[k].prev+pT;
     totalSum[k]={tgt:tg,act:ac,prev:pv,ach:tg>0?ac/tg*100:null,grw:pv>0?(ac/pv-1)*100:null};
   });
   let h='<thead><tr><th class="lbl" rowspan="2">사업부</th><th class="lbl" rowspan="2">구분</th>'+
@@ -1374,15 +1367,13 @@ function renderReport(){
   h+=_rptRow('한국영업','제품',kProd,'','국내영업|제품');
   h+=_rptRow('한국영업','소모품',kCons,'','국내영업|소모품');
   h+=_rptRow('한국영업','합계',kSum,'grp');
-  h+=_rptBlank('서지컬영업','제품');
-  h+=_rptBlank('','소모품');
-  h+=_rptBlank('','합계');
+  h+=_rptRow('서지컬영업','국내',sgRow,'grp','서지컬');
   regRows.forEach((x,i)=>h+=_rptRow(i===0?'지역영업':'',x.r,x.v,'','해외영업|'+x.r));
   h+=_rptRow('지역','소계',regSum,'grp');
   corpRows.forEach((x,i)=>h+=_rptRow(i===0?'법인영업':'',x.r,x.v,'','해외영업|'+x.r));
   h+=_rptRow('법인','소계',corpSum,'grp');
   h+=_rptRow('해외영업','합계',ovSum,'grp');
-  if(etcRow.h1.act>0||etcRow.q2.act>0) h+=_rptRow('기타','의료기기·서지컬·B2C·고객만족',etcRow,'grp');
+  if(etcRow.h1.act>0||etcRow.q2.act>0) h+=_rptRow('기타','의료기기·B2C·고객만족',etcRow,'grp','기타부문');
   h+='</tbody>';
   tbl.innerHTML=h;
   // 캐시(드릴다운용) + 임원 요약
@@ -1404,12 +1395,25 @@ function _rptHero(g,rows,pend){
 function _tgtMo(dept,item){ const o={}; (SALEST||[]).forEach(r=>{ if(r.dept===dept&&r.item===item&&+r.year===2026) o[+r.month]=(o[+r.month]||0)+Number(r.amount||0); }); return o; }
 function _drillSeg(dept,item){
   const C=_rptCache, custs={},prods={},pendRows=[]; let mo26={},mo25={},pend={},tgt={};
+  if(dept==='서지컬'){
+    mo26=(CONS.etcDept2026||{})['서지컬']||{}; mo25=(CONS.etcDept2025||{})['서지컬']||{};
+    return {mo26,mo25,pend:{},tgt:{},custs:{},prods:{},pendRows:[]};
+  }
+  if(dept==='기타부문'){
+    const e26=CONS.etcMonthly2026||{}, s26=(CONS.etcDept2026||{})['서지컬']||{};
+    const e25=CONS.etcMonthly2025||{}, s25=(CONS.etcDept2025||{})['서지컬']||{};
+    for(let m=1;m<=12;m++){ const a=(Number(e26[m])||0)-(Number(s26[m])||0); if(a) mo26[m]=a;
+      const b=(Number(e25[m])||0)-(Number(s25[m])||0); if(b) mo25[m]=b; }
+    Object.entries(CONS.etcDept2026||{}).forEach(([k,o])=>{ if(k==='서지컬') return;
+      let s=0; for(const m in o) s+=Number(o[m])||0; if(s>0) prods[k==='기타'?'의료기기·기타':k]=s; });
+    return {mo26,mo25,pend:{},tgt:{},custs:{},prods,pendRows:[]};
+  }
   if(dept==='국내영업'){
     const cl=item==='제품'?C.kpC:C.kcC; mo26=(cl&&cl.y26)||{}; mo25=(cl&&cl.y25)||{};
     pend=(C.pend&&C.pend.kr&&C.pend.kr[item])||{}; tgt=_tgtMo('국내영업',item);
     const src=item==='제품'?DEVICE:CONS;
     Object.entries(src.hospitals||{}).forEach(([nm,h])=>{ const v=Number(h.y2026)||0; if(v>0) custs[nm]=v; });
-    Object.entries(src.products2026||{}).forEach(([p,v])=>{ if(!/^ASR$|A\/S/i.test(p)) prods[p]=Number(v)||0; });
+    Object.entries(src.products2026||{}).forEach(([p,v])=>{ prods[p]=Number(v)||0; });
     (ILBO_PEND||[]).forEach(p=>{ if(p.region!=='해외'&&_pendKrItem(p.product)===item) pendRows.push(p); });
   }else{
     const ri=(item==='기타·미분류')?'기타':item;
@@ -1434,7 +1438,10 @@ function openDrill(dk){
   const sm=(o,f,t)=>{let s=0;for(let m=f;m<=t;m++)s+=Number((o||{})[m]||0);return s;};
   const act=sm(seg.mo26,P.hf,P.ht)+sm(seg.pend,P.hf,P.ht), prev=sm(seg.mo25,P.hf,P.ht), tg=sm(seg.tgt,P.hf,P.ht);
   const ach=tg>0?act/tg*100:null, grw=prev>0?(act/prev-1)*100:null;
-  const title=(dept==='국내영업'?'한국영업 · '+item:'해외영업 · '+item);
+  const title=(dept==='국내영업'?'한국영업 · '+item
+    :dept==='서지컬'?'서지컬영업 · 국내 <span style="font-size:11px;font-weight:500;color:#94a3b8">(해외 수출분은 해외영업 지역에 포함)</span>'
+    :dept==='기타부문'?'기타 · 의료기기·B2C·고객만족'
+    :'해외영업 · '+item);
   const custTop=Object.entries(seg.custs).sort((a,b)=>b[1]-a[1]).slice(0,8);
   const prodTop=Object.entries(seg.prods).sort((a,b)=>b[1]-a[1]).slice(0,8);
   const cmax=custTop.length?custTop[0][1]:1, pmax=prodTop.length?prodTop[0][1]:1;
