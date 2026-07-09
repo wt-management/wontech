@@ -1929,18 +1929,20 @@ const DB = {
     }));
   },
 
+  // 비파괴 저장: 내 로컬행만 upsert(추가/수정). '로컬에 없는 원격행 삭제' 로직 제거 →
+  // 로드 실패·오래된 화면·동시 사용 시에도 다른 사람이 넣은 데이터를 지우지 않음(베타 데이터 유실 방지).
   async save(name) {
     showToast('저장 중...');
     try {
-      const rows = this.d[name].map(item => ({id: item.id || item.serial, data: item}));
-      const {data: existing} = await _sb.from(name).select('id');
-      const existingIds = (existing||[]).map(r=>r.id);
-      const currentIds = rows.map(r=>r.id);
-      const toDelete = existingIds.filter(id=>!currentIds.includes(id));
-      if(toDelete.length) await _sb.from(name).delete().in('id', toDelete);
+      const rows = this.d[name].map(item => ({id: item.id || item.serial, data: item})).filter(r=>r.id!=null);
       if(rows.length) { const {error} = await _sb.from(name).upsert(rows); if(error) throw error; }
       showToast('저장 완료!', true);
     } catch(e) { showToast('저장 실패: '+e.message, true, true); }
+  },
+  // 단건 삭제(전체 덮어쓰기 없이) — 삭제는 반드시 이걸로. 다른 행은 절대 건드리지 않음.
+  del(name, id) {
+    if(id==null) return Promise.resolve();
+    return _sb.from(name).delete().eq('id', id).then(function(r){ if(r&&r.error) showToast('삭제 실패: '+r.error.message, true, true); });
   }
 };
 
@@ -5242,7 +5244,7 @@ function savePipeline() {
 function delPipeline() {
   const id=gV('p-id'); if(!confirm('삭제하시겠습니까?'))return;
   DB.d.pipeline=DB.d.pipeline.filter(x=>x.id!==id);
-  DB.save('pipeline').then(()=>{ bootstrap.Modal.getInstance(document.getElementById('pipelineModal')).hide(); renderPipeline(); });
+  DB.del('pipeline',id).then(()=>{ bootstrap.Modal.getInstance(document.getElementById('pipelineModal')).hide(); renderPipeline(); });
 }
 
 function probColor(p){p=Number(p)||0;return p>=80?'#16a34a':p>=50?'#ea580c':'#adb5bd';}
@@ -5986,7 +5988,7 @@ function saveCustomer(){
 function delCustomer(){
   const id=gV('c-id');if(!confirm('삭제하시겠습니까?'))return;
   DB.d.customers=DB.d.customers.filter(x=>x.id!==id);
-  DB.save('customers').then(()=>{bootstrap.Modal.getInstance(document.getElementById('custModal')).hide();renderCustomers();});
+  DB.del('customers',id).then(()=>{bootstrap.Modal.getInstance(document.getElementById('custModal')).hide();renderCustomers();});
 }
 
 function gradeBadge(g){if(g==='VIP')return'<span class="badge" style="background:#ffd700;color:#333">VIP</span>';if(g==='잠재')return'<span class="badge bg-info">잠재</span>';return'<span class="badge bg-secondary">일반</span>';}
@@ -6349,9 +6351,9 @@ function delEquipFromModal(){
   const serial=gV('e-orig-serial');if(!serial){alert('시리얼이 없어 삭제할 수 없습니다.');return;}
   if(!confirm('삭제하시겠습니까?'))return;
   DB.d.equipments=DB.d.equipments.filter(x=>x.serial!==serial);
-  DB.save('equipments').then(()=>{bootstrap.Modal.getInstance(document.getElementById('equipModal')).hide();filterEquip();});
+  DB.del('equipments',serial).then(()=>{bootstrap.Modal.getInstance(document.getElementById('equipModal')).hide();filterEquip();});
 }
-function delEquip(serial){if(!serial){alert('시리얼이 없어 삭제할 수 없습니다.');return;}if(!confirm('삭제하시겠습니까?'))return;DB.d.equipments=DB.d.equipments.filter(x=>x.serial!==serial);DB.save('equipments').then(()=>filterEquip());}
+function delEquip(serial){if(!serial){alert('시리얼이 없어 삭제할 수 없습니다.');return;}if(!confirm('삭제하시겠습니까?'))return;DB.d.equipments=DB.d.equipments.filter(x=>x.serial!==serial);DB.del('equipments',serial).then(()=>filterEquip());}
 
 // ── 엑셀 업로드 ──────────────────────────────────────────────────────
 let _excelPending = [];
@@ -6732,7 +6734,7 @@ async function saveSchedule(){
   try{ bootstrap.Modal.getInstance(document.getElementById('scheduleModal')).hide(); }catch(e){}
   renderSchedule(); showToast('일정 저장, 저장 중...'); await DB.save('logs'); showToast('저장 완료', true);
 }
-function delSchedule(){ const id=document.getElementById('sch-id').value; if(!id)return; if(!confirm('일정을 삭제할까요?'))return; DB.d.logs=(DB.d.logs||[]).filter(l=>l.id!==id); try{ bootstrap.Modal.getInstance(document.getElementById('scheduleModal')).hide(); }catch(e){} renderSchedule(); DB.save('logs'); }
+function delSchedule(){ const id=document.getElementById('sch-id').value; if(!id)return; if(!confirm('일정을 삭제할까요?'))return; DB.d.logs=(DB.d.logs||[]).filter(l=>l.id!==id); try{ bootstrap.Modal.getInstance(document.getElementById('scheduleModal')).hide(); }catch(e){} renderSchedule(); DB.del('logs',id); }
 async function toggleSchedDone(id){
   const l=(DB.d.logs||[]).find(x=>x.id===id); if(!l)return;
   if(!l.done){ renderSchedule(); _schOpenDoneModal(id); return; }   // 완료 처리는 결과 확인 모달을 거침
@@ -6817,7 +6819,7 @@ function saveLog(){
 function delLog(){
   const id=gV('l-id');if(!confirm('삭제하시겠습니까?'))return;
   DB.d.logs=DB.d.logs.filter(x=>x.id!==id);
-  DB.save('logs').then(()=>{bootstrap.Modal.getInstance(document.getElementById('logModal')).hide();renderLogs();});
+  DB.del('logs',id).then(()=>{bootstrap.Modal.getInstance(document.getElementById('logModal')).hide();renderLogs();});
 }
 
 // ── 사용자 관리 ──────────────────────────────────────────────────────
@@ -7227,7 +7229,7 @@ function saveProduct(){
 function delProduct(){
   const id=gV('pp-id');if(!confirm('삭제하시겠습니까?'))return;
   DB.d.products=DB.d.products.filter(x=>x.id!==id);
-  DB.save('products').then(()=>{bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();renderProducts();});
+  DB.del('products',id).then(()=>{bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();renderProducts();});
 }
 
 // ── 유틸 ──────────────────────────────────────────────────────
