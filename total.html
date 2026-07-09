@@ -2703,7 +2703,16 @@ function exRenderKITA(){
     el.insertAdjacentHTML('beforeend','<div class="k"><div class="y">'+esc(k.year)+'년 무역실적</div><div class="v">'+exUsd(k.amount)+'</div>'+d+'</div>'); });
 }
 function exRenderYearly(){
-  const y=EXPORT.yearly||{}, labels=y.labels||[], acc=y.acc||[], exp=y.exp||[];
+  const y=EXPORT.yearly||{}, labels=(y.labels||[]).slice(), acc=(y.acc||[]).slice(), exp=(y.exp||[]).slice();
+  // ★최신(진행) 연도 막대는 라이브 데이터로 자동 산출 — 하드코딩 스냅샷이 실데이터와 어긋나는 것 방지. 과거 확정연도는 스냅샷 유지.
+  // 회계=달력연도 회계 해외 USD 합(진행 중이면 경과월까지·미완결), 수출=전년7월~당해6월 차수 총계(exCycleOwn).
+  const _li=labels.length-1, _yr=parseInt(String(labels[_li]||''),10);
+  if(_li>=0 && _yr){
+    const muSrc=(_yr===2026)?INTL.monthly_usd:(_yr===2025?(INTL.data2025&&INTL.data2025.monthly_usd):null);
+    if(muSrc){ let s=0; for(let m=1;m<=12;m++) s+=Number(muSrc[m]||0); if(s>0) acc[_li]=Math.round(s/1e4); }
+    const cyc=(EXPORT.cycles||[]).find(c=>c.start===(_yr-1)+'-07');
+    if(cyc){ const cs=exCycleOwn(cyc); if(cs>0) exp[_li]=Math.round(cs/1e4); }
+  }
   const draw=(elId,vals,color)=>{ const el=document.getElementById(elId); if(!el) return; const max=Math.max.apply(null,vals.concat([1]));
     el.innerHTML='<div class="ex-ybars">'+vals.map(v=>'<div class="ex-ybar"><div class="v">'+Number(v).toLocaleString()+'</div><div class="bar" style="height:'+Math.max(v/max*100,1).toFixed(1)+'%;background:'+color+'"></div></div>').join('')+'</div><div class="ex-yx">'+labels.map(l=>'<span>'+esc(String(l))+'</span>').join('')+'</div><div class="ex-yleg"><i style="background:'+color+'"></i>수출액 (USD)</div>'; };
   draw('ex-yacc',acc,'#f0a868'); draw('ex-yexp',exp,'#2a8a8a');
