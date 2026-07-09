@@ -1590,6 +1590,161 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button><button class="btn btn-primary btn-sm" onclick="saveQuote()">저장</button></div>
 </div></div></div>
 
+<!-- ══ 견적서 편집기(문서 위에서 직접 입력) ══ -->
+<style>
+  #quoteEditModal .modal-content{border:0;border-radius:16px;overflow:hidden}
+  .qed{--ink:#1a1714;--ink2:#4b463f;--mut:#8f8a82;--faint:#b9b3aa;--line:#ece9e4;--bg:#f4f3f0;--cream:#faf9f7;--orange:#ff4d00;--focus:rgba(255,77,0,.12);--ring:rgba(255,77,0,.32);--sans:'Pretendard','Pretendard Variable',-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;font-family:var(--sans);color:var(--ink)}
+  .qed *{box-sizing:border-box}
+  .qed-bar{display:flex;align-items:center;gap:14px;padding:15px 22px;border-bottom:1px solid var(--line);background:#fff;flex-wrap:wrap}
+  .qed-title{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:800;letter-spacing:-.01em}
+  .qed-dot{width:7px;height:7px;border-radius:50%;background:var(--orange)}
+  .qed-hint{font-size:11.5px;font-weight:500;color:var(--mut);letter-spacing:0}
+  .qed-actions{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .qed-seg{display:inline-flex;background:#efece7;border-radius:10px;padding:3px;gap:2px}
+  .qed-seg button{border:0;background:transparent;font:inherit;font-size:12.5px;font-weight:600;color:var(--mut);padding:7px 14px;border-radius:8px;cursor:pointer;transition:.16s}
+  .qed-seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(60,45,30,.12)}
+  .qed-btn{border:0;font:inherit;font-size:13px;font-weight:700;padding:9px 18px;border-radius:10px;cursor:pointer;transition:.16s}
+  .qed-btn.ghost{background:#fff;color:var(--ink2);border:1px solid var(--line)}
+  .qed-btn.ghost:hover{border-color:#d8d2c8}
+  .qed-btn.dark{background:var(--ink);color:#fff}
+  .qed-btn.dark:hover{background:#000}
+  .qed-close{border:0;background:transparent;font-size:26px;line-height:1;color:var(--faint);cursor:pointer;padding:0 4px}
+  .qed-close:hover{color:var(--ink)}
+  .qed-scroll{background:var(--bg);max-height:calc(100vh - 122px);overflow:auto;padding:26px 20px}
+  .qed-sheet{background:#fff;max-width:900px;margin:0 auto;border:1px solid var(--line);border-radius:18px;box-shadow:0 1px 2px rgba(60,50,40,.04),0 22px 50px -30px rgba(60,45,30,.25);padding:50px 54px 44px}
+  .qed .f{border:0;background:transparent;font:inherit;color:inherit;padding:3px 6px;border-radius:7px;transition:background .14s,box-shadow .14s;min-width:0;width:100%}
+  .qed .f::placeholder{color:#c9c2b8;font-weight:400}
+  .qed .f:hover{background:#f6f3ee}
+  .qed .f:focus{outline:0;background:var(--focus);box-shadow:0 0 0 2px var(--ring)}
+  .qed .blank{box-shadow:inset 0 -1px 0 #ded7cc}
+  .qed .blank:focus{box-shadow:0 0 0 2px var(--ring)}
+  .qed .num{text-align:right;font-variant-numeric:tabular-nums}
+  .qed select.f{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:20px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M1 1l4 4 4-4' stroke='%238f8a82' stroke-width='1.4' fill='none' stroke-linecap='round'/></svg>") no-repeat right 5px center}
+  .qed-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px}
+  .qed-brand-sub{font-size:10.5px;font-weight:600;letter-spacing:.02em;color:var(--mut);margin-top:11px}
+  .qed-doctitle{text-align:right}
+  .qed-doctitle h1{margin:0;font-size:28px;font-weight:800;letter-spacing:13px;line-height:1}
+  .qed-doctitle .en{font-size:10px;letter-spacing:4px;color:var(--mut);font-weight:700;margin-top:7px}
+  .qed-parties{display:grid;grid-template-columns:1fr 1fr;gap:36px;margin-bottom:30px}
+  .qed-eyebrow{font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--orange);margin-bottom:12px}
+  .qed-toname{display:flex;align-items:baseline;gap:7px;margin-bottom:14px}
+  .qed-toname .f{font-size:21px;font-weight:800;letter-spacing:-.02em}
+  .qed-toname .hon{font-size:13px;font-weight:600;color:var(--mut);white-space:nowrap}
+  .qed-kv{display:grid;grid-template-columns:66px 1fr;row-gap:5px;align-items:center;font-size:12.5px}
+  .qed-kv .k{color:var(--mut);white-space:nowrap}
+  .qed-kv .v{font-weight:600}
+  .qed-from{border-left:1px solid var(--line);padding-left:34px}
+  .qed-supname{font-size:16px;font-weight:800;margin-bottom:12px}
+  .qed-supkv{display:grid;grid-template-columns:58px 1fr;row-gap:6px;font-size:12px;color:var(--ink2)}
+  .qed-supkv .k{color:var(--mut)}
+  .qed-supkv .v{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .qed-total{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px 24px;background:var(--cream);border:1px solid var(--line);border-radius:14px;margin-bottom:28px}
+  .qed-total .lbl{font-size:10.5px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--mut)}
+  .qed-total .kor{font-size:13px;color:var(--ink2);margin-top:6px;font-weight:600}
+  .qed-total .amt{font-size:30px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .qed-total .amt .won{color:var(--orange);margin-right:2px}
+  .qed-tblwrap{overflow-x:auto}
+  .qed-tbl{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed}
+  .qed-tbl thead th{font-size:10px;font-weight:800;letter-spacing:.04em;color:var(--mut);text-transform:uppercase;padding:0 8px 11px;border-bottom:1.5px solid var(--ink);text-align:left;white-space:nowrap}
+  .qed-tbl thead th.r{text-align:right}.qed-tbl thead th.c{text-align:center}
+  .qed-tbl tbody td{padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .qed-tbl .no{color:var(--mut);text-align:center;font-size:11px;font-variant-numeric:tabular-nums}
+  .qed-tbl .amt-cell{text-align:right;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;padding-right:8px}
+  .qed-rowdel{opacity:0;border:0;background:transparent;color:#cb9a8c;cursor:pointer;width:24px;height:24px;border-radius:6px;font-size:14px;line-height:1}
+  .qed-tbl tbody tr:hover .qed-rowdel{opacity:1}
+  .qed-rowdel:hover{background:#f8ece8;color:#c0472f}
+  .qed-addrow{margin-top:14px;border:1px dashed #d8d2c8;background:transparent;color:var(--ink2);font:inherit;font-size:12.5px;font-weight:600;padding:9px 16px;border-radius:10px;cursor:pointer;transition:.16s}
+  .qed-addrow:hover{border-color:var(--orange);color:var(--orange);background:#fff4ef}
+  .qed-sum{display:flex;justify-content:flex-end;margin-top:16px}
+  .qed-sum table{font-size:13px;min-width:300px}
+  .qed-sum td{padding:6px 4px}.qed-sum td.k{color:var(--mut)}
+  .qed-sum td.v{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+  .qed-sum tr.g td{padding-top:13px;border-top:1.5px solid var(--ink)}
+  .qed-sum tr.g .k{font-weight:800;font-size:15px}
+  .qed-sum tr.g .v{font-weight:800;font-size:20px}
+  .qed-sum tr.g .v .won{color:var(--orange)}
+  .qed-foot{margin-top:32px;padding-top:20px;border-top:1px solid var(--line)}
+  .qed-terms{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:11.5px;color:var(--ink2)}
+  .qed-terms b{color:var(--mut);font-weight:600}
+  .qed-memo{margin-top:16px}
+  .qed-memo textarea{width:100%;border:1px solid var(--line);border-radius:11px;padding:11px 13px;font:inherit;font-size:12.5px;resize:vertical;min-height:48px;color:var(--ink);background:var(--cream)}
+  .qed-memo textarea:focus{outline:0;border-color:var(--orange);box-shadow:0 0 0 3px var(--focus)}
+  .qed-tagline{text-align:center;margin-top:20px;font-size:11px;color:var(--faint)}
+  @media(max-width:720px){.qed-sheet{padding:30px 20px}.qed-parties{grid-template-columns:1fr;gap:22px}.qed-from{border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:20px}.qed-tbl{min-width:640px}.qed-doctitle h1{font-size:22px;letter-spacing:9px}.qed-total{flex-direction:column;align-items:flex-start}.qed-total .amt{font-size:26px}}
+</style>
+<div class="modal fade" id="quoteEditModal" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content qed">
+  <div class="qed-bar">
+    <div class="qed-title"><span class="qed-dot"></span>견적서 작성 <span class="qed-hint">칸을 클릭해 바로 입력하세요 — 금액은 자동 계산됩니다</span></div>
+    <div class="qed-actions">
+      <div class="qed-seg">
+        <button id="qedtpl-std" class="on" onclick="_qedTmpl('classic')">양식 1 · 표준</button>
+        <button id="qedtpl-simple" onclick="_qedTmpl('premium')">양식 2 · 심플</button>
+      </div>
+      <button class="qed-btn ghost" onclick="_qedPDF()"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</button>
+      <button class="qed-btn dark" onclick="_qedSave()">저장</button>
+      <button type="button" class="qed-close" data-bs-dismiss="modal">&times;</button>
+    </div>
+  </div>
+  <div class="qed-scroll">
+    <div class="qed-sheet">
+      <input type="hidden" id="qed-id">
+      <div class="qed-head">
+        <div>
+          <svg viewBox="0 0 432 173" width="112" style="height:auto;display:block" xmlns="http://www.w3.org/2000/svg" fill="#ff4d00"><rect x="0" y="0" width="100" height="100" rx="20"/><rect x="166" y="0" width="100" height="100" rx="20"/><rect x="332" y="0" width="100" height="100" rx="20"/><rect x="83" y="73" width="100" height="100" rx="20"/><rect x="249" y="73" width="100" height="100" rx="20"/></svg>
+          <div class="qed-brand-sub">원텍 주식회사 · WONTECH</div>
+        </div>
+        <div class="qed-doctitle"><h1>견 적 서</h1><div class="en">QUOTATION</div></div>
+      </div>
+      <div class="qed-parties">
+        <div>
+          <div class="qed-eyebrow">수신 · TO</div>
+          <div class="qed-toname"><input class="f blank" id="qed-cust" placeholder="병원명을 입력하세요"><span class="hon">귀하</span></div>
+          <div class="qed-kv">
+            <div class="k">문서번호</div><div class="v" id="qed-docno">—</div>
+            <div class="k">견적일자</div><div class="v"><input type="date" class="f" id="qed-date"></div>
+            <div class="k">유효기간</div><div class="v"><input type="date" class="f blank" id="qed-valid"></div>
+            <div class="k">담당영업</div><div class="v"><input class="f blank" id="qed-sales" placeholder="담당자명"></div>
+            <div class="k">상태</div><div class="v"><select class="f" id="qed-status"><option>임시</option><option>발송</option><option>수락</option><option>거절</option></select></div>
+          </div>
+        </div>
+        <div class="qed-from">
+          <div class="qed-eyebrow">공급자 · FROM</div>
+          <div class="qed-supname">원텍 주식회사</div>
+          <div class="qed-supkv">
+            <div class="k">등록번호</div><div class="v">496-88-01552</div>
+            <div class="k">대표이사</div><div class="v">김종원, 김정현</div>
+            <div class="k">주소</div><div class="v" title="대전광역시 유성구 테크노8로 64">대전광역시 유성구 테크노8로 64</div>
+            <div class="k">전화</div><div class="v">042) 934-6800</div>
+            <div class="k">팩스</div><div class="v">070) 7882-8658</div>
+          </div>
+        </div>
+      </div>
+      <div class="qed-total">
+        <div><div class="lbl">견적 합계금액 · VAT 포함</div><div class="kor" id="qed-kor">一金 영원整</div></div>
+        <div class="amt" id="qed-total-band"><span class="won">₩</span> 0</div>
+      </div>
+      <div class="qed-tblwrap">
+        <table class="qed-tbl">
+          <colgroup><col style="width:30px"><col><col style="width:74px"><col style="width:46px"><col style="width:52px"><col style="width:128px"><col style="width:116px"><col style="width:84px"><col style="width:30px"></colgroup>
+          <thead><tr><th class="c">No</th><th>제품명</th><th>규격</th><th class="c">단위</th><th class="r">수량</th><th class="r">단가</th><th class="r">금액</th><th>비고</th><th></th></tr></thead>
+          <tbody id="qed-rows"></tbody>
+        </table>
+      </div>
+      <button type="button" class="qed-addrow" onclick="_qedAddRow()">＋ 항목 추가</button>
+      <div class="qed-sum"><table>
+        <tr><td class="k">소계</td><td class="v" id="qed-sub">0 원</td></tr>
+        <tr><td class="k">부가세 (10%)</td><td class="v" id="qed-vat">0 원</td></tr>
+        <tr class="g"><td class="k">합계</td><td class="v" id="qed-total-sum"><span class="won">₩</span> 0</td></tr>
+      </table></div>
+      <div class="qed-foot">
+        <div class="qed-terms"><span><b>유효기간</b> 견적 후 30일</span><span><b>납품기일</b> 계약 후 3일 이내</span><span><b>결제조건</b> 선입금</span><span><b>납품처</b> 지정장소</span></div>
+        <div class="qed-memo"><textarea id="qed-note" placeholder="특이사항·협의 내용을 입력하세요 (설치·교육·소모품 조건 등)"></textarea></div>
+        <div class="qed-tagline">원텍 주식회사 · www.wtlaser.com · 본 견적서는 발행일로부터 30일간 유효합니다.</div>
+      </div>
+    </div>
+  </div>
+</div></div></div>
+
 <!-- 견적서 미리보기 -->
 <div class="modal fade" id="quotePrintModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content">
   <div class="modal-header">
@@ -5022,8 +5177,7 @@ function openModal(type,data={}) {
     document.getElementById('p-del-btn').style.display='none';
     new bootstrap.Modal(document.getElementById('pipelineModal')).show();
   } else if(type==='quote'){
-    clearQuoteForm();
-    new bootstrap.Modal(document.getElementById('quoteModal')).show();
+    openQuoteEditor();
   } else if(type==='target'){
     ['t-ym','t-sales','t-target','t-cust'].forEach(id=>setV(id,''));
     new bootstrap.Modal(document.getElementById('targetModal')).show();
@@ -5117,6 +5271,7 @@ function renderQuotes() {
     <td style="font-weight:700">${fmtAmt(Number(q.total||0))}</td>
     <td><span class="badge quote-status-${q.status||'임시'}">${q.status||'임시'}</span></td>
     <td style="white-space:nowrap">
+      <button class="btn btn-outline-dark btn-sm me-1" style="font-size:11px;padding:1px 6px" onclick="openQuoteEditor('${q.id}')"><i class="bi bi-pencil"></i>편집</button>
       <button class="btn btn-outline-primary btn-sm me-1" style="font-size:11px;padding:1px 6px" onclick="viewQuote('${q.id}')">보기</button>
       <button class="btn btn-outline-secondary btn-sm me-1" style="font-size:11px;padding:1px 6px" onclick="copyQuoteLink('${q.id}')"><i class="bi bi-link-45deg"></i>링크</button>
       <button class="btn btn-outline-danger btn-sm" style="font-size:11px;padding:1px 6px" onclick="delQuote('${q.id}')">삭제</button>
@@ -5176,9 +5331,91 @@ function saveQuote(){
   DB.save('quotes').then(()=>{bootstrap.Modal.getInstance(document.getElementById('quoteModal')).hide();renderQuotes();});
 }
 
+// ══ 견적서 편집기(문서 위에서 직접 입력) ══
+let _qed={tmpl:'classic',editId:null};
+function _qedFmt(v){ return (Number(v)||0).toLocaleString('ko-KR'); }
+function _qedParse(v){ return Number(String(v==null?'':v).replace(/[^0-9.-]/g,''))||0; }
+function _qedA(s){ return String(s==null?'':s).replace(/"/g,'&quot;'); }
+function _qedNextId(){ const t=new Date(); let mx=0; (DB.d.quotes||[]).forEach(x=>{const m=String(x.id||'').match(/-(\d+)$/); if(m)mx=Math.max(mx,+m[1]);}); return 'Q'+t.getFullYear()+String(t.getMonth()+1).padStart(2,'0')+String(t.getDate()).padStart(2,'0')+'-'+String(mx+1).padStart(3,'0'); }
+function openQuoteEditor(id){
+  const q = id ? (DB.d.quotes||[]).find(x=>x.id===id) : null;
+  _qed={tmpl:'classic', editId:q?q.id:null};
+  const today=new Date().toISOString().slice(0,10);
+  const docId = q?q.id:_qedNextId();
+  setV('qed-id',docId); document.getElementById('qed-docno').textContent=docId;
+  setV('qed-cust', q?(q.custName||''):'');
+  setV('qed-date', q?(q.quoteDate||today):today);
+  setV('qed-valid', q?(q.validUntil||''):'');
+  setV('qed-sales', q?(q.sales||''):(typeof currentUserName==='function'?currentUserName():''));
+  document.getElementById('qed-status').value = q?(q.status||'임시'):'임시';
+  setV('qed-note', q?(q.note||''):'');
+  document.getElementById('qed-rows').innerHTML='';
+  const items = (q&&q.items&&q.items.length)?q.items:[{name:'',spec:'',unit:'EA',qty:1,price:'',note:''}];
+  items.forEach(_qedAddRow);
+  _qedTmpl('classic'); _qedCalc();
+  new bootstrap.Modal(document.getElementById('quoteEditModal')).show();
+}
+function _qedAddRow(it){
+  it=(it&&typeof it==='object'&&!it.target)?it:{unit:'EA',qty:1};
+  const tr=document.createElement('tr');
+  tr.innerHTML='<td class="no"></td>'
+    +'<td><input class="f" data-k="name" placeholder="제품명" value="'+_qedA(it.name)+'"></td>'
+    +'<td><input class="f" data-k="spec" placeholder="규격" value="'+_qedA(it.spec)+'"></td>'
+    +'<td><input class="f" data-k="unit" style="text-align:center" value="'+_qedA(it.unit||'EA')+'"></td>'
+    +'<td><input class="f num" data-k="qty" inputmode="numeric" value="'+(it.qty!=null?it.qty:1)+'" oninput="_qedCalc()"></td>'
+    +'<td><input class="f num" data-k="price" inputmode="numeric" placeholder="0" value="'+(it.price!==''&&it.price!=null?_qedFmt(it.price):'')+'" oninput="_qedCalc()" onblur="var n=_qedParse(this.value);this.value=n?_qedFmt(n):\'\'"></td>'
+    +'<td class="amt-cell" data-amt>0</td>'
+    +'<td><input class="f" data-k="note" placeholder="—" value="'+_qedA(it.note)+'"></td>'
+    +'<td><button type="button" class="qed-rowdel" title="삭제" onclick="this.closest(\'tr\').remove();_qedCalc()">×</button></td>';
+  document.getElementById('qed-rows').appendChild(tr);
+  _qedCalc();
+}
+function _qedCalc(){
+  let sub=0,i=1;
+  document.querySelectorAll('#qed-rows tr').forEach(function(tr){
+    tr.querySelector('.no').textContent=i++;
+    const qty=_qedParse(tr.querySelector('[data-k=qty]').value);
+    const price=_qedParse(tr.querySelector('[data-k=price]').value);
+    const amt=Math.round(qty*price);
+    tr.querySelector('[data-amt]').textContent=_qedFmt(amt);
+    sub+=amt;
+  });
+  const vat=Math.round(sub*.1), total=sub+vat;
+  document.getElementById('qed-sub').textContent=_qedFmt(sub)+' 원';
+  document.getElementById('qed-vat').textContent=_qedFmt(vat)+' 원';
+  document.getElementById('qed-total-sum').innerHTML='<span class="won">₩</span> '+_qedFmt(total);
+  document.getElementById('qed-total-band').innerHTML='<span class="won">₩</span> '+_qedFmt(total);
+  document.getElementById('qed-kor').textContent='一金 '+numKor(total)+'원整';
+}
+function _qedTmpl(t){ _qed.tmpl=t; const s=document.getElementById('qedtpl-std'),p=document.getElementById('qedtpl-simple'); if(s)s.classList.toggle('on',t==='classic'); if(p)p.classList.toggle('on',t!=='classic'); }
+function _qedCollect(){
+  const items=[];
+  document.querySelectorAll('#qed-rows tr').forEach(function(tr){
+    const g=k=>tr.querySelector('[data-k='+k+']');
+    const name=(g('name').value||'').trim(); if(!name) return;
+    const qty=_qedParse(g('qty').value)||1, price=_qedParse(g('price').value);
+    items.push({name, spec:(g('spec').value||'').trim(), unit:(g('unit').value||'EA').trim(), qty, price, amount:Math.round(qty*price), note:(g('note').value||'').trim()});
+  });
+  const sub=items.reduce((s,it)=>s+it.amount,0), vat=Math.round(sub*.1);
+  return {id:document.getElementById('qed-id').value, custName:document.getElementById('qed-cust').value.trim(), quoteDate:document.getElementById('qed-date').value, validUntil:document.getElementById('qed-valid').value, sales:document.getElementById('qed-sales').value.trim(), status:document.getElementById('qed-status').value, note:document.getElementById('qed-note').value.trim(), items, subtotal:sub, vat, total:sub+vat};
+}
+function _qedSave(){
+  const q=_qedCollect();
+  if(!q.custName){ alert('병원명을 입력하세요.'); return; }
+  if(!q.items.length){ alert('제품을 1개 이상 입력하세요.'); return; }
+  const idx=(DB.d.quotes||[]).findIndex(x=>x.id===q.id);
+  if(idx>=0) DB.d.quotes[idx]=q; else DB.d.quotes.push(q);
+  DB.save('quotes').then(()=>{ try{bootstrap.Modal.getInstance(document.getElementById('quoteEditModal')).hide();}catch(e){} renderQuotes(); showToast('견적서 저장 완료', true); });
+}
+function _qedPDF(){
+  const q=_qedCollect();
+  if(!q.custName){ alert('병원명을 먼저 입력하세요.'); return; }
+  _qCur=q; _qTmpl=_qed.tmpl; quotePDF();
+}
+
 // ── 견적서 출력(2종 템플릿 + 올바른 CI + 한글금액 + PDF) ──
 const WT_SUP={name:'원텍 주식회사',reg:'496-88-01552',ceo:'김종원, 김정현',addr:'대전광역시 유성구 테크노8로 64',tel:'042) 934-6800',fax:'070) 7882-8658',web:'www.wtlaser.com'};
-function _wtLogo(c,w){ return '<svg viewBox="0 0 518 207" width="'+w+'" style="height:auto;display:inline-block;vertical-align:middle" xmlns="http://www.w3.org/2000/svg" fill="'+c+'"><rect x="0" y="0" width="110" height="110" rx="28"/><rect x="204" y="0" width="110" height="110" rx="28"/><rect x="408" y="0" width="110" height="110" rx="28"/><rect x="102" y="97" width="110" height="110" rx="28"/><rect x="306" y="97" width="110" height="110" rx="28"/></svg>'; }
+function _wtLogo(c,w){ c=c||'#ff4d00'; return '<svg viewBox="0 0 432 173" width="'+w+'" style="height:auto;display:inline-block;vertical-align:middle" xmlns="http://www.w3.org/2000/svg" fill="'+c+'"><rect x="0" y="0" width="100" height="100" rx="20"/><rect x="166" y="0" width="100" height="100" rx="20"/><rect x="332" y="0" width="100" height="100" rx="20"/><rect x="83" y="73" width="100" height="100" rx="20"/><rect x="249" y="73" width="100" height="100" rx="20"/></svg>'; }
 function numKor(n){ n=Math.round(Math.abs(n||0)); if(n===0)return '영'; const D=['','일','이','삼','사','오','육','칠','팔','구'],U=['','십','백','천'],P=['','만','억','조','경']; let res='',g=0; while(n>0){ let part=n%10000,s=''; for(let i=0;i<4;i++){ const d=Math.floor(part/Math.pow(10,i))%10; if(d)s=D[d]+U[i]+s; } if(s)res=s+P[g]+res; n=Math.floor(n/10000); g++; } return res; }
 function _qEscH(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 let _qCur=null, _qTmpl='classic';
@@ -5194,8 +5431,8 @@ function quotePDF(){ if(!_qCur)return; const w=window.open('','_blank'); if(!w){
 function QDOC(q,tmpl){
   const items=q.items||[]; const won=v=>Number(v||0).toLocaleString('ko-KR');
   const total=Number(q.total||0);
-  const INK='#221f1c',MUT='#8c837a',CLAY='#bf6a45',LINE='#ece7e1',CREAM='#faf8f5';
-  const logo = _qLogoSrc()?('<img src="'+_qLogoSrc()+'" style="height:32px;width:auto;display:block">'):_wtLogo(CLAY,'112');
+  const INK='#1a1714',MUT='#8f8a82',CLAY='#ff4d00',LINE='#ece9e4',CREAM='#faf9f7';
+  const logo = _wtLogo('#ff4d00','116');   // 정확한 CI(SVG) 고정 사용
   const termsList=['유효기간 : 견적 후 30일','납품기일 : 계약 후 3일 이내','결제조건 : 선입금','납품처 : 지정장소'];
 
   if(tmpl==='classic'){
