@@ -1281,9 +1281,10 @@ function _pendForReport(){   // 국내(제품/소모품) + 해외(지역별) 미
   return {kr,intl};
 }
 function _rptPeriods(){
-  // 시간 흐름에 따라 분기·반기·월 자동 변경 — 기준월은 성숙월(_matureMonth): 월초 소량 데이터로 새 분기/반기 전환 방지
-  const mo=_matureMonth(), Q=Math.ceil(mo/3), fh=mo<=6;
-  return {mo,Q,qf:(Q-1)*3+1,qt:Q*3,hf:fh?1:7,ht:fh?6:12,qLbl:Q+'분기',hLbl:fh?'상반기':'하반기',mLbl:'2026년 '+mo+'월'};
+  // 분기·반기는 성숙월(_matureMonth) 기준(월초 소량데이터로 상반기/분기가 사라지는 것 방지).
+  // 단, 맨 오른쪽 '월' 컬럼은 실제 현재월(_curMonth)로 → 전사 종합과 동일하게 당월(7월) 진행상황 반영.
+  const mo=_matureMonth(), Q=Math.ceil(mo/3), fh=mo<=6, cm=_curMonth();
+  return {mo,cm,Q,qf:(Q-1)*3+1,qt:Q*3,hf:fh?1:7,ht:fh?6:12,qLbl:Q+'분기',hLbl:fh?'상반기':'하반기',mLbl:'2026년 '+cm+'월'};
 }
 function _rowVals(act,pend,prev,dept,item){
   const sm=(o,f,t)=>{let s=0;for(let m=f;m<=t;m++)s+=Number((o&&o[m])||0);return s;};
@@ -1292,7 +1293,7 @@ function _rowVals(act,pend,prev,dept,item){
     return {tgt:tg, act:ac, prev:pv, ach:tg>0?ac/tg*100:null, grw:pv>0?(ac/pv-1)*100:null};
   };
   const _P=_rptPeriods();
-  return {q2:per(_P.qf,_P.qt), h1:per(_P.hf,_P.ht), m6:per(_P.mo,_P.mo)};
+  return {q2:per(_P.qf,_P.qt), h1:per(_P.hf,_P.ht), m6:per(_P.cm,_P.cm)};
 }
 function _sumV(list){
   const z=()=>({tgt:0,act:0,prev:0}), o={q2:z(),h1:z(),m6:z()};
@@ -1344,7 +1345,7 @@ function renderReport(){
   // Wontech Total = 글로벌영업실 + 서지컬(국내) + 기타(의료기기·B2C·고객만족) → 회계 전체 정합. 목표=전체 sales_targets.
   const _smE=(o,ff,tt)=>{let s=0;for(let m=ff;m<=tt;m++)s+=Number((o||{})[m]||0);return s;};
   const _allT=(ff,tt)=>{let s=0;(SALEST||[]).forEach(r=>{if(+r.year===2026&&+r.month>=ff&&+r.month<=tt)s+=Number(r.amount||0);});return s;};
-  const _perOf={q2:[P.qf,P.qt],h1:[P.hf,P.ht],m6:[P.mo,P.mo]};
+  const _perOf={q2:[P.qf,P.qt],h1:[P.hf,P.ht],m6:[P.cm,P.cm]};
   const etcRow={}, sgRow={}, totalSum={};
   // 서지컬(국내)은 etcDept에서 분리 표시, 기타 행 = etc 전체 − 서지컬. 총합엔 etc 전체가 그대로 들어가 정합 유지.
   const _sg26=(CONS.etcDept2026||{})['서지컬']||{}, _sg25=(CONS.etcDept2025||{})['서지컬']||{};
