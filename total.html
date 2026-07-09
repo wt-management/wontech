@@ -2593,12 +2593,16 @@ function exPrevYearKey(key){ const p=key.split('-'); return (Number(p[0])-1)+'-'
 function exCurKey(){ const n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0'); }
 function exElapsed(cyc){ const keys=exCycleMonths(cyc.start),sd=new Date(keys[0]+'-01'),n=new Date(); let e=(n.getFullYear()-sd.getFullYear())*12+(n.getMonth()-sd.getMonth())+1; return Math.max(0,Math.min(e,12)); }
 function exAccUSD(key){ const p=key.split('-').map(Number); let src=null; if(p[0]===2026) src=INTL.monthly_usd; else if(p[0]===2025) src=INTL.data2025&&INTL.data2025.monthly_usd; if(!src) return null; const v=src[p[1]]; return (v!=null&&v!=='')?Number(v):null; }
-// 미반영 잠정: 예정월이 당월이거나 이미 지난(연체) 해외 대기 건 — 지난달 예정이라도 회계 미반영이면 누계에서 빠지므로 당월 잠정에 포함
-function exPendUSD(){ const cur=exCurKey(); let krw=0;
+// 미반영 잠정: 예정월이 당월이거나 이미 지난(연체) 해외 대기 건.
+// 수출의 탑은 통관(수출실적) 성격 → 실적 가산은 '완료'(선적됐지만 회계 미반영)만. 미선적 '예정'분은 exPendPlanUSD로 분리해 캡션 참고 표기만(월초 과대표시 방지).
+function _exPendKRW(){ const cur=exCurKey(); let done=0,plan=0;
   const due=d=>{ const ym=String(d||'').slice(0,7); return /^\d{4}-\d{2}$/.test(ym)&&ym<=cur; };
-  (PENDING||[]).forEach(p=>{ if((p.channel||'korea')!=='intl') return; if(p.status==='취소'||p.status==='반영됨') return; if(due(p.expected_date)) krw+=Number(p.amount||0); });
-  (ILBO_PEND||[]).forEach(p=>{ if(p.region!=='해외') return; if(p.status==='취소'||p.status==='반영됨') return; if(due(p.expectedDate||p.expected_date)) krw+=Number(p.amount||0); });
-  const r=Number(EXPORT.rate)||0; return r>0?krw/r:0; }
+  (PENDING||[]).forEach(p=>{ if((p.channel||'korea')!=='intl') return; if(p.status==='취소'||p.status==='반영됨') return; if(due(p.expected_date)) plan+=Number(p.amount||0); });
+  (ILBO_PEND||[]).forEach(p=>{ if(p.region!=='해외') return; if(p.status==='취소'||p.status==='반영됨') return; if(!due(p.expectedDate||p.expected_date)) return;
+    if(p.type==='완료') done+=Number(p.amount||0); else plan+=Number(p.amount||0); });
+  return {done:done,plan:plan}; }
+function exPendUSD(){ const r=Number(EXPORT.rate)||0; return r>0?_exPendKRW().done/r:0; }
+function exPendPlanUSD(){ const r=Number(EXPORT.rate)||0; return r>0?_exPendKRW().plan/r:0; }
 function exMonVal(cyc,key){ const ov=cyc.months[key]; if(ov!=null&&ov!=='') return Number(ov); const acc=exAccUSD(key); let v=acc!=null?acc:0; if(key===exCurKey()) v+=exPendUSD(); return v; }
 function exIsProv(cyc,key){ const ov=cyc.months[key]; return (ov==null||ov==='')&&key===exCurKey()&&exMonVal(cyc,key)>0; }
 function exCycleOwn(cyc){ return exCycleMonths(cyc.start).reduce((s,k)=>s+exMonVal(cyc,k),0); }
@@ -2628,8 +2632,9 @@ function exUpdProv(){
   const c=EXPORT.cycles.find(x=>x.id===exCurCycleId());
   const ovv=c&&c.months[exCurKey()], ov=(ovv!=null&&ovv!=='');
   const lbl=document.getElementById('ex-prov-lbl'); if(lbl) lbl.textContent=ov?'확정':'잠정';
-  const acc=exAccUSD(exCurKey())||0, pend=exPendUSD();
-  document.getElementById('ex-prov-calc').textContent=ov?'(수기 확정값)':'(회계 '+exUsd(acc)+' + 미반영 '+exUsd(pend)+')';
+  const acc=exAccUSD(exCurKey())||0, pend=exPendUSD(), plan=exPendPlanUSD();
+  document.getElementById('ex-prov-calc').textContent=ov?'(수기 확정값)'
+    :'(회계 '+exUsd(acc)+' + 선적완료 미반영 '+exUsd(pend)+(plan>0?' · 월내 출고예정 '+exUsd(plan)+' 별도':'')+')';
 }
 let _exRateTimer=null;
 function exOnRate(){ const v=Number(document.getElementById('ex-rate').value);
