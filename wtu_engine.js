@@ -152,13 +152,15 @@ function aggDevice2026(rows26){
 // ───────── INTL (해외) 2026 ─────────
 function aggIntl2026(rows26){
   var mo={},mu={},mq={},pr={},pc={},pd={},pm={},pmq={},pq={},ct={},rp={};
+  var _muK={},_muU={},_muMiss={};   // USD 미기재 거래 보정용(월별 내재환율)
   rows26.forEach(function(r){
     var amt=num(r['금액']); if(amt===0) return;
     var usd=num(r['USD']); var qty=pint(r['수량']); qty=qty>0?qty:1;
     var m=moN(r['월']); var p=(r['구분#4']||'').trim(); var cat=(r['구분#2']||'').trim();
     var nm=(r['거래처명']||'').trim(); var sl=(r['담당자']||'').trim();
     var co=(!nm)?'기타':(FOR.test(nm)?(nm.match(/^([가-힣a-zA-Z]+)\s*\//)[1]):'국내법인');
-    if(m){ mo[m]=(mo[m]||0)+amt; mu[m]=(mu[m]||0)+usd; mq[m]=(mq[m]||0)+qty; }
+    if(m){ mo[m]=(mo[m]||0)+amt; mu[m]=(mu[m]||0)+usd; mq[m]=(mq[m]||0)+qty;
+      if(usd){ _muK[m]=(_muK[m]||0)+amt; _muU[m]=(_muU[m]||0)+usd; } else { _muMiss[m]=(_muMiss[m]||0)+amt; } }
     if(p){ pr[p]=(pr[p]||0)+amt; pq[p]=(pq[p]||0)+qty;
       if(cat==='소모품') pc[p]=(pc[p]||0)+amt; else if(cat==='제품군') pd[p]=(pd[p]||0)+amt; }
     if(m&&p){ pm[p]=pm[p]||{}; pm[p][m]=(pm[p][m]||0)+amt; pmq[p]=pmq[p]||{}; pmq[p][m]=(pmq[p][m]||0)+qty; }
@@ -181,6 +183,14 @@ function aggIntl2026(rows26){
   function frp(rpm){ var out={}; Object.keys(rpm).map(function(k){return [k,rpm[k]];}).sort(function(a,b){return b[1].total-a[1].total;}).forEach(function(p){
     var v=p[1]; out[p[0]]={total:Math.round(v.total),usd:Math.round(v.usd),orders:v.orders,countries:Object.keys(v.cset).length,clients:Object.keys(v.clients).length,prods:topN(v.prods,4),m:v.m};
   }); return out; }
+  // USD 미기재 거래(적요에 $ 없음 — 반품 미차감·신규출하 등) 보정: 해당월 USD 병기 거래의 내재환율로 환산해 monthly_usd에 합산.
+  // 내재환율이 비정상(800~2500 밖)이거나 표본이 없으면 1450 고정. 부호 보존(반품 음수는 차감).
+  Object.keys(_muMiss).forEach(function(m){
+    var rt=(_muU[m]>0&&_muK[m]>0)?(_muK[m]/_muU[m]):0;
+    if(!(rt>=800&&rt<=2500)) rt=1450;
+    mu[m]=(mu[m]||0)+_muMiss[m]/rt;
+  });
+  Object.keys(mu).forEach(function(m){ mu[m]=Math.round(mu[m]); });
   function sum(o){ var s=0; for(var k in o) s+=o[k]; return s; }
   return {monthly:mo,monthly_usd:mu,monthly_qty:mq,total:sum(mo),total_usd:sum(mu),
     products:topN(pr,12),prods_cons:topN(pc,10),prods_dev:topN(pd,10),prodQty:topN(pq,12),
