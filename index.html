@@ -247,6 +247,11 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <button onclick="openAddUserModal()" style="background:#ff4500;border:none;color:#fff;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><i class="bi bi-person-plus me-1"></i>ÏÇ¨Ïö©Ïûê Ï∂îÍ∞Ä</button>
     </div>
     <div style="max-width:1640px;margin:0 auto;padding:24px 28px 40px">
+    <div style="display:flex;gap:4px;margin-bottom:18px;border-bottom:1px solid rgba(255,255,255,.1)">
+      <button id="admtab-users" onclick="adminTab('users')" style="background:none;border:none;border-bottom:2px solid #ff4500;color:#fff;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer">¨©ê  ¨</button>
+      <button id="admtab-fb" onclick="adminTab('fb')" style="background:none;border:none;border-bottom:2px solid transparent;color:#94a3b8;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer">î≠∑‡‡h <span id="admtab-fb-badge" style="display:none;background:#ef4444;color:#fff;font-size:10px;padding:1px 6px;border-radius:9px;margin-left:2px;font-weight:700"></span></button>
+    </div>
+    <div id="admin-tab-users">
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
       <input id="user-search" oninput="_paintUsers()" placeholder="üîç Ïù¥Î¶Ñ¬∑Ïù¥Î©îÏùº¬∑Î∂ÄÏÑú¬∑ÏßÅÍ∏â Í≤ÄÏÉâ" style="flex:1;min-width:220px;max-width:360px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 12px;font-size:13px;color:#fff">
       <select id="user-role-filter" onchange="_paintUsers()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 10px;font-size:13px;color:#fff">
@@ -271,6 +276,16 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         </tr></thead>
         <tbody id="admin-user-list"></tbody>
       </table>
+    </div>
+    </div><!-- /admin-tab-users -->
+    <div id="admin-tab-fb" style="display:none">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+        <button id="fbsub-fb" onclick="fbSub('feedback')" style="background:#334155;border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer">î≠∑‡‡ <span id="fbsub-fb-n" style="color:#94a3b8"></span></button>
+        <button id="fbsub-err" onclick="fbSub('errors')" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#94a3b8;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer">–Ï\¯ <span id="fbsub-err-n" style="color:#64748b"></span></button>
+        <select id="fb-site-filter" onchange="renderAdminFeedback()" style="margin-left:auto;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 10px;font-size:12.5px;color:#fff"><option value="" style="background:#1e293b">¥ ¨t∏</option></select>
+        <button onclick="renderAdminFeedback()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 12px;font-size:12.5px;color:#cbd5e1;cursor:pointer">ª »\‡h</button>
+      </div>
+      <div id="admin-fb-list" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:auto;min-height:120px"></div>
     </div>
   </div>
   </div>
@@ -6883,7 +6898,7 @@ function showAdminPanel() {
   // Ìå®ÎÑêÏù¥ ÌôîÎ©¥Î≥¥Îã§ Í∏∏Ïñ¥ÎèÑ ÏúÑÏ™ΩÏù¥ ÏûòÎ¶¨ÏßÄ ÏïäÎèÑÎ°ù ÏÉÅÎã® Ï†ïÎ†¨ + Îß® ÏúÑÎ°ú Ïä§ÌÅ¨Î°§
   const ls = document.getElementById('launcher-screen');
   if(ls){ ls.style.justifyContent = 'flex-start'; ls.scrollTop = 0; }
-  renderAdminUsers();
+  renderAdminUsers(); _fbLoadBadge();
 }
 
 function hideAdminPanel() {
@@ -7098,6 +7113,56 @@ async function setUserPassword(id, email){
 }
 
 async function renderUsers() { renderAdminUsers(); }
+
+//    î≠∑‡‡h (site_feedback / site_errors på,  ¨ê ©)   
+let _fbSub='feedback';
+function adminTab(t){
+  var u=document.getElementById('admin-tab-users'), f=document.getElementById('admin-tab-fb');
+  if(u) u.style.display=(t==='fb')?'none':''; if(f) f.style.display=(t==='fb')?'':'none';
+  var bu=document.getElementById('admtab-users'), bf=document.getElementById('admtab-fb');
+  if(bu){ bu.style.color=(t==='fb')?'#94a3b8':'#fff'; bu.style.borderBottomColor=(t==='fb')?'transparent':'#ff4500'; }
+  if(bf){ bf.style.color=(t==='fb')?'#fff':'#94a3b8'; bf.style.borderBottomColor=(t==='fb')?'#ff4500':'transparent'; }
+  if(t==='fb') renderAdminFeedback();
+}
+function fbSub(x){ _fbSub=x; renderAdminFeedback(); }
+async function _fbLoadBadge(){ try{ var c=await _sb.from('site_feedback').select('id',{count:'exact',head:true}); var bd=document.getElementById('admtab-fb-badge'); if(bd){ if(c && c.count){ bd.style.display=''; bd.textContent=c.count; } else bd.style.display='none'; } }catch(e){} }
+async function renderAdminFeedback(){
+  var box=document.getElementById('admin-fb-list'); if(!box) return;
+  var esc=function(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+  box.innerHTML='<div style="padding:28px;text-align:center;color:#64748b;font-size:13px">\uBD88\uB7EC\uC624\uB294 \uC911...</div>';
+  var table=(_fbSub==='errors')?'site_errors':'site_feedback';
+  var rows=[], rlsErr=null, fbCnt=null, errCnt=null;
+  try{
+    var res=await _sb.from(table).select('*').order('created_at',{ascending:false}).limit(300);
+    if(res.error) rlsErr=res.error; else rows=res.data||[];
+    var c1=await _sb.from('site_feedback').select('id',{count:'exact',head:true}); fbCnt=(c1&&c1.error)?null:c1.count;
+    var c2=await _sb.from('site_errors').select('id',{count:'exact',head:true}); errCnt=(c2&&c2.error)?null:c2.count;
+  }catch(e){ rlsErr=e; }
+  var sf=document.getElementById('fbsub-fb-n'), se=document.getElementById('fbsub-err-n');
+  if(sf) sf.textContent=(fbCnt==null?'':'('+fbCnt+')'); if(se) se.textContent=(errCnt==null?'':'('+errCnt+')');
+  var bfb=document.getElementById('fbsub-fb'), berr=document.getElementById('fbsub-err');
+  if(bfb){ var on=_fbSub==='feedback'; bfb.style.background=on?'#334155':'rgba(255,255,255,.06)'; bfb.style.color=on?'#fff':'#94a3b8'; }
+  if(berr){ var on2=_fbSub==='errors'; berr.style.background=on2?'#334155':'rgba(255,255,255,.06)'; berr.style.color=on2?'#fff':'#94a3b8'; }
+  var bd=document.getElementById('admtab-fb-badge'); if(bd){ if(fbCnt){ bd.style.display=''; bd.textContent=fbCnt; } else bd.style.display='none'; }
+  // ¨t∏ D0 5X 1‡(  ›  ¿)
+  var selEl=document.getElementById('fb-site-filter'); var cur=selEl?selEl.value:'';
+  if(selEl){ var sites=[]; rows.forEach(function(r){ if(r.site && sites.indexOf(r.site)<0) sites.push(r.site); }); sites.sort();
+    selEl.innerHTML='<option value="" style="background:#1e293b">\uC804\uCCB4 \uC0AC\uC774\uD2B8</option>'+sites.map(function(x){return '<option value="'+esc(x)+'"'+(x===cur?' selected':'')+' style="background:#1e293b">'+esc(x)+'</option>';}).join(''); }
+  var siteF=selEl?selEl.value:'';
+  if(rlsErr){ box.innerHTML='<div style="padding:28px;text-align:center;color:#fca5a5;font-size:13px">\uC77D\uAE30 \uAD8C\uD55C\uC774 \uC5C6\uC2B5\uB2C8\uB2E4 (RLS \uC815\uCC45 \uD544\uC694).<br><span style="color:#94a3b8;font-size:12px">'+esc(rlsErr.message||rlsErr)+'</span></div>'; return; }
+  var shown=rows.filter(function(r){ return !siteF || r.site===siteF; });
+  if(!shown.length){ box.innerHTML='<div style="padding:32px;text-align:center;color:#64748b;font-size:13px">\uD45C\uC2DC\uD560 \uD56D\uBAA9\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.</div>'; return; }
+  var fmt=function(d){ return d?String(d).replace('T',' ').slice(0,16):''; };
+  var h='<table style="width:100%;border-collapse:collapse;min-width:720px;font-size:12.5px">';
+  if(_fbSub==='feedback'){
+    h+='<thead><tr style="border-bottom:1px solid rgba(255,255,255,.08);color:#64748b;font-size:11px;text-align:left"><th style="padding:11px 14px">\uC77C\uC2DC</th><th>\uC791\uC131\uC790</th><th>\uC704\uCE58</th><th style="padding-left:14px">\uB0B4\uC6A9</th></tr></thead><tbody>';
+    shown.forEach(function(r){ h+='<tr style="border-bottom:1px solid rgba(255,255,255,.05);color:#e2e8f0"><td style="padding:10px 14px;white-space:nowrap;color:#94a3b8">'+fmt(r.created_at)+'</td><td style="white-space:nowrap">'+esc(r.reporter||'\uC775\uBA85')+'</td><td style="white-space:nowrap;color:#94a3b8">'+esc(r.site||'')+(r.page?'/'+esc(r.page):'')+'</td><td style="white-space:pre-wrap;padding:10px 14px 10px 14px">'+esc(r.message)+'</td></tr>'; });
+  } else {
+    h+='<thead><tr style="border-bottom:1px solid rgba(255,255,255,.08);color:#64748b;font-size:11px;text-align:left"><th style="padding:11px 14px">\uC77C\uC2DC</th><th>\uC704\uCE58</th><th style="padding-left:14px">\uC5D0\uB7EC</th><th>\uC0AC\uC6A9\uC790</th></tr></thead><tbody>';
+    shown.forEach(function(r){ h+='<tr style="border-bottom:1px solid rgba(255,255,255,.05);color:#e2e8f0"><td style="padding:10px 14px;white-space:nowrap;color:#94a3b8">'+fmt(r.created_at)+'</td><td style="white-space:nowrap;color:#94a3b8">'+esc(r.site||'')+(r.page?'/'+esc(r.page):'')+'</td><td style="padding:10px 14px 10px 14px"><span style="color:#fca5a5">'+esc(r.message)+'</span>'+(r.line?'<span style="color:#64748b"> :'+esc(r.line)+'</span>':'')+'</td><td style="white-space:nowrap;color:#94a3b8">'+esc(r.user_email||'')+'</td></tr>'; });
+  }
+  h+='</tbody></table>'; box.innerHTML=h;
+}
 
 async function updateUserField(id, field, value) {
   await _sb.from('crm_profiles').update({[field]: value}).eq('id', id);
