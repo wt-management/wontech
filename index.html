@@ -248,8 +248,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     </div>
     <div style="max-width:1640px;margin:0 auto;padding:24px 28px 40px">
     <div style="display:flex;gap:4px;margin-bottom:18px;border-bottom:1px solid rgba(255,255,255,.1)">
-      <button id="admtab-users" onclick="adminTab('users')" style="background:none;border:none;border-bottom:2px solid #ff4500;color:#fff;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer">¬©  ¬</button>
-      <button id="admtab-fb" onclick="adminTab('fb')" style="background:none;border:none;border-bottom:2px solid transparent;color:#94a3b8;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer">”­·ààh <span id="admtab-fb-badge" style="display:none;background:#ef4444;color:#fff;font-size:10px;padding:1px 6px;border-radius:9px;margin-left:2px;font-weight:700"></span></button>
+      <button id="admtab-users" onclick="adminTab('users')" style="background:none;border:none;border-bottom:2px solid #ff4500;color:#fff;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer">ì‚¬ìš©ì ê´€ë¦¬</button>
+      <button id="admtab-fb" onclick="adminTab('fb')" style="background:none;border:none;border-bottom:2px solid transparent;color:#94a3b8;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer">ìš”ì²­Â·ì‹ ê³ í•¨ <span id="admtab-fb-badge" style="display:none;background:#ef4444;color:#fff;font-size:10px;padding:1px 6px;border-radius:9px;margin-left:2px;font-weight:700"></span></button>
     </div>
     <div id="admin-tab-users">
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
@@ -280,10 +280,10 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     </div><!-- /admin-tab-users -->
     <div id="admin-tab-fb" style="display:none">
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
-        <button id="fbsub-fb" onclick="fbSub('feedback')" style="background:#334155;border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer">”­·àà <span id="fbsub-fb-n" style="color:#94a3b8"></span></button>
-        <button id="fbsub-err" onclick="fbSub('errors')" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#94a3b8;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer">Ğì\ø <span id="fbsub-err-n" style="color:#64748b"></span></button>
-        <select id="fb-site-filter" onchange="renderAdminFeedback()" style="margin-left:auto;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 10px;font-size:12.5px;color:#fff"><option value="" style="background:#1e293b">´ ¬t¸</option></select>
-        <button onclick="renderAdminFeedback()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 12px;font-size:12.5px;color:#cbd5e1;cursor:pointer">» È\àh</button>
+        <button id="fbsub-fb" onclick="fbSub('feedback')" style="background:#334155;border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer">ìš”ì²­Â·ì‹ ê³  <span id="fbsub-fb-n" style="color:#94a3b8"></span></button>
+        <button id="fbsub-err" onclick="fbSub('errors')" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#94a3b8;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer">ì˜¤ë¥˜ ë¡œê·¸ <span id="fbsub-err-n" style="color:#64748b"></span></button>
+        <select id="fb-site-filter" onchange="renderAdminFeedback()" style="margin-left:auto;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 10px;font-size:12.5px;color:#fff"><option value="" style="background:#1e293b">ì „ì²´ ì‚¬ì´íŠ¸</option></select>
+        <button onclick="renderAdminFeedback()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 12px;font-size:12.5px;color:#cbd5e1;cursor:pointer">ìƒˆë¡œê³ ì¹¨</button>
       </div>
       <div id="admin-fb-list" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:auto;min-height:120px"></div>
     </div>
@@ -7114,7 +7114,7 @@ async function setUserPassword(id, email){
 
 async function renderUsers() { renderAdminUsers(); }
 
-//    ”­·ààh (site_feedback / site_errors pŒ,  ¬ ©)   
+// â”€â”€ ìš”ì²­Â·ì‹ ê³ í•¨ (site_feedback / site_errors ì¡°íšŒ, ê´€ë¦¬ì ì „ìš©) â”€â”€
 let _fbSub='feedback';
 function adminTab(t){
   var u=document.getElementById('admin-tab-users'), f=document.getElementById('admin-tab-fb');
@@ -7144,7 +7144,7 @@ async function renderAdminFeedback(){
   if(bfb){ var on=_fbSub==='feedback'; bfb.style.background=on?'#334155':'rgba(255,255,255,.06)'; bfb.style.color=on?'#fff':'#94a3b8'; }
   if(berr){ var on2=_fbSub==='errors'; berr.style.background=on2?'#334155':'rgba(255,255,255,.06)'; berr.style.color=on2?'#fff':'#94a3b8'; }
   var bd=document.getElementById('admtab-fb-badge'); if(bd){ if(fbCnt){ bd.style.display=''; bd.textContent=fbCnt; } else bd.style.display='none'; }
-  // ¬t¸ D0 5X 1à(  İ  À)
+  // ì‚¬ì´íŠ¸ í•„í„° ì˜µì…˜ ìƒì„±(ì „ì²´ + ë°œê²¬ëœ ì‚¬ì´íŠ¸)
   var selEl=document.getElementById('fb-site-filter'); var cur=selEl?selEl.value:'';
   if(selEl){ var sites=[]; rows.forEach(function(r){ if(r.site && sites.indexOf(r.site)<0) sites.push(r.site); }); sites.sort();
     selEl.innerHTML='<option value="" style="background:#1e293b">\uC804\uCCB4 \uC0AC\uC774\uD2B8</option>'+sites.map(function(x){return '<option value="'+esc(x)+'"'+(x===cur?' selected':'')+' style="background:#1e293b">'+esc(x)+'</option>';}).join(''); }
