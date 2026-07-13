@@ -5532,7 +5532,10 @@ function _cduDrillBand(i){ var b=_CDU_BANDS[i]; if(!b)return; _cduDrill('시술 
 function _cduDrillEvent(){ _cduDrill('이벤트 진행 병원', _cduRepVs.filter(v=>String(v.event||'').toUpperCase()==='O')); }
 function _cduDrillReels(){ _cduDrill('릴스 촬영 병원', _cduRepVs.filter(v=>String(v.reels||'').toUpperCase()==='O')); }
 function _cduDrillAll(){ _cduDrill('전체 방문 병원', _cduRepVs.slice()); }
-function _cduDrillChurn(){ _cduDrill('이탈 위험 병원', _cduRepVs.filter(v=>(v.churnRisk||'').trim())); }
+function _cduDrillChurn(){ _cduDrill('선제 감지 · 집중 대응 병원', _cduRepVs.filter(v=>(v.churnRisk||'').trim())); }
+var _cduNewSet={};
+function _cduDrillNew(){ _cduDrill('신규 개척 방문 (기간 내 첫 방문)', _cduRepVs.filter(v=>_cduNewSet[(v.custName||'').trim()])); }
+function _cduDrillPrice(){ _cduDrill('시술 수가 파악 병원', _cduRepVs.filter(v=>(Number(v.price)||0)>0)); }
 function _cduDrillVip(){ var m={}; _cduRepVs.forEach(v=>{var n=(v.custName||'').trim(); if(n)m[n]=1;}); var arr=Object.keys(m).map(n=>({n:n,r:_cduRev(n).y2026||0})).sort((a,b)=>b.r-a.r); _cduDrill('매출 상위 방문 병원', _cduRepVs.filter(v=>{ var top=arr.slice(0,15).map(x=>x.n); return top.indexOf((v.custName||'').trim())>=0; })); }
 function _cduDrill(title, arr){
   var t=document.getElementById('cduDrillTitle'); if(t) t.innerHTML=_cduEsc(title)+' <span style="font-size:12px;font-weight:400;color:#94a3b8">· '+arr.length+'건</span>';
@@ -5640,25 +5643,19 @@ function renderCDUReport(vs){
   var heroStat=(lab,val,sub,click)=>'<div'+(click?' onclick="'+click+'" style="flex:1;min-width:120px;cursor:pointer"':' style="flex:1;min-width:120px"')+'><div style="font-size:11px;color:rgba(255,255,255,.6);font-weight:600">'+lab+(click?' <i class="bi bi-chevron-right" style="font-size:9px"></i>':'')+'</div><div style="font-size:22px;font-weight:800;line-height:1.15;margin-top:2px">'+val+'</div><div style="font-size:11px;color:rgba(255,255,255,.55)">'+(sub||'')+'</div></div>';
   var barRow=(name,cnt,pct,col,suffix,click)=>'<div'+(click?' onclick="'+click+'" style="display:flex;align-items:center;gap:10px;padding:5px 0;cursor:pointer"':' style="display:flex;align-items:center;gap:10px;padding:5px 0"')+'><span style="font-size:12px;min-width:96px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_cduEsc(name)+'</span>'+_cduBar(pct,col)+'<span style="font-size:12px;font-weight:700;min-width:58px;text-align:right">'+cnt+(suffix||'개')+' <span style="color:#9ca3af;font-weight:400">'+Math.round(pct)+'%</span></span></div>';
   var card=(title,ic,iccol,inner)=>'<div class="card p-3 h-100"><div class="fw-bold mb-2" style="font-size:13px"><i class="bi '+ic+' me-1" style="color:'+iccol+'"></i>'+title+'</div>'+inner+'</div>';
-  // 재방문 관리(장기 미접촉) — 담당·검색 반영(주차 무관), 병원별 최종 방문일 기준
-  var lastByHosp={};
-  base.forEach(function(v){ var h=(v.custName||'').trim(); if(!h)return; var d=String(v.date||'').slice(0,10); if(!d)return; if(!lastByHosp[h]||d>lastByHosp[h].date) lastByHosp[h]={date:d,sales:v.sales||'',churn:v.churnRisk||'',comp:v.competitor||''}; });
-  var _today=new Date(); var todayStr=_today.getFullYear()+'-'+String(_today.getMonth()+1).padStart(2,'0')+'-'+String(_today.getDate()).padStart(2,'0');
-  var daysAgo=d=>{ var a=new Date(d+'T00:00:00'), b=new Date(todayStr+'T00:00:00'); return Math.max(0,Math.round((b-a)/86400000)); };
-  var reArr=Object.entries(lastByHosp).map(([h,o])=>({hosp:h,date:o.date,days:daysAgo(o.date),sales:o.sales,churn:o.churn,comp:o.comp})).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0).slice(0,8);
-  var reHtml = reArr.length? reArr.map(function(r){ var warn=r.days>=14; return '<div onclick="openCDUHosp(\''+_cduEsc(r.hosp).replace(/\x27/g,"\\x27")+'\')" style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f1f5f9;cursor:pointer">'
-      +'<span style="font-size:12px;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#0f172a">'+_cduEsc(r.hosp)+(r.churn?' <i class="bi bi-exclamation-triangle-fill" style="color:#ea580c;font-size:10px"></i>':'')+'</span>'
-      +(r.comp?'<span style="font-size:10px;font-weight:700;color:#dc2626;background:#fef2f2;border-radius:4px;padding:1px 6px;flex-shrink:0">'+_cduEsc(r.comp)+'</span>':'')
-      +(r.sales?'<span style="font-size:10px;color:#94a3b8;flex-shrink:0">'+_cduEsc(r.sales)+'</span>':'')
-      +'<span style="font-size:11.5px;font-weight:700;flex-shrink:0;min-width:64px;text-align:right;color:'+(warn?'#dc2626':'#64748b')+'">'+r.days+'일 전</span></div>'; }).join('')
-    : '<div class="text-muted" style="font-size:12px">방문 데이터 없음</div>';
+  // 활동 하이라이트(성과 프레임): 신규 개척·정보 수집·마케팅 유치 — 현업이 한 일이 드러나게
+  var _rangeHL=_cduPeriodRange();
+  var firstDate={}; _cduVisits().forEach(function(v){ var n=(v.custName||'').trim(); var d=String(v.date||'').slice(0,10); if(n&&d&&(!firstDate[n]||d<firstDate[n])) firstDate[n]=d; });
+  _cduNewSet={}; uniqNames.forEach(function(n){ var f=firstDate[n]; if(f&&(!_rangeHL||f>=_rangeHL.start)) _cduNewSet[n]=1; });
+  var newN=Object.keys(_cduNewSet).length;
+  var kmN=(typeof _cduKeys==='function')?_cduKeys().length:0;
   // 이탈 위험 리스트
   var churnHtml = churn.length? churn.map(function(v){ return '<div onclick="openCDUHosp(\''+_cduEsc(v.custName).replace(/\x27/g,"\\x27")+'\')" style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f1f5f9;cursor:pointer">'
       +'<span style="font-size:12px;font-weight:700;flex-shrink:0;min-width:120px;color:#0f172a">'+_cduEsc(v.custName)+'</span>'
       +(v.competitor?'<span style="font-size:10px;font-weight:700;color:#dc2626;background:#fef2f2;border-radius:4px;padding:1px 6px;flex-shrink:0">'+_cduEsc(v.competitor)+'</span>':'')
       +'<span style="font-size:11.5px;color:#ea580c;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_cduEsc(v.churnRisk)+'</span>'
       +(v.sales?'<span style="font-size:10px;color:#94a3b8;flex-shrink:0">'+_cduEsc(v.sales)+'</span>':'')+'</div>'; }).join('')
-    : '<div class="text-muted" style="font-size:12px">이탈 위험 표시된 병원 없음 👍</div>';
+    : '<div class="text-muted" style="font-size:12px">감지된 이탈 리스크 없음 — 전 담당처 안정 관리 중 👍</div>';
   // 주차별 추이
   var trendHtml = weeks.length? weeks.map(function(w){ var a=wk[w]; var ap=a.pn?Math.round(a.psum/a.pn):0; var isF=(w===focusW);
       return '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;'+(isF?'background:#eff6ff;border-radius:6px;padding-left:6px;padding-right:6px':'')+'">'
@@ -5670,11 +5667,12 @@ function renderCDUReport(vs){
     : '<div class="text-muted" style="font-size:12px">주차 데이터 없음</div>';
 
   // ── 한눈에 보는 통계 스트립(흰 카드) ──
+  var hlTile=(ic,col,num,lab,sub,click)=>'<div class="col-6 col-md-4 col-lg"><div '+(click?'onclick="'+click+'" ':'')+'style="background:#fff;border:1px solid #eef2f7;border-radius:11px;padding:10px 12px;height:100%;box-shadow:0 1px 2px rgba(15,23,42,.03)'+(click?';cursor:pointer':'')+'"><div style="font-size:18px;font-weight:800;color:'+col+';line-height:1.2"><i class="bi '+ic+' me-1" style="font-size:13px"></i>'+num+'</div><div style="font-size:11.5px;font-weight:700;color:#334155;margin-top:1px">'+lab+(click?' <i class="bi bi-chevron-right" style="font-size:8px;color:#cbd5e1"></i>':'')+'</div><div style="font-size:10px;color:#94a3b8">'+sub+'</div></div></div>';
   var stat=(lbl,val,col,sub,click)=>'<div'+(click?' onclick="'+click+'" style="cursor:pointer;':' style="')+'flex:1;min-width:104px;background:#fff;border:1px solid #eef2f7;border-radius:11px;padding:10px 13px;box-shadow:0 1px 2px rgba(15,23,42,.03)"><div style="font-size:11px;color:#64748b">'+lbl+(click?' <i class="bi bi-chevron-right" style="font-size:8px;color:#cbd5e1"></i>':'')+'</div><div style="font-size:20px;font-weight:800;color:'+col+';line-height:1.2">'+val+'</div>'+(sub?'<div style="font-size:10.5px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+sub+'</div>':'')+'</div>';
   var statStrip='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'
     +stat('방문 병원',nHosp+'곳','#2563eb','영업일수 '+days.size+'일','_cduDrillAll()')
     +stat('방문처 매출',_cduWon(visitedRev),'#0d9488','올해 팁매출 규모','_cduDrillVip()')
-    +stat('이탈 위험',churn.length+'곳','#dc2626',(churn.length?'즉시 방어 필요':'없음 👍'),'_cduDrillChurn()')
+    +stat('리스크 감지',churn.length+'곳','#dc2626',(churn.length?'선제 대응 진행 중':'감지 리스크 없음 👍'),'_cduDrillChurn()')
     +stat('평균 시술수가',(avg?avg+'천':'-'),'#0891b2',(prices.length?mn+'~'+mx+' · '+prices.length+'곳 파악':'미파악'),prices.length?'_cduDrillBand(0)':'')
   +'</div>';
   var distRow='<div class="row g-3 mb-3">'
@@ -5706,12 +5704,16 @@ function renderCDUReport(vs){
   el.innerHTML=
     // ① 핵심 숫자 4개
     statStrip
-    // ② 지금 챙겨야 할 것 — 행동이 필요한 것만
-    +'<div style="font-size:13px;font-weight:800;color:#b91c1c;margin:2px 0 8px"><i class="bi bi-flag-fill me-1"></i>지금 챙겨야 할 것</div>'
-    +'<div class="row g-3 mb-3">'
-      +'<div class="col-lg-6">'+card('이탈 위험 병원 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 클릭하면 이력</span>','bi-exclamation-triangle','#dc2626',churnHtml)+'</div>'
-      +'<div class="col-lg-6">'+card('오래 미방문한 병원 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 14일 이상 빨강 · 클릭하면 이력</span>','bi-arrow-repeat','#ea580c',reHtml)+'</div>'
+    // ② 이번 기간 활동 하이라이트 — 현장에서 한 일이 성과로 보이게
+    +'<div style="font-size:13px;font-weight:800;color:#0f766e;margin:2px 0 8px"><i class="bi bi-award-fill me-1"></i>이번 기간 활동 하이라이트</div>'
+    +'<div class="row g-2 mb-3">'
+      +hlTile('bi-flag-fill','#2563eb',newN+'곳','신규 개척 방문','기간 내 첫 방문 성사',newN?'_cduDrillNew()':'')
+      +hlTile('bi-cash-coin','#0891b2',prices.length+'곳','시술 수가 파악','현장 가격정보 수집',prices.length?'_cduDrillPrice()':'')
+      +hlTile('bi-binoculars-fill','#7c3aed',compTot+'건','경쟁 동향 수집','타사 장비 정보 확보',compArr[0]?"_cduDrillComp('"+_cduEsc(compArr[0][0]).replace(/\x27/g,"\\x27")+"')":'')
+      +hlTile('bi-megaphone-fill','#ea580c',ev+'·'+rl,'이벤트·릴스 유치','병원 마케팅 지원',ev?'_cduDrillEvent()':'')
+      +hlTile('bi-person-rolodex','#0d9488',kmN+'명','Keyman 확보','핵심 인맥 누적 관리','')
     +'</div>'
+    +'<div class="row g-3 mb-3"><div class="col-12">'+card('선제 감지 · 집중 대응 병원 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 담당자가 현장에서 조기 감지해 대응 중 · 클릭하면 이력</span>','bi-shield-check','#0f766e',churnHtml)+'</div></div>'
     // ③ 활동 추이 한 장
     +'<div class="row g-3 mb-3"><div class="col-12">'+card('기간 내 활동 추이 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 주 단위</span>','bi-graph-up','#2563eb',trendHtml+'<div style="font-size:10.5px;color:#9ca3af;margin-top:6px">막대=방문 병원 수 · 수가=주 평균 · 이벤트=진행 병원 수</div>')+'</div></div>'
     // ④ 상세 분석 — 접힘 기본
@@ -5738,7 +5740,18 @@ function renderCDUInput(vs){
     +'<button class="btn btn-'+(_cduInputView==='list'?'primary':'outline-primary')+'" onclick="_cduSetInputView(\'list\')"><i class="bi bi-list-ul me-1"></i>목록</button>'
     +'<button class="btn btn-'+(_cduInputView==='cal'?'primary':'outline-primary')+'" onclick="_cduSetInputView(\'cal\')"><i class="bi bi-calendar3 me-1"></i>캘린더</button>'
     +'</div><span style="font-size:11px;color:#94a3b8;margin-left:8px">'+(_cduInputView==='cal'?'월을 이동하며 방문을 한눈에 · 칸을 눌러 상세':'기간 필터 적용 · 행을 눌러 상세/수정')+'</span></div>';
-  el.innerHTML=toolbar+(_cduInputView==='cal'?_cduInputCal():_cduInputList(vs));
+  el.innerHTML=toolbar+_cduRevisitBox()+(_cduInputView==='cal'?_cduInputCal():_cduInputList(vs));
+}
+// 재방문 추천(담당자 참고용) — 방문기록 탭에만, 접힌 상태 기본
+function _cduRevisitBox(){
+  var base=_cduBaseFiltered(), lastByHosp={};
+  base.forEach(function(v){ var h=(v.custName||'').trim(); if(!h)return; var d=String(v.date||'').slice(0,10); if(!d)return; if(!lastByHosp[h]||d>lastByHosp[h].date) lastByHosp[h]={date:d,sales:v.sales||''}; });
+  var t=new Date(); var ts=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
+  var dAgo=function(d){ return Math.max(0,Math.round((new Date(ts+'T00:00:00')-new Date(d+'T00:00:00'))/86400000)); };
+  var arr=Object.entries(lastByHosp).map(function(p){ return {hosp:p[0],date:p[1].date,days:dAgo(p[1].date),sales:p[1].sales}; }).sort(function(a,b){ return a.date<b.date?-1:1; }).slice(0,8);
+  if(!arr.length) return '';
+  var rows=arr.map(function(r){ return '<div onclick="openCDUHosp(\''+_cduEsc(r.hosp).replace(/\x27/g,"\\x27")+'\')" style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f1f5f9;cursor:pointer;font-size:12px"><span style="font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_cduEsc(r.hosp)+'</span>'+(r.sales?'<span style="font-size:10px;color:#94a3b8;flex-shrink:0">'+_cduEsc(r.sales)+'</span>':'')+'<span style="font-size:11px;color:#64748b;min-width:56px;text-align:right;flex-shrink:0">'+r.days+'일 전</span></div>'; }).join('');
+  return '<details class="card p-2 mb-2"><summary style="cursor:pointer;font-size:12px;font-weight:700;color:#475569"><i class="bi bi-arrow-repeat me-1" style="color:#ea580c"></i>재방문 추천 '+arr.length+'곳 <span style="font-weight:400;color:#94a3b8">· 담당자 참고용 · 오래 안 간 순 · 클릭하면 이력</span></summary><div class="mt-1" style="padding:0 6px">'+rows+'</div></details>';
 }
 function _cduInputCal(){
   var base=_cduBaseFiltered();
