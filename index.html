@@ -5761,15 +5761,15 @@ function saveCDUInsight(){
   var msg=document.getElementById('cdu-insight-msg'); if(msg)msg.innerHTML='<span style="color:#6b7280">저장 중…</span>';
   DB.save('logs').then(()=>{ if(msg)msg.innerHTML='<span style="color:#16a34a"><i class="bi bi-check-circle"></i> '+_cduNoteLabel(k)+' 의견 저장됨</span>'; });
 }
-var _cduInputView=(function(){try{return sessionStorage.getItem('cdu_input_view')||'list';}catch(e){return 'list';}})();
+var _cduInputView=(function(){try{return sessionStorage.getItem('cdu_input_view')||'cal';}catch(e){return 'cal';}})();
 var _cduInputMonth=null;
 function _cduSetInputView(v){ _cduInputView=v; try{sessionStorage.setItem('cdu_input_view',v);}catch(e){} renderCDU(); }
 function _cduInputMonthNav(delta){ var now=new Date(); var y=(_cduInputMonth?_cduInputMonth.y:now.getFullYear()), m=(_cduInputMonth?_cduInputMonth.m:now.getMonth()+1)+delta; if(m<1){m=12;y--;} if(m>12){m=1;y++;} _cduInputMonth={y:y,m:m}; renderCDU(); }
 function renderCDUInput(vs){
   var el=document.getElementById('cdu-input'); if(!el) return;
   var toolbar='<div class="d-flex align-items-center mb-2"><div class="btn-group btn-group-sm">'
-    +'<button class="btn btn-'+(_cduInputView==='list'?'primary':'outline-primary')+'" onclick="_cduSetInputView(\'list\')"><i class="bi bi-list-ul me-1"></i>목록</button>'
     +'<button class="btn btn-'+(_cduInputView==='cal'?'primary':'outline-primary')+'" onclick="_cduSetInputView(\'cal\')"><i class="bi bi-calendar3 me-1"></i>캘린더</button>'
+    +'<button class="btn btn-'+(_cduInputView==='list'?'primary':'outline-primary')+'" onclick="_cduSetInputView(\'list\')"><i class="bi bi-list-ul me-1"></i>목록</button>'
     +'</div><span style="font-size:11px;color:#94a3b8;margin-left:8px">'+(_cduInputView==='cal'?'월을 이동하며 방문을 한눈에 · 칸을 눌러 상세':'기간 필터 적용 · 행을 눌러 상세/수정')+'</span></div>';
   el.innerHTML=toolbar+_cduRevisitBox()+(_cduInputView==='cal'?_cduInputCal():_cduInputList(vs));
 }
