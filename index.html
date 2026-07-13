@@ -5422,7 +5422,22 @@ function _cduTab(t){ _cduView=t;
 function _cduBar(pct,col){ return '<div style="height:8px;background:#f1f5f9;border-radius:5px;overflow:hidden;flex:1;min-width:60px"><div style="height:8px;width:'+Math.min(100,Math.max(0,pct))+'%;background:'+col+';border-radius:5px"></div></div>'; }
 // 매출 포맷 + 병원별 팁 매출(한국영업 CRM 공유)
 function _cduWon(v){ v=Number(v)||0; return v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만':Math.round(v).toLocaleString()+'원'; }
-function _cduRev(name){ try{ return (CONS.hospitals&&CONS.hospitals[(name||'').trim()])||{}; }catch(e){ return {}; } }
+// 병원명 정규화 매칭 — CDU 방문명("여름의원 강남")↔회계명("여름의원 강남역점") 표기차 흡수
+function _cduNorm(s){ return String(s==null?'':s).toLowerCase().replace(/\s+/g,''); }
+var _cduNMapCache=null;
+function _cduNMap(){ if(_cduNMapCache) return _cduNMapCache; var m={}; try{ Object.keys(CONS.hospitals||{}).forEach(function(k){ var nk=_cduNorm(k); if(!nk) return; if(m[nk]==null || (CONS.hospitals[k].y2026||0)>(CONS.hospitals[m[nk]].y2026||0)) m[nk]=k; }); }catch(e){} _cduNMapCache=m; return m; }
+var _CDU_LOC=['인천부평','하남미사','파주운정','범계역','광명점','의정부점','용인점','신논현','인천구월','강남역','신사','강남','청담','부평','범계','수원','동탄','하남','노원','광명','의정부','용인','파주','논현','선릉','역삼','압구정','분당','판교','일산','부천','안양','평촌','잠실','목동','송도','미사'];
+var _cduResolveCache={};
+function _cduResolveHosp(name){
+  name=String(name||'').trim(); if(!name) return null;
+  if(_cduResolveCache[name]!==undefined) return _cduResolveCache[name];
+  var nm=_cduNMap(), n=_cduNorm(name), res=null;
+  if(nm[n]) res=nm[n];
+  if(!res){ for(var i=0;i<_CDU_LOC.length;i++){ var loc=_CDU_LOC[i]; if(name.replace(/\s+/g,'').endsWith(loc)){ var b=_cduNorm(name).slice(0, _cduNorm(name).length-loc.length); if(b.length>=3&&nm[b]){ res=nm[b]; break; } } } }
+  if(!res){ var best=null,bestRev=-1; for(var k in nm){ if(k.length>=4 && (n.indexOf(k)===0 || k.indexOf(n)===0) && Math.min(k.length,n.length)>=4){ var rv=(CONS.hospitals[nm[k]].y2026||0); if(rv>bestRev){bestRev=rv;best=nm[k];} } } res=best; }
+  _cduResolveCache[name]=res; return res;
+}
+function _cduRev(name){ try{ var k=_cduResolveHosp(name); return k?(CONS.hospitals[k]||{}):{}; }catch(e){ return {}; } }
 var _cduAllTipCache=null;
 function _cduAllTip(){ if(_cduAllTipCache!=null) return _cduAllTipCache; var s=0; try{ Object.values(CONS.hospitals||{}).forEach(h=>s+=(h.y2026||0)); }catch(e){} _cduAllTipCache=s||0; return _cduAllTipCache; }
 var _CDU_BANDS=[['~349천원',p=>p<350],['350~399',p=>p>=350&&p<400],['400~449',p=>p>=400&&p<450],['450~',p=>p>=450]];
@@ -5500,17 +5515,18 @@ function renderCDUReport(vs){
   var salesArr=Object.entries(bySales).sort((a,b)=>b[1]-a[1]);
   var avg=prices.length?Math.round(prices.reduce((s,p)=>s+p,0)/prices.length):0, mx=prices.length?Math.max.apply(null,prices):0, mn=prices.length?Math.min.apply(null,prices):0;
   // ── 매출 연결(한국영업 CRM: 병원별 올해 팁 매출) — 활동을 '돈'으로 환산 ──
-  var uniqRev={}, visitedRev=0, unmatched=0;
-  vs.forEach(function(v){ var n=(v.custName||'').trim(); if(!n||uniqRev[n]!=null) return; var r=_cduRev(n); uniqRev[n]=r.y2026||0; visitedRev+=(r.y2026||0); if(!(r.y2026>0||r.y2025>0)) unmatched++; });
+  var _rk=n=>_cduResolveHosp(n)||('__'+_cduNorm(n)); // 중복집계 방지용 정규화 키
+  var uniqRev={}, visitedRev=0, matched=0, seenKey={};
+  vs.forEach(function(v){ var n=(v.custName||'').trim(); if(!n||uniqRev[n]!=null) return; var r=_cduRev(n), rk=_rk(n); uniqRev[n]=r.y2026||0; if(!seenKey[rk]){ seenKey[rk]=1; visitedRev+=(r.y2026||0); if(r.y2026>0||r.y2025>0) matched++; } });
   var uniqNames=Object.keys(uniqRev);
   var allTip=_cduAllTip(); var visShare=allTip?Math.round(visitedRev/allTip*100):0;
   var vipArr=uniqNames.map(n=>({n:n,rev:uniqRev[n]})).filter(x=>x.rev>0).sort((a,b)=>b.rev-a.rev).slice(0,6);
-  // 이탈 위험 매출 노출액(연간)
-  var churnRev=0, churnNames={}; churn.forEach(function(v){ var n=(v.custName||'').trim(); if(n&&churnNames[n]==null){ churnNames[n]=1; churnRev+=(_cduRev(n).y2026||0); } });
+  // 이탈 위험 매출 노출액(연간) + 병원명
+  var churnRev=0, churnNames={}, churnList=[]; churn.forEach(function(v){ var n=(v.custName||'').trim(); var rk=_rk(n); if(n&&churnNames[rk]==null){ churnNames[rk]=1; var rv=_cduRev(n).y2026||0; churnRev+=rv; churnList.push({name:n,risk:(v.churnRisk||'').trim(),rev:rv}); } });
   // 경쟁사 매출가중(경쟁사별 노출 병원의 매출 합)
-  var compRev={}, compRevSeen={}; vs.forEach(function(v){ var c=(v.competitor||'').trim(); var n=(v.custName||'').trim(); if(!c||!n)return; var k=c+'|'+n; if(compRevSeen[k])return; compRevSeen[k]=1; compRev[c]=(compRev[c]||0)+(_cduRev(n).y2026||0); });
+  var compRev={}, compRevSeen={}; vs.forEach(function(v){ var c=(v.competitor||'').trim(); var n=(v.custName||'').trim(); if(!c||!n)return; var k=c+'|'+_rk(n); if(compRevSeen[k])return; compRevSeen[k]=1; compRev[c]=(compRev[c]||0)+(_cduRev(n).y2026||0); });
   var compRevArr=Object.entries(compRev).sort((a,b)=>b[1]-a[1]);
-  var topCompByRev=compRevArr[0]||null;
+  var topCompByRev=compRevArr.filter(x=>x[1]>0)[0]||null;
   // 저가 병원(수가 350천 미만) 비중 — 가격 건전성
   var lowP=prices.filter(p=>p<350).length;
   // 주차별 추이(담당·검색 반영, 주차 무관)
@@ -5570,9 +5586,14 @@ function renderCDUReport(vs){
   // ── 임원 브리핑(평문) — "이 데이터가 무엇을 말하는가" ──
   var focusLabel=focusW?_cduEsc(focusW):(wkSel?_cduEsc(wkSel):'전체 기간');
   var story=[];
-  story.push('이번 <b>'+focusLabel+'</b> 소모품파트는 <b>'+nHosp+'곳</b>을 방문했으며, 이 병원들이 올해 원텍에 기여한 <b>팁·소모품 매출 합계는 '+_cduWon(visitedRev)+'원</b>'+(visShare?' — 전체 소모품 매출의 약 <b>'+visShare+'%</b>'+'에 해당하는 거래처들입니다':' 규모입니다')+'.');
-  if(Object.keys(churnNames).length) story.push('이 중 <b style="color:#dc2626">이탈 위험 '+Object.keys(churnNames).length+'곳</b>은 연 <b>'+_cduWon(churnRev)+'원</b>의 매출이 걸려 있어, 경쟁사로 넘어가면 그만큼이 사라집니다. <b>최우선 방어 대상</b>입니다.');
-  if(topCompByRev&&topCompByRev[1]>0) story.push('경쟁 위협은 <b style="color:#dc2626">'+_cduEsc(topCompByRev[0])+'</b>가 가장 크며, 이 장비가 들어와 있는 방문 병원들의 매출 합계만 <b>'+_cduWon(topCompByRev[1])+'원</b>입니다 — 방어하지 못하면 위험한 금액대입니다.');
+  var nMatch=Object.keys(seenKey).filter(k=>k.indexOf('__')!==0).length;
+  story.push('이번 <b>'+focusLabel+'</b>에 방문한 <b>'+nHosp+'곳</b>은 올해 원텍 팁·소모품을 <b>'+_cduWon(visitedRev)+'원</b>어치 구매한 거래처들입니다'+(nMatch<nHosp?' <span style="color:#94a3b8;font-size:11px">('+nMatch+'곳 회계 매칭)</span>':'')+'. 즉, 이번 주 영업 활동은 <b>'+_cduWon(visitedRev)+'원 규모의 계정</b>을 관리한 셈입니다.');
+  if(churnList.length){
+    var cn=churnList.slice(0,3).map(x=>_cduEsc(x.name)+(x.risk?'('+_cduEsc(x.risk)+')':'')).join(', ')+(churnList.length>3?' 외':'');
+    if(churnRev>0) story.push('그중 <b style="color:#dc2626">이탈 위험 '+churnList.length+'곳</b> — '+cn+' — 은 올해 <b>'+_cduWon(churnRev)+'원</b>을 구매한 거래처입니다. 경쟁사로 넘어가면 이 매출이 사라지므로 <b>최우선 방어 대상</b>입니다.');
+    else story.push('<b style="color:#dc2626">이탈 위험 '+churnList.length+'곳</b> — '+cn+' — 이 표시됐습니다. 아직 큰 매출은 아니지만 경쟁 이탈 조짐이 있어 초기 관리가 필요합니다.');
+  }
+  if(topCompByRev) story.push('경쟁 위협은 <b style="color:#dc2626">'+_cduEsc(topCompByRev[0])+'</b>가 가장 큽니다. 이 장비가 이미 들어와 있는 방문 병원들이 올해 우리에게 <b>'+_cduWon(topCompByRev[1])+'원</b>을 구매했는데, 이들을 뺏기면 그만큼이 위험합니다.');
   else if(compArr.length) story.push('경쟁 장비는 <b>'+_cduEsc(compArr[0][0])+'</b>가 '+compArr[0][1]+'곳에서 관찰됐습니다.');
   if(prices.length) story.push('현장 시술 가격(수가)은 평균 <b>'+avg+'천원</b>'+(lowP?'이며, 그중 <b style="color:#ea580c">'+lowP+'곳</b>은 350천원 미만 저가입니다. 시술을 싸게 팔면 병원이 시술을 덜 하게 되고 → 우리 팁 소모도 줄어듭니다':' 수준으로 안정적입니다')+'.');
   var actionLine=Object.keys(churnNames).length? '이탈 위험 '+Object.keys(churnNames).length+'곳 방어 미팅 + 경쟁('+(topCompByRev?_cduEsc(topCompByRev[0]):(compArr[0]?_cduEsc(compArr[0][0]):'-'))+') 대응' : (compArr.length? '경쟁 노출 병원 밀착 관리 및 수가 방어' : '현 방문 커버리지 유지·확대');
