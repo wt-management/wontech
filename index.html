@@ -5637,7 +5637,6 @@ function renderCDUReport(vs){
   var procArr=Object.entries(proc).sort((a,b)=>b[1]-a[1]).slice(0,8); var procTot=procArr.reduce((s,x)=>s+x[1],0)||1;
   var regArr=Object.entries(reg).sort((a,b)=>b[1]-a[1]);
   var docArr=Object.entries(docB).filter(x=>x[1]>0);
-  var savedIns=(_cduMeta()||{}).insight||'';
   // ── 빌더 ──
   var wowBadge = wow==null?'':' <span style="font-size:12px;font-weight:700;color:'+(wow>=0?'#4ade80':'#fca5a5')+'">'+(wow>=0?'▲':'▼')+Math.abs(wow)+' vs 전주</span>';
   var heroStat=(lab,val,sub,click)=>'<div'+(click?' onclick="'+click+'" style="flex:1;min-width:120px;cursor:pointer"':' style="flex:1;min-width:120px"')+'><div style="font-size:11px;color:rgba(255,255,255,.6);font-weight:600">'+lab+(click?' <i class="bi bi-chevron-right" style="font-size:9px"></i>':'')+'</div><div style="font-size:22px;font-weight:800;line-height:1.15;margin-top:2px">'+val+'</div><div style="font-size:11px;color:rgba(255,255,255,.55)">'+(sub||'')+'</div></div>';
@@ -5719,16 +5718,48 @@ function renderCDUReport(vs){
     // ④ 상세 분석 — 접힘 기본
     +'<div class="mb-3"><button class="btn btn-outline-secondary btn-sm w-100" onclick="_cduToggleDetail()" style="font-weight:600"><i class="bi bi-chevron-'+(_cduDetailOpen?'up':'down')+' me-1"></i>상세 분석 '+(_cduDetailOpen?'접기':'펼치기')+' <span style="color:#9ca3af;font-weight:400">· 수가 밴드 · 경쟁사 · 마케팅 채널 · 시술/규모 분포 · 담당자 · 매출 상위</span></button></div>'
     +(_cduDetailOpen?detailSec:'')
-    // ⑤ 담당자 종합 의견
-    +'<div class="card p-3"><div class="d-flex align-items-center mb-2"><span class="fw-bold" style="font-size:13px"><i class="bi bi-lightbulb me-1 text-warning"></i>담당자 종합 의견 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 임원 보고용</span></span><button class="btn btn-outline-primary btn-sm ms-auto" onclick="saveCDUInsight()"><i class="bi bi-save me-1"></i>저장</button><span id="cdu-insight-msg" style="font-size:11px;margin-left:8px"></span></div>'
-      +'<textarea id="cdu-insight" class="form-control form-control-sm" rows="4" placeholder="예: [경쟁 구도] … / [가격 밴드] … / [채널 집중] … / [다음 주 계획] …">'+_cduEsc(savedIns)+'</textarea></div>';
+    // ⑤ 담당자 종합 의견(주차별)
+    +_cduNoteCard();
+}
+function _cduNoteCard(){
+  var now=new Date(), keys=[];
+  for(var i=0;i<10;i++){ var d=new Date(now); d.setDate(now.getDate()-7*i); var k=_cduNoteKeyFromDate(d); if(keys.indexOf(k)<0) keys.push(k); }
+  _cduNotes().forEach(function(n){ if(n.week&&keys.indexOf(n.week)<0) keys.push(n.week); });
+  var cur=_cduNoteWeek||keys[0]; if(keys.indexOf(cur)<0) cur=keys[0];
+  _cduNoteWeek=cur;
+  var opts=keys.map(k=>'<option value="'+_cduEsc(k)+'"'+(k===cur?' selected':'')+'>'+_cduEsc(_cduNoteLabel(k))+((_cduNotes().some(n=>n.week===k&&(n.text||'').trim()))?' ✓':'')+'</option>').join('');
+  var curNote=_cduNotes().find(x=>x.week===cur);
+  var hist=_cduNotes().filter(x=>x.week!==cur&&(x.text||'').trim()).sort((a,b)=>String(b.week).localeCompare(String(a.week))).slice(0,4);
+  var histHtml=hist.length?'<details style="margin-top:8px"><summary style="font-size:11px;color:#64748b;cursor:pointer">지난 주차 의견 '+hist.length+'건 보기</summary>'
+    +hist.map(n=>'<div style="margin-top:6px;padding:8px 10px;background:#f8fafc;border-radius:8px"><div style="font-size:11px;font-weight:700;color:#334155">'+_cduEsc(_cduNoteLabel(n.week))+' <span style="font-weight:400;color:#94a3b8">'+_cduEsc(n.by||'')+(n.updatedAt?' · '+_cduEsc(n.updatedAt):'')+'</span></div><div style="font-size:12px;color:#475569;white-space:pre-line;margin-top:2px">'+_cduEsc(n.text||'')+'</div></div>').join('')+'</details>':'';
+  return '<div class="card p-3"><div class="d-flex align-items-center mb-2 flex-wrap" style="gap:8px"><span class="fw-bold" style="font-size:13px"><i class="bi bi-lightbulb me-1 text-warning"></i>담당자 종합 의견 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 주차 선택 후 작성/수정 · 임원 보고용</span></span>'
+    +'<select id="cdu-note-week" class="form-select form-select-sm ms-auto" style="width:auto" onchange="_cduNoteLoad()">'+opts+'</select>'
+    +'<button class="btn btn-outline-primary btn-sm" onclick="saveCDUInsight()"><i class="bi bi-save me-1"></i>저장</button><span id="cdu-insight-msg" style="font-size:11px"></span></div>'
+    +'<textarea id="cdu-insight" class="form-control form-control-sm" rows="4" placeholder="이번 주 종합 의견 — 예: [경쟁 구도] … / [가격 밴드] … / [다음 주 계획] …">'+_cduEsc(curNote?(curNote.text||''):'')+'</textarea>'
+    +histHtml+'</div>';
+}
+// ── 담당자 종합 의견: 주차별 작성(cdu_note) ──
+var _cduNoteWeek='';
+function _cduNoteKeyFromDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+(Math.floor((d.getDate()-1)/7)+1); }
+function _cduNoteLabel(k){ var p=String(k||'').split('-'); return p.length>=3?(p[0]+'년 '+Number(p[1])+'월 '+p[2]+'주'):k; }
+function _cduNotes(){ return (DB.d.logs||[]).filter(l=>l.kind==='cdu_note'); }
+function _cduNoteLoad(){
+  var sel=document.getElementById('cdu-note-week'); if(!sel) return;
+  _cduNoteWeek=sel.value;
+  var n=_cduNotes().find(x=>x.week===sel.value);
+  var t=document.getElementById('cdu-insight'); if(t) t.value=n?(n.text||''):'';
+  var msg=document.getElementById('cdu-insight-msg'); if(msg) msg.innerHTML=n&&n.by?'<span style="color:#94a3b8">'+_cduEsc(n.by)+' 작성'+(n.updatedAt?' · '+_cduEsc(n.updatedAt):'')+'</span>':'';
 }
 function saveCDUInsight(){
+  var k=(document.getElementById('cdu-note-week')||{}).value; if(!k){ alert('작성할 주차를 선택하세요.'); return; }
   var t=(document.getElementById('cdu-insight')||{}).value||'';
-  var m=_cduMeta();
-  if(m){ m.insight=t; } else { m={id:'cdu_meta',kind:'cdu_meta',insight:t}; DB.d.logs.push(m); }
+  var id='cdu_note_'+k;
+  var by=(typeof currentUserName==='function'?currentUserName():'');
+  var rec={id:id, kind:'cdu_note', week:k, text:t, by:by, updatedAt:new Date().toISOString().slice(0,10)};
+  var idx=(DB.d.logs||[]).findIndex(l=>l.id===id);
+  if(idx>=0) DB.d.logs[idx]=rec; else DB.d.logs.push(rec);
   var msg=document.getElementById('cdu-insight-msg'); if(msg)msg.innerHTML='<span style="color:#6b7280">저장 중…</span>';
-  DB.save('logs').then(()=>{ if(msg)msg.innerHTML='<span style="color:#16a34a"><i class="bi bi-check-circle"></i> 저장됨</span>'; });
+  DB.save('logs').then(()=>{ if(msg)msg.innerHTML='<span style="color:#16a34a"><i class="bi bi-check-circle"></i> '+_cduNoteLabel(k)+' 의견 저장됨</span>'; });
 }
 var _cduInputView=(function(){try{return sessionStorage.getItem('cdu_input_view')||'list';}catch(e){return 'list';}})();
 var _cduInputMonth=null;
@@ -6350,7 +6381,7 @@ function renderPerformance(){
     const ym=(d.stageUpdatedAt||'').substring(0,7);
     if(ym) monthlyA[ym]=(monthlyA[ym]||0)+Number(d.amount||0);
   });
-  DB.d.logs.filter(l=>l.kind!=='cdu'&&l.kind!=='cdu_meta'&&l.kind!=='cdu_key'&&l.kind!=='cdu_plan').forEach(l=>{
+  DB.d.logs.filter(l=>l.kind!=='cdu'&&l.kind!=='cdu_meta'&&l.kind!=='cdu_key'&&l.kind!=='cdu_plan'&&l.kind!=='cdu_note').forEach(l=>{
     const ym=(l.date||'').substring(0,7);
     if(ym) monthlyL[ym]=(monthlyL[ym]||0)+1;
   });
@@ -6879,7 +6910,7 @@ function showHospitalDetail(name){
   }).join('');
   // ③ 활동 타임라인 생성
   const tlItems = [];
-  DB.d.logs.filter(l=>l.custName===name&&l.kind!=='cdu'&&l.kind!=='cdu_meta'&&l.kind!=='cdu_key'&&l.kind!=='cdu_plan').forEach(l=>tlItems.push({
+  DB.d.logs.filter(l=>l.custName===name&&l.kind!=='cdu'&&l.kind!=='cdu_meta'&&l.kind!=='cdu_key'&&l.kind!=='cdu_plan'&&l.kind!=='cdu_note').forEach(l=>tlItems.push({
     date:l.date, type:'log', icon:'bi-journal-text', color:'#2563eb', bg:'#eff6ff',
     title:`상담 — ${l.type||''}`, sub: l.content||'', sales: l.sales||'', extra: l.nextAction?`다음액션: ${l.nextAction}${l.nextDate?' ('+fmtDate(l.nextDate)+')':''}`:''
   }));
@@ -7621,7 +7652,7 @@ function _schMine(){ const sel=document.getElementById('sch-sales-filter'); if(!
 // ── 상담일지 ──────────────────────────────────────────────────────
 function renderLogs(){
   const q=(document.getElementById('search-log').value||'').toLowerCase();
-  const list=[...DB.d.logs].filter(l=>l.kind!=='schedule'&&l.kind!=='cdu'&&l.kind!=='cdu_meta'&&l.kind!=='cdu_key'&&l.kind!=='cdu_plan').sort((a,b)=>new Date(b.date)-new Date(a.date)).filter(l=>!q||(l.custName||'').toLowerCase().includes(q)||(l.content||'').toLowerCase().includes(q)||(l.sales||'').toLowerCase().includes(q));
+  const list=[...DB.d.logs].filter(l=>l.kind!=='schedule'&&l.kind!=='cdu'&&l.kind!=='cdu_meta'&&l.kind!=='cdu_key'&&l.kind!=='cdu_plan'&&l.kind!=='cdu_note').sort((a,b)=>new Date(b.date)-new Date(a.date)).filter(l=>!q||(l.custName||'').toLowerCase().includes(q)||(l.content||'').toLowerCase().includes(q)||(l.sales||'').toLowerCase().includes(q));
   const el=document.getElementById('log-list');
   if(!list.length){el.innerHTML='<tr><td colspan="8" class="text-center text-muted py-3">데이터 없음</td></tr>';return;}
   el.innerHTML=list.map(l=>`<tr><td style="font-size:12px">${fmtDate(l.date)}</td><td><strong>${_escH(l.custName)}</strong></td><td><span class="badge bg-secondary" style="font-size:10px">${_escH(l.type)}</span></td><td style="font-size:12px;color:#555">${_escH((l.content||'').substring(0,35))}</td><td style="font-size:12px">${_escH(l.product)}</td><td style="font-size:12px">${_escH(l.nextAction)}</td><td style="font-size:12px">${_escH(l.sales)}</td><td><button class="btn btn-outline-primary" style="font-size:11px;padding:1px 6px" onclick='editLog("${l.id}")'>수정</button></td></tr>`).join('');
