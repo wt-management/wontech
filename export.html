@@ -488,6 +488,15 @@ async function afterLogin(user){
   if(session) await afterLogin(session.user);
   else document.getElementById('login-screen').style.display='flex';
 })();
+/* ── 자동 로그아웃: 30분 무동작 시 자동 로그아웃 (마스터·megan 제외) ── */
+(function(){
+  var IDLE_MS=30*60*1000, _it;
+  function _logout(){ if(typeof doLogout==='function'){ doLogout(); return; } try{ _sb.auth.signOut().then(function(){ location.reload(); }); }catch(e){ location.reload(); } }
+  function _fire(){ try{ if(typeof _sb!=='undefined' && _sb && _sb.auth && _sb.auth.getSession){ _sb.auth.getSession().then(function(r){ var s=r&&r.data&&r.data.session; var _noAutoLogout=['pmw0406@gmail.com','megan@wontech.com']; if(s&&s.user&&_noAutoLogout.indexOf(s.user.email)>=0){ _arm(); return; } if(s){ _logout(); } else { _arm(); } }).catch(function(){ _logout(); }); } else { _logout(); } }catch(e){ _logout(); } }
+  function _arm(){ clearTimeout(_it); _it=setTimeout(_fire, IDLE_MS); }
+  ['mousemove','mousedown','keydown','touchstart','scroll','click','wheel'].forEach(function(ev){ document.addEventListener(ev, _arm, {passive:true, capture:true}); });
+  _arm();
+})();
 </script>
 </body>
 </html>
