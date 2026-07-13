@@ -968,10 +968,15 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     </div>
     <div class="card p-2 mb-3" id="cdu-filterbar">
       <div class="d-flex align-items-center gap-2 flex-wrap" style="font-size:13px">
-        <span class="text-muted" style="font-size:12px"><i class="bi bi-calendar3 me-1"></i>주차</span>
-        <select id="cdu-week" class="form-select form-select-sm" style="width:auto;min-width:140px" onchange="renderCDU()"><option value="">전체 기간</option></select>
+        <span class="text-muted" style="font-size:12px"><i class="bi bi-calendar3 me-1"></i>기간</span>
+        <span id="cdu-period-chips" style="display:inline-flex;gap:4px;flex-wrap:wrap"></span>
+        <span id="cdu-period-custom" style="display:none;align-items:center;gap:4px;margin-left:2px;padding-left:8px;border-left:1px solid #e5e7eb">
+          <input type="date" id="cdu-from" class="form-control form-control-sm" style="width:auto" onchange="_cduPeriodCustom()">
+          <span style="color:#9ca3af">~</span>
+          <input type="date" id="cdu-to" class="form-control form-control-sm" style="width:auto" onchange="_cduPeriodCustom()">
+        </span>
         <select id="cdu-sales" class="form-select form-select-sm" style="width:auto;min-width:120px" onchange="renderCDU()"><option value="">담당 전체</option></select>
-        <input id="cdu-search" class="form-control form-control-sm" style="width:auto;min-width:160px" placeholder="🔍 병원·경쟁사·피드백" oninput="renderCDU()">
+        <input id="cdu-search" class="form-control form-control-sm" style="width:auto;min-width:150px" placeholder="🔍 병원·경쟁사·피드백" oninput="renderCDU()">
         <span id="cdu-count" class="text-muted" style="font-size:12px"></span>
         <button id="cdu-csv-btn" class="btn btn-outline-secondary btn-sm ms-auto" onclick="cduExportCSV()"><i class="bi bi-download me-1"></i>CSV</button>
         <button id="cdu-add-btn" class="btn btn-primary btn-sm" onclick="openCDUVisit()"><i class="bi bi-plus-lg me-1"></i>방문 추가</button>
@@ -5382,29 +5387,47 @@ function _cduEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&am
 function _cduWeekLabel(ds){ if(!ds) return ''; var d=new Date(String(ds).slice(0,10)+'T00:00:00'); if(isNaN(d)) return ''; return (d.getMonth()+1)+'월 '+(Math.floor((d.getDate()-1)/7)+1)+'주'; }
 function _cduVisits(){ return (DB.d.logs||[]).filter(l=>l.kind==='cdu'); }
 function _cduMeta(){ return (DB.d.logs||[]).find(l=>l.kind==='cdu_meta')||null; }
-function _cduFillWeeks(){ var sel=document.getElementById('cdu-week'); if(!sel) return;
-  var weeks=[...new Set(_cduVisits().map(v=>_cduWeekLabel(v.date)).filter(Boolean))].sort();
-  var cur=sel.value; sel.innerHTML='<option value="">전체 기간</option>'+weeks.map(w=>'<option>'+_cduEsc(w)+'</option>').join('');
-  if([...sel.options].some(o=>o.value===cur)) sel.value=cur; }
 function _cduFillSales(){ var sel=document.getElementById('cdu-sales'); if(!sel)return; var names=[...new Set(_cduVisits().map(v=>(v.sales||'').trim()).filter(Boolean))].sort(); var cur=sel.value; sel.innerHTML='<option value="">담당 전체</option>'+names.map(n=>'<option>'+_cduEsc(n)+'</option>').join(''); if([...sel.options].some(o=>o.value===cur))sel.value=cur; }
-function _cduBaseFiltered(){ // 담당·검색만(주차 제외) — 주차별 추이용
+// ── 기간 조회 엔진(일정 메뉴 방식: 프리셋 + 직접범위) ──
+var _cduPeriod=(function(){ try{ return sessionStorage.getItem('cdu_period')||'thismonth'; }catch(e){ return 'thismonth'; } })();
+var _CDU_PRESETS=[['thisweek','이번 주'],['lastweek','지난 주'],['thismonth','이번 달'],['recent2w','최근 2주'],['all','전체'],['custom','<i class="bi bi-sliders"></i> 직접']];
+function _cduTodayStr(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function _cduFmtD(x){ return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'); }
+function _cduPeriodRange(){
+  var t=_cduTodayStr(), d=new Date(t+'T00:00:00');
+  if(_cduPeriod==='all') return null;
+  if(_cduPeriod==='custom'){ var f=(document.getElementById('cdu-from')||{}).value||'', to=(document.getElementById('cdu-to')||{}).value||''; if(!f&&!to) return null; return {start:f||'0000-01-01', end:to||'9999-12-31'}; }
+  if(_cduPeriod==='thisweek'||_cduPeriod==='lastweek'){ var day=(d.getDay()+6)%7; var mon=new Date(d); mon.setDate(d.getDate()-day); if(_cduPeriod==='lastweek') mon.setDate(mon.getDate()-7); var sun=new Date(mon); sun.setDate(mon.getDate()+6); return {start:_cduFmtD(mon),end:_cduFmtD(sun)}; }
+  if(_cduPeriod==='recent2w'){ var s=new Date(d); s.setDate(d.getDate()-13); return {start:_cduFmtD(s),end:t}; }
+  if(_cduPeriod==='thismonth'){ var mp=t.slice(0,7); return {start:mp+'-01',end:mp+'-31'}; }
+  return null;
+}
+function _cduPeriodLabel(){ var r=_cduPeriodRange(); if(!r) return '전체 기간'; return r.start.slice(5).replace('-','.')+' ~ '+r.end.slice(5).replace('-','.'); }
+function _cduFillPeriodChips(){
+  var host=document.getElementById('cdu-period-chips'); if(!host) return;
+  host.innerHTML=_CDU_PRESETS.map(function(p){ var on=(_cduPeriod===p[0]); return '<button type="button" onclick="_cduSetPeriod(\''+p[0]+'\')" style="padding:4px 11px;border-radius:16px;font-size:11.5px;font-weight:600;border:1px solid '+(on?'#2563eb':'#e5e7eb')+';background:'+(on?'#2563eb':'#fff')+';color:'+(on?'#fff':'#6b7280')+';cursor:pointer;line-height:1.2">'+p[1]+'</button>'; }).join('');
+  var cc=document.getElementById('cdu-period-custom'); if(cc) cc.style.display=(_cduPeriod==='custom')?'inline-flex':'none';
+}
+function _cduSetPeriod(p){ _cduPeriod=p; try{ sessionStorage.setItem('cdu_period',p); }catch(e){} renderCDU(); }
+function _cduPeriodCustom(){ _cduPeriod='custom'; try{ sessionStorage.setItem('cdu_period','custom'); }catch(e){} renderCDU(); }
+function _cduBaseFiltered(){ // 담당·검색만(기간 제외) — 추이·재방문용
   var sl=(document.getElementById('cdu-sales')||{}).value||'';
   var q=((document.getElementById('cdu-search')||{}).value||'').toLowerCase();
   return _cduVisits().filter(function(v){
     if(sl && (v.sales||'')!==sl) return false;
-    if(q && ((v.custName||'')+' '+(v.competitor||'')+' '+(v.feedback||'')+' '+(v.dealer||'')+' '+(v.doctor||'')+' '+(v.channels||'')).toLowerCase().indexOf(q)<0) return false;
+    if(q && ((v.custName||'')+' '+(v.competitor||'')+' '+(v.feedback||'')+' '+(v.dealer||'')+' '+(v.doctor||'')+' '+(v.channels||'')+' '+(v.mainProc||'')).toLowerCase().indexOf(q)<0) return false;
     return true;
   });
 }
-function _cduFiltered(){ var wk=(document.getElementById('cdu-week')||{}).value||''; var vs=_cduBaseFiltered(); return wk? vs.filter(v=>_cduWeekLabel(v.date)===wk):vs; }
+function _cduFiltered(){ var r=_cduPeriodRange(); var vs=_cduBaseFiltered(); if(!r) return vs; return vs.filter(function(v){ var d=String(v.date||'').slice(0,10); return d>=r.start&&d<=r.end; }); }
 function renderCDU(){
-  _cduFillWeeks(); _cduFillSales();
+  _cduFillSales(); _cduFillPeriodChips();
   var dl=document.getElementById('cdu-hosp-list'); if(dl && CONS.hospitals){ dl.innerHTML=Object.keys(CONS.hospitals).slice(0,800).map(n=>'<option value="'+_cduEsc(n)+'">').join(''); }
   var fb=document.getElementById('cdu-filterbar'); if(fb) fb.style.display=(_cduView==='keyman'||_cduView==='plan')?'none':'';
   if(_cduView==='keyman'){ renderCDUKeyman(); return; }
   if(_cduView==='plan'){ renderCDUPlan(); return; }
   var vs=_cduFiltered();
-  var cc=document.getElementById('cdu-count'); if(cc) cc.textContent='· '+vs.length+'건';
+  var cc=document.getElementById('cdu-count'); if(cc) cc.textContent='· '+vs.length+'건 · '+_cduPeriodLabel();
   if(_cduView==='report') renderCDUReport(vs); else renderCDUInput(vs);
 }
 function _cduTab(t){ _cduView=t;
@@ -5535,19 +5558,22 @@ function renderCDUReport(vs){
   var wk={}; weeks.forEach(w=>wk[w]={n:0,psum:0,pn:0,ev:0});
   base.forEach(function(v){ var w=_cduWeekLabel(v.date); if(!w||!wk[w])return; wk[w].n++; var p=num(v.price); if(p>0){wk[w].psum+=p;wk[w].pn++;} if(String(v.event||'').toUpperCase()==='O')wk[w].ev++; });
   var maxWkN=Math.max.apply(null,weeks.map(w=>wk[w].n).concat([1]));
-  var wkSel=(document.getElementById('cdu-week')||{}).value||'';
-  var focusW=wkSel||(weeks.length?weeks[weeks.length-1]:''); var fi=weeks.indexOf(focusW); var prevW=fi>0?weeks[fi-1]:'';
+  var focusW=(weeks.length?weeks[weeks.length-1]:''); var fi=weeks.indexOf(focusW); var prevW=fi>0?weeks[fi-1]:'';
   var wow=(focusW&&prevW&&wk[prevW])?(wk[focusW].n-wk[prevW].n):null;
   // 시술 수가 밴드
   var bands=_CDU_BANDS;
   var bandCnt=bands.map(b=>prices.filter(b[1]).length);
-  // 자동 인사이트
-  var ins=[];
-  if(compArr.length) ins.push('경쟁 장비는 <b>'+_cduEsc(compArr[0][0])+'</b> 최다('+compArr[0][1]+'곳, '+pctf(compArr[0][1],compTot)+'%)');
-  if(prices.length) ins.push('평균 시술 수가 <b>'+avg+'천원</b> (밴드 '+mn+'~'+mx+', '+prices.length+'곳 파악)');
-  if(chanArr.length) ins.push('마케팅 채널 <b>'+_cduEsc(chanArr[0][0])+'</b> 중심('+pctf(chanArr[0][1],nHosp)+'%)'+(chanArr[1]?', '+_cduEsc(chanArr[1][0])+' '+pctf(chanArr[1][1],nHosp)+'%':''));
-  if(churn.length) ins.push('<span style="color:#dc2626">이탈 위험 '+churn.length+'곳</span> — '+churn.slice(0,3).map(v=>_cduEsc(v.custName)).join(', ')+(churn.length>3?' 외':''));
-  ins.push('이벤트 진행 '+ev+'곳('+pctf(ev,nHosp)+'%) · 릴스 '+rl+'곳');
+  // 데이터 분포(입력 기준): 주력 시술 / 원장 규모 / 국내·해외
+  var proc={}, reg={}, docB={'원장 1명':0,'2~3명':0,'4명 이상':0,'미기재':0};
+  vs.forEach(function(v){
+    (v.mainProc||'').split(/[\/,·]/).map(s=>s.trim()).filter(Boolean).forEach(p=>proc[p]=(proc[p]||0)+1);
+    var rg=(v.region||'').trim()||'미기재'; reg[rg]=(reg[rg]||0)+1;
+    var dc=parseInt(v.doctorCount,10);
+    if(!dc||isNaN(dc)) docB['미기재']++; else if(dc<=1) docB['원장 1명']++; else if(dc<=3) docB['2~3명']++; else docB['4명 이상']++;
+  });
+  var procArr=Object.entries(proc).sort((a,b)=>b[1]-a[1]).slice(0,8); var procTot=procArr.reduce((s,x)=>s+x[1],0)||1;
+  var regArr=Object.entries(reg).sort((a,b)=>b[1]-a[1]);
+  var docArr=Object.entries(docB).filter(x=>x[1]>0);
   var savedIns=(_cduMeta()||{}).insight||'';
   // ── 빌더 ──
   var wowBadge = wow==null?'':' <span style="font-size:12px;font-weight:700;color:'+(wow>=0?'#4ade80':'#fca5a5')+'">'+(wow>=0?'▲':'▼')+Math.abs(wow)+' vs 전주</span>';
@@ -5583,59 +5609,25 @@ function renderCDUReport(vs){
         +'<span style="font-size:11px;color:#7c3aed;min-width:52px;text-align:right">이벤트 '+a.ev+'</span></div>'; }).join('')
     : '<div class="text-muted" style="font-size:12px">주차 데이터 없음</div>';
 
-  // ── 임원 브리핑(평문) — "이 데이터가 무엇을 말하는가" ──
-  var focusLabel=focusW?_cduEsc(focusW):(wkSel?_cduEsc(wkSel):'전체 기간');
-  var story=[];
-  var nMatch=Object.keys(seenKey).filter(k=>k.indexOf('__')!==0).length;
-  story.push('이번 <b>'+focusLabel+'</b>에 방문한 <b>'+nHosp+'곳</b>은 올해 원텍 팁·소모품을 <b>'+_cduWon(visitedRev)+'원</b>어치 구매한 거래처들입니다'+(nMatch<nHosp?' <span style="color:#94a3b8;font-size:11px">('+nMatch+'곳 회계 매칭)</span>':'')+'. 즉, 이번 주 영업 활동은 <b>'+_cduWon(visitedRev)+'원 규모의 계정</b>을 관리한 셈입니다.');
-  if(churnList.length){
-    var cn=churnList.slice(0,3).map(x=>_cduEsc(x.name)+(x.risk?'('+_cduEsc(x.risk)+')':'')).join(', ')+(churnList.length>3?' 외':'');
-    if(churnRev>0) story.push('그중 <b style="color:#dc2626">이탈 위험 '+churnList.length+'곳</b> — '+cn+' — 은 올해 <b>'+_cduWon(churnRev)+'원</b>을 구매한 거래처입니다. 경쟁사로 넘어가면 이 매출이 사라지므로 <b>최우선 방어 대상</b>입니다.');
-    else story.push('<b style="color:#dc2626">이탈 위험 '+churnList.length+'곳</b> — '+cn+' — 이 표시됐습니다. 아직 큰 매출은 아니지만 경쟁 이탈 조짐이 있어 초기 관리가 필요합니다.');
-  }
-  if(topCompByRev) story.push('경쟁 위협은 <b style="color:#dc2626">'+_cduEsc(topCompByRev[0])+'</b>가 가장 큽니다. 이 장비가 이미 들어와 있는 방문 병원들이 올해 우리에게 <b>'+_cduWon(topCompByRev[1])+'원</b>을 구매했는데, 이들을 뺏기면 그만큼이 위험합니다.');
-  else if(compArr.length) story.push('경쟁 장비는 <b>'+_cduEsc(compArr[0][0])+'</b>가 '+compArr[0][1]+'곳에서 관찰됐습니다.');
-  if(prices.length) story.push('현장 시술 가격(수가)은 평균 <b>'+avg+'천원</b>'+(lowP?'이며, 그중 <b style="color:#ea580c">'+lowP+'곳</b>은 350천원 미만 저가입니다. 시술을 싸게 팔면 병원이 시술을 덜 하게 되고 → 우리 팁 소모도 줄어듭니다':' 수준으로 안정적입니다')+'.');
-  var actionLine=Object.keys(churnNames).length? '이탈 위험 '+Object.keys(churnNames).length+'곳 방어 미팅 + 경쟁('+(topCompByRev?_cduEsc(topCompByRev[0]):(compArr[0]?_cduEsc(compArr[0][0]):'-'))+') 대응' : (compArr.length? '경쟁 노출 병원 밀착 관리 및 수가 방어' : '현 방문 커버리지 유지·확대');
-  var briefing='<div class="card p-0 mb-3" style="overflow:hidden;border:1px solid #e2e8f0">'
-    +'<div style="background:linear-gradient(120deg,#0f766e,#0891b2);padding:12px 18px;color:#fff;display:flex;align-items:center;flex-wrap:wrap;gap:8px">'
-      +'<span style="font-size:14px;font-weight:800"><i class="bi bi-megaphone-fill me-2"></i>임원 브리핑 — 한눈에 보는 결론</span>'
-      +'<span style="font-size:11px;color:rgba(255,255,255,.75);margin-left:auto">'+focusLabel+wowBadge+'</span></div>'
-    +'<div style="padding:14px 18px">'
-      +'<ul style="margin:0 0 10px;padding-left:20px;font-size:13px;color:#1e293b;line-height:1.95">'+story.map(s=>'<li>'+s+'</li>').join('')+'</ul>'
-      +'<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:9px 12px;font-size:12.5px;color:#92400e;font-weight:600"><i class="bi bi-flag-fill me-1"></i>이번 주 최우선 액션 &nbsp;→&nbsp; '+actionLine+'</div>'
-      +'<details style="margin-top:10px"><summary style="font-size:11.5px;color:#64748b;cursor:pointer">이 리포트 용어가 헷갈리세요? · 읽는 법 펼치기</summary>'
-        +'<div style="font-size:11.5px;color:#475569;line-height:1.85;margin-top:6px;padding-left:4px">'
-          +'· <b>시술 수가</b> = 병원이 환자에게 받는 시술 가격(천원). 낮을수록 시술을 저평가 → 팁 소모 감소 우려<br>'
-          +'· <b>이탈 위험</b> = 경쟁 장비로 갈아탈 조짐이 있는 병원. 넘어가면 그 병원의 팁 매출이 사라짐<br>'
-          +'· <b>경쟁사 노출</b> = 방문 병원에 이미 들어와 있는 타사 장비(써마지·볼뉴머 등)<br>'
-          +'· <b>이벤트/릴스</b> = 병원이 진행하는 마케팅. 활발할수록 시술 수요↑ → 팁 소모↑<br>'
-          +'· <b>팁·소모품 매출</b> = 해당 병원이 올해 원텍에 낸 실제 매출(한국영업 회계 데이터 연동)'
-        +'</div></details>'
-    +'</div></div>';
-  // ── 임원 체크포인트 3종(매출 관점, 클릭 시 상세) ──
-  var chk=(bg,bd,ic,iccol,lab,big,sub,click)=>'<div class="col-md-4"><div onclick="'+click+'" style="background:'+bg+';border:1px solid '+bd+';border-radius:12px;padding:13px 15px;cursor:pointer;height:100%"><div style="font-size:11px;font-weight:700;color:'+iccol+'"><i class="bi '+ic+' me-1"></i>'+lab+' <i class="bi bi-chevron-right" style="font-size:9px;opacity:.6"></i></div><div style="font-size:20px;font-weight:800;color:#0f172a;line-height:1.2;margin-top:3px">'+big+'</div><div style="font-size:11.5px;color:#64748b;margin-top:2px">'+sub+'</div></div></div>';
-  var checkpoints='<div class="row g-2 mb-3">'
-    +chk('#fef2f2','#fecaca','bi-shield-fill-exclamation','#dc2626','매출 방어 필요', (Object.keys(churnNames).length?_cduWon(churnRev)+'원':'0원'), '이탈 위험 '+Object.keys(churnNames).length+'곳 연매출 노출','_cduDrillChurn()')
-    +chk('#fff7ed','#fed7aa','bi-crosshair','#ea580c','최대 경쟁 위협', (topCompByRev?_cduEsc(topCompByRev[0]):(compArr[0]?_cduEsc(compArr[0][0]):'-')), (topCompByRev?_cduWon(topCompByRev[1])+'원 매출 병원에 노출':'경쟁 정보 부족'), topCompByRev?"_cduDrillComp('"+_cduEsc(topCompByRev[0]).replace(/\x27/g,"\\x27")+"')":"_cduDrillAll()")
-    +chk('#f0fdfa','#99f6e4','bi-trophy-fill','#0d9488','이번 기간 최대 거래처', (vipArr[0]?_cduEsc(vipArr[0].n):'-'), (vipArr[0]?'올해 팁매출 '+_cduWon(vipArr[0].rev)+'원':'매출 매칭 병원 없음'), vipArr[0]?"openCDUHosp('"+_cduEsc(vipArr[0].n).replace(/\x27/g,"\\x27")+"')":"_cduDrillVip()")
-    +'</div>';
+  // ── 한눈에 보는 통계 스트립(흰 카드) ──
+  var stat=(lbl,val,col,sub,click)=>'<div'+(click?' onclick="'+click+'" style="cursor:pointer;':' style="')+'flex:1;min-width:104px;background:#fff;border:1px solid #eef2f7;border-radius:11px;padding:10px 13px;box-shadow:0 1px 2px rgba(15,23,42,.03)"><div style="font-size:11px;color:#64748b">'+lbl+(click?' <i class="bi bi-chevron-right" style="font-size:8px;color:#cbd5e1"></i>':'')+'</div><div style="font-size:20px;font-weight:800;color:'+col+';line-height:1.2">'+val+'</div>'+(sub?'<div style="font-size:10.5px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+sub+'</div>':'')+'</div>';
+  var statStrip='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'
+    +stat('방문 병원',nHosp+'곳','#2563eb','영업일수 '+days.size+'일','_cduDrillAll()')
+    +stat('평균 시술수가',(avg?avg+'천':'-'),'#0891b2',(prices.length?mn+'~'+mx+' · '+prices.length+'곳':'미파악'),prices.length?'_cduDrillBand(0)':'')
+    +stat('경쟁 노출',compTot+'건','#ef4444',(compArr.length?compArr.length+'종 · '+_cduEsc(compArr[0][0]):'없음'),compArr[0]?"_cduDrillComp('"+_cduEsc(compArr[0][0]).replace(/\x27/g,"\\x27")+"')":'')
+    +stat('이탈 위험',churn.length+'곳','#dc2626',(churn.length?'방어 필요':'없음 👍'),'_cduDrillChurn()')
+    +stat('이벤트·릴스',ev+'·'+rl,'#7c3aed','마케팅 활동')
+    +stat('방문처 매출',_cduWon(visitedRev),'#0d9488','올해 팁매출 규모','_cduDrillVip()')
+  +'</div>';
+  var distRow='<div class="row g-3 mb-3">'
+    +'<div class="col-md-4">'+card('주력 시술 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 방문처가 미는 시술</span>','bi-magic','#7c3aed',(procArr.length?procArr.map(([n,c])=>barRow(n,c,c/procTot*100,'#7c3aed','건')).join(''):'<div class="text-muted" style="font-size:12px">시술 정보 입력 없음</div>'))+'</div>'
+    +'<div class="col-md-4">'+card('병원 규모 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 원장 수 기준</span>','bi-people-fill','#2563eb',(docArr.length?docArr.map(([n,c])=>barRow(n,c,c/nHosp*100,'#2563eb','곳')).join(''):'<div class="text-muted" style="font-size:12px">규모 정보 없음</div>'))+'</div>'
+    +'<div class="col-md-4">'+card('국내 / 해외 마케팅','bi-globe2','#0d9488',(regArr.length?regArr.map(([n,c])=>barRow(n,c,c/nHosp*100,'#0d9488','곳')).join(''):'<div class="text-muted" style="font-size:12px">구분 정보 없음</div>'))+'</div>'
+  +'</div>';
   el.innerHTML=
-    briefing + checkpoints
-    // 임원 요약 히어로
-    +'<div style="background:linear-gradient(120deg,#1e293b,#334155);border-radius:16px;padding:18px 22px;color:#fff;margin-bottom:14px;box-shadow:0 8px 22px -12px rgba(15,23,42,.5)">'
-      +'<div style="font-size:11px;font-weight:700;letter-spacing:.08em;color:rgba(255,255,255,.6);text-transform:uppercase">소모품파트 주간 영업활동 — '+focusLabel+' 요약'+wowBadge+' <span style="font-size:10px;font-weight:400;text-transform:none;color:rgba(255,255,255,.4)">· 카드 클릭 시 상세</span></div>'
-      +'<div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:12px">'
-        +heroStat('방문 병원',nHosp+'<span style="font-size:13px;font-weight:600;color:rgba(255,255,255,.6)">곳</span>','영업일수 '+days.size+'일','_cduDrillAll()')
-        +heroStat('평균 시술 수가',(avg?avg+'<span style="font-size:13px;font-weight:600;color:rgba(255,255,255,.6)">천원</span>':'-'),(prices.length?'최고 '+mx+' / 최저 '+mn:'미파악'),prices.length?'_cduDrillBand(0)':'')
-        +heroStat('경쟁 최다',(compArr[0]?_cduEsc(compArr[0][0]):'-'),(compArr[0]?compArr[0][1]+'곳 노출 · '+compArr.length+'종':'-'),compArr[0]?"_cduDrillComp('"+_cduEsc(compArr[0][0]).replace(/\x27/g,"\\x27")+"')":'')
-        +heroStat('이탈 위험',churn.length+'<span style="font-size:13px;font-weight:600;color:rgba(255,255,255,.6)">곳</span>','이벤트 '+ev+' · 릴스 '+rl,'_cduDrillChurn()')
-      +'</div></div>'
-    // 자동 인사이트
-    +'<div class="card p-3 mb-3" style="border-left:3px solid #f59e0b"><div class="fw-bold mb-2" style="font-size:13px"><i class="bi bi-stars me-1 text-warning"></i>핵심 인사이트 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 자동 요약</span></div>'
-      +'<ul style="margin:0;padding-left:18px;font-size:12.5px;color:#334155;line-height:1.9">'+ins.map(x=>'<li>'+x+'</li>').join('')+'</ul></div>'
+    statStrip
     +'<div class="row g-3 mb-3">'
-      +'<div class="col-lg-7">'+card('주차별 활동 추이','bi-graph-up','#2563eb',trendHtml+'<div style="font-size:10.5px;color:#9ca3af;margin-top:6px">막대=방문 병원 수 · 파란 배경=선택/최근 주차</div>')+'</div>'
+      +'<div class="col-lg-7">'+card('기간 내 활동 추이 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 주 단위</span>','bi-graph-up','#2563eb',trendHtml+'<div style="font-size:10.5px;color:#9ca3af;margin-top:6px">막대=방문 병원 수 · 수가=주 평균 · 이벤트=진행 병원 수</div>')+'</div>'
       +'<div class="col-lg-5">'+card('시술 수가 밴드 (올리지오 300샷) <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 클릭 상세</span>','bi-cash-stack','#0891b2',
           (prices.length? bands.map((b,i)=>barRow(b[0].replace('천원','')+'천원',bandCnt[i],bandCnt[i]/prices.length*100,'#0891b2','곳','_cduDrillBand('+i+')')).join('')+'<div style="font-size:11px;color:#64748b;margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9">평균 <b>'+avg+'</b> · 최고 '+mx+' · 최저 '+mn+' · '+prices.length+'곳 파악</div>'
             : '<div class="text-muted" style="font-size:12px">수가 파악 병원 없음</div>'))+'</div>'
@@ -5644,6 +5636,7 @@ function renderCDUReport(vs){
       +'<div class="col-md-6">'+card('경쟁사 노출 현황 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 클릭 상세</span>','bi-shield-exclamation','#ef4444',(compArr.length?compArr.map(([n,c])=>barRow(n,c,c/compTot*100,'#ef4444','곳',"_cduDrillComp('"+_cduEsc(n).replace(/\x27/g,"\\x27")+"')")).join(''):'<div class="text-muted" style="font-size:12px">경쟁사 정보 없음</div>'))+'</div>'
       +'<div class="col-md-6">'+card('주요 마케팅 채널 활용 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 클릭 상세</span>','bi-megaphone','#2563eb',(chanArr.length?chanArr.map(([n,c])=>barRow(n,c,c/nHosp*100,'#2563eb','곳',"_cduDrillChan('"+_cduEsc(n).replace(/\x27/g,"\\x27")+"')")).join(''):'<div class="text-muted" style="font-size:12px">채널 정보 없음</div>')+'<div style="font-size:10.5px;color:#9ca3af;margin-top:6px">※ 방문 병원 대비 활용률(복수 선택)</div>')+'</div>'
     +'</div>'
+    +distRow
     +'<div class="row g-3 mb-3">'
       +'<div class="col-lg-7">'+card('이탈 위험 병원 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 클릭하면 이력</span>','bi-exclamation-triangle','#dc2626',churnHtml)+'</div>'
       +'<div class="col-lg-5">'+card('담당자별 방문 커버리지 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 클릭 상세</span>','bi-people','#0d9488',salesArr.map(([n,c])=>barRow(n,c,c/nHosp*100,'#0d9488','곳',"_cduDrillSales('"+_cduEsc(n).replace(/\x27/g,"\\x27")+"')")).join(''))+'</div>'
@@ -5668,10 +5661,41 @@ function saveCDUInsight(){
   var msg=document.getElementById('cdu-insight-msg'); if(msg)msg.innerHTML='<span style="color:#6b7280">저장 중…</span>';
   DB.save('logs').then(()=>{ if(msg)msg.innerHTML='<span style="color:#16a34a"><i class="bi bi-check-circle"></i> 저장됨</span>'; });
 }
+var _cduInputView=(function(){try{return sessionStorage.getItem('cdu_input_view')||'list';}catch(e){return 'list';}})();
+var _cduInputMonth=null;
+function _cduSetInputView(v){ _cduInputView=v; try{sessionStorage.setItem('cdu_input_view',v);}catch(e){} renderCDU(); }
+function _cduInputMonthNav(delta){ var now=new Date(); var y=(_cduInputMonth?_cduInputMonth.y:now.getFullYear()), m=(_cduInputMonth?_cduInputMonth.m:now.getMonth()+1)+delta; if(m<1){m=12;y--;} if(m>12){m=1;y++;} _cduInputMonth={y:y,m:m}; renderCDU(); }
 function renderCDUInput(vs){
   var el=document.getElementById('cdu-input'); if(!el) return;
+  var toolbar='<div class="d-flex align-items-center mb-2"><div class="btn-group btn-group-sm">'
+    +'<button class="btn btn-'+(_cduInputView==='list'?'primary':'outline-primary')+'" onclick="_cduSetInputView(\'list\')"><i class="bi bi-list-ul me-1"></i>목록</button>'
+    +'<button class="btn btn-'+(_cduInputView==='cal'?'primary':'outline-primary')+'" onclick="_cduSetInputView(\'cal\')"><i class="bi bi-calendar3 me-1"></i>캘린더</button>'
+    +'</div><span style="font-size:11px;color:#94a3b8;margin-left:8px">'+(_cduInputView==='cal'?'월을 이동하며 방문을 한눈에 · 칸을 눌러 상세':'기간 필터 적용 · 행을 눌러 상세/수정')+'</span></div>';
+  el.innerHTML=toolbar+(_cduInputView==='cal'?_cduInputCal():_cduInputList(vs));
+}
+function _cduInputCal(){
+  var base=_cduBaseFiltered();
+  var now=new Date(); var y=(_cduInputMonth?_cduInputMonth.y:now.getFullYear()), m=(_cduInputMonth?_cduInputMonth.m:now.getMonth()+1);
+  var mp=y+'-'+String(m).padStart(2,'0');
+  var byd={}, cnt=0; base.forEach(function(v){ var d=String(v.date||'').slice(0,10); if(d.indexOf(mp)===0){ (byd[d]=byd[d]||[]).push(v); cnt++; } });
+  var first=new Date(y,m-1,1), startDow=first.getDay(), days=new Date(y,m,0).getDate();
+  var todayS=_cduTodayStr(), cells='';
+  for(var i=0;i<startDow;i++) cells+='<div style="min-height:92px;border:1px solid #f1f3f7;background:#fafbfc"></div>';
+  for(var d=1;d<=days;d++){ var ds=mp+'-'+String(d).padStart(2,'0'); var its=(byd[ds]||[]); var isT=ds===todayS;
+    cells+='<div style="min-height:92px;border:1px solid #f1f3f7;padding:3px 4px;overflow:hidden;background:'+(isT?'#eff6ff':'#fff')+'">'
+      +'<div style="font-size:11px;color:'+(isT?'#2563eb':'#9ca3af')+';font-weight:'+(isT?'800':'400')+'">'+d+(isT?' ●':'')+'</div>'
+      +its.slice(0,4).map(function(v){ var col=(v.churnRisk||'').trim()?'#ea580c':((v.competitor||'').trim()?'#dc2626':'#2563eb'); return '<div onclick="openCDUVisit(\''+v.id+'\')" style="font-size:10px;margin-top:1px;padding:1px 4px;border-radius:3px;background:'+col+'18;color:'+col+';cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+_cduEsc(v.custName+(v.competitor?' · '+v.competitor:'')+(v.price?' · 수가'+v.price+'천':'')+(v.sales?' · '+v.sales:''))+'">'+_cduEsc(v.custName||'')+'</div>'; }).join('')
+      +(its.length>4?'<div style="font-size:9px;color:#9ca3af;margin-top:1px">+'+(its.length-4)+' 더</div>':'')
+    +'</div>';
+  }
+  var head=['일','월','화','수','목','금','토'].map(function(w,i){return '<div style="text-align:center;font-size:11px;padding:4px;color:'+(i===0?'#dc2626':i===6?'#2563eb':'#6b7280')+'">'+w+'</div>';}).join('');
+  var nav='<div class="d-flex align-items-center mb-2"><span style="font-size:14px;font-weight:800;color:#374151">'+y+'년 '+m+'월</span><span style="font-size:11px;color:#94a3b8;margin-left:6px">· '+cnt+'건</span>'
+    +'<span class="ms-auto"><button class="btn btn-sm btn-outline-secondary" onclick="_cduInputMonthNav(-1)"><i class="bi bi-chevron-left"></i></button> <button class="btn btn-sm btn-outline-secondary" onclick="_cduInputMonth=null;renderCDU()">이번달</button> <button class="btn btn-sm btn-outline-secondary" onclick="_cduInputMonthNav(1)"><i class="bi bi-chevron-right"></i></button></span></div>';
+  return nav+'<div class="card"><div class="card-body p-2"><div style="display:grid;grid-template-columns:repeat(7,1fr)">'+head+cells+'</div></div></div>';
+}
+function _cduInputList(vs){
   var rows=vs.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
-  if(!rows.length){ el.innerHTML='<div class="card p-5 text-center text-muted" style="font-size:13px"><i class="bi bi-clipboard-plus" style="font-size:24px;color:#cbd5e1"></i><div class="mt-2">방문 기록이 없습니다. 우측 상단 <b>방문 추가</b>로 등록하세요.</div></div>'; return; }
+  if(!rows.length){ return '<div class="card p-5 text-center text-muted" style="font-size:13px"><i class="bi bi-clipboard-plus" style="font-size:24px;color:#cbd5e1"></i><div class="mt-2">이 기간에 방문 기록이 없습니다. 기간을 넓히거나 <b>방문 추가</b>로 등록하세요.</div></div>'; }
   var groups={}, order=[];
   rows.forEach(function(v){ var w=_cduWeekLabel(v.date)||'(날짜 미상)'; if(!groups[w]){groups[w]=[];order.push(w);} groups[w].push(v); });
   var oc=id=>'onclick="openCDUVisit(\''+id+'\')"';
@@ -5689,7 +5713,7 @@ function renderCDUInput(vs){
       +'<td class="text-end" style="white-space:nowrap"><button class="btn btn-link btn-sm p-0 me-2" title="병원 이력" onclick="openCDUHosp(\''+_cduEsc(v.custName||'').replace(/\x27/g,"\\x27")+'\')"><i class="bi bi-clock-history" style="font-size:11px;color:#94a3b8"></i></button><button class="btn btn-link btn-sm p-0 me-2" title="복사(재방문)" onclick="openCDUVisit(\''+v.id+'\',true)"><i class="bi bi-files" style="font-size:11px;color:#94a3b8"></i></button><i class="bi bi-pencil" '+oc(v.id)+' style="color:#94a3b8;font-size:12px;cursor:pointer"></i></td></tr>';
     }).join('');
   }).join('');
-  el.innerHTML='<div class="card"><div class="card-body p-0"><div class="table-responsive"><table class="table table-hover table-sm mb-0" style="font-size:12px">'
+  return '<div class="card"><div class="card-body p-0"><div class="table-responsive"><table class="table table-hover table-sm mb-0" style="font-size:12px">'
     +'<thead class="table-light"><tr><th>일자</th><th>병원 / 대리점</th><th>원장</th><th>경쟁사</th><th>마케팅 채널</th><th class="text-end">수가</th><th class="text-center">이벤트/릴스</th><th>담당</th><th></th></tr></thead>'
     +'<tbody>'+body+'</tbody></table></div></div></div>';
 }
@@ -5880,7 +5904,7 @@ function cduExportCSV(){
   var esc=s=>'"'+String(s==null?'':s).replace(/"/g,'""').replace(/[\r\n]+/g,' ')+'"';
   var lines=[cols.map(c=>esc(c[1])).join(',')];
   vs.forEach(v=>lines.push(cols.map(c=>esc(v[c[0]])).join(',')));
-  var wk=(document.getElementById('cdu-week')||{}).value||'전체';
+  var wk=(_cduPeriodRange()?_cduPeriodLabel().replace(/[^0-9]/g,''):'전체');
   var blob=new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
   var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='CDU_방문기록_'+wk.replace(/\s/g,'')+'.csv'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
   showToast(vs.length+'건 CSV 내보내기 완료', true);
