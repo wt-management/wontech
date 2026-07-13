@@ -244,21 +244,18 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <button onclick="hideAdminPanel()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#94a3b8;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12px"><i class="bi bi-arrow-left me-1"></i>돌아가기</button>
       <div style="font-size:18px;font-weight:700;color:#fff"><i class="bi bi-shield-lock me-2 text-warning"></i>사용자 관리</div>
       <button id="admin-upload-btn" onclick="goUpload()" title="매일 재무팀 회계파일 1개 업로드 → 한국·해외·전사·포트폴리오·일보 전 사이트 자동 갱신 (마스터 전용)" style="display:none;margin-left:auto;background:#16a34a;border:none;color:#fff;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><i class="bi bi-cloud-arrow-up me-1"></i>회계파일 업로드 (전 사이트 갱신)</button>
-      <button onclick="openAddUserModal()" style="background:#ff4500;border:none;color:#fff;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><i class="bi bi-person-plus me-1"></i>사용자 추가</div>
+      <button onclick="openAddUserModal()" style="background:#ff4500;border:none;color:#fff;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600"><i class="bi bi-person-plus me-1"></i>사용자 추가</button>
+    </div>
     <div style="max-width:1640px;margin:0 auto;padding:24px 28px 40px">
     <div style="display:flex;gap:4px;margin-bottom:18px;border-bottom:1px solid rgba(255,255,255,.1)">
-<<<<<<< Updated upstream
       <button id="admtab-users" onclick="adminTab('users')" style="background:none;border:none;border-bottom:2px solid #ff4500;color:#fff;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer">사용자 관리</button>
       <button id="admtab-fb" onclick="adminTab('fb')" style="background:none;border:none;border-bottom:2px solid transparent;color:#94a3b8;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer">요청·신고함 <span id="admtab-fb-badge" style="display:none;background:#ef4444;color:#fff;font-size:10px;padding:1px 6px;border-radius:9px;margin-left:2px;font-weight:700"></span></button>
-=======
-      <button id="admtab-users" onclick="adminTab('users')" style="background:none;border:none;border-bottom:2px solid #ff4500;color:#fff;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer">사용자<button id="admtab-fb" onclick="adminTab('fb')" style="background:none;border:none;border-bottom:2px solid transparent;color:#94a3b8;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer">요청·신고 <span id="admtab-fb-badge" style="display:none;background:#ef4444;color:#fff;font-size:10px;padding:1px 6px;border-radius:9px;margin-left:2px;font-weight:700"></span></button>
->>>>>>> Stashed changes
     </div>
     <div id="admin-tab-users">
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
       <input id="user-search" oninput="_paintUsers()" placeholder="🔍 이름·이메일·부서·직급 검색" style="flex:1;min-width:220px;max-width:360px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 12px;font-size:13px;color:#fff">
       <select id="user-role-filter" onchange="_paintUsers()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 10px;font-size:13px;color:#fff">
-        <option value="" style="background:#1e293b">전체</option>
+        <option value="" style="background:#1e293b">전체 역할</option>
         <option value="user" style="background:#1e293b">팀원</option>
         <option value="manager" style="background:#1e293b">팀/파트장</option>
         <option value="admin" style="background:#1e293b">관리자</option>
@@ -283,13 +280,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     </div><!-- /admin-tab-users -->
     <div id="admin-tab-fb" style="display:none">
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
-<<<<<<< Updated upstream
         <button id="fbsub-fb" onclick="fbSub('feedback')" style="background:#334155;border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer">요청·신고 <span id="fbsub-fb-n" style="color:#94a3b8"></span></button>
         <button id="fbsub-err" onclick="fbSub('errors')" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#94a3b8;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer">오류 로그 <span id="fbsub-err-n" style="color:#64748b"></span></button>
-=======
-        <button id="fbsub-fb" onclick="fbSub('feedback')" style="background:#334155;border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer">요청·신고<span id="fbsub-fb-n" style="color:#94a3b8"></span></button>
-        <button id="fbsub-err" onclick="fbSub('errors')" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#94a3b8;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer">에러 로그<span id="fbsub-err-n" style="color:#64748b"></span></button>
->>>>>>> Stashed changes
         <select id="fb-site-filter" onchange="renderAdminFeedback()" style="margin-left:auto;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 10px;font-size:12.5px;color:#fff"><option value="" style="background:#1e293b">전체 사이트</option></select>
         <button onclick="renderAdminFeedback()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 12px;font-size:12.5px;color:#cbd5e1;cursor:pointer">새로고침</button>
       </div>
@@ -7129,11 +7121,7 @@ async function setUserPassword(id, email){
 
 async function renderUsers() { renderAdminUsers(); }
 
-<<<<<<< Updated upstream
 // ── 요청·신고함 (site_feedback / site_errors 조회, 관리자 전용) ──
-=======
-// 요청·에러 로그 조회 (site_feedback / site_errors 테이블)
->>>>>>> Stashed changes
 let _fbSub='feedback';
 function adminTab(t){
   var u=document.getElementById('admin-tab-users'), f=document.getElementById('admin-tab-fb');
@@ -7163,11 +7151,7 @@ async function renderAdminFeedback(){
   if(bfb){ var on=_fbSub==='feedback'; bfb.style.background=on?'#334155':'rgba(255,255,255,.06)'; bfb.style.color=on?'#fff':'#94a3b8'; }
   if(berr){ var on2=_fbSub==='errors'; berr.style.background=on2?'#334155':'rgba(255,255,255,.06)'; berr.style.color=on2?'#fff':'#94a3b8'; }
   var bd=document.getElementById('admtab-fb-badge'); if(bd){ if(fbCnt){ bd.style.display=''; bd.textContent=fbCnt; } else bd.style.display='none'; }
-<<<<<<< Updated upstream
   // 사이트 필터 옵션 생성(전체 + 발견된 사이트)
-=======
-  // 관리자 요청·신고/에러 로그 조회
->>>>>>> Stashed changes
   var selEl=document.getElementById('fb-site-filter'); var cur=selEl?selEl.value:'';
   if(selEl){ var sites=[]; rows.forEach(function(r){ if(r.site && sites.indexOf(r.site)<0) sites.push(r.site); }); sites.sort();
     selEl.innerHTML='<option value="" style="background:#1e293b">\uC804\uCCB4 \uC0AC\uC774\uD2B8</option>'+sites.map(function(x){return '<option value="'+esc(x)+'"'+(x===cur?' selected':'')+' style="background:#1e293b">'+esc(x)+'</option>';}).join(''); }
