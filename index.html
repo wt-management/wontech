@@ -119,18 +119,38 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:150}
 .sidebar-overlay.open{display:block}
 /* ── 모바일 반응형 ── */
+#m-bottomnav{display:none}
 @media(max-width:768px){
   .hamburger{display:flex}
-  .sidebar{transform:translateX(-100%);transition:transform .3s;z-index:200;width:240px;min-height:100vh;position:fixed}
+  .sidebar{transform:translateX(-100%);transition:transform .3s;z-index:200;width:min(84vw,270px);min-height:100vh;position:fixed;overflow-y:auto;max-height:100vh;-webkit-overflow-scrolling:touch}
   .sidebar.open{transform:translateX(0)}
-  .main{margin-left:0;padding:56px 14px 14px}
+  .sidebar .nav-link{padding:11px 14px;font-size:14px}
+  .main{margin-left:0;padding:56px 12px calc(86px + env(safe-area-inset-bottom))}
   .dash-hero{flex-direction:column;gap:12px;padding-top:16px}
   .dash-hero-right{justify-content:flex-start}
   .stat-card{flex-direction:column;align-items:flex-start;gap:8px}
   .page-header{flex-direction:column;align-items:flex-start;gap:10px}
-  .table-responsive{overflow-x:auto}
+  .table-responsive{overflow-x:auto;-webkit-overflow-scrolling:touch}
   .kpi-value{font-size:1.4rem}
   .pipeline-board{flex-direction:column}
+  /* ── 모바일 하단 탭바(영업사원 주사용 메뉴 4개 + 전체메뉴) ── */
+  #m-bottomnav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:140;background:#fff;border-top:1px solid #e5e7eb;box-shadow:0 -4px 16px rgba(15,23,42,.08);padding:4px 2px calc(4px + env(safe-area-inset-bottom))}
+  #m-bottomnav button{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0 4px;font-size:10px;font-weight:700;color:#94a3b8;cursor:pointer;min-width:0}
+  #m-bottomnav button i{font-size:19px;line-height:1.1}
+  #m-bottomnav button.on{color:#2563eb}
+  /* 플로팅 버튼은 탭바 위로 */
+  #pdf-fab{bottom:calc(86px + env(safe-area-inset-bottom))}
+  #wt-fb-btn{bottom:calc(134px + env(safe-area-inset-bottom))!important}
+  /* iOS 입력 자동확대 방지(16px 미만이면 포커스시 화면이 확대됨) + 터치 타깃 확보 */
+  input.form-control,select.form-select,textarea.form-control{font-size:16px!important;min-height:40px}
+  .modal .btn{min-height:42px}
+  .modal-footer{flex-wrap:wrap;gap:6px}
+  .btn-group-sm>.btn{padding-top:7px;padding-bottom:7px}
+  /* 모달은 화면에 꽉 차게(스크롤 가능) */
+  .modal-dialog{margin:8px auto;max-width:calc(100vw - 16px)}
+  .modal-dialog-scrollable{max-height:calc(100vh - 16px)}
+  /* 화면 밖 가로 스크롤 방지 */
+  body{overflow-x:hidden}
 }
 /* 페이지 전환 애니메이션 */
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -166,7 +186,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 @media print{
   @page{size:A4 landscape;margin:9mm}
   body{background:#fff!important}
-  .sidebar,.hamburger,#site-dropdown,#launcher-screen,#login-screen,#app-loading,.saving-toast,#pdf-fab{display:none!important}
+  .sidebar,.hamburger,#site-dropdown,#launcher-screen,#login-screen,#app-loading,.saving-toast,#pdf-fab,#m-bottomnav,#wt-fb-btn{display:none!important}
   .main,#main-content{margin-left:0!important;padding:0!important}
   .card,table{break-inside:avoid}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
@@ -440,6 +460,15 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 </div>
 
 <div class="main" id="main-content" style="display:none">
+
+  <!-- 모바일 하단 탭바(768px 이하에서만 표시) -->
+  <nav id="m-bottomnav">
+    <button data-p="dashboard" onclick="showPage('dashboard',null)"><i class="bi bi-grid-1x2"></i>현황판</button>
+    <button data-p="schedule" onclick="showPage('schedule',null)"><i class="bi bi-calendar3"></i>일정</button>
+    <button data-p="customers" onclick="showPage('customers',null)"><i class="bi bi-buildings"></i>고객사</button>
+    <button data-p="cdu" onclick="showPage('cdu',null)"><i class="bi bi-clipboard-data"></i>CDU</button>
+    <button onclick="_toggleSidebar()"><i class="bi bi-list"></i>전체메뉴</button>
+  </nav>
 
   <!-- 대시보드 -->
   <!-- 매출 종합 현황 -->
@@ -2456,6 +2485,8 @@ function _closeSidebar() {
   document.querySelector('.sidebar').classList.remove('open');
   document.getElementById('sidebarOverlay').classList.remove('open');
 }
+// 모바일 하단 탭바 활성 동기화
+function _mNavSync(n){ document.querySelectorAll('#m-bottomnav button[data-p]').forEach(b=>b.classList.toggle('on', b.dataset.p===n)); }
 
 function showPage(name, el, noPush) {
   _closeSidebar();
@@ -2473,6 +2504,7 @@ function showPage(name, el, noPush) {
     links.forEach(l=>{ if(l.textContent.trim().includes(
       {'sales-overview':'종합',dashboard:'현황판',sales:'수주관리',quotes:'견적서',schedule:'일정',cdu:'CDU',roi:'ROI 계산기',speech:'Sales Speech',customers:'고객사',equipments:'장비',logs:'상담일지',products:'제품',consumables:'소모품 매출','cons-hospitals':'병원별','device-sales':'제품 매출','device-reps':'담당자별',region:'지역별 분석',pending:'회계 미반영 매출','cons-accounts':'거래처'}[name]||''
     )) l.classList.add('active'); }); }
+  try{_mNavSync(name);}catch(e){}
   if(name==='sales-overview') renderSalesOverview();
   else if(name==='dashboard') renderDashboard();
   else if(name==='sales'||name==='pipeline'||name==='performance') renderSalesPage(name);
