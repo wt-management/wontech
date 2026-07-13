@@ -5425,6 +5425,8 @@ function openDealFromWarranty(custName, model) {
 
 // ══ CDU — 소모품파트 주간 영업활동 (보고 + 방문기록 입력) ══
 let _cduView='report';
+var _cduDetailOpen=false;
+function _cduToggleDetail(){ _cduDetailOpen=!_cduDetailOpen; renderCDU(); }
 function _cduEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function _cduWeekLabel(ds){ if(!ds) return ''; var d=new Date(String(ds).slice(0,10)+'T00:00:00'); if(isNaN(d)) return ''; return (d.getMonth()+1)+'월 '+(Math.floor((d.getDate()-1)/7)+1)+'주'; }
 function _cduVisits(){ return (DB.d.logs||[]).filter(l=>l.kind==='cdu'); }
@@ -5655,44 +5657,51 @@ function renderCDUReport(vs){
   var stat=(lbl,val,col,sub,click)=>'<div'+(click?' onclick="'+click+'" style="cursor:pointer;':' style="')+'flex:1;min-width:104px;background:#fff;border:1px solid #eef2f7;border-radius:11px;padding:10px 13px;box-shadow:0 1px 2px rgba(15,23,42,.03)"><div style="font-size:11px;color:#64748b">'+lbl+(click?' <i class="bi bi-chevron-right" style="font-size:8px;color:#cbd5e1"></i>':'')+'</div><div style="font-size:20px;font-weight:800;color:'+col+';line-height:1.2">'+val+'</div>'+(sub?'<div style="font-size:10.5px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+sub+'</div>':'')+'</div>';
   var statStrip='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'
     +stat('방문 병원',nHosp+'곳','#2563eb','영업일수 '+days.size+'일','_cduDrillAll()')
-    +stat('평균 시술수가',(avg?avg+'천':'-'),'#0891b2',(prices.length?mn+'~'+mx+' · '+prices.length+'곳':'미파악'),prices.length?'_cduDrillBand(0)':'')
-    +stat('경쟁 노출',compTot+'건','#ef4444',(compArr.length?compArr.length+'종 · '+_cduEsc(compArr[0][0]):'없음'),compArr[0]?"_cduDrillComp('"+_cduEsc(compArr[0][0]).replace(/\x27/g,"\\x27")+"')":'')
-    +stat('이탈 위험',churn.length+'곳','#dc2626',(churn.length?'방어 필요':'없음 👍'),'_cduDrillChurn()')
-    +stat('이벤트·릴스',ev+'·'+rl,'#7c3aed','마케팅 활동')
     +stat('방문처 매출',_cduWon(visitedRev),'#0d9488','올해 팁매출 규모','_cduDrillVip()')
+    +stat('이탈 위험',churn.length+'곳','#dc2626',(churn.length?'즉시 방어 필요':'없음 👍'),'_cduDrillChurn()')
+    +stat('평균 시술수가',(avg?avg+'천':'-'),'#0891b2',(prices.length?mn+'~'+mx+' · '+prices.length+'곳 파악':'미파악'),prices.length?'_cduDrillBand(0)':'')
   +'</div>';
   var distRow='<div class="row g-3 mb-3">'
     +'<div class="col-md-4">'+card('주력 시술 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 방문처가 미는 시술</span>','bi-magic','#7c3aed',(procArr.length?procArr.map(([n,c])=>barRow(n,c,c/procTot*100,'#7c3aed','건')).join(''):'<div class="text-muted" style="font-size:12px">시술 정보 입력 없음</div>'))+'</div>'
     +'<div class="col-md-4">'+card('병원 규모 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 원장 수 기준</span>','bi-people-fill','#2563eb',(docArr.length?docArr.map(([n,c])=>barRow(n,c,c/nHosp*100,'#2563eb','곳')).join(''):'<div class="text-muted" style="font-size:12px">규모 정보 없음</div>'))+'</div>'
     +'<div class="col-md-4">'+card('국내 / 해외 마케팅','bi-globe2','#0d9488',(regArr.length?regArr.map(([n,c])=>barRow(n,c,c/nHosp*100,'#0d9488','곳')).join(''):'<div class="text-muted" style="font-size:12px">구분 정보 없음</div>'))+'</div>'
   +'</div>';
-  el.innerHTML=
-    statStrip
-    +'<div class="row g-3 mb-3">'
-      +'<div class="col-lg-7">'+card('기간 내 활동 추이 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 주 단위</span>','bi-graph-up','#2563eb',trendHtml+'<div style="font-size:10.5px;color:#9ca3af;margin-top:6px">막대=방문 병원 수 · 수가=주 평균 · 이벤트=진행 병원 수</div>')+'</div>'
-      +'<div class="col-lg-5">'+card('시술 수가 밴드 (올리지오 300샷) <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 클릭 상세</span>','bi-cash-stack','#0891b2',
+  // ── 상세 분석(접힘 기본) — 궁금할 때만 펼쳐본다 ──
+  var detailSec=
+    '<div class="row g-3 mb-3">'
+      +'<div class="col-md-6">'+card('시술 수가 밴드 (올리지오 300샷) <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 클릭 상세</span>','bi-cash-stack','#0891b2',
           (prices.length? bands.map((b,i)=>barRow(b[0].replace('천원','')+'천원',bandCnt[i],bandCnt[i]/prices.length*100,'#0891b2','곳','_cduDrillBand('+i+')')).join('')+'<div style="font-size:11px;color:#64748b;margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9">평균 <b>'+avg+'</b> · 최고 '+mx+' · 최저 '+mn+' · '+prices.length+'곳 파악</div>'
             : '<div class="text-muted" style="font-size:12px">수가 파악 병원 없음</div>'))+'</div>'
+      +'<div class="col-md-6">'+card('경쟁사 노출 현황 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 클릭 상세</span>','bi-shield-exclamation','#ef4444',(compArr.length?compArr.map(([n,c])=>barRow(n,c,c/compTot*100,'#ef4444','곳',"_cduDrillComp('"+_cduEsc(n).replace(/\x27/g,"\\x27")+"')")).join(''):'<div class="text-muted" style="font-size:12px">경쟁사 정보 없음</div>'))+'</div>'
     +'</div>'
     +'<div class="row g-3 mb-3">'
-      +'<div class="col-md-6">'+card('경쟁사 노출 현황 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 클릭 상세</span>','bi-shield-exclamation','#ef4444',(compArr.length?compArr.map(([n,c])=>barRow(n,c,c/compTot*100,'#ef4444','곳',"_cduDrillComp('"+_cduEsc(n).replace(/\x27/g,"\\x27")+"')")).join(''):'<div class="text-muted" style="font-size:12px">경쟁사 정보 없음</div>'))+'</div>'
       +'<div class="col-md-6">'+card('주요 마케팅 채널 활용 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 클릭 상세</span>','bi-megaphone','#2563eb',(chanArr.length?chanArr.map(([n,c])=>barRow(n,c,c/nHosp*100,'#2563eb','곳',"_cduDrillChan('"+_cduEsc(n).replace(/\x27/g,"\\x27")+"')")).join(''):'<div class="text-muted" style="font-size:12px">채널 정보 없음</div>')+'<div style="font-size:10.5px;color:#9ca3af;margin-top:6px">※ 방문 병원 대비 활용률(복수 선택)</div>')+'</div>'
+      +'<div class="col-md-6">'+card('담당자별 방문 커버리지 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 클릭 상세</span>','bi-people','#0d9488',salesArr.map(([n,c])=>barRow(n,c,c/nHosp*100,'#0d9488','곳',"_cduDrillSales('"+_cduEsc(n).replace(/\x27/g,"\\x27")+"')")).join(''))+'</div>'
     +'</div>'
     +distRow
     +'<div class="row g-3 mb-3">'
-      +'<div class="col-lg-7">'+card('이탈 위험 병원 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 클릭하면 이력</span>','bi-exclamation-triangle','#dc2626',churnHtml)+'</div>'
-      +'<div class="col-lg-5">'+card('담당자별 방문 커버리지 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 클릭 상세</span>','bi-people','#0d9488',salesArr.map(([n,c])=>barRow(n,c,c/nHosp*100,'#0d9488','곳',"_cduDrillSales('"+_cduEsc(n).replace(/\x27/g,"\\x27")+"')")).join(''))+'</div>'
-    +'</div>'
-    +'<div class="row g-3 mb-3">'
-      +'<div class="col-lg-5">'+card('매출 상위 방문 병원 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 올해 팁매출 기준 · 클릭 이력</span>','bi-trophy','#0d9488',
+      +'<div class="col-lg-6">'+card('매출 상위 방문 병원 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 올해 팁매출 기준 · 클릭 이력</span>','bi-trophy','#0d9488',
           (vipArr.length? vipArr.map(function(x,i){ return '<div onclick="openCDUHosp(\''+_cduEsc(x.n).replace(/\x27/g,"\\x27")+'\')" style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f1f5f9;cursor:pointer">'
               +'<span style="font-size:11px;font-weight:800;color:#0d9488;min-width:20px">'+(i+1)+'</span>'
               +'<span style="font-size:12px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_cduEsc(x.n)+'</span>'
               +'<span style="font-size:12px;font-weight:700;color:#0891b2;flex-shrink:0">'+_cduWon(x.rev)+'원</span></div>'; }).join('')+'<div style="font-size:10.5px;color:#9ca3af;margin-top:6px">※ 방문 병원 중 한국영업 회계상 매출이 잡힌 거래처</div>'
             : '<div class="text-muted" style="font-size:12px">방문 병원 중 매출 매칭된 곳이 없습니다</div>'))+'</div>'
-      +'<div class="col-lg-7">'+card('재방문 관리 — 가장 오래 미방문한 병원 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 14일 이상 빨강 · 클릭하면 이력</span>','bi-arrow-repeat','#ea580c',reHtml)+'</div>'
+    +'</div>';
+  el.innerHTML=
+    // ① 핵심 숫자 4개
+    statStrip
+    // ② 지금 챙겨야 할 것 — 행동이 필요한 것만
+    +'<div style="font-size:13px;font-weight:800;color:#b91c1c;margin:2px 0 8px"><i class="bi bi-flag-fill me-1"></i>지금 챙겨야 할 것</div>'
+    +'<div class="row g-3 mb-3">'
+      +'<div class="col-lg-6">'+card('이탈 위험 병원 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 클릭하면 이력</span>','bi-exclamation-triangle','#dc2626',churnHtml)+'</div>'
+      +'<div class="col-lg-6">'+card('오래 미방문한 병원 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 14일 이상 빨강 · 클릭하면 이력</span>','bi-arrow-repeat','#ea580c',reHtml)+'</div>'
     +'</div>'
-    // 편집 인사이트
+    // ③ 활동 추이 한 장
+    +'<div class="row g-3 mb-3"><div class="col-12">'+card('기간 내 활동 추이 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 주 단위</span>','bi-graph-up','#2563eb',trendHtml+'<div style="font-size:10.5px;color:#9ca3af;margin-top:6px">막대=방문 병원 수 · 수가=주 평균 · 이벤트=진행 병원 수</div>')+'</div></div>'
+    // ④ 상세 분석 — 접힘 기본
+    +'<div class="mb-3"><button class="btn btn-outline-secondary btn-sm w-100" onclick="_cduToggleDetail()" style="font-weight:600"><i class="bi bi-chevron-'+(_cduDetailOpen?'up':'down')+' me-1"></i>상세 분석 '+(_cduDetailOpen?'접기':'펼치기')+' <span style="color:#9ca3af;font-weight:400">· 수가 밴드 · 경쟁사 · 마케팅 채널 · 시술/규모 분포 · 담당자 · 매출 상위</span></button></div>'
+    +(_cduDetailOpen?detailSec:'')
+    // ⑤ 담당자 종합 의견
     +'<div class="card p-3"><div class="d-flex align-items-center mb-2"><span class="fw-bold" style="font-size:13px"><i class="bi bi-lightbulb me-1 text-warning"></i>담당자 종합 의견 <span style="font-size:10.5px;font-weight:400;color:#9ca3af">· 임원 보고용</span></span><button class="btn btn-outline-primary btn-sm ms-auto" onclick="saveCDUInsight()"><i class="bi bi-save me-1"></i>저장</button><span id="cdu-insight-msg" style="font-size:11px;margin-left:8px"></span></div>'
       +'<textarea id="cdu-insight" class="form-control form-control-sm" rows="4" placeholder="예: [경쟁 구도] … / [가격 밴드] … / [채널 집중] … / [다음 주 계획] …">'+_cduEsc(savedIns)+'</textarea></div>';
 }
