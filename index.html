@@ -6554,12 +6554,11 @@ function _schBadge(t){ const c=_SCH_COL[t]||'#64748b'; return '<span style="font
 // 담당자별 고유 색상 — 일정 카드의 담당자명 글씨색을 담당자마다 다르게(이름 해시→팔레트)
 function _schRepColor(name){
   name=String(name||'').trim(); if(!name) return '#64748b';
-  // 대비 큰 순서(인접색이 안 겹치게), 빨강·분홍·주황 제외
-  var pal=['#2563eb','#ca8a04','#16a34a','#9333ea','#0891b2','#65a30d','#4f46e5','#0d9488','#7c3aed','#15803d','#0369a1','#475569'];
-  // 영업팀 9명은 명단 순서대로 '서로 다른 색' 고정 배정 → 팀원끼리 절대 안 겹침
-  var idx=(typeof KOR_SALES_TEAM!=='undefined')?KOR_SALES_TEAM.indexOf(name):-1;
-  if(idx>=0) return pal[idx%pal.length];
-  var h=0; for(var k=0;k<name.length;k++){ h=(h*31+name.charCodeAt(k))>>>0; }  // 대리점 등은 해시
+  // 영업팀 9명은 각자 '고정 색' 직접 지정 → DB 순서와 무관하게 서로 확실히 구분(빨강·분홍·주황 제외)
+  var fixed={'조만식':'#2563eb','김세현':'#ca8a04','양준욱':'#16a34a','구주영':'#9333ea','강지형':'#0d9488','김정국':'#65a30d','송재원':'#0891b2','최준수':'#475569','김량현':'#7c3aed'};
+  if(fixed[name]) return fixed[name];
+  var pal=['#2563eb','#ca8a04','#16a34a','#9333ea','#0891b2','#65a30d','#4f46e5','#0d9488','#7c3aed','#15803d','#0369a1','#475569'];  // 대리점 등은 해시
+  var h=0; for(var k=0;k<name.length;k++){ h=(h*31+name.charCodeAt(k))>>>0; }
   return pal[h%pal.length];
 }
 function _schItemRow(i){
