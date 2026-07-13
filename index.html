@@ -7386,25 +7386,13 @@ function _schToHosp(nm){
   setTimeout(function(){ try{ showHospitalDetail(nm); }catch(e){} }, 230);
 }
 // 병원 선택 시 종합정보 패널
-function _schHospInfo(name){
-  const box=document.getElementById('sch-hosp-info'); if(!box) return;
-  name=(name||'').trim();
-  if(!name){ box.style.display='none'; box.innerHTML=''; return; }
+function _schHospCardHtml(name){  // 병원 정보 카드(데이터 있는 병원용)
   const hi=(typeof HOSP_INFO!=='undefined'&&HOSP_INFO[name])||null;
   const ch=(typeof CONS!=='undefined'&&CONS.hospitals&&CONS.hospitals[name])||null;
   const dh=(typeof DEVICE!=='undefined'&&DEVICE.hospitals&&DEVICE.hospitals[name])||null;
-  const nm0=_schEsc(name).replace(/&#39;/g,"\\x27");
-  if(!hi&&!ch&&!dh){
-    // 거래 데이터 없는 병원(신규/미등록) — 이름만이라도 표시
-    box.style.display='block';
-    box.innerHTML='<div style="background:#f8fafc;border:1px solid #eef2f7;border-radius:12px;padding:11px 14px;display:flex;justify-content:space-between;align-items:center">'
-      +'<span style="font-size:12.5px;color:#334155"><i class="bi bi-hospital me-1" style="color:#94a3b8"></i><b>'+_schEsc(name)+'</b> <span style="font-size:11px;color:#94a3b8;margin-left:4px">· 거래 이력 없음 (신규/미등록)</span></span>'
-      +'<span onclick="_schToHosp(\''+nm0+'\')" style="font-size:11px;color:#2563eb;cursor:pointer;font-weight:600">병원 상세 ↗</span></div>';
-    return;
-  }
   const reg=(typeof _hospRegion==='function')?_hospRegion(name):null;
   const regStr=(reg&&reg[0])?(reg[0]+' '+(reg[1]||'')).trim():'-';
-  const mgr=(hi&&hi.mgr)||'-';
+  const mgr=(hi&&hi.mgr)||(typeof _repOf==='function'?_repOf(name):'')||'-';
   const last=(dh&&dh.lastDate)||(ch&&ch.lastDate)||'-';
   const topProd=(dh&&dh.topProd)||(ch&&ch.topProd)||'';
   const equipCnt=(DB.d.equipments||[]).filter(e=>e.custName===name).length;
@@ -7414,8 +7402,7 @@ function _schHospInfo(name){
   const y26=(dh&&dh.y2026||0)+(ch&&ch.y2026||0);
   const nm=_schEsc(name).replace(/&#39;/g,"\\x27");
   const cell=(l,v)=>'<div><span style="color:#94a3b8">'+l+'</span> <b style="color:#334155">'+v+'</b></div>';
-  box.style.display='block';
-  box.innerHTML='<div style="background:#f8fafc;border:1px solid #eef2f7;border-radius:12px;padding:12px 14px">'
+  return '<div style="background:#f8fafc;border:1px solid #eef2f7;border-radius:12px;padding:12px 14px">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
       +'<b style="font-size:13px;color:#0f172a"><i class="bi bi-hospital me-1" style="color:#0891b2"></i>'+_schEsc(name)+'</b>'
       +'<span onclick="_schToHosp(\''+nm+'\')" style="font-size:11px;color:#2563eb;cursor:pointer;font-weight:600">병원 상세 ↗</span></div>'
@@ -7427,6 +7414,37 @@ function _schHospInfo(name){
     +(rlog?'<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;font-size:11px;color:#64748b"><i class="bi bi-chat-left-text me-1"></i>최근 상담 <b>'+_schEsc(rlog.date||'')+'</b> · '+_schEsc((rlog.content||'').slice(0,40))+(rlog.sales?' <span style="color:#2563eb">('+_schEsc(rlog.sales)+')</span>':'')+'</div>':'')
     +_schDealsBox(name)
   +'</div>';
+}
+function _schPickHosp(n){ const inp=document.getElementById('sch-cust'); if(inp) inp.value=n; _schHospInfo(n); }
+function _schHospInfo(name){
+  const box=document.getElementById('sch-hosp-info'); if(!box) return;
+  name=(name||'').trim();
+  if(!name){ box.style.display='none'; box.innerHTML=''; return; }
+  const hi=(typeof HOSP_INFO!=='undefined'&&HOSP_INFO[name])||null;
+  const ch=(typeof CONS!=='undefined'&&CONS.hospitals&&CONS.hospitals[name])||null;
+  const dh=(typeof DEVICE!=='undefined'&&DEVICE.hospitals&&DEVICE.hospitals[name])||null;
+  if(hi||ch||dh){ box.style.display='block'; box.innerHTML=_schHospCardHtml(name); return; }
+  // 정확 일치 없음 → 타이핑 중 부분 일치 후보 검색(2글자부터)
+  const nm0=_schEsc(name).replace(/&#39;/g,"\\x27");
+  const q=name.toLowerCase().replace(/\s+/g,'');
+  let cands=[];
+  if(q.length>=2){
+    const pool=new Set([].concat(Object.keys((typeof CONS!=='undefined'&&CONS.hospitals)||{}),Object.keys((typeof DEVICE!=='undefined'&&DEVICE.hospitals)||{}),Object.keys((typeof HOSP_INFO!=='undefined'&&HOSP_INFO)||{})));
+    cands=[...pool].filter(n=>n.toLowerCase().replace(/\s+/g,'').indexOf(q)>=0).sort((a,b)=>a.length-b.length||a.localeCompare(b,'ko')).slice(0,6);
+  }
+  if(cands.length){
+    box.style.display='block';
+    const chips=cands.map(c=>'<span onclick="_schPickHosp(\''+_schEsc(c).replace(/&#39;/g,"\\x27")+'\')" style="display:inline-block;font-size:11.5px;font-weight:600;color:#1d4ed8;background:#eff6ff;border:1px solid #bfdbfe;border-radius:14px;padding:3px 10px;margin:2px 4px 2px 0;cursor:pointer">'+_schEsc(c)+'</span>').join('');
+    box.innerHTML='<div style="background:#fff;border:1px solid #eef2f7;border-radius:12px;padding:10px 14px;margin-bottom:'+(cands.length===1?'8px':'0')+'">'
+      +'<div style="font-size:11px;color:#64748b;margin-bottom:4px"><i class="bi bi-search me-1"></i>일치하는 병원 <b>'+cands.length+'곳</b> — 눌러서 선택</div>'+chips+'</div>'
+      +(cands.length===1?_schHospCardHtml(cands[0]):'');
+    return;
+  }
+  // 후보도 없음 — 신규/미등록
+  box.style.display='block';
+  box.innerHTML='<div style="background:#f8fafc;border:1px solid #eef2f7;border-radius:12px;padding:11px 14px;display:flex;justify-content:space-between;align-items:center">'
+    +'<span style="font-size:12.5px;color:#334155"><i class="bi bi-hospital me-1" style="color:#94a3b8"></i><b>'+_schEsc(name)+'</b> <span style="font-size:11px;color:#94a3b8;margin-left:4px">· 거래 이력 없음 (신규/미등록)</span></span>'
+    +'<span onclick="_schToHosp(\''+nm0+'\')" style="font-size:11px;color:#2563eb;cursor:pointer;font-weight:600">병원 상세 ↗</span></div>';
 }
 // 병원 선택 시 진행중인 수주관리 딜을 함께 표시 — 클릭하면 딜 상세로(유기적 연동)
 function _schDealsBox(name){
