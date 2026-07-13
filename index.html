@@ -1379,9 +1379,9 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <div class="card p-3 mb-3">
       <div class="d-flex align-items-center mb-2" style="font-size:13px">
         <span class="fw-bold"><i class="bi bi-grid-1x2-fill me-1" style="color:#7c3aed"></i>매출 한눈에</span>
-        <span id="devchart-hint" style="font-size:11px;color:#9ca3af;margin-left:8px">칸 크기 = 매출 규모 · 파랑=영업사원 / 주황=대리점</span>
+        <span id="devchart-hint" style="font-size:11px;color:#9ca3af;margin-left:8px">진한 막대=올해 / 연한 막대=전년 · 이름 옆 ▲▼=전년비 · 파랑=영업사원 주황=대리점</span>
         <div class="btn-group btn-group-sm ms-auto" role="group" style="font-size:11px">
-          <button id="devchart-tree" type="button" class="btn btn-outline-primary active" onclick="_setDevChart('tree',this)">비중지도</button>
+          <button id="devchart-tree" type="button" class="btn btn-outline-primary active" onclick="_setDevChart('bar',this)">순위·전년비</button>
           <button id="devchart-pareto" type="button" class="btn btn-outline-primary" onclick="_setDevChart('pareto',this)">집중도</button>
         </div>
       </div>
@@ -7587,10 +7587,10 @@ function devRepExport() {
 
 let _devRepChart = null;
 // ── 매출 한눈에 그래프 (비중지도=트리맵 / 집중도=Pareto) ──
-let _devChartMode='tree', _devChartObj=null, _devLastEntries=[];
+let _devChartMode='bar', _devChartObj=null, _devLastEntries=[];
 function _setDevChart(m, btn){ _devChartMode=m;
   ['devchart-tree','devchart-pareto'].forEach(function(id){ var e=document.getElementById(id); if(e) e.classList.remove('active'); }); if(btn) btn.classList.add('active');
-  var h=document.getElementById('devchart-hint'); if(h) h.textContent = (m==='pareto') ? '막대=매출(큰 순) · 보라 선=누적 비중(상위 몇 곳이 전체의 몇 %인지)' : '칸 크기 = 매출 규모 · 파랑=영업사원 / 주황=대리점';
+  var h=document.getElementById('devchart-hint'); if(h) h.textContent = (m==='pareto') ? '막대=매출(큰 순) · 보라 선=누적 비중(상위 몇 곳이 전체의 몇 %인지)' : '진한 막대=올해 / 연한 막대=전년 · 이름 옆 ▲▼=전년비 · 파랑=영업사원 주황=대리점';
   renderDevChart();
 }
 function _devFmt(v){ v=Number(v||0); return v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만':Math.round(v)+''; }
@@ -7605,19 +7605,28 @@ function _ensureTreemap(cb){
 function renderDevChart(){
   var el=document.getElementById('devrep-chart'); if(!el||!window.Chart) return;
   var data=(_devLastEntries||[]).filter(function(e){ return e.cur>0; });
-  if(!data.length){ if(_devChartObj){ _devChartObj.destroy(); _devChartObj=null; } return; }
-  if(_devChartMode==='pareto'){ _drawParetoChart(el,data); return; }
-  _ensureTreemap(function(){ if(!_hasTreemap()){ _drawParetoChart(el,data); return; } _drawTreemapChart(el,data); });
+  if(!data.length){ if(_devChartObj){ _devChartObj.destroy(); _devChartObj=null; } var w0=el.parentNode; if(w0)w0.style.height='360px'; return; }
+  if(_devChartMode==='pareto'){ var w1=el.parentNode; if(w1)w1.style.height='360px'; _drawParetoChart(el,data); return; }
+  _drawRankBar(el,data);
 }
-function _drawTreemapChart(el,data){
+// 순위·전년비 가로막대 — 담당자 비교/성장 분석용(트리맵 대체)
+function _drawRankBar(el,data){
   if(_devChartObj){ _devChartObj.destroy(); _devChartObj=null; }
-  _devChartObj=new Chart(el,{ type:'treemap', data:{ datasets:[{
-    tree:data, key:'cur', spacing:1, borderWidth:1, borderColor:'#fff',
-    backgroundColor:function(ctx){ if(ctx.type!=='data'||!ctx.raw) return 'rgba(0,0,0,0)'; var d=ctx.raw._data||{}; return d.isTeam?'#2563eb':'#f59e0b'; },
-    labels:{ display:true, color:'#fff', font:{size:10,weight:'700'}, formatter:function(ctx){ var d=(ctx.raw&&ctx.raw._data)||{}; return [d.name, _devFmt(d.cur)]; } }
-  }] }, options:{ maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{ callbacks:{
-    title:function(items){ return ((items[0].raw||{})._data||{}).name||''; },
-    label:function(item){ return '매출 '+_devFmt(((item.raw||{})._data||{}).cur); } } } } } });
+  var sorted=data.slice().sort(function(a,b){ return b.cur-a.cur; }).slice(0,20);
+  var wrap=el.parentNode; if(wrap) wrap.style.height=Math.max(340, sorted.length*30+48)+'px';
+  var yoy=function(e){ return (e.pre>0)?((e.cur/e.pre-1)*100):null; };
+  _devChartObj=new Chart(el,{ type:'bar', data:{ labels:sorted.map(function(e){return e.name;}), datasets:[
+    { label:'전년', data:sorted.map(function(e){return Math.round(e.pre||0);}), backgroundColor:sorted.map(function(e){return e.isTeam?'rgba(37,99,235,.22)':'rgba(245,158,11,.22)';}), borderWidth:0, order:2 },
+    { label:'올해', data:sorted.map(function(e){return Math.round(e.cur||0);}), backgroundColor:sorted.map(function(e){return e.isTeam?'#2563eb':'#f59e0b';}), borderWidth:0, order:1 }
+  ] }, options:{ indexAxis:'y', maintainAspectRatio:false,
+    plugins:{ legend:{display:true,labels:{font:{size:11},boxWidth:12,padding:10,color:'#64748b'}},
+      tooltip:{ callbacks:{
+        label:function(c){ return c.dataset.label+' '+_devFmt(c.parsed.x); },
+        afterBody:function(items){ var e=sorted[items[0].dataIndex]; if(!e) return ''; var y=yoy(e); return y!=null?('전년比 '+(y>=0?'▲':'▼')+Math.abs(y).toFixed(1)+'%'):'전년 실적 없음(신규)'; } } } },
+    scales:{
+      x:{ ticks:{font:{size:10},callback:function(v){return _devFmt(v);}}, grid:{color:'#f1f5f9'} },
+      y:{ ticks:{font:{size:11,weight:'600'}, autoSkip:false, callback:function(val,idx){ var e=sorted[idx]; if(!e) return ''; var y=yoy(e); var b=y!=null?('  '+(y>=0?'▲':'▼')+Math.abs(y).toFixed(0)+'%'):'  신규'; return e.name+b; } }, grid:{display:false} }
+    } } });
 }
 function _drawParetoChart(el,data){
   if(_devChartObj){ _devChartObj.destroy(); _devChartObj=null; }
@@ -7686,7 +7695,7 @@ function renderDevReps() {
       <td style="font-size:11px;color:#6b7280">${e.topProd||'-'}</td>
     </tr>`;
   }).join('') || '<tr><td colspan="8" class="text-center text-muted py-3">데이터 없음</td></tr>';
-  _devLastEntries = entries.map(function(e){ return {name:e.name, cur:e.cur, isTeam:e.isTeam}; });
+  _devLastEntries = entries.map(function(e){ return {name:e.name, cur:e.cur, pre:e.pre, isTeam:e.isTeam}; });
   renderDevChart();
 }
 
