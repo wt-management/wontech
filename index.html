@@ -158,6 +158,10 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 /* 파이프라인 필터 칩 */
 .pipe-chip{display:inline-flex;align-items:center;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--text-2);transition:all .15s;user-select:none}
 .pipe-chip.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+/* CDU 입력 원터치 칩 */
+.cdu-chip{display:inline-block;padding:4px 11px;border-radius:15px;font-size:11.5px;font-weight:600;border:1px solid #e5e7eb;background:#fff;color:#6b7280;cursor:pointer;margin:3px 4px 0 0;user-select:none;transition:all .12s}
+.cdu-chip.on{background:#2563eb;border-color:#2563eb;color:#fff}
+.cdu-sec{font-size:10.5px;font-weight:800;color:#94a3b8;letter-spacing:.06em;border-bottom:1px solid #f1f5f9;padding-bottom:3px;margin-top:6px}
 /* 대시보드 기간 필터 */
 .dash-period-btn{font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:#fff;color:var(--text-2);cursor:pointer;transition:all .15s}
 .dash-period-btn.on{background:var(--blue);color:#fff;border-color:var(--blue)}
@@ -1022,29 +1026,40 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <div class="modal-header"><h5 class="modal-title">방문 기록</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body"><input type="hidden" id="cd-id">
       <div class="row g-2">
-        <div class="col-md-3"><label class="form-label" style="font-size:12px">방문일 *</label><input type="date" id="cd-date" class="form-control form-control-sm"></div>
-        <div class="col-md-5"><label class="form-label" style="font-size:12px">병원명 *</label><input id="cd-hosp" class="form-control form-control-sm" list="cdu-hosp-list" autocomplete="off" onchange="_cduHospAuto()" onblur="_cduHospAuto()"></div>
-        <div class="col-md-4"><label class="form-label" style="font-size:12px">대리점/담당</label><input id="cd-dealer" class="form-control form-control-sm"></div>
+        <div class="col-12 cdu-sec">방문 정보</div>
+        <div class="col-md-3 col-6"><label class="form-label" style="font-size:12px">방문일 *</label><input type="date" id="cd-date" class="form-control form-control-sm"></div>
+        <div class="col-md-5 col-6"><label class="form-label" style="font-size:12px">병원명 *</label><input id="cd-hosp" class="form-control form-control-sm" list="cdu-hosp-list" autocomplete="off" onchange="_cduHospAuto()" onblur="_cduHospAuto()"></div>
+        <div class="col-md-4 col-12"><label class="form-label" style="font-size:12px">담당(영업사원)</label><input id="cd-sales" class="form-control form-control-sm" list="cdu-sales-list" autocomplete="off"></div>
         <div class="col-12"><div id="cd-hosp-info" style="font-size:11.5px;color:#0f766e;background:#f0fdfa;border:1px solid #ccfbf1;border-radius:8px;padding:7px 10px;display:none"></div></div>
-        <div class="col-md-4"><label class="form-label" style="font-size:12px">대표원장</label><input id="cd-doctor" class="form-control form-control-sm"></div>
-        <div class="col-md-2"><label class="form-label" style="font-size:12px">원장수</label><input type="number" id="cd-dcount" class="form-control form-control-sm" min="0"></div>
-        <div class="col-md-3"><label class="form-label" style="font-size:12px">주력 시술</label><input id="cd-proc" class="form-control form-control-sm"></div>
-        <div class="col-md-3"><label class="form-label" style="font-size:12px">경쟁사</label><input id="cd-comp" class="form-control form-control-sm" placeholder="써마지 등"></div>
+
+        <div class="col-12 cdu-sec">병원 현황</div>
+        <div class="col-md-4 col-6"><label class="form-label" style="font-size:12px">대표원장</label><input id="cdv-doctor" class="form-control form-control-sm"></div>
+        <div class="col-md-2 col-6"><label class="form-label" style="font-size:12px">원장수</label><input type="number" id="cd-dcount" class="form-control form-control-sm" min="0"></div>
+        <div class="col-md-3 col-6"><label class="form-label" style="font-size:12px">시술 수가<span class="text-muted">(천원)</span></label><input type="number" id="cd-price" class="form-control form-control-sm" min="0"></div>
+        <div class="col-md-3 col-6"><label class="form-label" style="font-size:12px">시술 건수</label><input type="number" id="cd-pcount" class="form-control form-control-sm" min="0"></div>
+        <div class="col-12"><label class="form-label" style="font-size:12px">주력 시술 <span class="text-muted">(칩 터치 또는 직접 입력, 복수는 /)</span></label><input id="cd-proc" class="form-control form-control-sm" oninput="_cduChipSync()">
+          <div><span class="cdu-chip" data-for="cd-proc" data-v="올리지오" onclick="_cduChip(this)">올리지오</span><span class="cdu-chip" data-for="cd-proc" data-v="리프팅" onclick="_cduChip(this)">리프팅</span><span class="cdu-chip" data-for="cd-proc" data-v="울쎄라" onclick="_cduChip(this)">울쎄라</span><span class="cdu-chip" data-for="cd-proc" data-v="스킨부스터" onclick="_cduChip(this)">스킨부스터</span><span class="cdu-chip" data-for="cd-proc" data-v="토닝" onclick="_cduChip(this)">토닝</span><span class="cdu-chip" data-for="cd-proc" data-v="보톡스" onclick="_cduChip(this)">보톡스</span><span class="cdu-chip" data-for="cd-proc" data-v="필러" onclick="_cduChip(this)">필러</span><span class="cdu-chip" data-for="cd-proc" data-v="리쥬란" onclick="_cduChip(this)">리쥬란</span></div></div>
+        <div class="col-12"><label class="form-label" style="font-size:12px">경쟁사 <span class="text-muted">(보유 타사 장비)</span></label><input id="cd-comp" class="form-control form-control-sm" placeholder="직접 입력 가능" oninput="_cduChipSync()">
+          <div><span class="cdu-chip" data-for="cd-comp" data-v="볼뉴머" onclick="_cduChip(this)">볼뉴머</span><span class="cdu-chip" data-for="cd-comp" data-v="써마지" onclick="_cduChip(this)">써마지</span><span class="cdu-chip" data-for="cd-comp" data-v="덴서티" onclick="_cduChip(this)">덴서티</span><span class="cdu-chip" data-for="cd-comp" data-v="울쎄라" onclick="_cduChip(this)">울쎄라</span><span class="cdu-chip" data-for="cd-comp" data-v="인모드" onclick="_cduChip(this)">인모드</span><span class="cdu-chip" data-for="cd-comp" data-v="슈링크" onclick="_cduChip(this)">슈링크</span><span class="cdu-chip" data-for="cd-comp" data-v="세르프" onclick="_cduChip(this)">세르프</span></div></div>
+        <div class="col-md-6 col-6"><label class="form-label" style="font-size:12px">재고</label><input id="cd-stock" class="form-control form-control-sm"></div>
+        <div class="col-md-3 col-6"><label class="form-label" style="font-size:12px">국내/해외</label><select id="cdv-region" class="form-select form-select-sm"><option>국내</option><option>국내/해외</option><option>해외</option></select></div>
+        <div class="col-md-3 col-12"><label class="form-label" style="font-size:12px">대리점/담당</label><input id="cd-dealer" class="form-control form-control-sm"></div>
+
+        <div class="col-12 cdu-sec">마케팅</div>
+        <div class="col-12"><label class="form-label" style="font-size:12px">마케팅 채널 <span class="text-muted">(복수 선택)</span></label><input id="cd-chan" class="form-control form-control-sm" placeholder="직접 입력 가능" oninput="_cduChipSync()">
+          <div><span class="cdu-chip" data-for="cd-chan" data-v="인스타그램" onclick="_cduChip(this)">인스타그램</span><span class="cdu-chip" data-for="cd-chan" data-v="블로그" onclick="_cduChip(this)">블로그</span><span class="cdu-chip" data-for="cd-chan" data-v="유튜브" onclick="_cduChip(this)">유튜브</span><span class="cdu-chip" data-for="cd-chan" data-v="카페" onclick="_cduChip(this)">카페</span><span class="cdu-chip" data-for="cd-chan" data-v="앱" onclick="_cduChip(this)">앱</span><span class="cdu-chip" data-for="cd-chan" data-v="리얼모델" onclick="_cduChip(this)">리얼모델</span><span class="cdu-chip" data-for="cd-chan" data-v="페이스북" onclick="_cduChip(this)">페이스북</span></div></div>
+        <div class="col-md-2 col-6"><label class="form-label" style="font-size:12px">이벤트</label><select id="cd-event" class="form-select form-select-sm"><option value="">-</option><option>O</option><option>X</option></select></div>
+        <div class="col-md-2 col-6"><label class="form-label" style="font-size:12px">릴스 촬영</label><select id="cd-reels" class="form-select form-select-sm"><option value="">-</option><option>O</option><option>X</option></select></div>
+
+        <div class="col-12 cdu-sec">영업 코멘트</div>
         <div class="col-12"><label class="form-label" style="font-size:12px">병원 피드백</label><textarea id="cd-fb" class="form-control form-control-sm" rows="2"></textarea></div>
-        <div class="col-md-6"><label class="form-label" style="font-size:12px">마케팅 채널 <span class="text-muted">(복수는 / 로 구분)</span></label><input id="cd-chan" class="form-control form-control-sm" placeholder="인스타그램/블로그/유튜브"></div>
-        <div class="col-md-3"><label class="form-label" style="font-size:12px">국내/해외</label><select id="cd-region" class="form-select form-select-sm"><option>국내</option><option>국내/해외</option><option>해외</option></select></div>
-        <div class="col-md-3"><label class="form-label" style="font-size:12px">담당(영업사원)</label><input id="cd-sales" class="form-control form-control-sm"></div>
-        <div class="col-md-2"><label class="form-label" style="font-size:12px">이벤트</label><select id="cd-event" class="form-select form-select-sm"><option value="">-</option><option>O</option><option>X</option></select></div>
-        <div class="col-md-2"><label class="form-label" style="font-size:12px">릴스 촬영</label><select id="cd-reels" class="form-select form-select-sm"><option value="">-</option><option>O</option><option>X</option></select></div>
-        <div class="col-md-3"><label class="form-label" style="font-size:12px">시술 수가<span class="text-muted">(천원)</span></label><input type="number" id="cd-price" class="form-control form-control-sm" min="0"></div>
-        <div class="col-md-2"><label class="form-label" style="font-size:12px">시술 건수</label><input type="number" id="cd-pcount" class="form-control form-control-sm" min="0"></div>
-        <div class="col-md-3"><label class="form-label" style="font-size:12px">재고</label><input id="cd-stock" class="form-control form-control-sm"></div>
-        <div class="col-md-4"><label class="form-label" style="font-size:12px">이탈 가능성</label><input id="cd-churn" class="form-control form-control-sm" placeholder="예: 볼뉴머로 이탈 우려"></div>
+        <div class="col-12"><label class="form-label" style="font-size:12px">이탈 가능성</label><input id="cd-churn" class="form-control form-control-sm" placeholder="예: 볼뉴머로 이탈 우려"></div>
       </div>
     </div>
     <div class="modal-footer"><button class="btn btn-outline-danger btn-sm me-auto" id="cd-del-btn" style="display:none" onclick="delCDUVisit()"><i class="bi bi-trash me-1"></i>삭제</button><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button><button class="btn btn-primary btn-sm" onclick="saveCDUVisit()">저장</button></div>
   </div></div></div>
   <datalist id="cdu-hosp-list"></datalist>
+  <datalist id="cdu-sales-list"></datalist>
 
   <!-- CDU Keyman 연락처 모달 -->
   <div class="modal fade" id="cduKeyModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
@@ -5548,7 +5563,7 @@ function _cduHospAuto(force){
   var rep=(typeof _repOf==='function')?_repOf(name):''; var hi=(typeof HOSP_INFO!=='undefined'&&HOSP_INFO[name])||{}; var rev=_cduRev(name);
   var setIf=(id,val)=>{ var e=document.getElementById(id); if(e&&(force||!e.value)&&val!=null&&val!=='') e.value=val; };
   if(rep) setIf('cd-sales',rep);
-  setIf('cd-doctor', hi.doctor||(prev&&prev.doctor));
+  setIf('cdv-doctor', hi.doctor||(prev&&prev.doctor));
   if(prev){ setIf('cd-dealer',prev.dealer); setIf('cd-dcount',prev.doctorCount); setIf('cd-proc',prev.mainProc); setIf('cd-comp',prev.competitor); setIf('cd-chan',prev.channels); setIf('cd-price',prev.price); }
   if(info){ var b=[];
     if(rep) b.push('담당 <b>'+_cduEsc(rep)+'</b>');
@@ -5559,6 +5574,7 @@ function _cduHospAuto(force){
     if(prev) b.push('<span style="color:#0891b2">이전방문('+_cduEsc(String(prev.date).slice(5,10))+') 자동참조</span>');
     info.style.display=''; info.innerHTML = b.length? '<i class="bi bi-magic me-1"></i>'+b.join(' · ') : '<span style="color:#94a3b8">한국영업 DB에 매출 이력이 없는 신규/미등록 병원입니다.</span>';
   }
+  try{ _cduChipSync(); }catch(e){}
 }
 function renderCDUReport(vs){
   var el=document.getElementById('cdu-report'); if(!el) return;
@@ -5768,21 +5784,44 @@ function _cduInputList(vs){
     +'<thead class="table-light"><tr><th>일자</th><th>병원 / 대리점</th><th>원장</th><th>경쟁사</th><th>마케팅 채널</th><th class="text-end">수가</th><th class="text-center">이벤트/릴스</th><th>담당</th><th></th></tr></thead>'
     +'<tbody>'+body+'</tbody></table></div></div></div>';
 }
+// 입력 원터치 칩: 터치하면 인풋에 값 추가/제거(복수는 / 구분)
+function _cduChip(el){
+  var e=document.getElementById(el.dataset.for); if(!e) return;
+  var v=el.dataset.v;
+  var parts=e.value.split('/').map(s=>s.trim()).filter(Boolean);
+  var i=parts.indexOf(v); if(i>=0) parts.splice(i,1); else parts.push(v);
+  e.value=parts.join('/');
+  _cduChipSync();
+}
+function _cduChipSync(){
+  document.querySelectorAll('#cduVisitModal .cdu-chip').forEach(function(c){
+    var e=document.getElementById(c.dataset.for);
+    var parts=(e&&e.value||'').split('/').map(s=>s.trim());
+    c.classList.toggle('on', parts.indexOf(c.dataset.v)>=0);
+  });
+}
+function _cduFillSalesList(){
+  var dl=document.getElementById('cdu-sales-list'); if(!dl) return;
+  var s=new Set((typeof KOR_SALES_TEAM!=='undefined'&&KOR_SALES_TEAM)||[]);
+  _cduVisits().forEach(v=>{ var n=(v.sales||'').trim(); if(n) s.add(n); });
+  dl.innerHTML=[...s].filter(Boolean).sort().map(n=>'<option value="'+_cduEsc(n)+'">').join('');
+}
 function openCDUVisit(id, copy){
   var v=id?(_cduVisits().find(x=>x.id===id)):null;
   var isNew=(!v||copy);
   var sv=(x,val)=>{var e=document.getElementById(x); if(e)e.value=val==null?'':val;};
   sv('cd-id', isNew?'':v.id);
   sv('cd-date', (v&&!copy)?(v.date||''):new Date().toISOString().slice(0,10));
-  sv('cd-hosp', v?v.custName:''); sv('cd-dealer', v?v.dealer:''); sv('cd-doctor', v?v.doctor:''); sv('cd-dcount', v?v.doctorCount:'');
+  sv('cd-hosp', v?v.custName:''); sv('cd-dealer', v?v.dealer:''); sv('cdv-doctor', v?v.doctor:''); sv('cd-dcount', v?v.doctorCount:'');
   sv('cd-proc', v?v.mainProc:''); sv('cd-comp', v?v.competitor:''); sv('cd-fb', copy?'':(v?v.feedback:'')); sv('cd-chan', v?v.channels:'');
-  document.getElementById('cd-region').value = v&&v.region?v.region:'국내';
+  document.getElementById('cdv-region').value = v&&v.region?v.region:'국내';
   sv('cd-sales', v?v.sales:(typeof currentUserName==='function'?currentUserName():''));
   document.getElementById('cd-event').value=(v&&!copy)?(v.event||''):''; document.getElementById('cd-reels').value=(v&&!copy)?(v.reels||''):'';
   sv('cd-price', v?v.price:''); sv('cd-pcount', copy?'':(v?v.procCount:'')); sv('cd-stock', v?v.stock:''); sv('cd-churn', copy?'':(v?v.churnRisk:''));
   document.getElementById('cd-del-btn').style.display=isNew?'none':'inline-block';
   var dl=document.getElementById('cdu-hosp-list'); if(dl&&!dl.innerHTML&&CONS.hospitals){ dl.innerHTML=Object.keys(CONS.hospitals).slice(0,800).map(n=>'<option value="'+_cduEsc(n)+'">').join(''); }
   try{ _cduHospAuto(false); }catch(e){}
+  try{ _cduFillSalesList(); _cduChipSync(); }catch(e){}
   new bootstrap.Modal(document.getElementById('cduVisitModal')).show();
 }
 function openCDUVisitFor(name){ openCDUVisit(); var e=document.getElementById('cd-hosp'); if(e){ e.value=name||''; } try{ _cduHospAuto(true); }catch(err){} }
@@ -5791,8 +5830,8 @@ function saveCDUVisit(){
   var date=g('cd-date'), hosp=g('cd-hosp').trim();
   if(!date||!hosp){ alert('방문일과 병원명을 입력하세요.'); return; }
   var id=g('cd-id')||uid();
-  var rec={id:id, kind:'cdu', date:date, custName:hosp, dealer:g('cd-dealer').trim(), doctor:g('cd-doctor').trim(), doctorCount:g('cd-dcount'),
-    mainProc:g('cd-proc').trim(), competitor:g('cd-comp').trim(), feedback:g('cd-fb').trim(), channels:g('cd-chan').trim(), region:g('cd-region'),
+  var rec={id:id, kind:'cdu', date:date, custName:hosp, dealer:g('cd-dealer').trim(), doctor:g('cdv-doctor').trim(), doctorCount:g('cd-dcount'),
+    mainProc:g('cd-proc').trim(), competitor:g('cd-comp').trim(), feedback:g('cd-fb').trim(), channels:g('cd-chan').trim(), region:g('cdv-region'),
     sales:g('cd-sales').trim(), event:g('cd-event'), reels:g('cd-reels'), price:g('cd-price'), procCount:g('cd-pcount'), stock:g('cd-stock').trim(), churnRisk:g('cd-churn').trim(),
     by:(typeof currentUserName==='function'?currentUserName():'')};
   var idx=(DB.d.logs||[]).findIndex(l=>l.id===id);
