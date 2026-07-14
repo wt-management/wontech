@@ -1640,7 +1640,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <div class="d-flex align-items-center mb-2"><i class="bi bi-pencil-square me-1" style="color:#2563eb"></i><b style="font-size:13px">병원 정보 (담당자 직접 수정)</b><span class="text-muted ms-2" style="font-size:11px">실제와 다르면 고쳐 주세요 · 저장 시 모든 담당자에게 공유됩니다</span></div>
       <input type="hidden" id="hi-name">
       <div class="row g-2" style="max-width:760px">
-        <div class="col-6"><label class="form-label" style="font-size:12px"><i class="bi bi-person-badge me-1" style="color:#2563eb"></i>담당 영업 <span class="text-muted">(콜스케줄)</span><span id="hi-mgr-lock" style="display:none;color:#9ca3af;font-weight:400"> · <i class="bi bi-lock-fill"></i> 파트장만 변경</span></label><input type="text" id="hi-mgr" class="form-control form-control-sm" placeholder="예: 조만식 / 공동" list="_mgr-list"></div>
+        <div class="col-6"><label class="form-label" style="font-size:12px"><i class="bi bi-person-badge me-1" style="color:#2563eb"></i>영업 담당자<span id="hi-mgr-lock" style="display:none;color:#9ca3af;font-weight:400"> · <i class="bi bi-lock-fill"></i> 파트장만 변경</span> <button type="button" class="btn btn-link btn-sm p-0" style="font-size:11px" onclick="showMgrHist()"><i class="bi bi-clock-history"></i> 변경 이력</button></label><input type="text" id="hi-mgr" class="form-control form-control-sm" placeholder="예: 조만식 / 공동" list="_mgr-list"></div>
         <div class="col-6"><label class="form-label" style="font-size:12px">지역 (시도 구군)</label><input type="text" id="hi-region" class="form-control form-control-sm" placeholder="예: 서울 강남구" list="_region-list" onfocus="_ensureRegionList()" autocomplete="off"></div>
         <div class="col-6"><label class="form-label" style="font-size:12px">원장명</label><input type="text" id="hi-doctor" class="form-control form-control-sm"></div>
         <div class="col-6"><label class="form-label" style="font-size:12px">전화</label><input type="text" id="hi-tel" class="form-control form-control-sm"></div>
@@ -1671,7 +1671,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <div class="col-md-8"><label class="form-label" style="font-size:12px">병원 * <span class="text-muted" style="font-weight:400">(입력하면 자동완성)</span></label><input type="text" id="sch-cust" class="form-control form-control-sm" list="sch-cust-list" placeholder="병원명 입력…" oninput="_schHospInfo(this.value)" autocomplete="off"><datalist id="sch-cust-list"></datalist></div>
       <div class="col-md-4"><label class="form-label" style="font-size:12px">유형</label><select id="sch-type" class="form-select form-select-sm"><option>방문</option><option>콜</option><option>A/S</option><option>기타</option></select></div>
       <div class="col-md-6"><label class="form-label" style="font-size:12px">날짜 *</label><input type="date" id="sch-date" class="form-control form-control-sm"></div>
-      <div class="col-md-6"><label class="form-label" style="font-size:12px">담당</label><input type="text" id="sch-sales" class="form-control form-control-sm"></div>
+      <div class="col-md-6"><label class="form-label" style="font-size:12px">담당자</label><input type="text" id="sch-sales" class="form-control form-control-sm" list="sch-sales-list" autocomplete="off"><datalist id="sch-sales-list"></datalist></div>
       <div class="col-12"><label class="form-label" style="font-size:12px">제품 / 장비 <span class="text-muted" style="font-weight:400">(자동완성)</span></label><input type="text" id="sch-prod" class="form-control form-control-sm" list="sch-prod-list" placeholder="예: Oligio Kiss / Pico Andy / Tips F4.0" autocomplete="off"><datalist id="sch-prod-list"></datalist></div>
       <div class="col-12"><label class="form-label" style="font-size:12px">내용 / 목적</label><textarea id="sch-note" class="form-control form-control-sm" rows="2" placeholder="예: 재구매 상담 / 데모 후 견적 협의 / 장비 정기 점검"></textarea></div>
     </div>
@@ -1739,6 +1739,12 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <div style="font-size:11.5px;color:#94a3b8;margin-top:8px">🗑 삭제(퇴사) 후 저장하면 담당자 필터·담당자별 분석·일정의 생일 표시에서 즉시 제외됩니다. 생일은 매년 반복 표시됩니다.</div>
   </div>
   <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button><button class="btn btn-primary btn-sm" onclick="saveTeamMgr()"><i class="bi bi-save me-1"></i>저장</button></div>
+</div></div></div>
+
+<!-- 영업 담당자 변경 이력 -->
+<div class="modal fade" id="mgrHistModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+  <div class="modal-header"><h6 class="modal-title" id="mgrHistTitle">담당자 변경 이력</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body" id="mgrHistBody"></div>
 </div></div></div>
 
 <!-- 파이프라인 모달 -->
@@ -2018,7 +2024,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <div class="d-flex align-items-center mb-2"><i class="bi bi-pencil-square me-1" style="color:#2563eb"></i><b style="font-size:13px">병원 정보 (담당자 직접 수정)</b><span class="text-muted ms-2" style="font-size:11px">실제와 다르면 고쳐 주세요 · 모든 담당자에게 공유됩니다</span></div>
     <input type="hidden" id="cd-name">
     <div class="row g-2">
-      <div class="col-6"><label class="form-label" style="font-size:12px"><i class="bi bi-person-badge me-1" style="color:#2563eb"></i>담당 영업 <span class="text-muted">(콜스케줄)</span></label><input type="text" id="cd-mgr" class="form-control form-control-sm" placeholder="예: 조만식 / 공동"></div>
+      <div class="col-6"><label class="form-label" style="font-size:12px"><i class="bi bi-person-badge me-1" style="color:#2563eb"></i>영업 담당자 <button type="button" class="btn btn-link btn-sm p-0" style="font-size:11px" onclick="showMgrHist((document.getElementById('cd-name')||{}).value)"><i class="bi bi-clock-history"></i> 변경 이력</button></label><input type="text" id="cd-mgr" class="form-control form-control-sm" placeholder="예: 조만식 / 공동"></div>
       <div class="col-6"><label class="form-label" style="font-size:12px">거래 담당·대리점 <span class="text-muted">(거래내역 기준)</span></label><input type="text" id="cd-txnsales" class="form-control form-control-sm" disabled style="background:#f8fafc"></div>
       <div class="col-6"><label class="form-label" style="font-size:12px">원장명</label><input type="text" id="cd-doctor" class="form-control form-control-sm"></div>
       <div class="col-6"><label class="form-label" style="font-size:12px">전화</label><input type="text" id="cd-tel" class="form-control form-control-sm"></div>
@@ -2240,6 +2246,36 @@ async function saveTeamMgr(){
   showToast('팀원 명단 저장 완료 — 담당자 필터·일정 생일에 즉시 반영', true);
 }
 function _isKorSales(name){ return KOR_SALES_TEAM.indexOf(name)>=0; }
+// ── 영업 담당자 자동 배정(방문 일정 등록 시) + 변경 이력 ──
+function _mgrAutoAssign(hosp, rep){
+  hosp=String(hosp||'').trim(); rep=String(rep||'').trim();
+  if(!hosp||!rep||!_isKorSales(rep)) return;                       // 팀원 명단에 있는 사람만(대리점 등 제외)
+  const hi=HOSP_INFO[hosp]||(HOSP_INFO[hosp]={});
+  const cur=(hi.mgr||'').trim();
+  if(cur===rep) return;
+  hi.mgrHistory=(hi.mgrHistory||[]).concat([{mgr:rep, prev:cur, from:(new Date().toISOString().slice(0,10)), by:(typeof currentUserName==='function'?currentUserName():'')||rep, reason:'방문 일정 등록'}]);
+  hi.mgr=rep; hi.updatedBy=(typeof currentUserName==='function'?currentUserName():'')||rep; hi.updatedAt=new Date().toISOString().slice(0,10);
+  _KW_SORTED=null;
+  _sb.from('cons_cache').upsert({key:'hospital_info',data:HOSP_INFO},{onConflict:'key'}).then(function(r){
+    if(!r.error) showToast(hosp+' 영업 담당자 → '+rep+(cur?' (이전: '+cur+')':'')+' 자동 지정됨', true);
+  });
+}
+function showMgrHist(name){
+  name=String(name||((document.getElementById('hi-name')||{}).value)||'').trim();
+  if(!name){ alert('병원을 먼저 선택하세요.'); return; }
+  const hi=HOSP_INFO[name]||{};
+  const hist=(hi.mgrHistory||[]).slice().reverse();
+  const t=document.getElementById('mgrHistTitle'); if(t) t.innerHTML='<i class="bi bi-clock-history me-1" style="color:#2563eb"></i>'+String(name).replace(/</g,'&lt;')+' — 담당자 변경 이력';
+  const b=document.getElementById('mgrHistBody'); if(!b) return;
+  const esc=s=>String(s==null?'':s).replace(/</g,'&lt;');
+  const curLine='<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:9px;padding:9px 12px;font-size:13px;margin-bottom:10px">현재 담당자 <b>'+(esc(hi.mgr)||'<span style="color:#94a3b8">미배정</span>')+'</b></div>';
+  b.innerHTML=curLine+(hist.length?hist.map(h=>'<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f1f5f9;font-size:12.5px">'
+      +'<span style="color:#64748b;min-width:78px">'+esc(h.from||'')+'</span>'
+      +'<span style="font-weight:700">'+(h.prev?esc(h.prev)+' <i class="bi bi-arrow-right" style="font-size:10px;color:#94a3b8"></i> ':'')+esc(h.mgr)+'</span>'
+      +'<span style="font-size:11px;color:#94a3b8;margin-left:auto">'+esc(h.reason||'')+(h.by?' · '+esc(h.by):'')+'</span></div>').join('')
+    :'<div class="text-muted" style="font-size:12.5px">기록된 변경 이력이 없습니다. 방문 일정 등록이나 병원정보 수정으로 담당자가 바뀌면 여기에 쌓입니다.</div>');
+  new bootstrap.Modal(document.getElementById('mgrHistModal')).show();
+}
 // ── 병원 담당자 단일 출처(SSOT) ──
 // HOSP_INFO.mgr(고객사에서 수정) 우선 → 없으면 회계 담당(sales). 이걸 전 페이지가 쓰면 mgr 수정이 즉시 반영됨.
 function _repOf(name){
@@ -6924,6 +6960,11 @@ async function saveHospInfoTab(){
     contacts:_collectHospContacts(),
     tags:tagsRaw?tagsRaw.split(',').map(t=>t.trim()).filter(Boolean):[], region:region,
     updatedBy:(typeof currentUserName==='function'?currentUserName():(_meName||'사용자')), updatedAt:new Date().toISOString().slice(0,10)});
+  // 영업 담당자 변경 이력(입퇴사·조직개편 추적)
+  const _oldMgr=((HOSP_INFO[name]||{}).mgr||'').trim();
+  if((info.mgr||'').trim()!==_oldMgr){
+    info.mgrHistory=(((HOSP_INFO[name]||{}).mgrHistory)||[]).concat([{mgr:(info.mgr||'').trim(), prev:_oldMgr, from:new Date().toISOString().slice(0,10), by:info.updatedBy, reason:'병원정보 수정'}]);
+  }
   HOSP_INFO[name]=info; _KW_SORTED=null;
   const msg=document.getElementById('hi-save-msg'); msg.innerHTML='<span style="color:#6b7280">저장 중...</span>';
   try{
@@ -7053,7 +7094,7 @@ function showHospitalDetail(name){
   const _reg=_hospRegion(name); const _regStr=(_reg&&_reg[0])?(_reg[0]+' '+(_reg[1]||'')).trim():'지역 미분류';
   const _hinfo=HOSP_INFO[name]||{}; const _mgr=_hinfo.mgr||'';
   const _txnSales=(CONS.hospitals&&CONS.hospitals[name]&&CONS.hospitals[name].sales)||(DEVICE.hospitals&&DEVICE.hospitals[name]&&DEVICE.hospitals[name].sales)||'';
-  document.getElementById('hosp-modal-sub').innerHTML=`<i class="bi bi-geo-alt-fill" style="color:#059669"></i> ${_regStr} &nbsp;·&nbsp; <i class="bi bi-person-badge" style="color:#2563eb"></i> 담당영업 <b>${_mgr||'<span style="color:#d1d5db">미배정</span>'}</b>${_txnSales&&_txnSales!==_mgr?` <span style="color:#9ca3af">(거래담당 ${_txnSales})</span>`:''} &nbsp;·&nbsp; 납품 장비 ${equips.length}대`;
+  document.getElementById('hosp-modal-sub').innerHTML=`<i class="bi bi-geo-alt-fill" style="color:#059669"></i> ${_regStr} &nbsp;·&nbsp; <span onclick="showMgrHist()" style="cursor:pointer" title="담당자 변경 이력 보기"><i class="bi bi-person-badge" style="color:#2563eb"></i> 영업 담당자 <b>${_mgr||'<span style="color:#d1d5db">미배정</span>'}</b> <i class="bi bi-clock-history" style="font-size:10px;color:#94a3b8"></i></span>${_txnSales&&_txnSales!==_mgr?` <span style="color:#9ca3af">(거래담당 ${_txnSales})</span>`:''} &nbsp;·&nbsp; 납품 장비 ${equips.length}대`;
   // 연락처 칩(읽기전용) — 여러 담당자 한눈에
   (function(){ const box=document.getElementById('hosp-modal-contacts'); if(!box) return;
     const cs=(_hinfo.contacts||[]).filter(c=>c&&(c.name||c.tel));
@@ -7688,6 +7729,7 @@ function renderSchedule(){
 }
 function openSchedule(pre){ pre=pre||{};
   _schFillProdList();
+  (function(){ var dl=document.getElementById('sch-sales-list'); if(dl) dl.innerHTML=(KOR_SALES_TEAM||[]).map(n=>'<option value="'+_schEsc(n)+'">').join(''); })();   // 팀원 명단 기준(입퇴사 자동 반영)
   document.getElementById('sch-id').value=pre.id||'';
   document.getElementById('sch-deal-id').value=pre.dealId||'';
   document.getElementById('sch-deal-badge').style.display=pre.dealId?'block':'none';
@@ -7793,6 +7835,7 @@ async function saveSchedule(){
   const idx=(DB.d.logs||[]).findIndex(l=>l.id===id);
   const rec={id:id,kind:'schedule',custName:cust,date:date,time:(idx>=0?(DB.d.logs[idx].time||''):''),type:document.getElementById('sch-type').value,product:document.getElementById('sch-prod').value.trim(),content:document.getElementById('sch-note').value.trim(),sales:document.getElementById('sch-sales').value.trim(),done:(idx>=0?!!DB.d.logs[idx].done:false),dealId:document.getElementById('sch-deal-id').value||(idx>=0?DB.d.logs[idx].dealId||'':'')};
   if(idx>=0) DB.d.logs[idx]=rec; else DB.d.logs.push(rec);
+  if(idx<0 && rec.type==='방문'){ try{ _mgrAutoAssign(rec.custName, rec.sales); }catch(e){} }   // 방문 등록 → 영업 담당자 자동 지정(이력 기록)
   try{ bootstrap.Modal.getInstance(document.getElementById('scheduleModal')).hide(); }catch(e){}
   renderSchedule(); showToast('일정 저장, 저장 중...'); await DB.save('logs'); showToast('저장 완료', true);
 }
