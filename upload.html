@@ -299,9 +299,9 @@ async function handleFile(file){
     BUILT.ilboPending=null;
     try{
       const _ipRows=(ilboPend&&ilboPend.rows&&ilboPend.rows.length)?JSON.parse(JSON.stringify(ilboPend.rows)):null;
-      if(_ipRows && BUILT.ilbo){
-        const rec=reconcilePending(_ipRows, BUILT.ilbo);
-        BUILT.ilboPending={rows:_ipRows, updatedAt:(BUILT.ilbo.reportDate||'')};
+      if(_ipRows && (BUILT.ilbo || BUILT.intl)){
+        const rec=reconcilePending(_ipRows, BUILT.ilbo, BUILT.intl);           // 해외는 intl 회계 원장으로 대조
+        BUILT.ilboPending={rows:_ipRows, updatedAt:((BUILT.ilbo&&BUILT.ilbo.reportDate)||(BUILT.intl&&BUILT.intl.updatedAt)||'')};
         BUILT.summary.pendAuto=rec.auto; BUILT.summary.pendNear=rec.near; BUILT.summary.pendAutoAmt=Math.round(rec.autoAmt/1e8*10)/10;
         BUILT.summary.pendTotal=_ipRows.length;
         log('미반영 자동대조: 정확일치 '+rec.auto+'건 반영처리, 확인필요 '+rec.near+'건 (총 '+_ipRows.length+'건)');
@@ -341,8 +341,18 @@ function renderPreview(s){
 // 미반영(ilbo_pending) ↔ 새 회계(ilbo_acc.lines) 대조 → 반영처리(자동제외). ilbo.html flagMatches와 동일 규칙: 국내=거래처, 해외=국가(법인/딜러 표기달라도)+제품+금액정확(±2%)만 자동, 근접은 확인필요.
 function _upNorm(s){ return String(s==null?'':s).replace(/[\s()（）\[\]·.,_\/\-]/g,'').toLowerCase(); }
 function _upCtry(name){ name=String(name||''); var i=name.indexOf('/'); if(i>=0) return _upNorm(name.slice(0,i)); var m=name.match(/^(.+?)법인/); return m?_upNorm(m[1]):''; }
-function reconcilePending(rows, ilboAcc){
-  var lines=(ilboAcc&&ilboAcc.lines)||[]; var auto=0,near=0,autoAmt=0;
+// 해외 회계 원장(intl.INTL2026.countries[].clientData[].txns) → 대조용 라인. 연간 누적이라 전월 선적분도 잡힘.
+function _intlLines(intlAcc){
+  var out=[]; var C=(intlAcc&&intlAcc.INTL2026&&intlAcc.INTL2026.countries)||{};
+  Object.keys(C).forEach(function(cc){ var cd=(C[cc]&&C[cc].clientData)||{};
+    Object.keys(cd).forEach(function(nm){ (cd[nm].txns||[]).forEach(function(t){
+      out.push({region:'해외',customer:nm,product:t[1],qty:t[2],amount:t[3],date:t[0]}); }); }); });
+  return out;
+}
+function reconcilePending(rows, ilboAcc, intlAcc){
+  // 국내=ilbo_acc.lines(당월), 해외=intl 회계 원장(연간 누적) — 해외는 ilbo lines에 거의 없어 별도 소스 필요
+  var lines=((ilboAcc&&ilboAcc.lines)||[]).concat(_intlLines(intlAcc)); var auto=0,near=0,autoAmt=0;
+  var _rd=(ilboAcc&&ilboAcc.reportDate)||(intlAcc&&intlAcc.updatedAt)||'';
   rows.forEach(function(p){
     if((p.status&&p.status!=='대기')||p.lock) return;
     var pc=_upNorm(p.customer),pp=_upNorm(p.product),pa=Math.round(Number(p.amount)||0),pq=Number(p.qty)||0;
@@ -358,7 +368,7 @@ function reconcilePending(rows, ilboAcc){
         else if(pa>0&&Math.abs(la-pa)<=pa*0.1){ cand++; }                    // 금액근접 → 확인필요
       } else if(isIntl&&prodEq&&pa>0&&Math.abs(la-pa)<=pa*0.1){ cand++; }    // 국가다르나 제품+금액근접 → 확인필요
     });
-    if(hit){ p.status='반영됨'; p.reflectedDate=(ilboAcc.reportDate||''); p.matchAmt=Math.round(hit.amount); p.matchAuto=true; p.matchLines=[{d:hit.date,c:hit.customer,p:hit.product,q:hit.qty,a:hit.amount}]; auto++; autoAmt+=pa; }
+    if(hit){ p.status='반영됨'; p.reflectedDate=_rd; p.matchAmt=Math.round(hit.amount); p.matchAuto=true; p.matchLines=[{d:hit.date,c:hit.customer,p:hit.product,q:hit.qty,a:hit.amount}]; auto++; autoAmt+=pa; }
     else if(cand){ near++; }
   });
   return {auto:auto, near:near, autoAmt:autoAmt};
