@@ -6147,8 +6147,15 @@ function cduExportCSV(){
 // ── 견적서 ──────────────────────────────────────────────────────
 function renderQuotes() {
   const el=document.getElementById('quote-list');
-  const sorted=[...DB.d.quotes].reverse();
-  if(!sorted.length){el.innerHTML='<tr><td colspan="7" class="text-center text-muted py-3">견적서 없음</td></tr>';return;}
+  const me=((typeof currentUserName==='function'?currentUserName():'')||'').trim();
+  const canAll=(typeof _isMgr!=='undefined'&&_isMgr);   // 파트장·관리자는 전체, 팀원은 본인 작성분만
+  let list=[...DB.d.quotes];
+  if(!canAll&&me) list=list.filter(q=>{
+    const by=(q.by||'').trim(), sl=(q.sales||'').trim();
+    return (by&&(by===me||by.includes(me)||me.includes(by))) || (!by&&sl&&(sl.includes(me)||me.includes(sl)));
+  });
+  const sorted=list.reverse();
+  if(!sorted.length){el.innerHTML='<tr><td colspan="7" class="text-center text-muted py-3">'+(canAll?'견적서 없음':'내가 작성한 견적서가 없습니다 — [새 견적서]로 작성하세요')+'</td></tr>';return;}
   el.innerHTML=sorted.map(q=>`<tr>
     <td><small class="text-muted" style="font-size:11px">${q.id}</small></td>
     <td><strong>${_escH(q.custName)}</strong></td>
@@ -6212,7 +6219,7 @@ function saveQuote(){
   const vat=Math.round(sub*.1);
   const today=new Date();
   let _maxSeq=0; DB.d.quotes.forEach(x=>{const m=String(x.id||'').match(/-(\d+)$/); if(m)_maxSeq=Math.max(_maxSeq,+m[1]);});
-  const q={id:'Q'+today.getFullYear()+(today.getMonth()+1).toString().padStart(2,'0')+today.getDate().toString().padStart(2,'0')+'-'+String(_maxSeq+1).padStart(3,'0'),custName:gV('q-cust'),quoteDate:gV('q-date'),validUntil:gV('q-valid'),sales:gV('q-sales'),status:gV('q-status'),note:gV('q-note'),subtotal:sub,vat,total:sub+vat,items};
+  const q={id:'Q'+today.getFullYear()+(today.getMonth()+1).toString().padStart(2,'0')+today.getDate().toString().padStart(2,'0')+'-'+String(_maxSeq+1).padStart(3,'0'),custName:gV('q-cust'),quoteDate:gV('q-date'),validUntil:gV('q-valid'),sales:gV('q-sales'),status:gV('q-status'),note:gV('q-note'),subtotal:sub,vat,total:sub+vat,items,by:((typeof currentUserName==='function'?currentUserName():'')||'').trim()};
   DB.d.quotes.push(q);
   DB.save('quotes').then(()=>{bootstrap.Modal.getInstance(document.getElementById('quoteModal')).hide();renderQuotes();});
 }
@@ -6324,6 +6331,7 @@ function _qedSave(){
   if(!q.custName){ alert('병원명을 입력하세요.'); return; }
   if(!q.items.length){ alert('제품을 1개 이상 입력하세요.'); return; }
   const idx=(DB.d.quotes||[]).findIndex(x=>x.id===q.id);
+  q.by=(idx>=0?(DB.d.quotes[idx].by||''):'')||((typeof currentUserName==='function'?currentUserName():'')||'').trim();   // 최초 작성자 유지
   if(idx>=0) DB.d.quotes[idx]=q; else DB.d.quotes.push(q);
   DB.save('quotes').then(()=>{ try{bootstrap.Modal.getInstance(document.getElementById('quoteEditModal')).hide();}catch(e){} renderQuotes(); showToast('견적서 저장 완료', true); });
 }
