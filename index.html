@@ -8182,9 +8182,8 @@ async function sdrIMG(){
   showToast('이미지 생성 중...');
   sheet.querySelectorAll('.sdr-noprint').forEach(function(el){ el.style.display='none'; });
   var canvas;
-  // 최종 픽셀 크기로 '직접' 렌더링(후축소 없음) — 축소 보간에 의한 글자 뭉개짐 방지
-  var TW=1100, k=TW/Math.max(sheet.offsetWidth,1);
-  try{ canvas=await html2canvas(sheet,{scale:k,backgroundColor:'#ffffff'}); }
+  // 화면 1:1 렌더링(정수 배율) — 소수 배율은 시트 바깥 회색 배경이 끌려 들어오고, 후축소는 글자가 뭉개짐
+  try{ canvas=await html2canvas(sheet,{scale:1,backgroundColor:'#ffffff'}); }
   finally{ sheet.querySelectorAll('.sdr-noprint').forEach(function(el){ el.style.display=''; }); }
   var D=(document.getElementById('sdr-date')||{}).value||'';
   var R=((document.getElementById('sdr-sales')||{}).value||'').trim();
