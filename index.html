@@ -7628,7 +7628,9 @@ function _schItemRow(i){
     +(i.product?'<span style="font-size:10.5px;color:#0891b2;font-weight:600;flex-shrink:0"><i class="bi bi-box-seam"></i> '+_schEsc(i.product)+'</span>':'')
     +'<span style="font-size:12px;color:#6b7280;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'+(i.kind==='sched'?';cursor:pointer" title="일정 상세/수정" onclick="editSchedule(\''+i.id+'\')':'')+'">'+_schEsc(i.content)+'</span>'
     +(i.sales?'<span style="font-size:11px;color:'+_schRepColor(i.sales)+';background:'+_schRepColor(i.sales)+'22;font-weight:700;flex-shrink:0;margin-left:auto;border-radius:9px;padding:1px 8px"><i class="bi bi-person-badge"></i> '+_schEsc(i.sales)+'</span>':'')
-    +(i.kind==='sched'&&!i.done?'<button class="btn btn-sm btn-outline-success" style="font-size:11px;padding:1px 8px;flex-shrink:0;white-space:nowrap" title="결과 남기고 완료 처리" onclick="toggleSchedDone(\''+i.id+'\')"><i class="bi bi-check-circle me-1"></i>완료·결과</button>':'')
+    +(i.kind==='sched'?(!i.done
+      ?'<button class="btn btn-sm btn-outline-success" style="font-size:11px;padding:1px 8px;flex-shrink:0;white-space:nowrap" title="결과 남기고 완료 처리" onclick="toggleSchedDone(\''+i.id+'\')"><i class="bi bi-check-circle me-1"></i>완료·결과</button>'
+      :'<button class="btn btn-sm btn-outline-secondary" style="font-size:11px;padding:1px 8px;flex-shrink:0;white-space:nowrap" title="입력한 결과 수정" onclick="_schOpenDoneModal(\''+i.id+'\')"><i class="bi bi-pencil-square me-1"></i>결과 수정</button>'):'')
     +(i.kind==='sched'?'<button class="btn btn-sm btn-link p-0 text-secondary" style="font-size:12px;flex-shrink:0" onclick="editSchedule(\''+i.id+'\')"><i class="bi bi-pencil"></i></button>':'')
     +'</div>';
 }
@@ -7760,7 +7762,9 @@ function openSchedule(pre){ pre=pre||{};
   document.getElementById('sch-prod').value=pre.product||'';
   document.getElementById('sch-note').value=pre.content||'';
   document.getElementById('sch-del-btn').style.display=pre.id?'inline-block':'none';
-  var db=document.getElementById('sch-done2-btn'); if(db){ var ex=pre.id?(DB.d.logs||[]).find(x=>x.id===pre.id):null; db.style.display=(ex&&ex.kind==='schedule'&&!ex.done)?'inline-block':'none'; }
+  var db=document.getElementById('sch-done2-btn'); if(db){ var ex=pre.id?(DB.d.logs||[]).find(x=>x.id===pre.id):null;
+    db.style.display=(ex&&ex.kind==='schedule')?'inline-block':'none';
+    db.innerHTML=(ex&&ex.done)?'<i class="bi bi-pencil-square me-1"></i>결과 수정':'<i class="bi bi-check-circle me-1"></i>완료·결과 입력'; }
   _schHospInfo(pre.custName||'');
   bootstrap.Modal.getOrCreateInstance(document.getElementById('scheduleModal')).show();
 }
@@ -7901,7 +7905,10 @@ async function _schConfirmDone(){
   const by=((typeof _meName!=='undefined'&&_meName)||(typeof currentUserName==='function'?currentUserName():'')||l.sales||'').trim();
   const resultTag=result?('['+result+'] '):'';
   const summary=resultTag+(memo||l.content||l.type||'')+(l.product?' · '+l.product:'')+(comp?' / 경쟁품: '+comp:'');
-  DB.d.logs.push({id:uid(),date:_schTodayStr(),custName:l.custName,type:l.type||'방문',content:'[일정 완료] '+summary,product:l.product||'',nextAction:'',nextDate:'',sales:by,by:by});
+  const dlid='schdone_'+id;   // 결정적 id — 결과를 다시 수정해도 상담기록이 중복 생성되지 않고 갱신됨
+  const dlrec={id:dlid,date:_schTodayStr(),custName:l.custName,type:l.type||'방문',content:'[일정 완료] '+summary,product:l.product||'',nextAction:'',nextDate:'',sales:by,by:by};
+  const dlidx=DB.d.logs.findIndex(x=>x.id===dlid);
+  if(dlidx>=0) DB.d.logs[dlidx]=dlrec; else DB.d.logs.push(dlrec);
   const saves=[DB.save('logs')];
   // 딜과 연결된 일정이면 자동 기록 + 다음액션 정리(유기적 연동)
   if(l.dealId){
