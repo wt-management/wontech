@@ -1898,7 +1898,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
             <div class="k">문서번호</div><div class="v" id="qed-docno">—</div>
             <div class="k">견적일자</div><div class="v"><input type="date" class="f" id="qed-date"></div>
             <div class="k">유효기간</div><div class="v"><input type="date" class="f blank" id="qed-valid" onchange="_qedValidSync()"></div>
-            <div class="k">담당영업</div><div class="v" style="display:flex;gap:4px"><input class="f blank" id="qed-team" placeholder="팀명" list="qed-team-list" autocomplete="off" style="width:112px;flex-shrink:0"><datalist id="qed-team-list"><option value="한국영업팀"><option value="한국영업1파트"><option value="한국영업2파트"><option value="CDU파트"></datalist><input class="f blank" id="qed-sales" placeholder="담당자명" style="flex:1;min-width:0"><select class="f" id="qed-rank" style="width:74px;flex-shrink:0"><option value="">직급</option><option>사원</option><option>주임</option><option>대리</option><option>과장</option><option>차장</option><option>부장</option><option>파트장</option><option>팀장</option><option>이사</option></select></div>
+            <div class="k">담당영업</div><div class="v" style="display:flex;gap:4px"><input class="f blank" id="qed-team" placeholder="팀명" list="qed-team-list" autocomplete="off" style="width:112px;flex-shrink:0"><datalist id="qed-team-list"><option value="한국영업팀"><option value="한국영업1파트"><option value="한국영업2파트"><option value="CDU파트"></datalist><input class="f blank" id="qed-sales" placeholder="담당자명" style="flex:1;min-width:0" oninput="_qedSalesPhoneSync()" onchange="_qedSalesPhoneSync()"><select class="f" id="qed-rank" style="width:74px;flex-shrink:0"><option value="">직급</option><option>사원</option><option>주임</option><option>대리</option><option>과장</option><option>차장</option><option>부장</option><option>파트장</option><option>팀장</option><option>이사</option></select></div>
             <div class="k">연락처</div><div class="v"><input class="f blank" id="qed-phone" placeholder="010-0000-0000"></div>
             <div class="k">상태</div><div class="v"><select class="f" id="qed-status"><option>임시</option><option>발송</option><option>수락</option><option>거절</option></select></div>
           </div>
@@ -6250,7 +6250,11 @@ function openQuoteEditor(id){
     setV('qed-rank', _rk);
   }catch(e){}
   try{ setV('qed-team', q?(q.salesTeam||'한국영업팀'):(localStorage.getItem('wt_qteam')||'한국영업팀')); }catch(e){}
-  try{ setV('qed-phone', q?(q.salesPhone||''):(localStorage.getItem('wt_qphone')||'')); }catch(e){}
+  try{
+    var _ph=q?(q.salesPhone||''):'';
+    if(!_ph){ var _nm=((document.getElementById('qed-sales')||{}).value||'').trim(); _ph=WT_SALES_PHONE[_nm]||localStorage.getItem('wt_qphone')||''; }
+    setV('qed-phone', _ph);
+  }catch(e){}
   try{ var _tv0=(q&&q.terms&&q.terms.length===4)?q.terms:[(q&&q.validUntil)?(fmtDate(q.validUntil)+' 까지'):'견적 후 30일','계약 후 3일 이내','선입금','지정장소']; setV('qed-t1',_tv0[0]); setV('qed-t2',_tv0[1]); setV('qed-t3',_tv0[2]); setV('qed-t4',_tv0[3]); }catch(e){}
   document.getElementById('qed-status').value = q?(q.status||'임시'):'임시';
   setV('qed-note', q?(q.note||''):'');
@@ -6321,6 +6325,15 @@ function _qedCalc(){
   document.getElementById('qed-kor').textContent='一金 '+numKor(total)+'원整';
 }
 function _qedValidSync(){ var v=(document.getElementById('qed-valid')||{}).value; var t=document.getElementById('qed-t1'); if(t&&v) t.value=fmtDate(v)+' 까지'; }
+// 담당자별 기본 연락처 — 담당자명 입력 시 자동 채움(수기 수정 가능)
+const WT_SALES_PHONE={'김정국':'010-9870-2838','조만식':'010-9981-1236','양준욱':'010-2827-0488','김세현':'010-7928-8792','구주영':'010-9950-9916','강지형':'010-5480-1823','송재원':'010-8935-8482','최준수':'010-3830-4292','김량현':'010-9034-4145'};
+function _qedSalesPhoneSync(){
+  var nm=((document.getElementById('qed-sales')||{}).value||'').trim();
+  var p=document.getElementById('qed-phone'); if(!p) return;
+  var def=WT_SALES_PHONE[nm]; if(!def) return;
+  var cur=(p.value||'').trim();
+  if(!cur||Object.values(WT_SALES_PHONE).indexOf(cur)>=0) p.value=def;   // 비었거나 다른 팀원 기본값이면 교체(수기 입력은 보존)
+}
 function _qedTmpl(t){ _qed.tmpl=t; const s=document.getElementById('qedtpl-std'),p=document.getElementById('qedtpl-simple'); if(s)s.classList.toggle('on',t==='classic'); if(p)p.classList.toggle('on',t!=='classic'); }
 function _qedCollect(){
   const items=[];
