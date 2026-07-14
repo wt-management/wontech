@@ -1762,7 +1762,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <div class="col-12"><label class="form-label">메모</label><textarea id="p-note" class="form-control form-control-sm" rows="2"></textarea></div>
       <div class="col-12"><label class="form-label">다음 액션</label><input type="text" id="p-next-action" class="form-control form-control-sm" placeholder="예) 견적서 발송, 원장 미팅 요청..."></div>
       <div class="col-6"><label class="form-label">다음 액션 일자</label><input type="date" id="p-next-date" class="form-control form-control-sm"></div>
-      <div class="col-6"><label class="form-label">액션 유형</label><select id="p-next-type" class="form-select form-select-sm"><option value="">선택</option><option>전화</option><option>방문</option><option>견적발송</option><option>데모</option><option>계약검토</option><option>기타</option></select></div>
+      <div class="col-6"><label class="form-label">액션 유형</label><select id="p-next-type" class="form-select form-select-sm"><option value="">선택</option><option>콜</option><option>방문</option><option>견적발송</option><option>데모</option><option>계약검토</option><option>기타</option></select></div>
     </div>
   </div>
   <div class="modal-footer">
@@ -3559,9 +3559,9 @@ function renderDashboard() {
   // KPI 1: 기간별 확정 매출
   const wonPeriod=DB.d.pipeline.filter(d=>d.stage==='계약완료'&&yms.some(ym=>(d.stageUpdatedAt||'').startsWith(ym)));
   const wonAmt=wonPeriod.reduce((s,d)=>s+Number(d.amount||0),0);
-  // KPI 2: 기간 내 마감 예정 파이프라인 가중금액
+  // KPI 2: 기간 내 마감 예정 파이프라인 금액(전액 합계)
   const closingPeriod=DB.d.pipeline.filter(d=>d.stage!=='계약완료'&&yms.some(ym=>(d.expectedDate||'').startsWith(ym)));
-  const expectedAmt=Math.round(closingPeriod.reduce((s,d)=>s+Number(d.amount||0)*Number(d.prob||0)/100,0));
+  const expectedAmt=Math.round(closingPeriod.reduce((s,d)=>s+Number(d.amount||0),0));
   const totalForecast=wonAmt+expectedAmt;
   // 전월 대비 (월 단위일 때만)
   const prevYms=(()=>{
@@ -3577,7 +3577,7 @@ function renderDashboard() {
   document.getElementById('kpi-confirmed').textContent=fmtAmt(wonAmt);
   document.getElementById('kpi-confirmed-sub').textContent=`${wonPeriod.length}건 계약완료${momChg!==null?' · 전월比 '+(Number(momChg)>=0?'▲':'▼')+Math.abs(momChg)+'%':''}`;
   document.getElementById('kpi-expected').textContent=fmtAmt(expectedAmt);
-  document.getElementById('kpi-expected-sub').textContent=`마감예정 ${closingPeriod.length}건 가중합산`;
+  document.getElementById('kpi-expected-sub').textContent=`마감예정 ${closingPeriod.length}건 합계`;
   document.getElementById('kpi-total-forecast').textContent=fmtAmt(totalForecast);
   document.getElementById('kpi-total-forecast-sub').textContent=totalForecast>0?`확정 ${Math.round(wonAmt/totalForecast*100)}% + 예상 ${Math.round(expectedAmt/totalForecast*100)}%`:'데이터 없음';
   // Win Rate (최근 6개월)
@@ -3587,9 +3587,9 @@ function renderDashboard() {
   document.getElementById('kpi-winrate').textContent=wr!=null?wr+'%':'-';
   document.getElementById('kpi-winrate-sub').textContent=`최근 6개월 · ${won6m.length}건 완료`;
   // 파이프라인 잔고
-  const weightedTotal=Math.round(activePipe.reduce((s,d)=>s+Number(d.amount||0)*Number(d.prob||0)/100,0));
+  const weightedTotal=Math.round(activePipe.reduce((s,d)=>s+Number(d.amount||0),0));
   document.getElementById('kpi-pipe-balance').textContent=fmtAmt(weightedTotal);
-  document.getElementById('kpi-pipe-balance-sub').textContent=`진행중 ${activePipe.length}건 가중합산`;
+  document.getElementById('kpi-pipe-balance-sub').textContent=`진행중 ${activePipe.length}건 합계`;
   // 매출 전망 바
   const revBar=document.getElementById('dash-revenue-bar');
   if(revBar&&totalForecast>0){
@@ -3607,7 +3607,7 @@ function renderDashboard() {
   const months=[];
   for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);}
   const confirmedByMonth=months.map(ym=>DB.d.pipeline.filter(d=>d.stage==='계약완료'&&(d.stageUpdatedAt||'').startsWith(ym)).reduce((s,d)=>s+Number(d.amount||0),0));
-  const expectedByMonth=months.map(ym=>Math.round(DB.d.pipeline.filter(d=>d.stage!=='계약완료'&&(d.expectedDate||'').startsWith(ym)).reduce((s,d)=>s+Number(d.amount||0)*Number(d.prob||0)/100,0)));
+  const expectedByMonth=months.map(ym=>Math.round(DB.d.pipeline.filter(d=>d.stage!=='계약완료'&&(d.expectedDate||'').startsWith(ym)).reduce((s,d)=>s+Number(d.amount||0),0)));
   const monthLabels=months.map(ym=>ym.split('-')[1]+'월');
   if(monthlyChart) monthlyChart.destroy();
   const ctx=document.getElementById('chart-monthly').getContext('2d');
@@ -3649,12 +3649,12 @@ function renderDashboard() {
 
   // 퍼널 요약
   const activePipeAll=DB.d.pipeline.filter(d=>d.stage!=='계약완료');
-  const weightedAll=Math.round(activePipeAll.reduce((s,d)=>s+Number(d.amount||0)*Number(d.prob||0)/100,0));
+  const weightedAll=Math.round(activePipeAll.reduce((s,d)=>s+Number(d.amount||0),0));
   const funnelSum=document.getElementById('dash-funnel-summary');
   if(funnelSum) funnelSum.innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
       <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">진행중 딜</div><div style="font-size:16px;font-weight:800;color:#374151">${activePipeAll.length}<span style="font-size:11px;font-weight:400">건</span></div></div>
-      <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">가중 예상 합계</div><div style="font-size:14px;font-weight:800;color:#7c3aed">${fmtAmt(weightedAll)}</div></div>
+      <div style="text-align:center"><div style="font-size:10px;color:#9ca3af">예상 합계</div><div style="font-size:14px;font-weight:800;color:#7c3aed">${fmtAmt(weightedAll)}</div></div>
     </div>`;
 
 
@@ -3703,7 +3703,7 @@ function renderDashboard() {
   const salesList=[...salesSet].map(s=>{
     const won=DB.d.pipeline.filter(d=>d.stage==='계약완료'&&(d.sales||'미배정')===s).reduce((a,d)=>a+Number(d.amount||0),0);
     const wonCnt=DB.d.pipeline.filter(d=>d.stage==='계약완료'&&(d.sales||'미배정')===s).length;
-    const pipe=DB.d.pipeline.filter(d=>d.stage!=='계약완료'&&(d.sales||'미배정')===s).reduce((a,d)=>a+Number(d.amount||0)*Number(d.prob||0)/100,0);
+    const pipe=DB.d.pipeline.filter(d=>d.stage!=='계약완료'&&(d.sales||'미배정')===s).reduce((a,d)=>a+Number(d.amount||0),0);
     const logCnt=DB.d.logs.filter(l=>(l.sales||'미배정')===s).length;
     const lastLog=DB.d.logs.filter(l=>(l.sales||'미배정')===s).sort((a,b)=>b.date.localeCompare(a.date))[0];
     return {s,won,wonCnt,pipe:Math.round(pipe),logCnt,lastLog};
@@ -3733,7 +3733,7 @@ function renderDashboard() {
             </div>
             <div style="background:rgba(255,255,255,.7);border-radius:8px;padding:6px 4px">
               <div style="font-size:12px;font-weight:700;color:#16a34a">${x.pipe>=1e8?(x.pipe/1e8).toFixed(1)+'억':x.pipe>=1e4?Math.round(x.pipe/1e4)+'만':x.pipe}</div>
-              <div style="font-size:10px;color:#6b7280">파이프(가중)</div>
+              <div style="font-size:10px;color:#6b7280">파이프라인</div>
             </div>
           </div>
         </div>`).join('')}
@@ -5390,7 +5390,7 @@ function renderPipeline() {
   const thisYm=new Date().toISOString().substring(0,7);
   const today=new Date().toISOString().split('T')[0];
   const activeRaw=allRaw.filter(d=>d.stage!=='계약완료');
-  const weightedRaw=activeRaw.reduce((s,d)=>s+Number(d.amount||0)*Number(d.prob||0)/100,0);
+  const weightedRaw=activeRaw.reduce((s,d)=>s+Number(d.amount||0),0);
   const closingRaw=activeRaw.filter(d=>d.expectedDate&&d.expectedDate.startsWith(thisYm));
   const wonRaw=allRaw.filter(d=>d.stage==='계약완료').reduce((s,d)=>s+Number(d.amount||0),0);
 
@@ -5404,7 +5404,7 @@ function renderPipeline() {
       </div>
       <div style="display:flex;align-items:center;gap:6px;background:#f5f3ff;border-radius:8px;padding:6px 14px">
         <i class="bi bi-graph-up" style="color:#7c3aed;font-size:13px"></i>
-        <span style="font-size:11px;color:#6b7280">가중 예상매출</span>
+        <span style="font-size:11px;color:#6b7280">예상매출</span>
         <span style="font-size:14px;font-weight:800;color:#7c3aed">${fmtAmt(Math.round(weightedRaw))}</span>
       </div>
       <div style="display:flex;align-items:center;gap:6px;background:#fff7ed;border-radius:8px;padding:6px 14px">
@@ -6659,7 +6659,7 @@ function renderPerformance(){
     const wonDeals=DB.d.pipeline.filter(d=>d.stage==='계약완료'&&(d.sales||'')=== s&&yms.some(ym=>(d.stageUpdatedAt||'').startsWith(ym)));
     const wonAmt=wonDeals.reduce((a,d)=>a+Number(d.amount||0),0);
     const pipeDeals=DB.d.pipeline.filter(d=>d.stage!=='계약완료'&&(d.sales||'')===s);
-    const pipeW=Math.round(pipeDeals.reduce((a,d)=>a+Number(d.amount||0)*Number(d.prob||0)/100,0));
+    const pipeW=Math.round(pipeDeals.reduce((a,d)=>a+Number(d.amount||0),0));
     const logs=DB.d.logs.filter(l=>(l.sales||'')=== s&&yms.some(ym=>(l.date||'').startsWith(ym)));
     const allLogs=DB.d.logs.filter(l=>(l.sales||'')===s);
     const lastLog=allLogs.sort((a,b)=>b.date.localeCompare(a.date))[0];
@@ -6722,7 +6722,7 @@ function renderPerformance(){
             </div>
             <div style="background:#fff;border-radius:8px;padding:7px 4px;border:1px solid #e5e7eb">
               <div style="font-size:12px;font-weight:700;color:#16a34a">${x.pipeW>=1e8?(x.pipeW/1e8).toFixed(1)+'억':x.pipeW>=1e4?Math.round(x.pipeW/1e4)+'만':x.pipeW}</div>
-              <div style="font-size:9px;color:#6b7280">파이프가중</div>
+              <div style="font-size:9px;color:#6b7280">파이프라인</div>
             </div>
           </div>
         </div>`;
@@ -7552,7 +7552,7 @@ function _hospEquipStatus(sel){
 // ── 일정 (방문·콜 스케줄) — logs 재사용(kind:'schedule') + 후속조치(nextDate) 병합 ──
 let _schView=(function(){try{return sessionStorage.getItem('sch_view')||'week';}catch(e){return 'week';}})(), _schMonth=null, _schOverdueOnly=false;
 function _schShowOverdueOnly(){ _schOverdueOnly=true; renderSchedule(); }
-const _SCH_COL={'방문':'#2563eb','콜':'#0891b2','데모':'#7c3aed','A/S':'#ea580c','기타':'#64748b','후속':'#9ca3af','견적발송':'#7c3aed','계약검토':'#7c3aed','전화':'#7c3aed'};
+const _SCH_COL={'방문':'#2563eb','콜':'#0891b2','데모':'#7c3aed','A/S':'#ea580c','기타':'#64748b','후속':'#9ca3af','견적발송':'#7c3aed','계약검토':'#7c3aed'};
 function _schEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function _schTodayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function _schMe(){ return ((typeof _meName!=='undefined'&&_meName)||(typeof currentUserName==='function'?currentUserName():'')||'').trim(); }
@@ -7579,7 +7579,7 @@ function _schItems(){
   _demoSched.forEach(function(e){ out.push(e); });   // 데모사이트 입력분 병합(읽기전용)
   // 수주관리 딜의 다음 액션도 일정에 함께 표시(딜 저장 시 nextDate 입력분)
   (DB.d.pipeline||[]).forEach(p=>{
-    if(p.stage!=='계약완료' && p.nextDate && p.nextAction) out.push({id:p.id,date:p.nextDate,time:'',type:p.nextType||'후속',custName:p.custName||'',sales:p.sales||'',product:p.model||'',content:'[딜] '+(p.nextAction||'')+(p.note?' — '+p.note:''),done:false,kind:'deal',dealId:p.id});
+    if(p.stage!=='계약완료' && p.nextDate && p.nextAction) out.push({id:p.id,date:p.nextDate,time:'',type:(p.nextType==='전화'?'콜':p.nextType)||'후속',custName:p.custName||'',sales:p.sales||'',product:p.model||'',content:'[딜] '+(p.nextAction||'')+(p.note?' — '+p.note:''),done:false,kind:'deal',dealId:p.id});
   });
   return out;
 }
