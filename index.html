@@ -2367,7 +2367,7 @@ function _ensureRegionList(){
   dl.innerHTML=[...set].sort((a,b)=>a.localeCompare(b,'ko')).map(r=>'<option value="'+r.replace(/"/g,'&quot;')+'">').join('');
 }
 // 담당자 필터 드롭다운을 명단(한국영업1/2파트 9명)으로 채움. 첫 '전체' 옵션·현재선택 유지. extra=추가 옵션 HTML.
-function _fillSalesFilter(sel, extra){
+function _fillSalesFilter(sel, extra, teamOnly){
   if(!sel) return;
   const cur=sel.value;
   const ph=sel.querySelector('option[value=""]'); const phHtml=ph?ph.outerHTML:'';
@@ -2375,7 +2375,7 @@ function _fillSalesFilter(sel, extra){
   const dealers=_allReps().filter(n=>KOR_SALES_TEAM.indexOf(n)<0).sort((a,b)=>a.localeCompare(b,'ko'));  // 대리점·기타(실제 데이터의 담당자)
   sel.innerHTML=phHtml
     + KOR_SALES_TEAM.map(opt).join('')
-    + (dealers.length?'<optgroup label="대리점·기타">'+dealers.map(opt).join('')+'</optgroup>':'')
+    + (!teamOnly&&dealers.length?'<optgroup label="대리점·기타">'+dealers.map(opt).join('')+'</optgroup>':'')
     + (extra||'');
   if([...sel.options].some(o=>o.value===cur)) sel.value=cur;
 }
@@ -7810,7 +7810,7 @@ function renderSchedule(){
   if(dl && !dl.dataset.filled){ const ns=[...new Set([].concat(Object.keys(CONS.hospitals||{}),Object.keys(DEVICE.hospitals||{})))].sort((a,b)=>a.localeCompare(b,'ko')); dl.innerHTML=ns.slice(0,2500).map(n=>'<option value="'+n.replace(/"/g,'&quot;')+'">').join(''); dl.dataset.filled='1'; }
   const all=_schItems();
   const sf=document.getElementById('sch-sales-filter');
-  _fillSalesFilter(sf);
+  _fillSalesFilter(sf, '', true);   // 일정 담당 필터는 한국영업 1·2파트 팀원만(대리점 제외)
   const sfv=(sf&&sf.value)||'';
   const items = sfv? all.filter(i=>i.sales===sfv) : all;
   const st=document.getElementById('sch-stats'); if(st) st.innerHTML=_schStatsBar(items);
