@@ -1720,7 +1720,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <button class="btn btn-outline-success btn-sm ms-auto" onclick="sdrSave()"><i class="bi bi-save me-1"></i>수정 저장</button>
       <button class="btn btn-primary btn-sm" onclick="sdrPDF()"><i class="bi bi-file-earmark-pdf me-1"></i>PDF 저장</button>
     </div>
-    <div id="sdr-sheet" style="background:#fff;padding:24px;max-width:920px;margin:0 auto;box-shadow:0 2px 10px rgba(15,23,42,.1);font-family:'Batang','바탕','BatangChe',serif"></div>
+    <div id="sdr-sheet" style="background:#fff;padding:24px;max-width:1150px;margin:0 auto;box-shadow:0 2px 10px rgba(15,23,42,.1);font-family:'Batang','바탕','BatangChe',serif"></div>
   </div>
 </div></div></div>
 
@@ -7844,7 +7844,7 @@ function sdrPDF(){
   var R=((document.getElementById('sdr-sales')||{}).value||'').trim();
   var w=window.open('','_blank'); if(!w){ alert('팝업이 차단되었습니다. 팝업 허용 후 다시 시도하세요.'); return; }
   var fn='일일보고_'+R+'_'+D.replace(/-/g,'');
-  w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+_schEsc(fn)+'</title><style>@page{size:A4;margin:12mm}body{margin:0;font-family:"Batang","바탕","BatangChe",serif;background:#fff}[contenteditable]{outline:none}.sdr-noprint{display:none}</style></head><body>'+sheet.innerHTML+'<script>window.onload=function(){setTimeout(function(){window.print();},250);};<\/script></body></html>');
+  w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+_schEsc(fn)+'</title><style>@page{size:A4 landscape;margin:0}body{margin:0;padding:10mm 14mm;font-family:"Batang","바탕","BatangChe",serif;background:#fff}[contenteditable]{outline:none}.sdr-noprint{display:none}</style></head><body>'+sheet.innerHTML+'<script>window.onload=function(){setTimeout(function(){window.print();},250);};<\/script></body></html>');
   w.document.close();
 }
 
