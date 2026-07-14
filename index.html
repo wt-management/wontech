@@ -1951,7 +1951,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <button id="qtmpl-premium" type="button" class="btn btn-outline-primary" onclick="setQuoteTmpl('premium')">양식 2 · 심플</button>
       </div>
       <button class="btn btn-success btn-sm" onclick="quotePDF()"><i class="bi bi-file-earmark-pdf me-1"></i>PDF 다운로드</button>
-      <button class="btn btn-outline-secondary btn-sm" onclick="window.print()"><i class="bi bi-printer me-1"></i>인쇄</button>
+      <button class="btn btn-outline-secondary btn-sm" onclick="quotePDF()"><i class="bi bi-printer me-1"></i>인쇄</button>
       <button type="button" class="btn-close ms-1" data-bs-dismiss="modal"></button>
     </div>
   </div>
@@ -6371,7 +6371,7 @@ function _qRender(){ const el=document.getElementById('print-content'); if(el&&_
 function viewQuote(id){ const q=DB.d.quotes.find(x=>x.id===id); if(!q)return; _qCur=q; setQuoteTmpl(_qTmpl); new bootstrap.Modal(document.getElementById('quotePrintModal')).show(); }
 function quotePDF(){ if(!_qCur)return; const w=window.open('','_blank'); if(!w){alert('팝업이 차단되었습니다. 팝업 허용 후 다시 시도하세요.');return;}
   const fn='견적서_'+(_qCur.custName||'')+'_'+(_qCur.quoteDate||'').replace(/-/g,'');
-  w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+_qEscH(fn)+'</title><style>@page{size:A4;margin:8mm}body{margin:0;font-family:"Malgun Gothic",sans-serif;background:#fff}</style></head><body><div id="qwrap">'+QDOC(_qCur,_qTmpl)+'</div><script>window.onload=function(){requestAnimationFrame(function(){requestAnimationFrame(function(){var pageH=1000;var el=document.getElementById("qwrap");var h=Math.max(el.scrollHeight,Math.ceil(el.getBoundingClientRect().height));if(h>pageH){document.body.style.zoom=Math.max(0.5,pageH/h).toFixed(3);}setTimeout(function(){window.print();},180);});});};<\/script></body></html>');
+  w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+_qEscH(fn)+'</title><style>@page{size:A4;margin:0}body{margin:0;padding:8mm 10mm;font-family:"Malgun Gothic",sans-serif;background:#fff}</style></head><body><div id="qwrap">'+QDOC(_qCur,_qTmpl)+'</div><script>window.onload=function(){requestAnimationFrame(function(){requestAnimationFrame(function(){var pageH=1000;var el=document.getElementById("qwrap");var h=Math.max(el.scrollHeight,Math.ceil(el.getBoundingClientRect().height));if(h>pageH){document.body.style.zoom=Math.max(0.5,pageH/h).toFixed(3);}setTimeout(function(){window.print();},180);});});};<\/script></body></html>');
   w.document.close();
 }
 function QDOC(q,tmpl){
