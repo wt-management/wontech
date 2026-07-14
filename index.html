@@ -1696,8 +1696,10 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <button type="button" class="btn btn-outline-warning btn-sm flex-fill" onclick="_schPickResult('보류',this)">🤔 보류</button>
       <button type="button" class="btn btn-outline-danger btn-sm flex-fill" onclick="_schPickResult('거절',this)">😕 거절</button>
     </div>
-    <label class="form-label" style="font-size:12px">메모 <span class="text-muted">(선택)</span></label>
-    <textarea id="schd-memo" class="form-control form-control-sm mb-2" rows="2" placeholder="예: 원장님 관심 있음, 다음달 예산 편성 후 재문의 예정"></textarea>
+    <label class="form-label" style="font-size:12px">결정권자 반응 <span class="text-muted">(일일보고 반응 칸에 그대로 들어갑니다)</span></label>
+    <textarea id="schd-memo" class="form-control form-control-sm mb-2" rows="3" placeholder="예: 원장님 관심 있음, 다음달 예산 편성 후 재문의 예정"></textarea>
+    <label class="form-label" style="font-size:12px">경쟁품 현황 <span class="text-muted">(선택 · 일일보고 경쟁품 칸)</span></label>
+    <input id="schd-comp" class="form-control form-control-sm mb-2" placeholder="예: RF: 써마지 / HIFU: 울쎄라">
     <label class="form-label" style="font-size:12px">다음 방문 잡을까요?</label>
     <div class="d-flex gap-2 mb-2" id="schd-next-btns">
       <button type="button" class="btn btn-outline-primary btn-sm flex-fill" onclick="_schPickNext('7',this)">+1주</button>
@@ -7692,13 +7694,15 @@ async function toggleSchedDone(id){
 let _schDoneState={result:'',nextChoice:'',nextDate:''};
 function _schOpenDoneModal(id){
   const l=(DB.d.logs||[]).find(x=>x.id===id); if(!l)return;
-  _schDoneState={result:'',nextChoice:'',nextDate:''};
+  _schDoneState={result:l.resultGrade||'',nextChoice:'',nextDate:''};
   document.getElementById('schd-id').value=id;
   document.getElementById('schd-cust').textContent=(l.custName||'')+' · '+(l.type||'방문')+(l.product?' · '+l.product:'');
-  document.getElementById('schd-memo').value='';
+  document.getElementById('schd-memo').value=l.resultMemo||'';
+  var ce=document.getElementById('schd-comp'); if(ce) ce.value=l.resultComp||'';
   document.getElementById('schd-next-date').style.display='none';
   document.getElementById('schd-next-date').value='';
   document.querySelectorAll('#schd-result-btns .btn, #schd-next-btns .btn').forEach(b=>b.classList.remove('active'));
+  if(l.resultGrade){ document.querySelectorAll('#schd-result-btns .btn').forEach(b=>{ if(b.textContent.indexOf(l.resultGrade)>=0) b.classList.add('active'); }); }
   bootstrap.Modal.getOrCreateInstance(document.getElementById('schDoneModal')).show();
 }
 function _schDoneCancel(){ /* 결과 미저장 — 체크박스는 이미 미완료 상태로 재렌더됨 */ }
@@ -7714,12 +7718,14 @@ async function _schConfirmDone(){
   const id=document.getElementById('schd-id').value;
   const l=(DB.d.logs||[]).find(x=>x.id===id); if(!l) return;
   const memo=document.getElementById('schd-memo').value.trim();
+  const comp=((document.getElementById('schd-comp')||{}).value||'').trim();
   const result=_schDoneState.result;
   const nextDate=document.getElementById('schd-next-date').value;
   l.done=true;
+  l.resultGrade=result; l.resultMemo=memo; l.resultComp=comp; l.doneAt=_schTodayStr();   // 일일보고 연동용 구조화 저장
   const by=((typeof _meName!=='undefined'&&_meName)||(typeof currentUserName==='function'?currentUserName():'')||l.sales||'').trim();
   const resultTag=result?('['+result+'] '):'';
-  const summary=resultTag+(l.content||l.type||'')+(l.product?' · '+l.product:'')+(memo?' — '+memo:'');
+  const summary=resultTag+(memo||l.content||l.type||'')+(l.product?' · '+l.product:'')+(comp?' / 경쟁품: '+comp:'');
   DB.d.logs.push({id:uid(),date:_schTodayStr(),custName:l.custName,type:l.type||'방문',content:'[일정 완료] '+summary,product:l.product||'',nextAction:'',nextDate:'',sales:by,by:by});
   const saves=[DB.save('logs')];
   // 딜과 연결된 일정이면 자동 기록 + 다음액션 정리(유기적 연동)
@@ -7779,9 +7785,12 @@ function renderSchDaily(force){
   } else {
     var rows=[];
     logs.filter(l=>l.kind==='schedule'&&l.date===D&&(l.sales||'').trim()===R).forEach(function(s){
-      var res=logs.find(l=>l.kind!=='schedule'&&(l.custName||'')===s.custName&&String(l.content||'').indexOf('[일정 완료]')===0&&l.date===D);
-      var reaction=res?String(res.content).replace('[일정 완료] ',''):(s.done?'완료':'');
-      rows.push({sid:s.id, hosp:s.custName||'', purpose:((s.type&&s.type!=='방문')?('['+s.type+'] '):'')+(s.content||'')+(s.product?' — '+s.product:''), reaction:reaction, comp:_sdrCompFor((s.custName||'').trim())});
+      var reaction='';
+      if(s.resultMemo||s.resultGrade){ reaction=(s.resultGrade?'['+s.resultGrade+'] ':'')+(s.resultMemo||''); }   // 완료 모달의 구조화 결과 우선
+      else { var res=logs.find(l=>l.kind!=='schedule'&&(l.custName||'')===s.custName&&String(l.content||'').indexOf('[일정 완료]')===0&&l.date===D);
+        reaction=res?String(res.content).replace('[일정 완료] ',''):(s.done?'완료':''); }
+      var comp=s.resultComp||_sdrCompFor((s.custName||'').trim());
+      rows.push({sid:s.id, hosp:s.custName||'', purpose:((s.type&&s.type!=='방문')?('['+s.type+'] '):'')+(s.content||'')+(s.product?' — '+s.product:''), reaction:reaction, comp:comp});
     });
     logs.filter(l=>l.kind==='cdu'&&l.status!=='planned'&&String(l.date||'').slice(0,10)===D&&(l.sales||'').trim()===R).forEach(function(v){
       rows.push({hosp:v.custName||'', purpose:'[소모품] '+(v.mainProc?v.mainProc+' ':'')+'방문'+(v.price?' · 수가 '+v.price+'천':''), reaction:(v.feedback||''), comp:(v.competitor||'')});
@@ -7838,6 +7847,9 @@ async function sdrSave(){
     if(!r.sid||!r.reaction) return;
     var s=(DB.d.logs||[]).find(l=>l.id===r.sid&&l.kind==='schedule'); if(!s) return;
     if(!s.done){ s.done=true; doneN++; }
+    var gm=r.reaction.match(/^\[(긍정적|보류|거절)\]\s*([\s\S]*)$/);   // 보고서에 쓴 반응을 일정 결과에도 반영
+    if(gm){ s.resultGrade=gm[1]; s.resultMemo=gm[2].trim(); } else { s.resultMemo=r.reaction; }
+    if(r.comp) s.resultComp=r.comp;
     var did='sdrdone_'+r.sid;
     var already=(DB.d.logs||[]).some(l=>l.kind!=='schedule'&&l.id!==did&&(l.custName||'')===s.custName&&String(l.content||'').indexOf('[일정 완료]')===0&&l.date===D);
     if(already) return;
