@@ -1012,7 +1012,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <input id="cdu-search" class="form-control form-control-sm" style="width:auto;min-width:150px" placeholder="🔍 병원·경쟁사·피드백" oninput="renderCDU()">
         <span id="cdu-count" class="text-muted" style="font-size:12px"></span>
         <button id="cdu-csv-btn" class="btn btn-outline-secondary btn-sm ms-auto" onclick="cduExportCSV()"><i class="bi bi-download me-1"></i>CSV</button>
-        <button id="cdu-add-btn" class="btn btn-primary btn-sm" onclick="openCDUVisit()"><i class="bi bi-plus-lg me-1"></i>방문 추가</button>
+        <button id="cdu-add-btn" class="btn btn-primary btn-sm" onclick="openCDUQuick()"><i class="bi bi-plus-lg me-1"></i>방문 추가</button>
       </div>
     </div>
     <div id="cdu-report"></div>
@@ -1060,6 +1060,20 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   </div></div></div>
   <datalist id="cdu-hosp-list"></datalist>
   <datalist id="cdu-sales-list"></datalist>
+
+  <!-- CDU 방문 예정 간단 추가 모달 -->
+  <div class="modal fade" id="cduQuickModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-calendar-plus me-1" style="color:#2563eb"></i>방문 예정 추가</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <div class="row g-2">
+        <div class="col-12"><label class="form-label" style="font-size:12px">병원명 *</label><input id="cq-hosp" class="form-control form-control-sm" list="cdu-hosp-list" autocomplete="off" placeholder="병원명 입력…"></div>
+        <div class="col-6"><label class="form-label" style="font-size:12px">방문일 *</label><input type="date" id="cq-date" class="form-control form-control-sm"></div>
+        <div class="col-6"><label class="form-label" style="font-size:12px">담당</label><input id="cq-sales" class="form-control form-control-sm" list="cdu-sales-list" autocomplete="off"></div>
+        <div class="col-12"><div style="font-size:11.5px;color:#64748b;background:#f8fafc;border-radius:8px;padding:8px 10px"><i class="bi bi-info-circle me-1" style="color:#2563eb"></i>방문 전엔 이것만 등록하세요. 방문 후 카드의 <b>[결과 입력]</b>에서 수가·경쟁사·피드백 등을 채우면 됩니다.</div></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button><button class="btn btn-primary btn-sm" onclick="saveCDUQuick()">등록</button></div>
+  </div></div></div>
 
   <!-- CDU Keyman 연락처 모달 -->
   <div class="modal fade" id="cduKeyModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
@@ -5488,7 +5502,7 @@ function _cduTab(t){ _cduView=t;
   var ab=document.getElementById('cdu-add-btn'); if(ab){
     if(t==='keyman'){ ab.innerHTML='<i class="bi bi-plus-lg me-1"></i>연락처 추가'; ab.setAttribute('onclick','openCDUKey()'); }
     else if(t==='plan'){ ab.innerHTML='<i class="bi bi-plus-lg me-1"></i>계획 추가'; ab.setAttribute('onclick','openCDUPlan()'); }
-    else { ab.innerHTML='<i class="bi bi-plus-lg me-1"></i>방문 추가'; ab.setAttribute('onclick','openCDUVisit()'); } }
+    else { ab.innerHTML='<i class="bi bi-plus-lg me-1"></i>방문 추가'; ab.setAttribute('onclick','openCDUQuick()'); } }
   renderCDU();
 }
 function _cduBar(pct,col){ return '<div style="height:8px;background:#f1f5f9;border-radius:5px;overflow:hidden;flex:1;min-width:60px"><div style="height:8px;width:'+Math.min(100,Math.max(0,pct))+'%;background:'+col+';border-radius:5px"></div></div>'; }
@@ -5571,6 +5585,7 @@ function _cduHospAuto(force){
 }
 function renderCDUReport(vs){
   var el=document.getElementById('cdu-report'); if(!el) return;
+  vs=vs.filter(v=>v.status!=='planned');   // 실적 집계는 완료된 방문만(예정 제외)
   if(!vs.length){ el.innerHTML='<div class="card p-5 text-center text-muted" style="font-size:14px"><i class="bi bi-clipboard-x" style="font-size:26px;color:#cbd5e1"></i><div class="mt-2">조건에 맞는 방문 기록이 없습니다. <b>방문 추가</b> 또는 <b>방문 기록</b> 탭에서 등록하세요.</div></div>'; return; }
   var num=v=>Number(v)||0, pctf=(a,b)=>b?Math.round(a/b*100):0;
   var comp={},chan={},prices=[],ev=0,rl=0,churn=[],days=new Set(),bySales={};
@@ -5605,8 +5620,8 @@ function renderCDUReport(vs){
   var topCompByRev=compRevArr.filter(x=>x[1]>0)[0]||null;
   // 저가 병원(수가 350천 미만) 비중 — 가격 건전성
   var lowP=prices.filter(p=>p<350).length;
-  // 주차별 추이(담당·검색 반영, 주차 무관)
-  var base=_cduBaseFiltered();
+  // 주차별 추이(담당·검색 반영, 주차 무관) — 완료 방문만
+  var base=_cduBaseFiltered().filter(v=>v.status!=='planned');
   var weeks=[...new Set(base.map(v=>_cduWeekLabel(v.date)).filter(Boolean))].sort();
   var wk={}; weeks.forEach(w=>wk[w]={n:0,psum:0,pn:0,ev:0});
   base.forEach(function(v){ var w=_cduWeekLabel(v.date); if(!w||!wk[w])return; wk[w].n++; var p=num(v.price); if(p>0){wk[w].psum+=p;wk[w].pn++;} if(String(v.event||'').toUpperCase()==='O')wk[w].ev++; });
@@ -5752,20 +5767,25 @@ function saveCDUInsight(){
   DB.save('logs').then(()=>{ if(msg)msg.innerHTML='<span style="color:#16a34a"><i class="bi bi-check-circle"></i> '+_cduNoteLabel(k)+' 의견 저장됨</span>'; });
 }
 var _cduInputView=(function(){try{return sessionStorage.getItem('cdu_input_view')||'cal';}catch(e){return 'cal';}})();
-var _cduInputMonth=null;
+var _cduWeekOff=0;
 function _cduSetInputView(v){ _cduInputView=v; try{sessionStorage.setItem('cdu_input_view',v);}catch(e){} renderCDU(); }
-function _cduInputMonthNav(delta){ var now=new Date(); var y=(_cduInputMonth?_cduInputMonth.y:now.getFullYear()), m=(_cduInputMonth?_cduInputMonth.m:now.getMonth()+1)+delta; if(m<1){m=12;y--;} if(m>12){m=1;y++;} _cduInputMonth={y:y,m:m}; renderCDU(); }
+function _cduWeekNav(d){ _cduWeekOff+=d; renderCDU(); }
 function renderCDUInput(vs){
   var el=document.getElementById('cdu-input'); if(!el) return;
   var toolbar='<div class="d-flex align-items-center mb-2"><div class="btn-group btn-group-sm">'
-    +'<button class="btn btn-'+(_cduInputView==='cal'?'primary':'outline-primary')+'" onclick="_cduSetInputView(\'cal\')"><i class="bi bi-calendar3 me-1"></i>캘린더</button>'
+    +'<button class="btn btn-'+(_cduInputView==='cal'?'primary':'outline-primary')+'" onclick="_cduSetInputView(\'cal\')"><i class="bi bi-calendar3 me-1"></i>주간</button>'
     +'<button class="btn btn-'+(_cduInputView==='list'?'primary':'outline-primary')+'" onclick="_cduSetInputView(\'list\')"><i class="bi bi-list-ul me-1"></i>목록</button>'
-    +'</div><span style="font-size:11px;color:#94a3b8;margin-left:8px">'+(_cduInputView==='cal'?'월을 이동하며 방문을 한눈에 · 칸을 눌러 상세':'기간 필터 적용 · 행을 눌러 상세/수정')+'</span></div>';
-  el.innerHTML=toolbar+_cduRevisitBox()+(_cduInputView==='cal'?_cduInputCal():_cduInputList(vs));
+    +'</div><span style="font-size:11px;color:#94a3b8;margin-left:8px">'+(_cduInputView==='cal'?'방문 추가는 간단히 → 방문 후 카드의 [결과 입력] · 빈 칸을 누르면 그 날짜로 추가':'기간 필터 적용 · 행을 눌러 상세/수정')+'</span></div>';
+  // 결과 미입력 배너(지난 방문 예정인데 결과가 없는 것)
+  var todayS=_cduTodayStr();
+  var pend=_cduVisits().filter(v=>v.status==='planned'&&String(v.date||'').slice(0,10)<todayS);
+  var pendHtml=pend.length?'<div style="margin-bottom:8px;padding:8px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:9px;font-size:12.5px;color:#b91c1c"><i class="bi bi-exclamation-triangle-fill me-1"></i><b>결과 미입력 '+pend.length+'건</b> — 방문일은 지났는데 결과가 없어요. 눌러서 입력해 주세요: '
+    +pend.slice(0,6).map(v=>'<span onclick="openCDUVisit(\''+v.id+'\')" style="display:inline-block;font-size:11.5px;font-weight:700;color:#b91c1c;background:#fff;border:1px solid #fecaca;border-radius:12px;padding:2px 9px;margin:2px 3px;cursor:pointer">'+_cduEsc(v.custName||'')+' '+_cduEsc(String(v.date||'').slice(5,10))+'</span>').join('')+(pend.length>6?' 외 '+(pend.length-6)+'건':'')+'</div>':'';
+  el.innerHTML=toolbar+pendHtml+_cduRevisitBox()+(_cduInputView==='cal'?_cduInputCal():_cduInputList(vs));
 }
 // 재방문 추천(담당자 참고용) — 방문기록 탭에만, 접힌 상태 기본
 function _cduRevisitBox(){
-  var base=_cduBaseFiltered(), lastByHosp={};
+  var base=_cduBaseFiltered().filter(v=>v.status!=='planned'), lastByHosp={};
   base.forEach(function(v){ var h=(v.custName||'').trim(); if(!h)return; var d=String(v.date||'').slice(0,10); if(!d)return; if(!lastByHosp[h]||d>lastByHosp[h].date) lastByHosp[h]={date:d,sales:v.sales||''}; });
   var t=new Date(); var ts=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
   var dAgo=function(d){ return Math.max(0,Math.round((new Date(ts+'T00:00:00')-new Date(d+'T00:00:00'))/86400000)); };
@@ -5774,25 +5794,37 @@ function _cduRevisitBox(){
   var rows=arr.map(function(r){ return '<div onclick="openCDUHosp(\''+_cduEsc(r.hosp).replace(/\x27/g,"\\x27")+'\')" style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f1f5f9;cursor:pointer;font-size:12px"><span style="font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_cduEsc(r.hosp)+'</span>'+(r.sales?'<span style="font-size:10px;color:#94a3b8;flex-shrink:0">'+_cduEsc(r.sales)+'</span>':'')+'<span style="font-size:11px;color:#64748b;min-width:56px;text-align:right;flex-shrink:0">'+r.days+'일 전</span></div>'; }).join('');
   return '<details class="card p-2 mb-2"><summary style="cursor:pointer;font-size:12px;font-weight:700;color:#475569"><i class="bi bi-arrow-repeat me-1" style="color:#ea580c"></i>재방문 추천 '+arr.length+'곳 <span style="font-weight:400;color:#94a3b8">· 담당자 참고용 · 오래 안 간 순 · 클릭하면 이력</span></summary><div class="mt-1" style="padding:0 6px">'+rows+'</div></details>';
 }
+function _cduMiniCard(v){
+  var planned=(v.status==='planned');
+  var c=planned?'#2563eb':((v.churnRisk||'').trim()?'#ea580c':'#16a34a');
+  var rc=(typeof _schRepColor==='function')?_schRepColor((v.sales||'').trim()):'#64748b';
+  return '<div onclick="event.stopPropagation();openCDUVisit(\''+v.id+'\')" style="background:'+c+'14;border-left:3px solid '+c+';border-radius:5px;padding:4px 6px;margin-bottom:4px;cursor:pointer" title="'+_cduEsc((v.custName||'')+(v.competitor?' · '+v.competitor:'')+(v.price?' · 수가'+v.price+'천':''))+'">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;gap:3px">'
+      +'<span style="font-size:9.5px;font-weight:800;color:'+c+';white-space:nowrap">'+(planned?'방문 예정':'완료 ✓')+'</span>'
+      +((v.sales||'').trim()?'<span style="font-size:8.5px;color:'+rc+';background:'+rc+'22;font-weight:800;border-radius:7px;padding:0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+_cduEsc(v.sales)+'</span>':'')
+    +'</div>'
+    +'<div style="font-size:10.5px;font-weight:700;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_cduEsc(v.custName||'')+'</div>'
+    +(planned?'<div style="font-size:9px;color:#2563eb;font-weight:700"><i class="bi bi-pencil-square"></i> 결과 입력</div>'
+      :((v.price?'<span style="font-size:9px;color:#0891b2">수가 '+_cduEsc(v.price)+'천</span> ':'')+(v.competitor?'<span style="font-size:9px;color:#dc2626">'+_cduEsc(v.competitor)+'</span>':'')))
+  +'</div>';
+}
 function _cduInputCal(){
   var base=_cduBaseFiltered();
-  var now=new Date(); var y=(_cduInputMonth?_cduInputMonth.y:now.getFullYear()), m=(_cduInputMonth?_cduInputMonth.m:now.getMonth()+1);
-  var mp=y+'-'+String(m).padStart(2,'0');
-  var byd={}, cnt=0; base.forEach(function(v){ var d=String(v.date||'').slice(0,10); if(d.indexOf(mp)===0){ (byd[d]=byd[d]||[]).push(v); cnt++; } });
-  var first=new Date(y,m-1,1), startDow=first.getDay(), days=new Date(y,m,0).getDate();
-  var todayS=_cduTodayStr(), cells='';
-  for(var i=0;i<startDow;i++) cells+='<div style="min-height:92px;border:1px solid #f1f3f7;background:#fafbfc"></div>';
-  for(var d=1;d<=days;d++){ var ds=mp+'-'+String(d).padStart(2,'0'); var its=(byd[ds]||[]); var isT=ds===todayS;
-    cells+='<div style="min-height:92px;border:1px solid #f1f3f7;padding:3px 4px;overflow:hidden;background:'+(isT?'#eff6ff':'#fff')+'">'
-      +'<div style="font-size:11px;color:'+(isT?'#2563eb':'#9ca3af')+';font-weight:'+(isT?'800':'400')+'">'+d+(isT?' ●':'')+'</div>'
-      +its.slice(0,4).map(function(v){ var col=(v.churnRisk||'').trim()?'#ea580c':((v.competitor||'').trim()?'#dc2626':'#2563eb'); return '<div onclick="openCDUVisit(\''+v.id+'\')" style="font-size:10px;margin-top:1px;padding:1px 4px;border-radius:3px;background:'+col+'18;color:'+col+';cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+_cduEsc(v.custName+(v.competitor?' · '+v.competitor:'')+(v.price?' · 수가'+v.price+'천':'')+(v.sales?' · '+v.sales:''))+'">'+_cduEsc(v.custName||'')+'</div>'; }).join('')
-      +(its.length>4?'<div style="font-size:9px;color:#9ca3af;margin-top:1px">+'+(its.length-4)+' 더</div>':'')
+  var todayS=_cduTodayStr(); var today=new Date(todayS+'T00:00:00');
+  var dow=(today.getDay()+6)%7; var mon=new Date(today); mon.setDate(today.getDate()-dow+_cduWeekOff*7);
+  var days=[]; for(var i=0;i<7;i++){ var d=new Date(mon); d.setDate(mon.getDate()+i); days.push(_cduFmtD(d)); }
+  var byd={}, cnt=0; base.forEach(function(v){ var ds=String(v.date||'').slice(0,10); if(ds>=days[0]&&ds<=days[6]){ (byd[ds]=byd[ds]||[]).push(v); cnt++; } });
+  var WD=['월','화','수','목','금','토','일'], cols='';
+  for(var k=0;k<7;k++){ var ds2=days[k]; var isT=ds2===todayS;
+    var its=(byd[ds2]||[]).sort(function(a,b){ return String(a.sales||'').localeCompare(String(b.sales||''),'ko')||String(a.custName||'').localeCompare(String(b.custName||''),'ko'); });
+    cols+='<div onclick="openCDUQuickFor(\''+ds2+'\')" title="이 날짜에 방문 예정 추가" style="border:1px solid '+(isT?'#bfdbfe':'#eef2f7')+';border-radius:9px;min-height:160px;background:'+(isT?'#eff6ff':'#fff')+';overflow:hidden;cursor:pointer">'
+      +'<div style="padding:6px 8px;font-size:11px;font-weight:800;border-bottom:1px solid #f1f3f7;color:'+(isT?'#2563eb':k===5?'#2563eb':k===6?'#dc2626':'#475569')+'">'+WD[k]+' <span style="font-weight:600;color:#9ca3af">'+parseInt(ds2.slice(8),10)+'일</span>'+(isT?' <span style="font-size:9px">●오늘</span>':'')+'</div>'
+      +'<div style="padding:5px">'+(its.length?its.map(_cduMiniCard).join(''):'<div style="font-size:10px;color:#cbd5e1;text-align:center;padding:14px 0"><i class="bi bi-plus-circle" style="opacity:.4"></i></div>')+'</div>'
     +'</div>';
   }
-  var head=['일','월','화','수','목','금','토'].map(function(w,i){return '<div style="text-align:center;font-size:11px;padding:4px;color:'+(i===0?'#dc2626':i===6?'#2563eb':'#6b7280')+'">'+w+'</div>';}).join('');
-  var nav='<div class="d-flex align-items-center mb-2"><span style="font-size:14px;font-weight:800;color:#374151">'+y+'년 '+m+'월</span><span style="font-size:11px;color:#94a3b8;margin-left:6px">· '+cnt+'건</span>'
-    +'<span class="ms-auto"><button class="btn btn-sm btn-outline-secondary" onclick="_cduInputMonthNav(-1)"><i class="bi bi-chevron-left"></i></button> <button class="btn btn-sm btn-outline-secondary" onclick="_cduInputMonth=null;renderCDU()">이번달</button> <button class="btn btn-sm btn-outline-secondary" onclick="_cduInputMonthNav(1)"><i class="bi bi-chevron-right"></i></button></span></div>';
-  return nav+'<div class="card"><div class="card-body p-2"><div style="display:grid;grid-template-columns:repeat(7,1fr)">'+head+cells+'</div></div></div>';
+  var nav='<div class="d-flex align-items-center mb-2"><span style="font-size:14px;font-weight:800;color:#374151">'+days[0].slice(5).replace('-','.')+' ~ '+days[6].slice(5).replace('-','.')+'</span><span style="font-size:11px;color:#94a3b8;margin-left:6px">· '+cnt+'건</span>'
+    +'<span class="ms-auto"><button class="btn btn-sm btn-outline-secondary" onclick="_cduWeekNav(-1)"><i class="bi bi-chevron-left"></i></button> <button class="btn btn-sm btn-outline-secondary" onclick="_cduWeekOff=0;renderCDU()">이번주</button> <button class="btn btn-sm btn-outline-secondary" onclick="_cduWeekNav(1)"><i class="bi bi-chevron-right"></i></button></span></div>';
+  return nav+'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><div style="display:grid;grid-template-columns:repeat(7,minmax(96px,1fr));gap:6px;min-width:700px">'+cols+'</div></div>';
 }
 function _cduInputList(vs){
   var rows=vs.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
@@ -5804,7 +5836,7 @@ function _cduInputList(vs){
     var head='<tr style="background:#f8fafc"><td colspan="9" style="font-size:11.5px;font-weight:800;color:#334155;padding:6px 10px"><i class="bi bi-calendar3 me-1" style="color:#94a3b8"></i>'+_cduEsc(w)+' <span style="color:#94a3b8;font-weight:500">· '+g.length+'곳</span></td></tr>';
     return head+g.map(function(v){ return '<tr>'
       +'<td style="font-size:11px;white-space:nowrap;color:#64748b" '+oc(v.id)+'>'+_cduEsc(String(v.date||'').slice(5,10))+'</td>'
-      +'<td style="font-size:12px;font-weight:600;cursor:pointer" '+oc(v.id)+'>'+_cduEsc(v.custName||'')+(v.dealer?'<br><span style="font-size:10px;color:#9ca3af">'+_cduEsc(v.dealer)+'</span>':'')+(v.churnRisk?'<br><span style="font-size:9px;color:#ea580c"><i class="bi bi-exclamation-triangle-fill"></i> '+_cduEsc(v.churnRisk).slice(0,20)+'</span>':'')+'</td>'
+      +'<td style="font-size:12px;font-weight:600;cursor:pointer" '+oc(v.id)+'>'+(v.status==='planned'?'<span style="font-size:9px;font-weight:800;color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;padding:1px 5px;margin-right:4px">예정</span>':'')+_cduEsc(v.custName||'')+(v.dealer?'<br><span style="font-size:10px;color:#9ca3af">'+_cduEsc(v.dealer)+'</span>':'')+(v.churnRisk?'<br><span style="font-size:9px;color:#ea580c"><i class="bi bi-exclamation-triangle-fill"></i> '+_cduEsc(v.churnRisk).slice(0,20)+'</span>':'')+(v.status==='planned'?'<br><span '+oc(v.id)+' style="font-size:9.5px;color:#2563eb;font-weight:700;cursor:pointer"><i class="bi bi-pencil-square"></i> 결과 입력</span>':'')+'</td>'
       +'<td style="font-size:11px" '+oc(v.id)+'>'+_cduEsc(v.doctor||'')+(v.doctorCount?' <span style="color:#9ca3af">('+_cduEsc(v.doctorCount)+')</span>':'')+'</td>'
       +'<td style="font-size:11px;color:#dc2626" '+oc(v.id)+'>'+_cduEsc(v.competitor||'')+'</td>'
       +'<td style="font-size:10.5px;color:#2563eb;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" '+oc(v.id)+'>'+_cduEsc(v.channels||'')+'</td>'
@@ -5840,6 +5872,25 @@ function _cduFillSalesList(){
   _cduVisits().forEach(v=>{ var n=(v.sales||'').trim(); if(n) s.add(n); });
   dl.innerHTML=[...s].filter(Boolean).sort().map(n=>'<option value="'+_cduEsc(n)+'">').join('');
 }
+// ── 방문 예정 간단 등록(방문 전) ──
+function openCDUQuick(){
+  _cduFillSalesList();
+  var dl=document.getElementById('cdu-hosp-list'); if(dl&&!dl.innerHTML&&CONS.hospitals){ dl.innerHTML=Object.keys(CONS.hospitals).slice(0,800).map(n=>'<option value="'+_cduEsc(n)+'">').join(''); }
+  var sv=(x,val)=>{var e=document.getElementById(x); if(e)e.value=val;};
+  sv('cq-hosp',''); sv('cq-date',_cduTodayStr()); sv('cq-sales',(typeof currentUserName==='function'?currentUserName():''));
+  new bootstrap.Modal(document.getElementById('cduQuickModal')).show();
+}
+function openCDUQuickFor(ds){ openCDUQuick(); var e=document.getElementById('cq-date'); if(e&&ds) e.value=ds; }
+function saveCDUQuick(){
+  var g=x=>(document.getElementById(x)||{}).value||'';
+  var hosp=g('cq-hosp').trim(), date=g('cq-date');
+  if(!hosp||!date){ alert('병원명과 방문일을 입력하세요.'); return; }
+  var rec={id:uid(), kind:'cdu', status:'planned', date:date, custName:hosp, sales:g('cq-sales').trim(), region:'국내',
+    by:(typeof currentUserName==='function'?currentUserName():'')};
+  DB.d.logs.push(rec);
+  try{ bootstrap.Modal.getInstance(document.getElementById('cduQuickModal')).hide(); }catch(e){}
+  renderCDU(); DB.save('logs').then(()=>showToast('방문 예정 등록 완료 — 방문 후 [결과 입력]을 눌러주세요', true));
+}
 function openCDUVisit(id, copy){
   var v=id?(_cduVisits().find(x=>x.id===id)):null;
   var isNew=(!v||copy);
@@ -5858,13 +5909,13 @@ function openCDUVisit(id, copy){
   try{ _cduFillSalesList(); _cduChipSync(); }catch(e){}
   new bootstrap.Modal(document.getElementById('cduVisitModal')).show();
 }
-function openCDUVisitFor(name){ openCDUVisit(); var e=document.getElementById('cd-hosp'); if(e){ e.value=name||''; } try{ _cduHospAuto(true); }catch(err){} }
+function openCDUVisitFor(name){ openCDUQuick(); var e=document.getElementById('cq-hosp'); if(e){ e.value=name||''; } }
 function saveCDUVisit(){
   var g=x=>(document.getElementById(x)||{}).value||'';
   var date=g('cd-date'), hosp=g('cd-hosp').trim();
   if(!date||!hosp){ alert('방문일과 병원명을 입력하세요.'); return; }
   var id=g('cd-id')||uid();
-  var rec={id:id, kind:'cdu', date:date, custName:hosp, dealer:g('cd-dealer').trim(), doctor:g('cdv-doctor').trim(), doctorCount:g('cd-dcount'),
+  var rec={id:id, kind:'cdu', status:'done', date:date, custName:hosp, dealer:g('cd-dealer').trim(), doctor:g('cdv-doctor').trim(), doctorCount:g('cd-dcount'),
     mainProc:g('cd-proc').trim(), competitor:g('cd-comp').trim(), feedback:g('cd-fb').trim(), channels:g('cd-chan').trim(), region:g('cdv-region'),
     sales:g('cd-sales').trim(), event:g('cd-event'), reels:g('cd-reels'), price:g('cd-price'), procCount:g('cd-pcount'), stock:g('cd-stock').trim(), churnRisk:g('cd-churn').trim(),
     by:(typeof currentUserName==='function'?currentUserName():'')};
