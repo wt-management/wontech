@@ -1953,7 +1953,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <div class="qed-foot">
         <div class="qed-terms" id="qed-terms-rows"></div><button type="button" onclick="_qedTermAdd('','')" style="border:1px dashed var(--line);background:#fff;color:var(--mut);font-size:11px;border-radius:8px;padding:3px 10px;cursor:pointer;margin-top:6px">＋ 조건 추가</button>
         <div class="qed-memo" id="qed-note-rows"></div>
-        <div class="qed-tagline">원텍 주식회사 · www.wontech.com · 본 견적서는 발행일로부터 30일간 유효합니다.</div>
+        <div class="qed-tagline">www.wontech.com</div>
       </div>
     </div>
   </div>
@@ -6503,7 +6503,7 @@ function _qedSalesPhoneSync(){
 }
 function _qedTmpl(t,quiet){ _qed.tmpl=t; const s=document.getElementById('qedtpl-std'),p=document.getElementById('qedtpl-simple'); if(s)s.classList.toggle('on',t==='premium'); if(p)p.classList.toggle('on',t==='classic');
   const sh=document.querySelector('#quoteEditModal .qed-sheet'); if(sh) sh.classList.toggle('t2', t!=='classic');   // 양식2 선택 시 편집 화면도 결과물과 동일 톤
-  const tg=document.querySelector('#quoteEditModal .qed-tagline'); if(tg) tg.textContent=(t!=='classic')?'www.wontech.com':'원텍 주식회사 · www.wontech.com · 본 견적서는 발행일로부터 30일간 유효합니다.';
+  const tg=document.querySelector('#quoteEditModal .qed-tagline'); if(tg) tg.textContent='www.wontech.com';
 }
 function _qedPreview(){
   const q=_qedCollect();
@@ -6617,6 +6617,7 @@ function QDOC(q,tmpl){
           +'<tr><td style="padding:6px 14px;color:'+MUT+';border-bottom:1px solid '+LINE+'"><span style="display:inline-flex;width:86px;justify-content:space-between"><span style="display:inline-flex;width:48px;justify-content:space-between"><span>부</span><span>가</span><span>세</span></span><span>(10%)</span></span></td><td style="padding:6px 0;text-align:right;font-weight:600;border-bottom:1px solid '+LINE+'">'+won(q.vat)+' 원</td></tr>'
           +'<tr><td style="padding:12px 14px 0;font-weight:800;font-size:15px;color:'+INK+'"><span style="display:inline-flex;width:86px;justify-content:space-between"><span>합</span><span>계</span></span></td><td style="padding:12px 0 0;text-align:right;font-weight:800;font-size:19px;color:'+INK+'">₩ '+won(total)+'</td></tr></table></div>'
       +'<div style="margin-top:14px;padding-top:10px;border-top:1px solid '+LINE+';font-size:11.5px;color:'+MUT+';line-height:2">'+termsList.map((t,i)=>(i+1)+'. '+t).join('　　')+(q.note?'<div style="margin-top:8px;color:'+INK+';font-size:13px;font-weight:600">※ '+_qEscH(q.note)+'</div>':'')+'</div>'
+      +'<div class="qfoot" style="margin-top:20px;border-top:1px solid '+LINE+';padding:10px 0 4px;text-align:center;font-size:10px;letter-spacing:.14em;color:'+MUT+';font-weight:700">'+WT_SUP.web+'</div>'
     +'</div>';
   }
 
