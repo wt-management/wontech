@@ -1686,7 +1686,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 </div></div></div>
 
 <!-- 일정 완료 결과 모달 -->
-<div class="modal fade" id="schDoneModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content">
+<div class="modal fade" id="schDoneModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
   <div class="modal-header"><h6 class="modal-title"><i class="bi bi-check-circle-fill me-1" style="color:#16a34a"></i>일정 완료</h6><button type="button" class="btn-close" data-bs-dismiss="modal" onclick="_schDoneCancel()"></button></div>
   <div class="modal-body"><input type="hidden" id="schd-id">
     <div id="schd-cust" style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:10px"></div>
@@ -1697,7 +1697,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <button type="button" class="btn btn-outline-danger btn-sm flex-fill" onclick="_schPickResult('거절',this)">😕 거절</button>
     </div>
     <label class="form-label" style="font-size:12px">결정권자 반응 <span class="text-muted">(일일보고 반응 칸에 그대로 들어갑니다)</span></label>
-    <textarea id="schd-memo" class="form-control form-control-sm mb-2" rows="3" placeholder="예: 원장님 관심 있음, 다음달 예산 편성 후 재문의 예정"></textarea>
+    <textarea id="schd-memo" class="form-control form-control-sm mb-2" rows="6" style="font-size:13px;line-height:1.6" placeholder="예: 원장님 관심 있음, 다음달 예산 편성 후 재문의 예정&#10;&#10;장비 반응, 경쟁사 대비 의견, 정책 관련 이야기 등 현장에서 들은 그대로 구체적으로"></textarea>
     <label class="form-label" style="font-size:12px">경쟁품 현황 <span class="text-muted">(선택 · 일일보고 경쟁품 칸)</span></label>
     <input id="schd-comp" class="form-control form-control-sm mb-2" placeholder="예: RF: 써마지 / HIFU: 울쎄라">
     <label class="form-label" style="font-size:12px">다음 방문 잡을까요?</label>
