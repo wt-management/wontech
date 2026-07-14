@@ -2130,24 +2130,40 @@ function _siteVisible(site, access, isAdmin) {
 // ── DB ──────────────────────────────────────────────────────
 const DB = {
   d: {customers:[],equipments:[],logs:[],products:[],pipeline:[],quotes:[],targets:[]},
+  _orig: {},   // 로드 시점 스냅샷(id→JSON) — 이 세션에서 실제로 바뀐 행만 저장하기 위함
 
   async load() {
     const tables = Object.keys(this.d);
     await Promise.all(tables.map(async t => {
       try {
         const {data, error} = await _sb.from(t).select('id, data');
-        if(!error && data) this.d[t] = data.map(r => r.data).filter(x => !(x && x.deleted));
+        if(!error && data){
+          this.d[t] = data.map(r => r.data).filter(x => !(x && x.deleted));
+          const snap={}; this.d[t].forEach(it=>{ const id=it.id||it.serial; if(id!=null) snap[id]=JSON.stringify(it); });
+          this._orig[t]=snap;
+        }
       } catch(e) { console.warn(t, e); }
     }));
   },
 
-  // 비파괴 저장: 내 로컬행만 upsert(추가/수정). '로컬에 없는 원격행 삭제' 로직 제거 →
-  // 로드 실패·오래된 화면·동시 사용 시에도 다른 사람이 넣은 데이터를 지우지 않음(베타 데이터 유실 방지).
+  // 비파괴 저장 v2: 이 세션에서 '실제로 바뀐 행'만 upsert.
+  // 오래된 화면이 저장해도 자기 로드 스냅샷과 같은 행은 업로드하지 않으므로
+  // 다른 사람이 그 사이에 고친 행(예: 일정 완료·결과)을 되돌리지 않음(동시사용 덮어쓰기 방지).
   async save(name) {
     showToast('저장 중...');
     try {
-      const rows = this.d[name].map(item => ({id: item.id || item.serial, data: item})).filter(r=>r.id!=null);
-      if(rows.length) { const {error} = await _sb.from(name).upsert(rows); if(error) throw error; }
+      const snap=this._orig[name]||(this._orig[name]={});
+      const rows=[];
+      this.d[name].forEach(item=>{
+        const id=item.id||item.serial; if(id==null) return;
+        const j=JSON.stringify(item);
+        if(snap[id]!==j) rows.push({id:id, data:item, _j:j});   // 신규 또는 이 세션에서 수정된 행만
+      });
+      if(rows.length){
+        const {error}=await _sb.from(name).upsert(rows.map(r=>({id:r.id,data:r.data})));
+        if(error) throw error;
+        rows.forEach(r=>{ snap[r.id]=r._j; });
+      }
       showToast('저장 완료!', true);
     } catch(e) { showToast('저장 실패: '+e.message, true, true); }
   },
