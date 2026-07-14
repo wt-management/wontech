@@ -365,8 +365,8 @@ function reconcilePending(rows, ilboAcc, intlAcc){
       if(custOk){
         if(prodEq&&la===pa&&(pq===0||lq===pq)){ if(!hit) hit=l; }            // 거래처/국가+제품+금액 정확 → 자동
         else if(prodEq&&pa>0&&Math.abs(la-pa)<=pa*0.02){ if(!hit) hit=l; }   // +금액±2%(반올림흡수) → 자동
-        else if(pa>0&&Math.abs(la-pa)<=pa*0.1){ cand++; }                    // 금액근접 → 확인필요
-      } else if(isIntl&&prodEq&&pa>0&&Math.abs(la-pa)<=pa*0.1){ cand++; }    // 국가다르나 제품+금액근접 → 확인필요
+        else if(pa>0&&Math.abs(la-pa)<=pa*0.1&&(!isIntl||p.type==='완료')){ cand++; }   // 금액근접 → 확인필요(해외는 선적'완료'만, 예정은 오탐방지)
+      } else if(isIntl&&p.type==='완료'&&prodEq&&pa>0&&Math.abs(la-pa)<=pa*0.1){ cand++; }    // 국가다르나 제품+금액근접 → 확인필요(완료만)
     });
     if(hit){ p.status='반영됨'; p.reflectedDate=_rd; p.matchAmt=Math.round(hit.amount); p.matchAuto=true; p.matchLines=[{d:hit.date,c:hit.customer,p:hit.product,q:hit.qty,a:hit.amount}]; auto++; autoAmt+=pa; }
     else if(cand){ near++; }
