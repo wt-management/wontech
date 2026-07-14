@@ -2781,9 +2781,7 @@ const _RENDERFN = {ov:'renderSalesOverview', cons:'renderConsumables', dev:'rend
 function _dataMaxMonth(){
   const ms=[].concat(Object.keys(CONS.monthly2026||{}),Object.keys(DEVICE.monthly2026||{})).map(Number).filter(m=>m>=1&&m<=12);
   let t=ms.length?Math.max.apply(null,ms):6;
-  // 성숙월 캡: 새 달 실적이 전월의 20% 미만이면 월초 소량으로 보고 전월을 기준월로(최근월 헤드라인 ▼95% 왜곡·빈매출 방지)
-  const v=m=>(Number((CONS.monthly2026||{})[m])||0)+(Number((DEVICE.monthly2026||{})[m])||0);
-  if(t>1 && v(t) < v(t-1)*0.2) t=t-1;
+  // 월이 바뀌면 즉시 최신월 반영(성숙월 캡 제거) — 월초 YoY 왜곡은 KPI 카드의 '전월까지' 병기로 해소
   return t;
 }
 function _renderPrefix(p){ const fn=window[_RENDERFN[p]]; if(fn) fn(); }
@@ -2795,6 +2793,8 @@ function _getPeriod(prefix){  // 단일 출처: 4개 커스텀 셀렉터(프리�
 function _spanMonths(p){ const o=[]; for(let y=p.sy;y<=p.ey;y++){ const lo=(y===p.sy?p.sm:1), hi=(y===p.ey?p.em:12); for(let m=lo;m<=hi;m++) o.push({y:y,m:m}); } return o; }
 function _prevSpan(p){ const len=_spanMonths(p).length; let ey=p.sy, em=p.sm-1; if(em<1){em=12;ey--;} let sy=ey, sm=em-len+1; while(sm<1){sm+=12;sy--;} return _normPeriod(sy,sm,ey,em); }
 function _yoyShift(p){ return _normPeriod(p.sy-1,p.sm,p.ey-1,p.em); }  // 동일 월·전년(YoY 비교용)
+function _ongoingEnd(p){ const n=new Date(); return p.ey===n.getFullYear() && p.em===(n.getMonth()+1); }  // 기간 끝 = 진행 중인 달
+function _prevEndP(p){ let ey=p.ey, em=p.em-1; if(em<1){em=12;ey--;} let sy=p.sy, sm=p.sm; if(ey<sy||(ey===sy&&em<sm)){ sy=ey; sm=em; } return _normPeriod(sy,sm,ey,em); }  // 끝월 하나 앞으로(전월까지 기준)
 // 연도별 월데이터 접근자 후 span 합. acc(y) → {m:value}
 function _spanSumF(acc,p){ let s=0; _spanMonths(p).forEach(function(x){ s+=Number((acc(x.y)||{})[x.m]||0); }); return s; }
 function _setSimpleSel(prefix,y,fm,tm){ const ys=document.getElementById(prefix+'-year-sel'); if(ys)ys.value=y; const fs=document.getElementById(prefix+'-from-sel'); if(fs)fs.value=fm; const ts=document.getElementById(prefix+'-to-sel'); if(ts){ts.value=tm;ts.dataset.init='1';} }
@@ -2820,7 +2820,7 @@ function _periodCustomChange(prefix){  // 인풋 직접 변경 → 직접설정 
 function _periodCtrl(prefix){
   const yrOpt=[2025,2026].map(y=>'<option value="'+y+'">'+y+'년</option>').join('');
   const moOpt=Array.from({length:12},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+'월</option>').join('');
-  const presets=[['olhae','올해'],['y2025','2025년'],['last12','최근 12개월'],['all','2025~현재'],['custom','<i class=\"bi bi-sliders me-1\"></i>직접설정']];
+  const presets=[['custom','<i class="bi bi-sliders me-1"></i>직접설정'],['olhae','올해'],['y2025','2025년'],['last12','최근 12개월'],['all','2025~현재']];
   const chips=presets.map(o=>'<button type="button" class="pp-chip pp-'+prefix+'" data-t="'+o[0]+'" onclick="_periodPreset(\''+prefix+'\',\''+o[0]+'\',this)">'+o[1]+'</button>').join('');
   return '<span style="display:inline-flex;gap:5px;flex-wrap:wrap;align-items:center">'+chips+'</span>'
     +'<span id="'+prefix+'-custom" style="display:none;align-items:center;gap:4px;margin-left:8px;padding-left:8px;border-left:1px solid #e5e7eb">'
@@ -2838,7 +2838,8 @@ function _injectPeriodCtrl(prefix){
   if(host && !host.dataset.init){
     host.innerHTML=_periodCtrl(prefix); host.dataset.init='1';
     _setCustomSel(prefix,2026,1,2026,_dataMaxMonth());
-    const c=document.querySelector('.pp-'+prefix+'[data-t="olhae"]'); if(c) c.classList.add('pp-on');
+    const c=document.querySelector('.pp-'+prefix+'[data-t="custom"]'); if(c) c.classList.add('pp-on');
+    const cu=document.getElementById(prefix+'-custom'); if(cu) cu.style.display='inline-flex';   // 직접설정 기본 오픈(1월~최신월)
   }
 }
 
@@ -2895,14 +2896,29 @@ function renderSalesOverview() {
   const _kpiHead = c => '<div class="kpi-label"><i class="bi '+c.icon+' me-1" style="color:'+c.col+'"></i>'+c.label+(c.click?' <i class="bi bi-search" style="font-size:9px;color:#cbd5e1"></i>':'')+'</div>';
   const _kpiDual = c => '<div class="col-12 col-md-4"><div class="kpi-card"'+(c.click?' onclick="'+c.click+'" style="cursor:pointer" title="클릭하면 전체 품목 랭킹 조회"':'')+'>'+_kpiHead(c)
     +'<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px">'
-      +'<div><div style="font-size:10px;color:#7c3aed;margin-bottom:1px;font-weight:700">미반영 포함 <span style="color:#cbd5e1;font-weight:500">· 보고기준</span></div><div class="kpi-value" style="color:'+c.col+';font-size:1.4rem;line-height:1.1">'+c.rightVal+'</div><div class="kpi-sub" style="margin-top:3px">'+c.mainSub+'</div></div>'
-      +'<div style="text-align:right;border-left:1px solid #eef2f7;padding-left:11px"><div style="font-size:10px;color:#9ca3af;margin-bottom:1px;font-weight:600">회계반영</div><div style="font-size:1.32rem;font-weight:800;color:#374151;line-height:1.1">'+c.mainVal+'</div><div style="font-size:10px;color:#9ca3af;margin-top:3px">+ '+c.pendStr+'</div></div>'
-    +'</div></div></div>';
+      +'<div><div style="font-size:10px;color:#7c3aed;margin-bottom:1px;font-weight:700">'+(c.p2?'이번달 포함':'미반영 포함')+' <span style="color:#cbd5e1;font-weight:500">· 보고기준</span></div><div class="kpi-value" style="color:'+c.col+';font-size:1.4rem;line-height:1.1">'+c.rightVal+'</div><div class="kpi-sub" style="margin-top:3px">'+c.mainSub+'</div></div>'
+      +(c.p2
+        ?'<div style="text-align:right;border-left:1px solid #eef2f7;padding-left:11px"><div style="font-size:10px;color:#6b7280;margin-bottom:1px;font-weight:700">전월까지 <span style="color:#cbd5e1;font-weight:500">· '+c.p2.label+'</span></div><div style="font-size:1.32rem;font-weight:800;color:#374151;line-height:1.1">'+fmtW(c.p2.v)+'</div><div style="font-size:10px;color:#9ca3af;margin-top:3px">전년 '+fmtW(c.p2.p)+' '+badge(c.p2.p>0?(c.p2.v/c.p2.p-1)*100:null)+'</div></div>'
+        :'<div style="text-align:right;border-left:1px solid #eef2f7;padding-left:11px"><div style="font-size:10px;color:#9ca3af;margin-bottom:1px;font-weight:600">회계반영</div><div style="font-size:1.32rem;font-weight:800;color:#374151;line-height:1.1">'+c.mainVal+'</div><div style="font-size:10px;color:#9ca3af;margin-top:3px">+ '+c.pendStr+'</div></div>')
+    +'</div>'
+    +(c.p2?'<div style="margin-top:7px;padding-top:6px;border-top:1px dashed #eef2f7;font-size:10px;color:#9ca3af">회계반영 '+c.mainVal+' · 미반영 + '+c.pendStr+'</div>':'')
+    +'</div></div>';
   const _kpiSingle = c => '<div class="col-6 col-md-3"><div class="kpi-card">'+_kpiHead(c)+'<div class="kpi-value" style="color:'+c.col+';font-size:1.45rem">'+c.mainVal+'</div><div class="kpi-sub">'+c.mainSub+'</div></div></div>';
+  // 기간 끝이 진행 중인 달이면 '전월까지' 기준을 우측에 병기(월초 YoY 괴리 완화)
+  const P2=_ongoingEnd(P)?_prevEndP(P):null;
+  let PV2=null;
+  if(P2){
+    const s2=_spanMonths(P2), pv2=_spanMonths(_yoyShift(P2));
+    const cC2=_spanS(CONS,s2), dC2=_spanS(DEVICE,s2);
+    const _sp2=fn=>s2.reduce((s,x)=>s+(x.y===2026?fn(x.m):0),0);
+    const cI2=cC2+_sp2(_consPendM), dI2=dC2+_sp2(_devPendM);
+    const cP2=_spanS(CONS,pv2), dP2=_spanS(DEVICE,pv2);
+    PV2={tot:{v:cI2+dI2,p:cP2+dP2,label:P2.label},dev:{v:dI2,p:dP2,label:P2.label},cons:{v:cI2,p:cP2,label:P2.label}};
+  }
   const kpis = [
-    {dual:incPend, label:'합계 ('+periodLbl+')', icon:'bi-currency-won', col:'#111827', mainVal:fmtW(totalC), mainSub:'전년 '+fmtW(totalPrev)+' '+badge(yoy), rightVal:fmtW(totalI), pendStr:fmtW(totalPend)},
-    {dual:incPend, label:'제품', icon:'bi-box-seam', col:'#16a34a', click:"openOvCategory('dev')", mainVal:fmtW(devYtdC), mainSub:'전년 '+fmtW(devPrev)+' '+badge(devYoy), rightVal:fmtW(devYtdI), pendStr:fmtW(devPendYtd)},
-    {dual:incPend, label:'소모품', icon:'bi-capsule', col:'#2563eb', click:"openOvCategory('cons')", mainVal:fmtW(consYtdC), mainSub:'전년 '+fmtW(consPrev)+' '+badge(consYoy), rightVal:fmtW(consYtdI), pendStr:fmtW(consPendYtd)},
+    {dual:incPend, label:'합계 ('+periodLbl+')', icon:'bi-currency-won', col:'#111827', mainVal:fmtW(totalC), mainSub:'전년 '+fmtW(totalPrev)+' '+badge(yoy), rightVal:fmtW(totalI), pendStr:fmtW(totalPend), p2:PV2&&PV2.tot},
+    {dual:incPend, label:'제품', icon:'bi-box-seam', col:'#16a34a', click:"openOvCategory('dev')", mainVal:fmtW(devYtdC), mainSub:'전년 '+fmtW(devPrev)+' '+badge(devYoy), rightVal:fmtW(devYtdI), pendStr:fmtW(devPendYtd), p2:PV2&&PV2.dev},
+    {dual:incPend, label:'소모품', icon:'bi-capsule', col:'#2563eb', click:"openOvCategory('cons')", mainVal:fmtW(consYtdC), mainSub:'전년 '+fmtW(consPrev)+' '+badge(consYoy), rightVal:fmtW(consYtdI), pendStr:fmtW(consPendYtd), p2:PV2&&PV2.cons},
   ];
   document.getElementById('ov-kpi').innerHTML = kpis.map(c=>_kpiDual(c)).join('');
 
@@ -4407,6 +4423,21 @@ function renderConsumables() {
     {color:'#0891b2',icon:'bi-cpu',            label:`Cartridge (${ytdLabel})`,        value:fmtB(cartV26),     sub:`전년 동기 추정 ${fmtB(cartV25)}`, chg:cartV25>0?(cartV26/cartV25-1)*100:null,
      drill:()=>showConsDrill(['Cartridge'],'Cartridge 구매 병원')},
   ];
+  // '전월까지' 기준 병기(기간 끝 = 진행 중인 달일 때)
+  const P2c=_ongoingEnd(P)?_prevEndP(P):null;
+  if(P2c){
+    const s2=_spanMonths(P2c), pv2=_spanMonths(_yoyShift(P2c));
+    const fe2=spanGrp('Oligio',s2), fe2p=spanGrp('Oligio',pv2);
+    const xm2=spanGrp('Oligio X/XM',s2), xm2p=spanGrp('Oligio X/XM',pv2);
+    const t2=fe2+xm2, t2p=fe2p+xm2p;
+    const ty2=spanMonthlySum(pv2);
+    const cartP2=totFull25>0?Math.round(cartV25full*ty2/totFull25):0;
+    const sub2=(v,p,hero)=>{ const g=p>0?(v/p-1)*100:null; return '<div style="margin-top:5px;font-size:10px;color:'+(hero?'rgba(255,255,255,.65)':'#64748b')+'">'+P2c.label+' 기준 <b>'+fmtB(v)+'</b> · 전년 '+fmtB(p)+(g===null?'':' <span style="color:'+(g>=0?'#16a34a':(hero?'#f87171':'#dc2626'))+';font-weight:700">'+(g>=0?'▲':'▼')+Math.abs(g).toFixed(1)+'%</span>')+'</div>'; };
+    kpiData[0].sub2=sub2(t2+cartV26,t2p+cartP2,true);
+    kpiData[1].sub2=sub2(t2,t2p);
+    kpiData[2].sub2=sub2(fe2,fe2p);
+    kpiData[3].sub2=sub2(xm2,xm2p);
+  }
   document.getElementById('cons-kpi').innerHTML = kpiData.map((k,i)=>`
     <div class="col-6 col-lg">
       <div class="card p-3" style="${k.hero?'background:#111827;border:0;box-shadow:0 6px 18px -6px rgba(17,24,39,.4);':'border-top:3px solid '+k.color+';'}cursor:pointer;height:100%" onclick="_consKpiDrill(${i})">
@@ -4414,6 +4445,7 @@ function renderConsumables() {
         <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:${k.hero?'#fff':'#2563eb'};text-decoration:underline dotted">${k.value}</div>
         <div style="font-size:11px;color:${k.hero?'rgba(255,255,255,.6)':'#9ca3af'}">${k.sub}</div>
         ${k.chg!==null?`<div style="margin-top:5px">${chgBadge(k.chg,false)}</div>`:''}
+        ${k.sub2||''}
       </div>
     </div>`).join('');
   window._consKpiDrills = kpiData.map(k=>k.drill);
@@ -8787,12 +8819,21 @@ function renderDeviceSales() {
   const curProds = _prodSet;
   const _lastSpan = spanMs[spanMs.length-1] || {y:2026,m:_dataMaxMonth()};  // 당월=기간 마지막달
 
+  // '전월까지' 기준 병기(기간 끝 = 진행 중인 달일 때)
+  const P2d=_ongoingEnd(P)?_prevEndP(P):null;
+  let devSub2='';
+  if(P2d){
+    const s2=_spanMonths(P2d), pv2=_spanMonths(_yoyShift(P2d));
+    const c2=s2.reduce((s,x)=>s+(moY(x.y)[x.m]||0),0), p2v=pv2.reduce((s,x)=>s+(moY(x.y)[x.m]||0),0);
+    const g2=p2v>0?(c2/p2v-1)*100:null;
+    devSub2='<div style="margin-top:4px;font-size:10px;color:#64748b">'+P2d.label+' 기준 <b>'+fmtW(c2)+'</b> · 전년 '+fmtW(p2v)+' '+chgBadge(g2)+'</div>';
+  }
   // KPI 카드
   const noData = Object.keys(DEVICE.monthly2026||{}).length === 0 && Object.keys(DEVICE.monthly2025||{}).length === 0;
   document.getElementById('dev-kpi').innerHTML = noData
     ? `<div class="col-12"><div class="card p-4 text-center text-muted"><i class="bi bi-cloud-upload me-2"></i>소모품 메뉴에서 Excel 업로드 후 데이터가 표시됩니다</div></div>`
     : [
-      {label:`누계 매출 (${P.label})`, val:fmtW(ytdCur), sub:_prevFull?`전년 동기 ${fmtW(ytdPrev)}`:'연도경계 누적', chg:yoy, col:'#2563eb', icon:'bi-box-seam'},
+      {label:`누계 매출 (${P.label})`, val:fmtW(ytdCur), sub:(_prevFull?`전년 동기 ${fmtW(ytdPrev)}`:'연도경계 누적')+devSub2, chg:yoy, col:'#2563eb', icon:'bi-box-seam'},
       {label:'전년 동기', val:_prevFull?fmtW(ytdPrev):'—', sub:_prevFull?'동일 기간·전년':'전년 데이터 범위 밖', chg:null, col:'#6b7280', icon:'bi-calendar2'},
       {label:'YoY 성장률', val:yoy===null?'-':((yoy>=0?'▲':'▼')+Math.abs(yoy).toFixed(1)+'%'), sub:'전년 동기 대비', chg:null, col:yoy===null?'#6b7280':yoy>=0?'#16a34a':'#dc2626', icon:'bi-graph-up'},
       {label:'취급 제품수', val:Object.keys(curProds).length+'종', sub:P.label, chg:null, col:'#7c3aed', icon:'bi-grid'},
