@@ -1946,9 +1946,9 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       </div>
       <button type="button" class="qed-addrow" onclick="_qedAddRow()">＋ 항목 추가</button>
       <div class="qed-sum"><table>
-        <tr><td class="k"><span style="display:inline-block;width:82px;text-align-last:justify;text-align:justify">공급가액</span></td><td class="v" id="qed-sub">0 원</td></tr>
-        <tr><td class="k"><span style="display:inline-block;width:82px;text-align-last:justify;text-align:justify">부가세 (10%)</span></td><td class="v" id="qed-vat">0 원</td></tr>
-        <tr class="g"><td class="k"><span style="display:inline-block;width:82px;text-align-last:justify;text-align:justify">합계</span></td><td class="v" id="qed-total-sum"><span class="won">₩</span> 0</td></tr>
+        <tr><td class="k"><span style="display:inline-flex;width:86px;justify-content:space-between"><span>공</span><span>급</span><span>가</span><span>액</span></span></td><td class="v" id="qed-sub">0 원</td></tr>
+        <tr><td class="k"><span style="display:inline-flex;width:86px;justify-content:space-between"><span>부가세</span><span>(10%)</span></span></td><td class="v" id="qed-vat">0 원</td></tr>
+        <tr class="g"><td class="k"><span style="display:inline-flex;width:86px;justify-content:space-between"><span>합</span><span>계</span></span></td><td class="v" id="qed-total-sum"><span class="won">₩</span> 0</td></tr>
       </table></div>
       <div class="qed-foot">
         <div class="qed-terms"><span><b>납품기일</b> <input class="f" id="qed-t2" style="width:118px" value="계약 후 3일 이내"></span><span><b>결제조건</b> <input class="f" id="qed-t3" style="width:76px" value="선입금"></span><span><b>납품처</b> <input class="f" id="qed-t4" style="width:86px" value="지정장소"></span></div>
@@ -6589,9 +6589,9 @@ function QDOC(q,tmpl){
         +'<tbody>'+rowsC+'</tbody></table>'
       +'<div style="display:flex;justify-content:flex-end;margin-top:6px">'
         +'<table style="font-size:12.5px;min-width:280px">'
-          +'<tr><td style="padding:6px 14px;color:'+MUT+'">소계</td><td style="padding:6px 0;text-align:right;font-weight:600">'+won(q.subtotal)+' 원</td></tr>'
-          +'<tr><td style="padding:6px 14px;color:'+MUT+';border-bottom:1px solid '+LINE+'">부가가치세</td><td style="padding:6px 0;text-align:right;font-weight:600;border-bottom:1px solid '+LINE+'">'+won(q.vat)+' 원</td></tr>'
-          +'<tr><td style="padding:12px 14px 0;font-weight:800;font-size:15px;color:'+INK+'">합계</td><td style="padding:12px 0 0;text-align:right;font-weight:800;font-size:19px;color:'+CLAY+'">₩ '+won(total)+'</td></tr></table></div>'
+          +'<tr><td style="padding:6px 14px;color:'+MUT+'"><span style="display:inline-flex;width:86px;justify-content:space-between"><span>공</span><span>급</span><span>가</span><span>액</span></span></td><td style="padding:6px 0;text-align:right;font-weight:600">'+won(q.subtotal)+' 원</td></tr>'
+          +'<tr><td style="padding:6px 14px;color:'+MUT+';border-bottom:1px solid '+LINE+'"><span style="display:inline-flex;width:86px;justify-content:space-between"><span>부가세</span><span>(10%)</span></span></td><td style="padding:6px 0;text-align:right;font-weight:600;border-bottom:1px solid '+LINE+'">'+won(q.vat)+' 원</td></tr>'
+          +'<tr><td style="padding:12px 14px 0;font-weight:800;font-size:15px;color:'+INK+'"><span style="display:inline-flex;width:86px;justify-content:space-between"><span>합</span><span>계</span></span></td><td style="padding:12px 0 0;text-align:right;font-weight:800;font-size:19px;color:'+CLAY+'">₩ '+won(total)+'</td></tr></table></div>'
       +'<div style="margin-top:14px;padding-top:10px;border-top:1px solid '+LINE+';font-size:11.5px;color:'+MUT+';line-height:2">'+termsList.map((t,i)=>(i+1)+'. '+t).join('　　')+(q.note?'<div style="margin-top:8px;color:'+INK+';font-size:13px;font-weight:600">※ '+_qEscH(q.note)+'</div>':'')+'</div>'
     +'</div>';
   }
@@ -6648,10 +6648,10 @@ function QDOC(q,tmpl){
         +'<tbody>'+rowsP+'</tbody></table>'
       +'<div style="display:flex;justify-content:flex-end;margin-top:18px">'
         +'<table style="font-size:12.5px;min-width:300px;border-collapse:collapse">'
-          +'<tr><td style="padding:5px 18px;color:'+MUT+'"><span style="display:inline-block;width:82px;text-align-last:justify;text-align:justify">공급가액</span></td><td style="text-align:right;font-weight:600;font-variant-numeric:tabular-nums">'+won(q.subtotal)+' 원</td></tr>'
-          +'<tr><td style="padding:5px 18px;color:'+MUT+'"><span style="display:inline-block;width:82px;text-align-last:justify;text-align:justify">부가세 (10%)</span></td><td style="text-align:right;font-weight:600;font-variant-numeric:tabular-nums">'+won(q.vat)+' 원</td></tr>'
+          +'<tr><td style="padding:5px 18px;color:'+MUT+'"><span style="display:inline-flex;width:86px;justify-content:space-between"><span>공</span><span>급</span><span>가</span><span>액</span></span></td><td style="text-align:right;font-weight:600;font-variant-numeric:tabular-nums">'+won(q.subtotal)+' 원</td></tr>'
+          +'<tr><td style="padding:5px 18px;color:'+MUT+'"><span style="display:inline-flex;width:86px;justify-content:space-between"><span>부가세</span><span>(10%)</span></span></td><td style="text-align:right;font-weight:600;font-variant-numeric:tabular-nums">'+won(q.vat)+' 원</td></tr>'
           +'<tr><td colspan="2" style="padding-top:9px"><div style="border-top:3px double '+INK+'"></div></td></tr>'
-          +'<tr><td style="padding:7px 18px 0;font-weight:800;font-size:14px;white-space:nowrap"><span style="display:inline-block;width:82px;text-align-last:justify;text-align:justify">합계</span></td><td style="padding-top:7px;text-align:right;font-weight:800;font-size:22px;color:'+CLAY+';font-variant-numeric:tabular-nums">₩ '+won(total)+'</td></tr></table>'
+          +'<tr><td style="padding:7px 18px 0;font-weight:800;font-size:14px;white-space:nowrap"><span style="display:inline-flex;width:86px;justify-content:space-between"><span>합</span><span>계</span></span></td><td style="padding-top:7px;text-align:right;font-weight:800;font-size:22px;color:'+CLAY+';font-variant-numeric:tabular-nums">₩ '+won(total)+'</td></tr></table>'
       +'</div>'
       +'<div style="margin-top:24px;border-top:1px solid '+LINE+';padding-top:13px;display:flex;flex-wrap:wrap;gap:6px 26px;font-size:11.5px;color:'+INK+'">'
         +termsList.map((t,i)=>'<span><b style="color:'+CLAY+';font-variant-numeric:tabular-nums">0'+(i+1)+'</b>&nbsp; '+t+'</span>').join('')
