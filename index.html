@@ -6370,12 +6370,12 @@ function QDOC(q,tmpl){
     // 양식 1 · 표준 — 격식 있는 정식 견적서, 헤어라인 톤으로 재정리
     const rowsC=items.map((it,i)=>'<tr>'
       +'<td style="border-bottom:1px solid '+LINE+';text-align:center;padding:7px 4px;color:'+MUT+';font-size:11.5px">'+(i+1)+'</td>'
-      +'<td style="border-bottom:1px solid '+LINE+';padding:7px 10px;font-weight:700;color:'+INK+'">'+_qEscH(it.name)+'</td>'
-      +'<td style="border-bottom:1px solid '+LINE+';text-align:center;padding:7px 6px;color:'+MUT+';font-size:12px">'+_qEscH(it.spec||'')+'</td>'
+      +'<td style="border-bottom:1px solid '+LINE+';padding:7px 10px;font-weight:700;color:'+INK+';white-space:nowrap">'+_qEscH(it.name)+'</td>'
+      +'<td style="border-bottom:1px solid '+LINE+';text-align:center;padding:7px 6px;color:'+MUT+';font-size:12px;white-space:nowrap">'+_qEscH(it.spec||'')+'</td>'
       +'<td style="border-bottom:1px solid '+LINE+';text-align:center;padding:7px 6px;color:'+MUT+';font-size:12px">'+_qEscH(it.unit||'EA')+'</td>'
       +'<td style="border-bottom:1px solid '+LINE+';text-align:center;padding:7px 6px;color:'+INK+'">'+won(it.qty)+'</td>'
-      +'<td style="border-bottom:1px solid '+LINE+';text-align:right;padding:7px 10px;color:'+MUT+'">'+won(it.price)+'</td>'
-      +'<td style="border-bottom:1px solid '+LINE+';text-align:right;padding:7px 10px;font-weight:800;color:'+INK+'">'+won(it.amount)+'</td>'
+      +'<td style="border-bottom:1px solid '+LINE+';text-align:right;padding:7px 10px;color:'+MUT+'">'+(Number(it.price)>0?won(it.price):'')+'</td>'
+      +'<td style="border-bottom:1px solid '+LINE+';text-align:right;padding:7px 10px;font-weight:800;color:'+INK+'">'+(Number(it.amount)>0?won(it.amount):'')+'</td>'
       +'<td style="border-bottom:1px solid '+LINE+';text-align:center;padding:7px 4px;font-size:12.5px;color:'+INK+'">'+_qEscH(it.note||'')+'</td></tr>').join('');
     return '<div style="background:#fff;padding:26px 34px;font-family:\'Pretendard\',\'Malgun Gothic\',sans-serif;color:'+INK+'">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'
@@ -6422,11 +6422,11 @@ function QDOC(q,tmpl){
   // 양식 2 · 심플 (미니멀 프리미엄)
   const rowsP=items.map((it,i)=>'<tr>'
     +'<td style="text-align:center;padding:8px 6px;border-bottom:1px solid '+LINE+';color:'+MUT+';font-size:11px">'+(i+1)+'</td>'
-    +'<td style="padding:8px 8px;border-bottom:1px solid '+LINE+';font-weight:700;color:'+INK+'">'+_qEscH(it.name)+(it.spec?' <span style="color:'+MUT+';font-weight:400;font-size:11px">'+_qEscH(it.spec)+'</span>':'')+'</td>'
+    +'<td style="padding:8px 8px;border-bottom:1px solid '+LINE+';font-weight:700;color:'+INK+';white-space:nowrap">'+_qEscH(it.name)+(it.spec?' <span style="color:'+MUT+';font-weight:400;font-size:11px">'+_qEscH(it.spec)+'</span>':'')+'</td>'
     +'<td style="text-align:center;padding:8px 6px;border-bottom:1px solid '+LINE+';color:'+MUT+';font-size:11.5px">'+_qEscH(it.unit||'EA')+'</td>'
     +'<td style="text-align:center;padding:8px 6px;border-bottom:1px solid '+LINE+';color:'+INK+'">'+won(it.qty)+'</td>'
-    +'<td style="text-align:right;padding:8px 10px;border-bottom:1px solid '+LINE+';color:'+MUT+'">'+won(it.price)+'</td>'
-    +'<td style="text-align:right;padding:8px 10px;border-bottom:1px solid '+LINE+';font-weight:800;color:'+INK+'">'+won(it.amount)+'</td>'
+    +'<td style="text-align:right;padding:8px 10px;border-bottom:1px solid '+LINE+';color:'+MUT+'">'+(Number(it.price)>0?won(it.price):'')+'</td>'
+    +'<td style="text-align:right;padding:8px 10px;border-bottom:1px solid '+LINE+';font-weight:800;color:'+INK+'">'+(Number(it.amount)>0?won(it.amount):'')+'</td>'
     +'<td style="text-align:center;padding:8px 6px;border-bottom:1px solid '+LINE+';color:'+INK+';font-size:12.5px">'+_qEscH(it.note||'')+'</td></tr>').join('');
   return '<div style="background:#fff;font-family:\'Pretendard\',\'Malgun Gothic\',sans-serif;color:'+INK+';padding:26px 34px">'
     +'<div style="display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:14px;border-bottom:1px solid '+INK+'">'
