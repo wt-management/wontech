@@ -995,10 +995,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <div class="page-header">
       <h5><i class="bi bi-clipboard-data me-2"></i>CDU <span class="text-muted" style="font-size:12px;font-weight:400">· 소모품파트 주간 영업활동</span></h5>
       <div class="btn-group btn-group-sm" role="group">
-        <button id="cdu-tab-report" class="btn btn-primary" onclick="_cduTab('report')"><i class="bi bi-graph-up-arrow me-1"></i>임원 보고</button>
+        <button id="cdu-tab-report" class="btn btn-primary" onclick="_cduTab('report')"><i class="bi bi-graph-up-arrow me-1"></i>대시보드</button>
         <button id="cdu-tab-input" class="btn btn-outline-primary" onclick="_cduTab('input')"><i class="bi bi-pencil-square me-1"></i>방문 기록</button>
-        <button id="cdu-tab-plan" class="btn btn-outline-primary" onclick="_cduTab('plan')"><i class="bi bi-calendar-check me-1"></i>다음 달 계획</button>
-        <button id="cdu-tab-keyman" class="btn btn-outline-primary" onclick="_cduTab('keyman')"><i class="bi bi-person-rolodex me-1"></i>Keyman 연락처</button>
       </div>
     </div>
     <div class="card p-2 mb-3" id="cdu-filterbar">
@@ -5777,7 +5775,8 @@ function _cduHospAuto(force){
 }
 function renderCDUReport(vs){
   var el=document.getElementById('cdu-report'); if(!el) return;
-  vs=vs.filter(v=>v.status!=='planned');   // 실적 집계는 완료된 방문만(예정 제외)
+  var _d0=new Date(), _cduTdyS=_d0.getFullYear()+'-'+String(_d0.getMonth()+1).padStart(2,'0')+'-'+String(_d0.getDate()).padStart(2,'0');
+  vs=vs.filter(v=>v.status!=='planned' && String(v.date||'').slice(0,10)<=_cduTdyS);   // 실적 집계 = 오늘까지 완료된 방문만(예정·미래 계획 제외)
   if(!vs.length){ el.innerHTML='<div class="card p-5 text-center text-muted" style="font-size:14px"><i class="bi bi-clipboard-x" style="font-size:26px;color:#cbd5e1"></i><div class="mt-2">조건에 맞는 방문 기록이 없습니다. <b>방문 추가</b> 또는 <b>방문 기록</b> 탭에서 등록하세요.</div></div>'; return; }
   var num=v=>Number(v)||0, pctf=(a,b)=>b?Math.round(a/b*100):0;
   var comp={},chan={},prices=[],ev=0,rl=0,churn=[],days=new Set(),bySales={};
@@ -5791,7 +5790,8 @@ function renderCDUReport(vs){
     if(v.date) days.add(String(v.date).slice(0,10));
     var s=((v.sales||'').trim())||'미지정'; bySales[s]=(bySales[s]||0)+1;
   });
-  var nHosp=vs.length;
+  var _hset={}; vs.forEach(function(v){ var n=(v.custName||'').trim(); if(n)_hset[n]=1; });
+  var nHosp=Object.keys(_hset).length, nVisit=vs.length;   // 방문 병원 = 고유 병원 수(방문 건수와 구분)
   _cduRepVs=vs.slice();
   var compArr=Object.entries(comp).sort((a,b)=>b[1]-a[1]); var compTot=compArr.reduce((s,x)=>s+x[1],0)||1;
   var chanArr=Object.entries(chan).sort((a,b)=>b[1]-a[1]);
@@ -5813,7 +5813,7 @@ function renderCDUReport(vs){
   // 저가 병원(수가 350천 미만) 비중 — 가격 건전성
   var lowP=prices.filter(p=>p<350).length;
   // 주차별 추이(담당·검색 반영, 주차 무관) — 완료 방문만
-  var base=_cduBaseFiltered().filter(v=>v.status!=='planned');
+  var base=_cduBaseFiltered().filter(v=>v.status!=='planned' && String(v.date||'').slice(0,10)<=_cduTdyS);
   var weeks=[...new Set(base.map(v=>_cduWeekLabel(v.date)).filter(Boolean))].sort();
   var wk={}; weeks.forEach(w=>wk[w]={n:0,psum:0,pn:0,ev:0});
   base.forEach(function(v){ var w=_cduWeekLabel(v.date); if(!w||!wk[w])return; wk[w].n++; var p=num(v.price); if(p>0){wk[w].psum+=p;wk[w].pn++;} if(String(v.event||'').toUpperCase()==='O')wk[w].ev++; });
@@ -5866,7 +5866,7 @@ function renderCDUReport(vs){
   var hlTile=(ic,col,num,lab,sub,click)=>'<div class="col-6 col-md-4 col-lg"><div '+(click?'onclick="'+click+'" ':'')+'style="background:#fff;border:1px solid #eef2f7;border-radius:11px;padding:10px 12px;height:100%;box-shadow:0 1px 2px rgba(15,23,42,.03)'+(click?';cursor:pointer':'')+'"><div style="font-size:18px;font-weight:800;color:'+col+';line-height:1.2"><i class="bi '+ic+' me-1" style="font-size:13px"></i>'+num+'</div><div style="font-size:11.5px;font-weight:700;color:#334155;margin-top:1px">'+lab+(click?' <i class="bi bi-chevron-right" style="font-size:8px;color:#cbd5e1"></i>':'')+'</div><div style="font-size:10px;color:#94a3b8">'+sub+'</div></div></div>';
   var stat=(lbl,val,col,sub,click)=>'<div'+(click?' onclick="'+click+'" style="cursor:pointer;':' style="')+'flex:1;min-width:104px;background:#fff;border:1px solid #eef2f7;border-radius:11px;padding:10px 13px;box-shadow:0 1px 2px rgba(15,23,42,.03)"><div style="font-size:11px;color:#64748b">'+lbl+(click?' <i class="bi bi-chevron-right" style="font-size:8px;color:#cbd5e1"></i>':'')+'</div><div style="font-size:20px;font-weight:800;color:'+col+';line-height:1.2">'+val+'</div>'+(sub?'<div style="font-size:10.5px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+sub+'</div>':'')+'</div>';
   var statStrip='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'
-    +stat('방문 병원',nHosp+'곳','#2563eb','영업일수 '+days.size+'일','_cduDrillAll()')
+    +stat('방문 병원',nHosp+'곳','#2563eb','방문 '+nVisit+'건 · 영업일수 '+days.size+'일','_cduDrillAll()')
     +stat('방문처 매출',_cduWon(visitedRev),'#0d9488','올해 팁매출 규모','_cduDrillVip()')
     +stat('리스크 감지',churn.length+'곳','#dc2626',(churn.length?'선제 대응 진행 중':'감지 리스크 없음 👍'),'_cduDrillChurn()')
     +stat('평균 시술수가',(avg?avg+'천':'-'),'#0891b2',(prices.length?mn+'~'+mx+' · '+prices.length+'곳 파악':'미파악'),prices.length?'_cduDrillBand(0)':'')
@@ -9589,7 +9589,7 @@ window.addEventListener('popstate', function(e) {
     _roiBanner('<i class="bi bi-file-earmark-text me-1"></i>견적 <b>'+q.id+'</b> · '+(q.custName||'')+' · 합계 '+_kr(Number(q.total||0))+(dev?' · '+dev:'')+' 기준&nbsp; <button class="btn btn-sm btn-outline-primary" style="font-size:11px;padding:2px 10px" onclick="roiSaveToQuote()">이 분석을 견적서에 담기</button>'+(q.roi?' <span style="color:#16a34a;font-size:11px">✓ 저장됨 — 인쇄 시 [ROI 분석 포함]으로 출력</span>':''));
   }
   window.roiFromQuote=function(id){
-    const q=((window.DB&&DB.d&&DB.d.quotes)||[]).find(x=>x.id===id); if(!q){ alert('견적서를 찾을 수 없습니다.'); return; }
+    const q=((typeof DB!=='undefined'&&DB.d&&DB.d.quotes)||[]).find(x=>x.id===id); if(!q){ alert('견적서를 찾을 수 없습니다.'); return; }
     if(!window._roiInit){ roiInit(); window._roiInit=1; }
     _roiQuoteId=id;
     const items=(q.items||[]).slice().sort((a,b)=>Number(b.amount||0)-Number(a.amount||0));
@@ -9647,12 +9647,12 @@ window.addEventListener('popstate', function(e) {
   };
   // ===== 병원 맞춤 추정(실제 팁 구매량 → 시술량) =====
   const _ROI_TIP_PRICE=400000;   // 팁 1개 단가 가정(패키지 환산 35~49만원 범위의 중간값)
-  function _roiHospList(){ const dl=document.getElementById('roi-hosp-list'); if(!dl||dl.dataset.f) return; const hs=Object.keys((window.CONS&&CONS.hospitals)||{}).sort((a,b)=>a.localeCompare(b,'ko')); dl.innerHTML=hs.slice(0,2500).map(n=>'<option value="'+n.replace(/"/g,'&quot;')+'">').join(''); dl.dataset.f='1'; }
+  function _roiHospList(){ const dl=document.getElementById('roi-hosp-list'); if(!dl||dl.dataset.f) return; const hs=Object.keys((typeof CONS!=='undefined'&&CONS.hospitals)||{}).sort((a,b)=>a.localeCompare(b,'ko')); dl.innerHTML=hs.slice(0,2500).map(n=>'<option value="'+n.replace(/"/g,'&quot;')+'">').join(''); dl.dataset.f='1'; }
   function _roiHospEst(){
     const inp=document.getElementById('rf-hosp'), note=document.getElementById('rf-hosp-note'); if(!inp||!note) return;
     const nm=(inp.value||'').trim();
     if(!nm){ note.textContent=''; return; }
-    const h=((window.CONS&&CONS.hospitals)||{})[nm];
+    const h=((typeof CONS!=='undefined'&&CONS.hospitals)||{})[nm];
     if(!h){ note.textContent='매출 데이터에 없는 병원명입니다(정확한 병원명을 선택하세요).'; return; }
     const isTip=t=>String(t[2]||'').indexOf('Oligio Tip')===0;
     const t26=(h.txns2026||[]).filter(isTip), t25=(h.txns2025||[]).filter(isTip);
