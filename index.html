@@ -1898,7 +1898,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
             <div class="k">문서번호</div><div class="v" id="qed-docno">—</div>
             <div class="k">견적일자</div><div class="v"><input type="date" class="f" id="qed-date"></div>
             <div class="k">유효기간</div><div class="v"><input type="date" class="f blank" id="qed-valid"></div>
-            <div class="k">담당영업</div><div class="v"><input class="f blank" id="qed-sales" placeholder="담당자명"></div>
+            <div class="k">담당영업</div><div class="v" style="display:flex;gap:4px"><input class="f blank" id="qed-sales" placeholder="담당자명" style="flex:1;min-width:0"><select class="f" id="qed-rank" style="width:74px;flex-shrink:0"><option value="">직급</option><option>사원</option><option>주임</option><option>대리</option><option>과장</option><option>차장</option><option>부장</option><option>이사</option></select></div>
             <div class="k">상태</div><div class="v"><select class="f" id="qed-status"><option>임시</option><option>발송</option><option>수락</option><option>거절</option></select></div>
           </div>
         </div>
@@ -6240,6 +6240,7 @@ function openQuoteEditor(id){
   setV('qed-date', q?(q.quoteDate||today):today);
   setV('qed-valid', q?(q.validUntil||''):'');
   setV('qed-sales', q?(q.sales||''):(typeof currentUserName==='function'?currentUserName():''));
+  try{ setV('qed-rank', q?(q.salesRank||''):(localStorage.getItem('wt_qrank')||'')); }catch(e){}
   document.getElementById('qed-status').value = q?(q.status||'임시'):'임시';
   setV('qed-note', q?(q.note||''):'');
   document.getElementById('qed-rows').innerHTML='';
@@ -6324,7 +6325,7 @@ function _qedCollect(){
   });
   const total=items.reduce((s,it)=>s+it.amount,0);   // 입력금액 = 부가세 포함
   const subtotal=Math.round(total/1.1), vat=total-subtotal;   // 공급가액·부가세 역산
-  return {id:document.getElementById('qed-id').value, custName:document.getElementById('qed-cust').value.trim(), quoteDate:document.getElementById('qed-date').value, validUntil:document.getElementById('qed-valid').value, sales:document.getElementById('qed-sales').value.trim(), status:document.getElementById('qed-status').value, note:document.getElementById('qed-note').value.trim(), items, subtotal, vat, total};
+  return {id:document.getElementById('qed-id').value, custName:document.getElementById('qed-cust').value.trim(), quoteDate:document.getElementById('qed-date').value, validUntil:document.getElementById('qed-valid').value, sales:document.getElementById('qed-sales').value.trim(), salesRank:((document.getElementById('qed-rank')||{}).value||''), status:document.getElementById('qed-status').value, note:document.getElementById('qed-note').value.trim(), items, subtotal, vat, total};
 }
 function _qedSave(){
   const q=_qedCollect();
@@ -6332,6 +6333,7 @@ function _qedSave(){
   if(!q.items.length){ alert('제품을 1개 이상 입력하세요.'); return; }
   const idx=(DB.d.quotes||[]).findIndex(x=>x.id===q.id);
   q.by=(idx>=0?(DB.d.quotes[idx].by||''):'')||((typeof currentUserName==='function'?currentUserName():'')||'').trim();   // 최초 작성자 유지
+  try{ if(q.salesRank) localStorage.setItem('wt_qrank', q.salesRank); }catch(e){}   // 다음 견적 때 직급 기억
   if(idx>=0) DB.d.quotes[idx]=q; else DB.d.quotes.push(q);
   DB.save('quotes').then(()=>{ try{bootstrap.Modal.getInstance(document.getElementById('quoteEditModal')).hide();}catch(e){} renderQuotes(); showToast('견적서 저장 완료', true); });
 }
@@ -6400,7 +6402,7 @@ function QDOC(q,tmpl){
             +'<tr><td style="padding:4px 0;color:'+MUT+'">대표이사</td><td style="padding:4px 0;font-weight:600">'+_qEscH(WT_SUP.ceo)+' (인)</td></tr>'
             +'<tr><td style="padding:4px 0;color:'+MUT+'">주　소</td><td style="padding:4px 0;font-weight:600">'+_qEscH(WT_SUP.addr)+'</td></tr>'
             +'<tr><td style="padding:4px 0;color:'+MUT+'">전화/팩스</td><td style="padding:4px 0;font-weight:600">'+WT_SUP.tel+' / '+WT_SUP.fax+'</td></tr>'
-            +'<tr><td style="padding:4px 0;color:'+MUT+'">담당자</td><td style="padding:4px 0;font-weight:600">국내영업부 '+_qEscH(q.sales||'')+'</td></tr></table>'
+            +'<tr><td style="padding:4px 0;color:'+MUT+'">담당자</td><td style="padding:4px 0;font-weight:600">한국영업팀 '+_qEscH(((q.sales||'')+(q.salesRank?' '+q.salesRank:'')).trim())+'</td></tr></table>'
         +'</div>'
       +'</div>'
       +'<div style="display:flex;justify-content:space-between;align-items:center;background:'+INK+';border-radius:16px;padding:12px 20px;margin-bottom:14px">'
@@ -6441,7 +6443,7 @@ function QDOC(q,tmpl){
       +'<div style="flex:1;padding-left:30px;border-left:1px solid '+LINE+'">'
         +'<div style="font-size:10px;font-weight:700;letter-spacing:2px;color:'+CLAY+'">FROM</div>'
         +'<div style="font-size:14px;font-weight:800;color:'+INK+';margin:7px 0 6px">'+_qEscH(WT_SUP.name)+'</div>'
-        +'<div style="font-size:11px;color:'+MUT+';line-height:1.9">사업자 '+WT_SUP.reg+' · 대표 '+_qEscH(WT_SUP.ceo)+'<br>'+_qEscH(WT_SUP.addr)+'<br>T '+WT_SUP.tel+' · 담당 국내영업부 <b style="color:'+INK+'">'+_qEscH(q.sales||'')+'</b></div></div>'
+        +'<div style="font-size:11px;color:'+MUT+';line-height:1.9">사업자 '+WT_SUP.reg+' · 대표 '+_qEscH(WT_SUP.ceo)+'<br>'+_qEscH(WT_SUP.addr)+'<br>T '+WT_SUP.tel+' · 담당 한국영업팀 <b style="color:'+INK+'">'+_qEscH(((q.sales||'')+(q.salesRank?' '+q.salesRank:'')).trim())+'</b></div></div>'
     +'</div>'
     +'<div style="display:flex;justify-content:space-between;align-items:center;padding:22px 26px;background:'+CREAM+';border:1px solid '+LINE+';border-radius:18px;margin-bottom:28px">'
       +'<div><div style="font-size:10.5px;font-weight:700;letter-spacing:.15em;color:'+MUT+';text-transform:uppercase">견적 합계금액 · VAT 포함</div><div style="font-size:12px;color:'+MUT+';margin-top:5px">一金 '+numKor(total)+'원整</div></div>'
