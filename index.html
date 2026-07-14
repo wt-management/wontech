@@ -1664,6 +1664,19 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   </div>
 </div></div></div>
 
+<!-- 일일보고서 내역 불러오기 모달 -->
+<div class="modal fade" id="sdrPickModal" tabindex="-1" style="z-index:1060"><div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
+  <div class="modal-header">
+    <h5 class="modal-title"><i class="bi bi-box-arrow-in-down me-1" style="color:#7c3aed"></i>방문 내역 불러오기 <span class="text-muted" style="font-size:11px;font-weight:400" id="sdrpick-range"></span></h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+  </div>
+  <div class="modal-body" id="sdrpick-body" style="font-size:13px"></div>
+  <div class="modal-footer py-2">
+    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button>
+    <button class="btn btn-primary btn-sm" onclick="sdrPickAdd()"><i class="bi bi-plus-lg me-1"></i>선택한 내역 추가</button>
+  </div>
+</div></div></div>
+
 <!-- 일 요약(영업활동 요약) 모달 -->
 <div class="modal fade" id="daySumModal" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content">
   <div class="modal-header">
@@ -8265,7 +8278,7 @@ var _SDR_LOGO='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPIAAAAsCAYAAABfXOX
 var _SDR_TD='border:1px solid #000;padding:6px 8px;font-size:12px;vertical-align:top';
 var _SDR_TH='border:1px solid #000;padding:6px 8px;font-size:12px;background:#F2F2F2;font-weight:700;text-align:center';
 function _sdrRowHtml(r,i){ var td=_SDR_TD; return '<tr'+(r.sid?' data-sid="'+_schEsc(r.sid)+'"':'')+'>'
-  +'<td style="'+td+';text-align:center">'+(i+1)+'</td>'
+  +'<td style="'+td+';text-align:center;position:relative"><span class="sdr-no">'+(i+1)+'</span><span class="sdr-noprint" onclick="sdrDelRow(this)" title="이 행 삭제" style="position:absolute;left:2px;top:50%;transform:translateY(-50%);color:#dc2626;cursor:pointer;font-weight:800;font-size:13px;line-height:1;padding:2px 4px">&times;</span></td>'
   +'<td contenteditable="true" style="'+td+'">'+_schEsc(r.hosp||'')+'</td>'
   +'<td contenteditable="true" style="'+td+'">'+_schEsc(r.purpose||'')+'</td>'
   +'<td contenteditable="true" style="'+td+'">'+_schEsc(r.reaction||'')+'</td>'
@@ -8336,7 +8349,7 @@ function renderSchDaily(force){
     +'<table id="sdr-act" style="width:100%;border-collapse:collapse;margin-top:-1px"><thead><tr>'
       +'<th style="'+th+';width:5%">No.</th><th style="'+th+';width:17%">병원명</th><th style="'+th+';width:27%">방문 목적과 타겟 제품(목적)</th><th style="'+th+';width:31%">결정권자 반응</th><th style="'+th+'">경쟁품 현황</th></tr></thead>'
       +'<tbody id="sdr-act-body">'+bodyRows+'</tbody></table>'
-    +'<div class="sdr-noprint" style="margin-top:4px"><button class="btn btn-link btn-sm p-0" style="font-size:11.5px" onclick="sdrAddRow()"><i class="bi bi-plus-circle me-1"></i>행 추가</button></div>'
+    +'<div class="sdr-noprint" style="margin-top:4px;display:flex;gap:14px;align-items:center"><button class="btn btn-link btn-sm p-0" style="font-size:11.5px" onclick="sdrAddRow()"><i class="bi bi-plus-circle me-1"></i>행 추가</button><button class="btn btn-link btn-sm p-0" style="font-size:11.5px;color:#7c3aed" onclick="sdrPickOpen()"><i class="bi bi-box-arrow-in-down me-1"></i>내역 불러오기</button><span style="font-size:10.5px;color:#9ca3af">· 최근 1주 방문내역 선택 추가 · 행 앞 &times;로 삭제</span></div>'
     +'<div style="font-size:13px;font-weight:800;margin:16px 0 5px">□ 성과 및 진행 상황</div>'
     +'<table style="width:100%;border-collapse:collapse;margin-top:-1px"><tr>'
       +'<th style="'+th+'">총 병원 방문 수</th><th style="'+th+'">의사 상담 병원 수</th><th style="'+th+'">데모 요청 병원 수</th><th style="'+th+'">계약(진행/완료) 건수</th></tr>'
@@ -8348,6 +8361,61 @@ function sdrAddRow(){
   var tb=document.getElementById('sdr-act-body'); if(!tb) return;
   var n=tb.querySelectorAll('tr').length;
   tb.insertAdjacentHTML('beforeend', _sdrRowHtml({}, n));
+}
+function _sdrRenum(){ document.querySelectorAll('#sdr-act-body tr').forEach(function(tr,i){ var s=tr.querySelector('.sdr-no'); if(s) s.textContent=(i+1); }); }
+function sdrDelRow(el){
+  var tr=el.closest('tr'); if(!tr) return;
+  var tb=tr.parentElement;
+  tr.remove();
+  if(tb && !tb.querySelectorAll('tr').length) tb.insertAdjacentHTML('beforeend', _sdrRowHtml({},0));   // 최소 1행 유지
+  _sdrRenum();
+}
+// ── 내역 불러오기: 작성자의 최근 1주 방문(일정·CDU)을 선택해 행으로 추가 ──
+var _sdrPickList=[];
+function sdrPickOpen(){
+  var D=(document.getElementById('sdr-date')||{}).value||_schTodayStr();
+  var R=((document.getElementById('sdr-sales')||{}).value||'').trim();
+  if(!R){ alert('작성자를 먼저 선택하세요.'); return; }
+  var p=D.split('-').map(Number); var d0=new Date(p[0],p[1]-1,p[2]); d0.setDate(d0.getDate()-6);
+  var from=d0.getFullYear()+'-'+String(d0.getMonth()+1).padStart(2,'0')+'-'+String(d0.getDate()).padStart(2,'0');
+  var mine=s=>{ s=(s||'').trim(); return s&&(s===R||s.includes(R)||R.includes(s)); };
+  var out=[];
+  (DB.d.logs||[]).forEach(function(l){
+    var dt=String(l.date||'').slice(0,10); if(!dt||dt<from||dt>D) return;
+    if(l.kind==='schedule'&&mine(l.sales)){
+      out.push({sid:l.id, date:dt, hosp:l.custName||'', purpose:((l.type&&l.type!=='방문')?('['+l.type+'] '):'')+(l.content||'')+(l.product?' — '+l.product:''), reaction:(l.resultMemo||''), comp:(l.resultComp||'')});
+    } else if(l.kind==='cdu'&&l.status!=='planned'&&mine(l.sales)){
+      out.push({date:dt, hosp:l.custName||'', purpose:'[소모품] '+(l.mainProc?l.mainProc+' ':'')+'방문'+(l.price?' · 수가 '+l.price+'천':''), reaction:(l.feedback||''), comp:(l.competitor||'')});
+    }
+  });
+  out.sort((a,b)=>b.date.localeCompare(a.date)||a.hosp.localeCompare(b.hosp,'ko'));
+  _sdrPickList=out;
+  var inSheet={}; document.querySelectorAll('#sdr-act-body tr[data-sid]').forEach(tr=>inSheet[tr.getAttribute('data-sid')]=1);
+  var rg=document.getElementById('sdrpick-range'); if(rg) rg.textContent='· '+R+' · '+from+' ~ '+D;
+  var body=document.getElementById('sdrpick-body');
+  body.innerHTML = out.length ? out.map(function(r,i){
+    var dup=r.sid&&inSheet[r.sid];
+    return '<label style="display:flex;align-items:flex-start;gap:8px;padding:8px 4px;border-bottom:1px solid #f1f5f9;cursor:'+(dup?'default':'pointer')+';opacity:'+(dup?'.45':'1')+'">'
+      +'<input type="checkbox" class="sdrpick-chk" data-i="'+i+'" '+(dup?'disabled':'')+' style="margin-top:3px">'
+      +'<span style="font-size:11px;color:#9ca3af;flex-shrink:0;min-width:44px">'+r.date.slice(5).replace('-','/')+'</span>'
+      +'<span style="flex:1;min-width:0"><b style="font-size:13px">'+_schEsc(r.hosp)+'</b>'
+      +(r.purpose?' <span style="color:#6b7280;font-size:12px">'+_schEsc(String(r.purpose).slice(0,50))+'</span>':'')
+      +(r.reaction?'<div style="font-size:11.5px;color:#475569">'+_schEsc(String(r.reaction).slice(0,70))+'</div>':'')
+      +'</span>'+(dup?'<span style="font-size:10px;color:#16a34a;flex-shrink:0">이미 있음</span>':'')+'</label>';
+  }).join('') : '<div class="text-center text-muted py-4">최근 1주 내 '+_schEsc(R)+' 방문 내역이 없습니다.</div>';
+  new bootstrap.Modal(document.getElementById('sdrPickModal')).show();
+}
+function sdrPickAdd(){
+  var tb=document.getElementById('sdr-act-body'); if(!tb) return;
+  var chk=[...document.querySelectorAll('.sdrpick-chk:checked')];
+  if(!chk.length){ alert('추가할 내역을 선택하세요.'); return; }
+  // 완전히 빈 기본 1행만 있으면 대체
+  var trs=tb.querySelectorAll('tr');
+  if(trs.length===1){ var c=trs[0].querySelectorAll('td'); var empty=true; for(var i=1;i<c.length;i++){ if(c[i].textContent.trim()){empty=false;break;} } if(empty) trs[0].remove(); }
+  chk.forEach(function(ch){ var r=_sdrPickList[Number(ch.dataset.i)]; if(r) tb.insertAdjacentHTML('beforeend', _sdrRowHtml(r, tb.querySelectorAll('tr').length)); });
+  _sdrRenum();
+  bootstrap.Modal.getInstance(document.getElementById('sdrPickModal')).hide();
+  showToast(chk.length+'건을 업무 활동 내역에 추가했습니다. [수정 저장]을 눌러야 보고서에 저장됩니다.', true);
 }
 async function sdrSave(){
   var D=(document.getElementById('sdr-date')||{}).value||_schTodayStr();
