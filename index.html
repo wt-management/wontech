@@ -8504,7 +8504,7 @@ function gV(id){return(document.getElementById(id)?.value||'');}
 function setV(id,v){const el=document.getElementById(id);if(el)el.value=v;}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).substr(2,5);}
 function fmtDate(d){if(!d)return'';try{return new Date(d).toLocaleDateString('ko-KR');}catch(e){return String(d);}}
-function fmtAmt(n){n=Number(n)||0;if(!n)return'0원';if(n>=100000000)return(n/100000000).toFixed(1)+'억';if(n>=10000000)return(n/10000000).toFixed(1)+'천만';if(n>=10000)return Math.round(n/10000)+'만';return n.toLocaleString()+'원';}
+function fmtAmt(n){n=Number(n)||0;if(!n)return'0원';if(n>=100000000)return(n/100000000).toFixed(1)+'억';if(n>=1000000)return Math.round(n/1000000).toLocaleString()+'백만';if(n>=10000)return Math.round(n/10000)+'만';return n.toLocaleString()+'원';}
 
 init();
 
