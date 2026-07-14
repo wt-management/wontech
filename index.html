@@ -2035,7 +2035,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <div class="col-6"><label class="form-label">시리얼번호</label><input type="text" id="e-serial" class="form-control form-control-sm"></div>
     <div class="col-6"><label class="form-label">납품일</label><input type="date" id="e-deliv" class="form-control form-control-sm"></div>
     <div class="col-6"><label class="form-label">보증만료일</label><input type="date" id="e-warranty" class="form-control form-control-sm"></div>
-    <div class="col-6"><label class="form-label">상태</label><select id="e-status" class="form-select form-select-sm"><option>정상</option><option>점검중</option><option>폐기</option></select></div>
+    <div class="col-6"><label class="form-label">상태</label><select id="e-status" class="form-select form-select-sm"><option>정상</option><option>점검중</option><option>철수</option><option>폐기</option></select></div>
     <div class="col-6"><label class="form-label">납품단가</label><input type="number" id="e-price" class="form-control form-control-sm"></div>
     <div class="col-6"><label class="form-label">담당영업</label><input type="text" id="e-sales" class="form-control form-control-sm"></div>
     <div class="col-12"><label class="form-label">비고</label><input type="text" id="e-note" class="form-control form-control-sm"></div>
@@ -7041,7 +7041,9 @@ function showHospitalDetail(name){
       <td><span style="font-size:11px;color:#6b7280;font-family:monospace">${e.serial||''}</span></td>
       <td>${fmtDate(e.delivDate)}</td>
       <td style="${wStyle}">${fmtDate(e.warrantyEnd)}${days!==null&&days<=60?`<span style="font-size:10px;margin-left:4px">(${days<=0?'만료':days+'일 후'})</span>`:''}</td>
-      <td>${statusBadge(e.status)}</td>
+      <td><select class="form-select form-select-sm" data-serial="${_escH(e.serial||'')}" onchange="_hospEquipStatus(this)" style="width:auto;min-width:86px;font-size:12px;display:inline-block;${e.status==='철수'?'color:#6b7280;background:#f3f4f6':e.status==='폐기'?'color:#dc2626':e.status==='점검중'?'color:#b45309':'color:#15803d'}">
+        ${['정상','점검중','철수','폐기'].map(s=>`<option${(e.status||'정상')===s?' selected':''}>${s}</option>`).join('')}
+      </select>${e.statusAt?`<div style="font-size:10px;color:#9ca3af;margin-top:2px">${_escH(e.statusBy||'')} · ${_escH(e.statusAt)}</div>`:''}</td>
       <td style="color:#6b7280">${_eqSalesDisp(e.sales)}</td>
     </tr>`;
   }).join('');
@@ -7418,7 +7420,18 @@ function confirmEquipExcel() {
     initEquip();
   });
 }
-function statusBadge(s){if(s==='점검중')return'<span class="badge bg-warning text-dark">점검중</span>';if(s==='폐기')return'<span class="badge bg-danger">폐기</span>';return'<span class="badge bg-success">정상</span>';}
+function statusBadge(s){if(s==='점검중')return'<span class="badge bg-warning text-dark">점검중</span>';if(s==='폐기')return'<span class="badge bg-danger">폐기</span>';if(s==='철수')return'<span class="badge bg-secondary">철수</span>';return'<span class="badge bg-success">정상</span>';}
+// 병원 상세에서 장비 상태 즉시 변경(영업사원 현장 수정용) — 변경자·일자 기록
+function _hospEquipStatus(sel){
+  const serial=sel.getAttribute('data-serial'); if(!serial){ alert('시리얼이 없어 수정할 수 없습니다.'); return; }
+  const e=DB.d.equipments.find(x=>x.serial===serial); if(!e){ alert('장비를 찾지 못했습니다.'); return; }
+  e.status=sel.value;
+  e.statusBy=((typeof currentUserName==='function'?currentUserName():'')||'').trim();
+  e.statusAt=new Date().toISOString().slice(0,10);
+  const st={'철수':'color:#6b7280;background:#f3f4f6','폐기':'color:#dc2626','점검중':'color:#b45309','정상':'color:#15803d'}[sel.value]||'';
+  sel.style.cssText='width:auto;min-width:86px;font-size:12px;display:inline-block;'+st;
+  DB.save('equipments').then(()=>showToast(e.model+' ('+serial+') 상태 → '+sel.value+' 저장됨', true));
+}
 
 // ── 일정 (방문·콜 스케줄) — logs 재사용(kind:'schedule') + 후속조치(nextDate) 병합 ──
 let _schView=(function(){try{return sessionStorage.getItem('sch_view')||'week';}catch(e){return 'week';}})(), _schMonth=null, _schOverdueOnly=false;
