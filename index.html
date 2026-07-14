@@ -4408,7 +4408,7 @@ function renderConsumables() {
   const sumTot26 = oligTotal26 + cartV26;   // 소모품 합계 = Oligio Tip 전체 + Cartridge
   const sumTot25 = oligTotal25 + cartV25;
   const kpiData = [
-    {hero:true,color:'#111827',icon:'bi-capsule', label:`소모품 합계 (${ytdLabel})`, value:fmtB(sumTot26), sub:`팁 전체 + 카트리지 · 전년 동기 ${fmtB(sumTot25)}`, chg:sumTot25>0?(sumTot26/sumTot25-1)*100:null,
+    {hero:true,color:'#111827',icon:'bi-capsule', label:`소모품 합계 (${ytdLabel})`, value:fmtB(total2026ytd), sub:`전 품목(의료기기·A/S 포함) — 종합 페이지와 동일 기준 · 전년 동기 ${fmtB(total2025ytd)} · 팁+카트리지 ${fmtB(sumTot26)}`, chg:total2025ytd>0?(total2026ytd/total2025ytd-1)*100:null,
      drill:()=>showConsDrill(['Oligio Tip [F-4.0]','Oligio Tip [E-0.25]','Oligio Tip [XF-4.0]','Oligio Tip [XE-0.25]','Cartridge'],'소모품 합계(팁+카트리지) 구매 병원')},
     {color:'#ff4500',icon:'bi-star-fill',      label:`Oligio Tip 전체 (${ytdLabel})`, value:fmtB(oligTotal26), sub:`전년 동기 ${fmtB(oligTotal25)}`, chg:oligTotal25>0?(oligTotal26/oligTotal25-1)*100:null,
      drill:()=>showConsDrill(['Oligio Tip [F-4.0]','Oligio Tip [E-0.25]','Oligio Tip [XF-4.0]','Oligio Tip [XE-0.25]'],'Oligio Tip 전체 구매 병원')},
@@ -4429,7 +4429,7 @@ function renderConsumables() {
     const ty2=spanMonthlySum(pv2);
     const cartP2=totFull25>0?Math.round(cartV25full*ty2/totFull25):0;
     const sub2=(v,p,hero)=>{ const g=p>0?(v/p-1)*100:null; return '<div style="margin-top:5px;font-size:10px;color:'+(hero?'rgba(255,255,255,.65)':'#64748b')+'">'+P2c.label+' 기준 <b>'+fmtB(v)+'</b> · 전년 '+fmtB(p)+(g===null?'':' <span style="color:'+(g>=0?'#16a34a':(hero?'#f87171':'#dc2626'))+';font-weight:700">'+(g>=0?'▲':'▼')+Math.abs(g).toFixed(1)+'%</span>')+'</div>'; };
-    kpiData[0].sub2=sub2(t2+cartV26,t2p+cartP2,true);
+    kpiData[0].sub2=sub2(spanMonthlySum(s2),spanMonthlySum(pv2),true);   // 전 품목 월계 — 종합 페이지와 동일 기준
     kpiData[1].sub2=sub2(t2,t2p);
     kpiData[2].sub2=sub2(fe2,fe2p);
     kpiData[3].sub2=sub2(xm2,xm2p);
