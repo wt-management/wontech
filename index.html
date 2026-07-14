@@ -7812,7 +7812,8 @@ function renderSchDaily(force){
   var saved=(force==='auto')?null:_sdrSaved(D,R);
   var data;
   if(saved){
-    data={part:saved.part||'1파트', author:saved.author||R, rows:(saved.rows||[]).slice(), stats:(saved.stats||['','','','']).slice(), opinion:saved.opinion||''};
+    var _pt=saved.part||'한국영업1파트'; if(/^\d파트$/.test(_pt)) _pt='한국영업'+_pt;   // 구버전 '1파트' 표기 정규화
+    data={part:_pt, author:saved.author||R, rows:(saved.rows||[]).slice(), stats:(saved.stats||['','','','']).slice(), opinion:saved.opinion||''};
   } else {
     var rows=[];
     logs.filter(l=>l.kind==='schedule'&&l.date===D&&(l.sales||'').trim()===R).forEach(function(s){
@@ -7828,7 +7829,9 @@ function renderSchDaily(force){
     });
     var uniq=new Set(rows.map(r=>r.hosp).filter(Boolean));
     var demoN=logs.filter(l=>l.kind==='schedule'&&l.date===D&&(l.sales||'').trim()===R&&l.type==='데모').length;
-    data={part:'1파트', author:R, rows:rows, stats:[String(uniq.size||''),'',String(demoN||''),''], opinion:rows.filter(r=>r.reaction).slice(0,5).map(r=>r.hosp+' : '+r.reaction).join('\n')};
+    var _team='한국영업1파트'; try{ _team=localStorage.getItem('wt_sdr_team')||_team; }catch(e){}
+    var _rk=''; if(typeof _isMgr!=='undefined'&&_isMgr){ _rk='파트장'; } else { try{ _rk=localStorage.getItem('wt_qrank')||''; }catch(e){} if(_rk==='파트장'||_rk==='팀장') _rk=''; }
+    data={part:_team, author:R+(_rk?' '+_rk:''), rows:rows, stats:[String(uniq.size||''),'',String(demoN||''),''], opinion:rows.filter(r=>r.reaction).slice(0,5).map(r=>r.hosp+' : '+r.reaction).join('\n')};
   }
   var st=document.getElementById('sdr-status');
   if(st) st.innerHTML=saved
@@ -7842,8 +7845,7 @@ function renderSchDaily(force){
       +'<div style="font-size:26px;font-weight:800">한국영업팀 일일보고</div></div>'
     +'<table style="width:100%;border-collapse:collapse;margin-top:-1px"><tr>'
       +'<td style="'+th+';width:11%">작성일</td><td style="'+td+';width:19%;text-align:center">'+_schEsc(D.replace(/-/g,'.'))+'</td>'
-      +'<td style="'+th+';width:9%">부서</td><td style="'+td+';width:17%;text-align:center">한국영업팀</td>'
-      +'<td style="'+th+';width:9%">파트</td><td id="sdr-part" contenteditable="true" style="'+td+';width:12%;text-align:center">'+_schEsc(data.part)+'</td>'
+      +'<td style="'+th+';width:9%">부서</td><td id="sdr-part" contenteditable="true" style="'+td+';width:26%;text-align:center">'+_schEsc(data.part)+'</td>'
       +'<td style="'+th+';width:10%">작성자</td><td id="sdr-author" contenteditable="true" style="'+td+';text-align:center">'+_schEsc(data.author)+'</td></tr></table>'
     +'<table style="width:100%;border-collapse:collapse;margin-top:14px"><tr><td style="border:1px solid #000;padding:6px 10px;font-size:13px;font-weight:800">업무 활동 내역</td></tr></table>'
     +'<table id="sdr-act" style="width:100%;border-collapse:collapse;margin-top:-1px"><thead><tr>'
@@ -7889,6 +7891,7 @@ async function sdrSave(){
     if(ex>=0) DB.d.logs[ex]=lg; else DB.d.logs.push(lg);
   });
   var g=id=>{ var e=document.getElementById(id); return e?(id==='sdr-op'?e.innerText:e.textContent).trim():''; };
+  try{ if(g('sdr-part')) localStorage.setItem('wt_sdr_team', g('sdr-part')); }catch(e){}   // 다음 보고 때 부서(파트) 기억
   var rec={id:'sdr_'+D+'_'+R, kind:'sdr', date:D, sales:R, part:g('sdr-part'), author:g('sdr-author'),
     rows:rows, stats:[g('sdr-s1'),g('sdr-s2'),g('sdr-s3'),g('sdr-s4')], opinion:g('sdr-op'),
     updatedAt:new Date().toISOString().slice(0,10), by:_schMe()};
