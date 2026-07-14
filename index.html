@@ -6240,7 +6240,14 @@ function openQuoteEditor(id){
   setV('qed-date', q?(q.quoteDate||today):today);
   setV('qed-valid', q?(q.validUntil||''):'');
   setV('qed-sales', q?(q.sales||''):(typeof currentUserName==='function'?currentUserName():''));
-  try{ setV('qed-rank', q?(q.salesRank||''):(localStorage.getItem('wt_qrank')||'')); }catch(e){}
+  try{
+    var _mgrQ=(typeof _isMgr!=='undefined'&&_isMgr);
+    // 팀원에게는 파트장·팀장 직급이 드롭다운에 안 보이게
+    document.querySelectorAll('#qed-rank option').forEach(function(o){ if(o.value==='파트장'||o.value==='팀장'){ o.hidden=!_mgrQ; o.disabled=!_mgrQ; } });
+    var _rk=q?(q.salesRank||''):(localStorage.getItem('wt_qrank')||(_mgrQ?'파트장':''));   // 자동입력(기억값→파트장/공란)
+    if(!_mgrQ&&(_rk==='파트장'||_rk==='팀장')) _rk='';
+    setV('qed-rank', _rk);
+  }catch(e){}
   try{ setV('qed-team', q?(q.salesTeam||'한국영업팀'):(localStorage.getItem('wt_qteam')||'한국영업팀')); }catch(e){}
   document.getElementById('qed-status').value = q?(q.status||'임시'):'임시';
   setV('qed-note', q?(q.note||''):'');
