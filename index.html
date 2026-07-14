@@ -1734,7 +1734,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <thead class="table-light"><tr><th style="width:96px">이름 *</th><th style="width:130px">파트 <span class="text-muted fw-normal" style="font-size:10px">(직접 입력 가능)</span></th><th style="width:84px">직급</th><th style="width:104px">생일(월-일)</th><th style="width:136px">연락처</th><th style="width:40px"></th></tr></thead>
       <tbody id="tm-body"></tbody>
     </table>
-    <datalist id="tm-dept-list"><option value="1파트"><option value="2파트"><option value="CDU파트"><option value="기타"></datalist>
+    <datalist id="tm-dept-list"><option value="한국영업1파트"><option value="한국영업2파트"><option value="CDU파트"><option value="기타"></datalist>
     <button class="btn btn-outline-primary btn-sm" onclick="_tmAdd()"><i class="bi bi-plus-lg me-1"></i>팀원 추가 (입사)</button>
     <div style="font-size:11.5px;color:#94a3b8;margin-top:8px">🗑 삭제(퇴사) 후 저장하면 담당자 필터·담당자별 분석·일정의 생일 표시에서 즉시 제외됩니다. 생일은 매년 반복 표시됩니다.</div>
   </div>
@@ -2205,7 +2205,7 @@ function _tmRow(m){ m=m||{};
   var esc=s=>String(s==null?'':s).replace(/"/g,'&quot;').replace(/</g,'&lt;');
   return '<tr>'
     +'<td><input class="form-control form-control-sm tm-name" value="'+esc(m.name)+'" placeholder="이름"></td>'
-    +'<td><input class="form-control form-control-sm tm-dept" list="tm-dept-list" autocomplete="off" value="'+esc(m.dept||'1파트')+'" placeholder="1파트"></td>'
+    +'<td><input class="form-control form-control-sm tm-dept" list="tm-dept-list" autocomplete="off" value="'+esc(m.dept||'한국영업1파트')+'" placeholder="한국영업1파트"></td>'
     +'<td><input class="form-control form-control-sm tm-pos" value="'+esc(m.pos)+'" placeholder="과장"></td>'
     +'<td><input class="form-control form-control-sm tm-bday" value="'+esc(m.bday)+'" placeholder="09-18"></td>'
     +'<td><input class="form-control form-control-sm tm-phone" value="'+esc(m.phone)+'" placeholder="010-"></td>'
@@ -2213,11 +2213,11 @@ function _tmRow(m){ m=m||{};
 }
 function openTeamMgr(){
   if(!(typeof _isMgr!=='undefined'&&_isMgr)){ alert('파트장/관리자만 사용할 수 있습니다.'); return; }
-  var ms=(KOR_TEAM&&KOR_TEAM.length)?KOR_TEAM:KOR_SALES_TEAM.map(n=>({name:n,dept:(KOR_TEAM_INFO[n]||{}).dept||'1파트',pos:(KOR_TEAM_INFO[n]||{}).pos||'',bday:'',phone:(typeof WT_SALES_PHONE!=='undefined'&&WT_SALES_PHONE[n])||''}));
+  var ms=(KOR_TEAM&&KOR_TEAM.length)?KOR_TEAM:KOR_SALES_TEAM.map(n=>({name:n,dept:(KOR_TEAM_INFO[n]||{}).dept||'한국영업1파트',pos:(KOR_TEAM_INFO[n]||{}).pos||'',bday:'',phone:(typeof WT_SALES_PHONE!=='undefined'&&WT_SALES_PHONE[n])||''}));
   document.getElementById('tm-body').innerHTML=ms.map(_tmRow).join('');
   new bootstrap.Modal(document.getElementById('teamMgrModal')).show();
 }
-function _tmAdd(){ document.getElementById('tm-body').insertAdjacentHTML('beforeend', _tmRow({dept:'1파트'})); }
+function _tmAdd(){ document.getElementById('tm-body').insertAdjacentHTML('beforeend', _tmRow({dept:'한국영업1파트'})); }
 async function saveTeamMgr(){
   var ms=[], bad='';
   document.querySelectorAll('#tm-body tr').forEach(function(tr){
@@ -7939,7 +7939,7 @@ function renderSchDaily(force){
       +'<img src="'+_SDR_LOGO+'" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);width:105px;height:auto" alt="wontech">'
       +'<div style="font-size:26px;font-weight:800">한국영업팀 일일보고</div></div>'
     +'<table style="width:100%;border-collapse:collapse;margin-top:-1px"><tr>'
-      +'<td style="'+th+';width:11%">작성일</td><td style="'+td+';width:19%;text-align:center">'+_schEsc(D.replace(/-/g,'.'))+'</td>'
+      +'<td style="'+th+';width:11%">작성일</td><td style="'+td+';width:19%;text-align:center">'+_schEsc(D.replace(/-/g,'. '))+'</td>'
       +'<td style="'+th+';width:9%">부서</td><td id="sdr-part" contenteditable="true" style="'+td+';width:26%;text-align:center">'+_schEsc(data.part)+'</td>'
       +'<td style="'+th+';width:10%">작성자</td><td id="sdr-author" contenteditable="true" style="'+td+';text-align:center">'+_schEsc(data.author)+'</td></tr></table>'
     +'<table style="width:100%;border-collapse:collapse;margin-top:14px"><tr><td style="border:1px solid #000;padding:6px 10px;font-size:13px;font-weight:800">업무 활동 내역</td></tr></table>'
@@ -8821,7 +8821,7 @@ function _setDevFilter(v, btn){ _devFilter=v; document.querySelectorAll('#page-d
 function _devRepName(e){
   const esc=s=>String(s||'').replace(/</g,'&lt;');
   if(e.isTeam){ const inf=KOR_TEAM_INFO[e.name]||{};
-    return (inf.dept?'<span style="font-size:9px;font-weight:800;color:#0891b2;background:#ecfeff;border-radius:4px;padding:1px 6px;margin-right:6px;vertical-align:middle">'+esc(inf.dept)+'</span>':'')
+    return (inf.dept?'<span style="font-size:9px;font-weight:800;color:#0891b2;background:#ecfeff;border-radius:4px;padding:1px 6px;margin-right:6px;vertical-align:middle">'+esc(String(inf.dept).replace(/^한국영업/,''))+'</span>':'')
       +esc(e.name)+(inf.pos?' <span style="font-size:10.5px;font-weight:600;color:#64748b">'+esc(inf.pos)+'</span>':'');
   }
   return esc(e.name)+'<span style="font-size:8.5px;font-weight:700;color:#a16207;background:#fef9c3;border-radius:4px;padding:1px 5px;margin-left:5px;vertical-align:middle">대리점</span>';
