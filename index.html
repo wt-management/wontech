@@ -399,8 +399,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <li><a class="nav-link" onclick="showPage('sales',this)"><i class="bi bi-kanban"></i>수주관리</a></li>
       <li><a class="nav-link" onclick="showPage('schedule',this)"><i class="bi bi-calendar-week"></i>일정</a></li>
       <li><a class="nav-link" onclick="showPage('cdu',this)"><i class="bi bi-clipboard-data"></i>CDU</a></li>
-      <li><a class="nav-link" onclick="showPage('quotes',this)"><i class="bi bi-file-earmark-text"></i>견적서</a></li>
-      <li><a class="nav-link" onclick="showPage('roi',this)"><i class="bi bi-calculator"></i>ROI 계산기</a></li>
+      <li><a class="nav-link" onclick="showPage('quotes',this)"><i class="bi bi-file-earmark-text"></i>견적서/ROI</a></li>
       <li><a class="nav-link" onclick="showPage('speech',this)"><i class="bi bi-chat-quote"></i>Sales Speech</a></li>
     </ul>
     <div class="nav-label mt-3">관리</div>
@@ -950,6 +949,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
   <!-- ROI 계산기 (네이티브 재구현: RF/HIFU · Laser) -->
   <div id="page-roi" class="page">
+    <div class="d-flex justify-content-center mb-2"><div class="btn-group btn-group-sm"><button class="btn btn-outline-primary" type="button" onclick="showPage('quotes')"><i class="bi bi-file-earmark-text me-1"></i>견적서</button><button class="btn btn-primary" type="button">ROI 계산기</button></div></div>
     <div class="roi-top">
       <div class="roi-seg">
         <button id="roitab-rf" class="active" onclick="roiTab('rf')">RF / HIFU</button>
@@ -1133,7 +1133,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
   <!-- 견적서 -->
   <div id="page-quotes" class="page">
-    <div class="page-header"><h5><i class="bi bi-file-earmark-text me-2"></i>견적서</h5><button class="btn btn-primary btn-sm" onclick="openModal('quote')"><i class="bi bi-plus-lg me-1"></i>견적서 작성</button></div>
+    <div class="page-header"><h5><i class="bi bi-file-earmark-text me-2"></i>견적서</h5><div class="d-flex align-items-center" style="gap:8px"><div class="btn-group btn-group-sm"><button class="btn btn-primary" type="button">견적서</button><button class="btn btn-outline-primary" type="button" onclick="showPage('roi')"><i class="bi bi-calculator me-1"></i>ROI 계산기</button></div><button class="btn btn-primary btn-sm" onclick="openModal('quote')"><i class="bi bi-plus-lg me-1"></i>견적서 작성</button></div></div>
     <div class="card"><div class="card-body p-0"><table class="table table-hover mb-0">
       <thead class="table-light"><tr><th>견적번호</th><th>병원명</th><th>장비명</th><th>견적일</th><th>담당</th><th>합계</th><th></th></tr></thead>
       <tbody id="quote-list"></tbody>
@@ -2659,7 +2659,7 @@ function showPage(name, el, noPush) {
   if(el) el.classList.add('active');
   else { const links = document.querySelectorAll('.nav-link');
     links.forEach(l=>{ if(l.textContent.trim().includes(
-      {'sales-overview':'종합',dashboard:'현황판',sales:'수주관리',quotes:'견적서',schedule:'일정',cdu:'CDU',roi:'ROI 계산기',speech:'Sales Speech',customers:'고객사',equipments:'장비',logs:'상담일지',products:'제품',consumables:'소모품 매출','cons-hospitals':'병원별','device-sales':'제품 매출','device-reps':'담당자별',region:'지역별 분석',pending:'회계 미반영 매출','cons-accounts':'거래처'}[name]||''
+      {'sales-overview':'종합',dashboard:'현황판',sales:'수주관리',quotes:'견적서/ROI',schedule:'일정',cdu:'CDU',roi:'견적서/ROI · ROI 계산기',speech:'Sales Speech',customers:'고객사',equipments:'장비',logs:'상담일지',products:'제품',consumables:'소모품 매출','cons-hospitals':'병원별','device-sales':'제품 매출','device-reps':'담당자별',region:'지역별 분석',pending:'회계 미반영 매출','cons-accounts':'거래처'}[name]||''
     )) l.classList.add('active'); }); }
   try{_mNavSync(name);}catch(e){}
   if(name==='sales-overview') renderSalesOverview();
