@@ -1951,7 +1951,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <tr class="g"><td class="k"><span style="display:inline-flex;width:86px;justify-content:space-between"><span>합</span><span>계</span></span></td><td class="v" id="qed-total-sum"><span class="won">₩</span> 0</td></tr>
       </table></div>
       <div class="qed-foot">
-        <div class="qed-terms"><span><b>납품기일</b> <input class="f" id="qed-t2" style="width:118px" value="계약 후 3일 이내"></span><span><b>결제조건</b> <input class="f" id="qed-t3" style="width:76px" value="선입금"></span><span><b>납품처</b> <input class="f" id="qed-t4" style="width:86px" value="지정장소"></span></div>
+        <div class="qed-terms" id="qed-terms-rows"></div><button type="button" onclick="_qedTermAdd('','')" style="border:1px dashed var(--line);background:#fff;color:var(--mut);font-size:11px;border-radius:8px;padding:3px 10px;cursor:pointer;margin-top:6px">＋ 조건 추가</button>
         <div class="qed-memo" id="qed-note-rows"></div>
         <div class="qed-tagline">원텍 주식회사 · www.wontech.com · 본 견적서는 발행일로부터 30일간 유효합니다.</div>
       </div>
@@ -6378,7 +6378,7 @@ function openQuoteEditor(id){
     if(!_ph){ var _nm=((document.getElementById('qed-sales')||{}).value||'').trim(); _ph=WT_SALES_PHONE[_nm]||localStorage.getItem('wt_qphone')||''; }
     setV('qed-phone', _ph);
   }catch(e){}
-  try{ var _tv0=(q&&q.terms&&q.terms.length===4)?q.terms:[(q&&q.validUntil)?(fmtDate(q.validUntil)+' 까지'):'견적 후 30일','계약 후 3일 이내','선입금','지정장소']; setV('qed-t1',_tv0[0]); setV('qed-t2',_tv0[1]); setV('qed-t3',_tv0[2]); setV('qed-t4',_tv0[3]); }catch(e){}
+  try{ _qedTermsSet(q); }catch(e){}
   (function(){ var e=document.getElementById('qed-status'); if(e) e.value=q?(q.status||'임시'):'임시'; })();
   _qedNoteSet(q?(q.note||''):'');
   document.getElementById('qed-rows').innerHTML='';
@@ -6463,6 +6463,27 @@ function _qedNoteVal(){
   var vals=[...document.querySelectorAll('#qed-note-rows .qed-note-i')].map(e=>e.value.trim()).filter(Boolean);
   return vals.map((v,i)=>(i+1)+'. '+v).join('\n');
 }
+// 거래조건: 동적 행(조건명+내용), 내용 있는 것만 저장·인쇄
+function _qedTermRow(k,v){ return '<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 14px 2px 0"><input class="f qed-term-k" style="width:70px;font-weight:700" value="'+_qedA(k||'')+'" placeholder="조건명"><input class="f qed-term-v" style="width:132px" value="'+_qedA(v||'')+'" placeholder="내용"></span>'; }
+function _qedTermAdd(k,v){ var bx=document.getElementById('qed-terms-rows'); if(bx) bx.insertAdjacentHTML('beforeend',_qedTermRow(k,v)); }
+function _qedTermsSet(q){
+  var bx=document.getElementById('qed-terms-rows'); if(!bx) return;
+  bx.innerHTML='';
+  var list;
+  if(q&&q.termsList&&q.termsList.length){ list=q.termsList.map(function(s){ var i=String(s).indexOf(' : '); return i>0?[s.slice(0,i),s.slice(i+3)]:['',String(s)]; }); }
+  else if(q&&q.terms&&q.terms.length===4){ list=[['납품기일',q.terms[1]||'계약 후 3일 이내'],['결제조건',q.terms[2]||'선입금'],['납품처',q.terms[3]||'지정장소']]; }
+  else list=[['납품기일','계약 후 3일 이내'],['결제조건','선입금'],['납품처','지정장소']];
+  list.forEach(function(p){ _qedTermAdd(p[0],p[1]); });
+}
+function _qedTermsVal(){
+  var out=[];
+  document.querySelectorAll('#qed-terms-rows .qed-term-k').forEach(function(kEl){
+    var vEl=kEl.parentElement.querySelector('.qed-term-v');
+    var k=(kEl.value||'').trim(), v=(vEl?vEl.value:'').trim();
+    if(!k&&!v) return; out.push(k?(k+' : '+v):v);
+  });
+  return out;
+}
 function _qedValidSync(){ var v=(document.getElementById('qed-valid')||{}).value; var t=document.getElementById('qed-t1'); if(t&&v) t.value=fmtDate(v)+' 까지'; }
 // 담당자별 기본 연락처 — 담당자명 입력 시 자동 채움(수기 수정 가능)
 const WT_SALES_PHONE={'김정국':'010-9870-2838','조만식':'010-9981-1236','양준욱':'010-2827-0488','김세현':'010-7928-8792','구주영':'010-9950-9916','강지형':'010-5480-1823','송재원':'010-8935-8482','최준수':'010-3830-4292','김량현':'010-9034-4145'};
@@ -6502,7 +6523,7 @@ function _qedCollect(){
   });
   const total=items.reduce((s,it)=>s+it.amount,0);   // 입력금액 = 부가세 포함
   const subtotal=Math.round(total/1.1), vat=total-subtotal;   // 공급가액·부가세 역산
-  return {id:document.getElementById('qed-id').value, custName:document.getElementById('qed-cust').value.trim(), quoteDate:document.getElementById('qed-date').value, validUntil:document.getElementById('qed-valid').value, sales:document.getElementById('qed-sales').value.trim(), salesRank:((document.getElementById('qed-rank')||{}).value||''), salesTeam:(((document.getElementById('qed-team')||{}).value||'').trim()), salesPhone:(((document.getElementById('qed-phone')||{}).value||'').trim()), status:(((document.getElementById('qed-status')||{}).value)||'임시'), note:_qedNoteVal(), terms:[1,2,3,4].map(i=>(((document.getElementById('qed-t'+i)||{}).value)||'').trim()), items, subtotal, vat, total};
+  return {id:document.getElementById('qed-id').value, custName:document.getElementById('qed-cust').value.trim(), quoteDate:document.getElementById('qed-date').value, validUntil:document.getElementById('qed-valid').value, sales:document.getElementById('qed-sales').value.trim(), salesRank:((document.getElementById('qed-rank')||{}).value||''), salesTeam:(((document.getElementById('qed-team')||{}).value||'').trim()), salesPhone:(((document.getElementById('qed-phone')||{}).value||'').trim()), status:(((document.getElementById('qed-status')||{}).value)||'임시'), note:_qedNoteVal(), termsList:_qedTermsVal(), items, subtotal, vat, total};
 }
 function _qedSave(){
   const q=_qedCollect();
@@ -6544,7 +6565,7 @@ function QDOC(q,tmpl){
   const total=Number(q.total||0);
   const INK='#1a1714',MUT='#8f8a82',CLAY='#ff4d00',LINE='#ece9e4',CREAM='#faf9f7';
   const logo = _wtLogo('#ff4d00','116');   // 정확한 CI(SVG) 고정 사용
-  const _tv=(q.terms&&q.terms.length===4)?q.terms.map(x=>_qEscH(x)):[(q.validUntil?_qEscH(fmtDate(q.validUntil)+' 까지'):'견적 후 30일'),'계약 후 3일 이내','선입금','지정장소']; const termsList=['납품기일 : '+_tv[1],'결제조건 : '+_tv[2],'납품처 : '+_tv[3]];
+  const termsList=(q.termsList&&q.termsList.length)?q.termsList.map(x=>_qEscH(x)):(function(){ const _tv=(q.terms&&q.terms.length===4)?q.terms.map(x=>_qEscH(x)):null; return ['납품기일 : '+((_tv&&_tv[1])||'계약 후 3일 이내'),'결제조건 : '+((_tv&&_tv[2])||'선입금'),'납품처 : '+((_tv&&_tv[3])||'지정장소')]; })();
 
   if(tmpl==='classic'){
     // 양식 1 — 격식 있는 정식 견적서, 헤어라인 톤으로 재정리
@@ -6598,14 +6619,14 @@ function QDOC(q,tmpl){
 
   // 양식 2 — 프리미엄 에디토리얼: 타이포·헤어라인·오렌지 포인트(인쇄 안전: 테두리/글자색 위주)
   const rowsP=items.map((it,i)=>'<tr>'
-    +'<td style="text-align:center;padding:9px 6px;border-bottom:1px solid '+LINE+';color:'+CLAY+';font-weight:800;font-size:11px;font-variant-numeric:tabular-nums">'+String(i+1).padStart(2,'0')+'</td>'
+    +'<td style="text-align:center;padding:9px 6px;border-bottom:1px solid '+LINE+';color:'+INK+';font-weight:800;font-size:11px;font-variant-numeric:tabular-nums">'+String(i+1).padStart(2,'0')+'</td>'
     +'<td style="padding:9px 8px;border-bottom:1px solid '+LINE+';font-weight:700;color:'+INK+';white-space:nowrap">'+_qEscH(it.name)+(it.spec?' <span style="color:'+MUT+';font-weight:400;font-size:11px">'+_qEscH(it.spec)+'</span>':'')+'</td>'
     +'<td style="text-align:center;padding:9px 6px;border-bottom:1px solid '+LINE+';color:'+MUT+';font-size:11.5px">'+_qEscH(it.unit||'EA')+'</td>'
     +'<td style="text-align:center;padding:9px 6px;border-bottom:1px solid '+LINE+';color:'+INK+';font-weight:600">'+won(it.qty)+'</td>'
     +'<td style="text-align:right;padding:9px 10px;border-bottom:1px solid '+LINE+';color:'+MUT+';font-variant-numeric:tabular-nums">'+(Number(it.price)>0?won(it.price):'')+'</td>'
     +'<td style="text-align:right;padding:9px 10px;border-bottom:1px solid '+LINE+';font-weight:800;color:'+INK+';font-variant-numeric:tabular-nums">'+(Number(it.amount)>0?won(it.amount):'')+'</td>'
     +'<td style="text-align:center;padding:9px 6px;border-bottom:1px solid '+LINE+';color:'+INK+';font-size:12px">'+_qEscH(it.note||'')+'</td></tr>').join('');
-  const _mv=(l,v)=>'<div style="flex:1;min-width:0;padding:10px 16px;border-left:1px solid '+LINE+'"><div style="font-size:9px;font-weight:800;letter-spacing:.18em;color:'+MUT+'">'+l+'</div><div style="font-size:12.5px;font-weight:700;color:'+INK+';margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+v+'</div></div>';
+  const _mv=(l,v)=>'<div style="flex:1;min-width:0;padding:10px 16px;border-left:1px solid '+LINE+';display:flex;flex-direction:column;justify-content:center"><div style="font-size:9px;font-weight:800;letter-spacing:.18em;color:'+MUT+'">'+l+'</div><div style="font-size:12.5px;font-weight:700;color:'+INK+';margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+v+'</div></div>';
   const _mgrLine=_qEscH(((q.salesTeam||'한국영업팀')+' '+(q.sales||'')+(q.salesRank?' '+q.salesRank:'')).trim())+(q.salesPhone?' <span style="color:'+MUT+';font-weight:500">· '+_qEscH(q.salesPhone)+'</span>':'');
   return '<div style="background:#fff;font-family:\'Pretendard\',\'Malgun Gothic\',sans-serif;color:'+INK+';border-top:6px solid '+CLAY+'">'
     +'<div style="padding:32px 40px 0">'
@@ -6617,7 +6638,7 @@ function QDOC(q,tmpl){
         +_mv('DOCUMENT NO.',_qEscH(q.id||''))
         +_mv('견적일자',_qEscH(fmtDate(q.quoteDate)||''))
         +_mv('유효기간',(fmtDate(q.validUntil)||'견적 후 30일'))
-        +'<div style="flex:1;min-width:0;padding:10px 16px;border-left:1px solid '+LINE+'"><div style="font-size:9px;font-weight:800;letter-spacing:.18em;color:'+MUT+'">담당</div><div style="font-size:12.5px;font-weight:700;color:'+INK+';margin-top:3px;white-space:nowrap">'+_qEscH(((q.salesTeam||'한국영업팀')+' '+(q.sales||'')+(q.salesRank?' '+q.salesRank:'')).trim())+'</div>'+(q.salesPhone?'<div style="font-size:11px;color:'+MUT+';font-weight:700;margin-top:1px">'+_qEscH(q.salesPhone)+'</div>':'')+'</div>'
+        +'<div style="flex:1;min-width:0;padding:10px 16px;border-left:1px solid '+LINE+';display:flex;flex-direction:column;justify-content:center"><div style="font-size:9px;font-weight:800;letter-spacing:.18em;color:'+MUT+'">담당</div><div style="font-size:12.5px;font-weight:700;color:'+INK+';margin-top:3px;white-space:nowrap">'+_qEscH(((q.salesTeam||'한국영업팀')+' '+(q.sales||'')+(q.salesRank?' '+q.salesRank:'')).trim())+'</div>'+(q.salesPhone?'<div style="font-size:11px;color:'+MUT+';font-weight:700;margin-top:1px">'+_qEscH(q.salesPhone)+'</div>':'')+'</div>'
       +'</div>'
       +'<div style="display:flex;margin:26px 0 22px">'
         +'<div style="flex:1.05;padding-right:34px">'
@@ -6654,7 +6675,7 @@ function QDOC(q,tmpl){
           +'<tr><td style="padding:7px 18px 0;font-weight:800;font-size:14px;white-space:nowrap"><span style="display:inline-flex;width:86px;justify-content:space-between"><span>합</span><span>계</span></span></td><td style="padding-top:7px;text-align:right;font-weight:800;font-size:22px;color:'+CLAY+';font-variant-numeric:tabular-nums">₩ '+won(total)+'</td></tr></table>'
       +'</div>'
       +'<div style="margin-top:24px;border-top:1px solid '+LINE+';padding-top:13px;display:flex;flex-wrap:wrap;gap:6px 26px;font-size:11.5px;color:'+INK+'">'
-        +termsList.map((t,i)=>'<span><b style="color:'+CLAY+';font-variant-numeric:tabular-nums">0'+(i+1)+'</b>&nbsp; '+t+'</span>').join('')
+        +termsList.map((t,i)=>'<span><b style="color:'+INK+';font-variant-numeric:tabular-nums">'+String(i+1).padStart(2,'0')+'</b>&nbsp; '+t+'</span>').join('')
       +'</div>'
       +(q.note?'<div style="margin-top:12px;border-left:3px solid '+CLAY+';padding:8px 12px;font-size:12.5px;color:'+INK+';font-weight:600;white-space:pre-line">'+_qEscH(q.note)+'</div>':'')
     +'</div>'
