@@ -8180,13 +8180,17 @@ async function sdrIMG(){
     }catch(e){ alert('이미지 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하세요.'); return; }
   }
   showToast('이미지 생성 중...');
-  sheet.querySelectorAll('.sdr-noprint').forEach(function(el){ el.style.display='none'; });
+  // 시트가 모달보다 넓어 넘친 부분에 모달 배경이 회색으로 겹쳐 찍힘 → 모달 밖(화면 밖)에 복제해서 캡처
+  var W=Math.max(sheet.scrollWidth,sheet.offsetWidth);
+  var clone=sheet.cloneNode(true);
+  clone.removeAttribute('id');
+  clone.querySelectorAll('.sdr-noprint').forEach(function(el){ el.remove(); });
+  clone.style.position='absolute'; clone.style.left='-12000px'; clone.style.top='0';
+  clone.style.width=W+'px'; clone.style.maxWidth='none'; clone.style.margin='0'; clone.style.boxShadow='none'; clone.style.background='#fff';
+  document.body.appendChild(clone);
   var canvas;
-  // 화면 1:1 렌더링. 가상 창 크기를 시트 전체 폭·높이로 지정 — 실제 창보다 넓은 부분이 회색(뷰포트 밖)으로 찍히는 문제 방지
-  try{ canvas=await html2canvas(sheet,{scale:1,backgroundColor:'#ffffff',scrollX:0,scrollY:0,
-    windowWidth:Math.max(document.documentElement.clientWidth,sheet.scrollWidth+60),
-    windowHeight:Math.max(document.documentElement.clientHeight,sheet.scrollHeight+60)}); }
-  finally{ sheet.querySelectorAll('.sdr-noprint').forEach(function(el){ el.style.display=''; }); }
+  try{ canvas=await html2canvas(clone,{scale:1,backgroundColor:'#ffffff',scrollX:0,scrollY:0,windowWidth:W+80}); }
+  finally{ clone.remove(); }
   var D=(document.getElementById('sdr-date')||{}).value||'';
   var R=((document.getElementById('sdr-sales')||{}).value||'').trim();
   var fn='일일보고_'+R+'_'+D.replace(/-/g,'');
