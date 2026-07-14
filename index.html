@@ -1828,6 +1828,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   .qed-close:hover{color:var(--ink)}
   .qed-scroll{background:var(--bg);max-height:calc(100vh - 122px);overflow:auto;padding:26px 20px}
   .qed-sheet{background:#fff;max-width:900px;margin:0 auto;border:1px solid var(--line);border-radius:18px;box-shadow:0 1px 2px rgba(60,50,40,.04),0 22px 50px -30px rgba(60,45,30,.25);padding:50px 54px 44px}
+  .qed-sheet.t2{border-top:6px solid #ff4d00;border-top-left-radius:0;border-top-right-radius:0}
+  .qed-sheet.t2 .qed-tagline{letter-spacing:.14em;font-weight:700}
   .qed .f{border:0;background:transparent;font:inherit;color:inherit;padding:3px 6px;border-radius:7px;transition:background .14s,box-shadow .14s;min-width:0;width:100%}
   .qed .f::placeholder{color:#c9c2b8;font-weight:400}
   .qed .f:hover{background:#f6f3ee}
@@ -1896,7 +1898,6 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <div class="qed-seg">
         <button id="qedtpl-std" class="on" onclick="_qedTmpl('classic')">양식 1</button>
         <button id="qedtpl-simple" onclick="_qedTmpl('premium')">양식 2</button>
-        <button onclick="_qedPreview()" style="margin-left:6px"><i class="bi bi-eye me-1"></i>미리보기</button>
       </div>
       <button class="qed-btn ghost" onclick="_qedPDF()"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</button>
       <button class="qed-btn dark" onclick="_qedSave()">저장</button>
@@ -1929,11 +1930,10 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
           <div class="qed-eyebrow">공급자 · FROM</div>
           <div class="qed-supname">원텍 주식회사</div>
           <div class="qed-supkv">
+            <div class="k">대표이사</div><div class="v">김종원, 김정현&nbsp;&nbsp;(인)<img id="qed-seal" alt="" style="width:36px;height:36px;vertical-align:middle;margin:-13px 0 -10px -24px;opacity:.92"></div>
             <div class="k">등록번호</div><div class="v">496-88-01552</div>
-            <div class="k">대표이사</div><div class="v">김종원, 김정현</div>
             <div class="k">주소</div><div class="v" title="대전광역시 유성구 테크노8로 64">대전광역시 유성구 테크노8로 64</div>
-            <div class="k">전화</div><div class="v">042) 934-6800</div>
-            <div class="k">팩스</div><div class="v">070) 7882-8658</div>
+            <div class="k">전화/팩스</div><div class="v" style="white-space:nowrap">042) 934-6800 / 070) 7882-8658</div>
           </div>
         </div>
       </div>
@@ -6362,6 +6362,7 @@ function openQuoteEditor(id){
   setV('qed-date', q?(q.quoteDate||today):today);
   setV('qed-valid', q?(q.validUntil||''):'');
   setV('qed-sales', q?(q.sales||''):(typeof currentUserName==='function'?currentUserName():''));
+  try{ var _se=document.getElementById('qed-seal'); if(_se&&!_se.getAttribute('src')) _se.src=_WT_SEAL; }catch(e){}
   try{ var _sdl=document.getElementById('qed-sales-list'); if(_sdl) _sdl.innerHTML=(KOR_SALES_TEAM||[]).map(n=>'<option value="'+_qedA(n)+'">').join(''); }catch(e){}
   try{
     var _mgrQ=(typeof _isMgr!=='undefined'&&_isMgr);
@@ -6470,7 +6471,10 @@ function _qedSalesPhoneSync(){
   var pool=Object.values(WT_SALES_PHONE).concat((KOR_TEAM||[]).map(m=>(m.phone||'').trim()));
   if(!cur||pool.indexOf(cur)>=0) p.value=def;   // 수기 입력은 보존
 }
-function _qedTmpl(t,quiet){ _qed.tmpl=t; const s=document.getElementById('qedtpl-std'),p=document.getElementById('qedtpl-simple'); if(s)s.classList.toggle('on',t==='classic'); if(p)p.classList.toggle('on',t!=='classic'); if(!quiet) showToast((t==='classic'?'양식 1':'양식 2')+' 선택 — 인쇄·PDF 결과물에 적용됩니다. [미리보기]로 확인하세요', true); }
+function _qedTmpl(t,quiet){ _qed.tmpl=t; const s=document.getElementById('qedtpl-std'),p=document.getElementById('qedtpl-simple'); if(s)s.classList.toggle('on',t==='classic'); if(p)p.classList.toggle('on',t!=='classic');
+  const sh=document.querySelector('#quoteEditModal .qed-sheet'); if(sh) sh.classList.toggle('t2', t!=='classic');   // 양식2 선택 시 편집 화면도 결과물과 동일 톤
+  const tg=document.querySelector('#quoteEditModal .qed-tagline'); if(tg) tg.textContent=(t!=='classic')?'www.wontech.com':'원텍 주식회사 · www.wontech.com · 본 견적서는 발행일로부터 30일간 유효합니다.';
+}
 function _qedPreview(){
   const q=_qedCollect();
   if(!q.custName){ alert('병원명을 먼저 입력하세요.'); return; }
