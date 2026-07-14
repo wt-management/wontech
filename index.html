@@ -1896,8 +1896,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <datalist id="qed-dev-list"></datalist>
     <div class="qed-actions">
       <div class="qed-seg">
-        <button id="qedtpl-std" class="on" onclick="_qedTmpl('classic')">양식 1</button>
-        <button id="qedtpl-simple" onclick="_qedTmpl('premium')">양식 2</button>
+        <button id="qedtpl-std" class="on" onclick="_qedTmpl('premium')">양식 1</button>
+        <button id="qedtpl-simple" onclick="_qedTmpl('classic')">양식 2</button>
       </div>
       <button class="qed-btn ghost" onclick="_qedPDF()"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</button>
       <button class="qed-btn dark" onclick="_qedSave()">저장</button>
@@ -1965,8 +1965,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <h5 class="modal-title">견적서 미리보기</h5>
     <div class="d-flex align-items-center gap-2 flex-wrap">
       <div class="btn-group btn-group-sm" role="group" title="양식 선택">
-        <button id="qtmpl-classic" type="button" class="btn btn-outline-primary active" onclick="setQuoteTmpl('classic')">양식 1</button>
-        <button id="qtmpl-premium" type="button" class="btn btn-outline-primary" onclick="setQuoteTmpl('premium')">양식 2</button>
+        <button id="qtmpl-premium" type="button" class="btn btn-outline-primary active" onclick="setQuoteTmpl('premium')">양식 1</button>
+        <button id="qtmpl-classic" type="button" class="btn btn-outline-primary" onclick="setQuoteTmpl('classic')">양식 2</button>
       </div>
       <button class="btn btn-success btn-sm" onclick="quotePDF()"><i class="bi bi-file-earmark-pdf me-1"></i>PDF 다운로드</button>
       <button class="btn btn-outline-secondary btn-sm" onclick="quotePDF()"><i class="bi bi-printer me-1"></i>인쇄</button>
@@ -6387,7 +6387,7 @@ function openQuoteEditor(id){
   // 실제 CI 로고 삽입 + 장비명 자동완성 목록 채우기
   var _lg=document.getElementById('qed-logo'); if(_lg)_lg.src=_WT_LOGO_URI;
   var _dl=document.getElementById('qed-dev-list'); if(_dl)_dl.innerHTML=Object.keys(WT_DEVICES).map(function(n){return '<option value="'+_qedA(n)+'">';}).join('');
-  _qedTmpl('classic',true); _qedCalc();
+  _qedTmpl('premium',true); _qedCalc();
   new bootstrap.Modal(document.getElementById('quoteEditModal')).show();
 }
 function _qedMakeRow(it){
@@ -6501,7 +6501,7 @@ function _qedSalesPhoneSync(){
   var pool=Object.values(WT_SALES_PHONE).concat((KOR_TEAM||[]).map(m=>(m.phone||'').trim()));
   if(!cur||pool.indexOf(cur)>=0) p.value=def;   // 수기 입력은 보존
 }
-function _qedTmpl(t,quiet){ _qed.tmpl=t; const s=document.getElementById('qedtpl-std'),p=document.getElementById('qedtpl-simple'); if(s)s.classList.toggle('on',t==='classic'); if(p)p.classList.toggle('on',t!=='classic');
+function _qedTmpl(t,quiet){ _qed.tmpl=t; const s=document.getElementById('qedtpl-std'),p=document.getElementById('qedtpl-simple'); if(s)s.classList.toggle('on',t==='premium'); if(p)p.classList.toggle('on',t==='classic');
   const sh=document.querySelector('#quoteEditModal .qed-sheet'); if(sh) sh.classList.toggle('t2', t!=='classic');   // 양식2 선택 시 편집 화면도 결과물과 동일 톤
   const tg=document.querySelector('#quoteEditModal .qed-tagline'); if(tg) tg.textContent=(t!=='classic')?'www.wontech.com':'원텍 주식회사 · www.wontech.com · 본 견적서는 발행일로부터 30일간 유효합니다.';
 }
@@ -6553,14 +6553,14 @@ const WT_DEVICES={"Oligio X": {"accessories": [{"name": "Handpiece", "spec": ""}
 function _wtLogo(c,w){ return '<img src="'+_WT_LOGO_URI+'" width="'+w+'" alt="wontech" style="height:auto;display:inline-block;vertical-align:middle">'; }
 function numKor(n){ n=Math.round(Math.abs(n||0)); if(n===0)return '영'; const D=['','일','이','삼','사','오','육','칠','팔','구'],U=['','십','백','천'],P=['','만','억','조','경']; let res='',g=0; while(n>0){ let part=n%10000,s=''; for(let i=0;i<4;i++){ const d=Math.floor(part/Math.pow(10,i))%10; if(d)s=D[d]+U[i]+s; } if(s)res=s+P[g]+res; n=Math.floor(n/10000); g++; } return res; }
 function _qEscH(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-let _qCur=null, _qTmpl='classic';
+let _qCur=null, _qTmpl='premium';
 function _qLogoSrc(){ const im=document.querySelector('.sidebar-brand img'); return (im&&im.src)||''; }
 function setQuoteTmpl(t){ _qTmpl=t; ['premium','classic'].forEach(x=>{const b=document.getElementById('qtmpl-'+x); if(b)b.classList.toggle('active',x===t);}); _qRender(); }
 function _qRender(){ const el=document.getElementById('print-content'); if(el&&_qCur) el.innerHTML='<div style="max-width:820px;margin:0 auto">'+QDOC(_qCur,_qTmpl)+'</div>'; }
 function viewQuote(id){ const q=DB.d.quotes.find(x=>x.id===id); if(!q)return; _qCur=q; setQuoteTmpl(_qTmpl); new bootstrap.Modal(document.getElementById('quotePrintModal')).show(); }
 function quotePDF(){ if(!_qCur)return; const w=window.open('','_blank'); if(!w){alert('팝업이 차단되었습니다. 팝업 허용 후 다시 시도하세요.');return;}
   const fn='견적서_'+(_qCur.custName||'')+'_'+(_qCur.quoteDate||'').replace(/-/g,'');
-  w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+_qEscH(fn)+'</title><style>@page{size:A4;margin:0}body{margin:0;padding:8mm 10mm;font-family:"Malgun Gothic",sans-serif;background:#fff}</style></head><body><div id="qwrap">'+QDOC(_qCur,_qTmpl)+'</div><script>window.onload=function(){requestAnimationFrame(function(){requestAnimationFrame(function(){var pageH=1000;var el=document.getElementById("qwrap");var h=Math.max(el.scrollHeight,Math.ceil(el.getBoundingClientRect().height));if(h>pageH){document.body.style.zoom=Math.max(0.5,pageH/h).toFixed(3);}setTimeout(function(){window.print();},180);});});};<\/script></body></html>');
+  w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+_qEscH(fn)+'</title><style>@page{size:A4;margin:0}body{margin:0;padding:8mm 10mm;font-family:"Malgun Gothic",sans-serif;background:#fff}.qfoot{position:fixed;bottom:6mm;left:10mm;right:10mm;background:#fff}</style></head><body><div id="qwrap">'+QDOC(_qCur,_qTmpl)+'</div><script>window.onload=function(){requestAnimationFrame(function(){requestAnimationFrame(function(){var pageH=1000;var el=document.getElementById("qwrap");var h=Math.max(el.scrollHeight,Math.ceil(el.getBoundingClientRect().height));if(h>pageH){document.body.style.zoom=Math.max(0.5,pageH/h).toFixed(3);}setTimeout(function(){window.print();},180);});});};<\/script></body></html>');
   w.document.close();
 }
 function QDOC(q,tmpl){
@@ -6682,7 +6682,7 @@ function QDOC(q,tmpl){
       +'</div>'
       +(q.note?'<div style="margin-top:12px;border-left:3px solid '+CLAY+';padding:8px 12px;font-size:12.5px;color:'+INK+';font-weight:600;white-space:pre-line">'+_qEscH(q.note)+'</div>':'')
     +'</div>'
-    +'<div style="margin-top:24px;border-top:1px solid '+LINE+';padding:12px 40px 16px;text-align:center;font-size:10px;letter-spacing:.14em;color:'+MUT+';font-weight:700">'
+    +'<div class="qfoot" style="margin-top:24px;border-top:1px solid '+LINE+';padding:12px 40px 16px;text-align:center;font-size:10px;letter-spacing:.14em;color:'+MUT+';font-weight:700">'
       +WT_SUP.web
     +'</div>'
   +'</div>';
