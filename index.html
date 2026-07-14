@@ -6409,12 +6409,15 @@ function _qedAddRow(it){ document.getElementById('qed-rows').appendChild(_qedMak
 function _qedDevPick(inp){
   const key=(inp.value||'').trim(); const dev=WT_DEVICES[key]; if(!dev) return;
   const tr=inp.closest('tr'); if(!tr || tr.dataset.accs===key) return; tr.dataset.accs=key;
-  let anchor=tr;
+  // 이미 표에 있는 품명은 다시 추가하지 않음(저장된 견적의 제품명 수정 시 부속품 중복 방지)
+  const existing=new Set([...document.querySelectorAll('#qed-rows tr [data-k=name]')].map(e=>(e.value||'').trim()).filter(Boolean));
+  let anchor=tr, added=0;
   dev.accessories.forEach(function(a){
+    if(existing.has((a.name||'').trim())) return;
     const r=_qedMakeRow({name:a.name, spec:a.spec||'', unit:'EA', qty:1, price:'', note:'기본 구성'});
-    anchor.after(r); anchor=r;
+    anchor.after(r); anchor=r; added++;
   });
-  _qedCalc();
+  if(added) _qedCalc();
 }
 // 수량·단가 입력 → 금액 자동 / 금액 입력 → 단가 자동 역산 (양방향)
 function _qedRowQP(el){
