@@ -819,7 +819,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
   <!-- 일정 (방문·콜 스케줄) -->
   <div id="page-schedule" class="page">
-    <div class="page-header"><h5><i class="bi bi-calendar-week me-2"></i>일정 <span class="text-muted" style="font-size:12px;font-weight:400">· 누가 오늘 어디 가는지</span></h5><button class="btn btn-primary btn-sm" onclick="openSchedule()"><i class="bi bi-plus-lg me-1"></i>일정 추가</button></div>
+    <div class="page-header"><h5><i class="bi bi-calendar-week me-2"></i>일정 <span class="text-muted" style="font-size:12px;font-weight:400">· 누가 오늘 어디 가는지</span></h5><div class="d-flex flex-column" style="gap:6px"><button class="btn btn-primary btn-sm" onclick="openSchedule()"><i class="bi bi-plus-lg me-1"></i>일정 추가</button><button class="btn btn-outline-primary btn-sm" onclick="openSchDaily()"><i class="bi bi-file-earmark-text me-1"></i>일일보고</button></div></div>
     <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
       <div class="btn-group btn-group-sm" role="group">
         <button id="sch-v-today" type="button" class="btn btn-outline-primary" onclick="setSchView('today',this)">오늘</button>
@@ -1707,6 +1707,20 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <input type="date" id="schd-next-date" class="form-control form-control-sm" style="display:none" oninput="_schDoneState.nextDate=this.value">
   </div>
   <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal" onclick="_schDoneCancel()">취소</button><button class="btn btn-primary btn-sm" onclick="_schConfirmDone()">완료 처리</button></div>
+</div></div></div>
+
+<!-- 일일보고 자동 생성 모달(양식1 그대로) -->
+<div class="modal fade" id="schDailyModal" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title"><i class="bi bi-file-earmark-text me-1" style="color:#2563eb"></i>일일보고 <span class="text-muted" style="font-size:11px;font-weight:400">· 일정·완료 결과에서 자동 생성</span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body" style="background:#f1f5f9">
+    <div class="d-flex align-items-center flex-wrap mb-2" style="gap:8px">
+      <input type="date" id="sdr-date" class="form-control form-control-sm" style="width:auto" onchange="renderSchDaily()">
+      <select id="sdr-sales" class="form-select form-select-sm" style="width:auto;min-width:110px" onchange="renderSchDaily()"></select>
+      <span style="font-size:11px;color:#94a3b8">모든 칸은 클릭해서 직접 수정한 뒤 PDF로 저장하세요</span>
+      <button class="btn btn-primary btn-sm ms-auto" onclick="sdrPDF()"><i class="bi bi-file-earmark-pdf me-1"></i>PDF 저장</button>
+    </div>
+    <div id="sdr-sheet" style="background:#fff;padding:24px;max-width:920px;margin:0 auto;box-shadow:0 2px 10px rgba(15,23,42,.1)"></div>
+  </div>
 </div></div></div>
 
 <!-- 파이프라인 모달 -->
@@ -7704,6 +7718,80 @@ async function _schConfirmDone(){
   await Promise.all(saves);
 }
 function _schMine(){ const sel=document.getElementById('sch-sales-filter'); if(!sel)return; const me=_schMe(); if(!me){alert('로그인 정보가 없습니다.');return;} let hit=''; for(const o of sel.options){ if(o.value&&(o.value.includes(me)||me.includes(o.value))){hit=o.value;break;} } if(!hit){alert('"'+me+'" 담당 일정을 찾지 못했어요.');return;} sel.value=hit; renderSchedule(); }
+
+// ── 일일보고 자동 생성((양식1) 일일보고(한국영업팀).docx 그대로) ──
+function openSchDaily(){
+  var sel=document.getElementById('sdr-sales');
+  if(sel){
+    var names=new Set((typeof KOR_SALES_TEAM!=='undefined'&&KOR_SALES_TEAM)||[]);
+    (DB.d.logs||[]).forEach(l=>{ if(l.kind==='schedule'&&(l.sales||'').trim()) names.add(l.sales.trim()); });
+    var me=_schMe(); if(me) names.add(me);
+    var arr=[...names].filter(Boolean).sort((a,b)=>a.localeCompare(b,'ko'));
+    sel.innerHTML=arr.map(n=>'<option'+(n===me?' selected':'')+'>'+_schEsc(n)+'</option>').join('');
+  }
+  var d=document.getElementById('sdr-date'); if(d&&!d.value) d.value=_schTodayStr();
+  renderSchDaily();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('schDailyModal')).show();
+}
+function _sdrCompFor(hosp){ // 최근 CDU 방문에서 파악된 경쟁품
+  try{ var vs=(DB.d.logs||[]).filter(l=>l.kind==='cdu'&&(l.custName||'').trim()===hosp&&(l.competitor||'').trim()).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+    return vs.length?vs[0].competitor:''; }catch(e){ return ''; }
+}
+function renderSchDaily(){
+  var el=document.getElementById('sdr-sheet'); if(!el) return;
+  var D=(document.getElementById('sdr-date')||{}).value||_schTodayStr();
+  var R=((document.getElementById('sdr-sales')||{}).value||'').trim();
+  var logs=DB.d.logs||[];
+  var rows=[];
+  logs.filter(l=>l.kind==='schedule'&&l.date===D&&(l.sales||'').trim()===R).forEach(function(s){
+    var res=logs.find(l=>l.kind!=='schedule'&&(l.custName||'')===s.custName&&String(l.content||'').indexOf('[일정 완료]')===0&&l.date===D);
+    var reaction=res?String(res.content).replace('[일정 완료] ',''):(s.done?'완료':'');
+    rows.push({hosp:s.custName||'', purpose:((s.type&&s.type!=='방문')?('['+s.type+'] '):'')+(s.content||'')+(s.product?' — '+s.product:''), reaction:reaction, comp:_sdrCompFor((s.custName||'').trim())});
+  });
+  logs.filter(l=>l.kind==='cdu'&&l.status!=='planned'&&String(l.date||'').slice(0,10)===D&&(l.sales||'').trim()===R).forEach(function(v){
+    rows.push({hosp:v.custName||'', purpose:'[소모품] '+(v.mainProc?v.mainProc+' ':'')+'방문'+(v.price?' · 수가 '+v.price+'천':''), reaction:(v.feedback||''), comp:(v.competitor||'')});
+  });
+  var uniq=new Set(rows.map(r=>r.hosp).filter(Boolean));
+  var demoN=logs.filter(l=>l.kind==='schedule'&&l.date===D&&(l.sales||'').trim()===R&&l.type==='데모').length;
+  var td='border:1px solid #333;padding:6px 8px;font-size:12px;vertical-align:top';
+  var th='border:1px solid #333;padding:6px 8px;font-size:12px;background:#eef2f7;font-weight:700;text-align:center';
+  var bodyRows=rows.length?rows.map(function(r,i){ return '<tr>'
+    +'<td style="'+td+';text-align:center">'+(i+1)+'</td>'
+    +'<td contenteditable="true" style="'+td+'">'+_schEsc(r.hosp)+'</td>'
+    +'<td contenteditable="true" style="'+td+'">'+_schEsc(r.purpose)+'</td>'
+    +'<td contenteditable="true" style="'+td+'">'+_schEsc(r.reaction)+'</td>'
+    +'<td contenteditable="true" style="'+td+'">'+_schEsc(r.comp)+'</td></tr>'; }).join('')
+    :'<tr><td style="'+td+';text-align:center">1</td><td contenteditable="true" style="'+td+'"></td><td contenteditable="true" style="'+td+'"></td><td contenteditable="true" style="'+td+'"></td><td contenteditable="true" style="'+td+'"></td></tr>';
+  var memos=rows.filter(r=>r.reaction).slice(0,5).map(r=>r.hosp+' : '+r.reaction).join('\n');
+  el.innerHTML=
+    '<div style="display:flex;align-items:center;border:2px solid #333;padding:10px 14px">'
+      +(typeof _wtLogo==='function'?_wtLogo('',105):'<b>WONTECH</b>')
+      +'<div style="flex:1;text-align:center;font-size:22px;font-weight:800;letter-spacing:6px">한국영업팀 일일보고</div><div style="width:105px"></div></div>'
+    +'<table style="width:100%;border-collapse:collapse;margin-top:-1px"><tr>'
+      +'<td style="'+th+';width:11%">작성일</td><td style="'+td+';width:19%;text-align:center">'+_schEsc(D.replace(/-/g,'.'))+'</td>'
+      +'<td style="'+th+';width:9%">부서</td><td style="'+td+';width:17%;text-align:center">한국영업팀</td>'
+      +'<td style="'+th+';width:9%">파트</td><td contenteditable="true" style="'+td+';width:12%;text-align:center">1파트</td>'
+      +'<td style="'+th+';width:10%">작성자</td><td contenteditable="true" style="'+td+';text-align:center">'+_schEsc(R)+'</td></tr></table>'
+    +'<div style="font-size:14px;font-weight:800;margin:16px 0 6px">업무 활동 내역</div>'
+    +'<table style="width:100%;border-collapse:collapse"><tr>'
+      +'<th style="'+th+';width:5%">No.</th><th style="'+th+';width:17%">병원명</th><th style="'+th+';width:27%">방문 목적과 타겟 제품(목적)</th><th style="'+th+';width:31%">결정권자 반응</th><th style="'+th+'">경쟁품 현황</th></tr>'
+      +bodyRows+'</table>'
+    +'<div style="font-size:14px;font-weight:800;margin:16px 0 6px">성과 및 진행 상황</div>'
+    +'<table style="width:100%;border-collapse:collapse"><tr>'
+      +'<th style="'+th+'">총 병원 방문 수</th><th style="'+th+'">의사 상담 병원 수</th><th style="'+th+'">데모 요청 병원 수</th><th style="'+th+'">계약(진행/완료) 건수</th></tr>'
+      +'<tr><td contenteditable="true" style="'+td+';text-align:center">'+(uniq.size||'')+'</td><td contenteditable="true" style="'+td+';text-align:center"></td><td contenteditable="true" style="'+td+';text-align:center">'+(demoN||'')+'</td><td contenteditable="true" style="'+td+';text-align:center"></td></tr></table>'
+    +'<div style="font-size:13px;font-weight:800;margin:16px 0 6px">방문 후 특이 담당의견 구체화 <span style="font-weight:400;font-size:11px;color:#555">*업무 활동 내역 外 원장과 어떤 목적, 미팅을 통해 현장의 있는그대로 반응(장비, 경쟁사 대비, 정책부분) 최대한 구체화 要</span></div>'
+    +'<div contenteditable="true" style="border:1px solid #333;min-height:110px;padding:8px;font-size:12px;white-space:pre-wrap">'+_schEsc(memos)+'</div>';
+}
+function sdrPDF(){
+  var sheet=document.getElementById('sdr-sheet'); if(!sheet) return;
+  var D=(document.getElementById('sdr-date')||{}).value||'';
+  var R=((document.getElementById('sdr-sales')||{}).value||'').trim();
+  var w=window.open('','_blank'); if(!w){ alert('팝업이 차단되었습니다. 팝업 허용 후 다시 시도하세요.'); return; }
+  var fn='일일보고_'+R+'_'+D.replace(/-/g,'');
+  w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+_schEsc(fn)+'</title><style>@page{size:A4;margin:12mm}body{margin:0;font-family:"Malgun Gothic",sans-serif;background:#fff}[contenteditable]{outline:none}</style></head><body>'+sheet.innerHTML+'<script>window.onload=function(){setTimeout(function(){window.print();},250);};<\/script></body></html>');
+  w.document.close();
+}
 
 // ── 상담일지 ──────────────────────────────────────────────────────
 function renderLogs(){
