@@ -8053,23 +8053,23 @@ function renderSchDaily(force){
   var td=_SDR_TD, th=_SDR_TH;
   var bodyRows=data.rows.length?data.rows.map(_sdrRowHtml).join(''):_sdrRowHtml({},0);
   el.innerHTML=
-    '<div style="position:relative;border:1px solid #000;height:56px;display:flex;align-items:center;justify-content:center">'
+    '<div style="position:relative;height:56px;display:flex;align-items:center;justify-content:center">'
       +'<img src="'+_SDR_LOGO+'" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);width:105px;height:auto" alt="wontech">'
       +'<div style="font-size:26px;font-weight:800">한국영업팀 일일보고</div></div>'
     +'<table style="width:100%;border-collapse:collapse;margin-top:-1px"><tr>'
       +'<td style="'+th+';width:11%">작성일</td><td style="'+td+';width:19%;text-align:center">'+_schEsc(D.replace(/-/g,'. '))+'</td>'
       +'<td style="'+th+';width:9%">부서</td><td id="sdr-part" contenteditable="true" style="'+td+';width:26%;text-align:center">'+_schEsc(data.part)+'</td>'
       +'<td style="'+th+';width:10%">작성자</td><td id="sdr-author" contenteditable="true" style="'+td+';text-align:center">'+_schEsc(data.author)+'</td></tr></table>'
-    +'<table style="width:100%;border-collapse:collapse;margin-top:14px"><tr><td style="border:1px solid #000;padding:6px 10px;font-size:13px;font-weight:800">업무 활동 내역</td></tr></table>'
+    +'<div style="font-size:13px;font-weight:800;margin:16px 0 5px">□ 업무 활동 내역</div>'
     +'<table id="sdr-act" style="width:100%;border-collapse:collapse;margin-top:-1px"><thead><tr>'
       +'<th style="'+th+';width:5%">No.</th><th style="'+th+';width:17%">병원명</th><th style="'+th+';width:27%">방문 목적과 타겟 제품(목적)</th><th style="'+th+';width:31%">결정권자 반응</th><th style="'+th+'">경쟁품 현황</th></tr></thead>'
       +'<tbody id="sdr-act-body">'+bodyRows+'</tbody></table>'
     +'<div class="sdr-noprint" style="margin-top:4px"><button class="btn btn-link btn-sm p-0" style="font-size:11.5px" onclick="sdrAddRow()"><i class="bi bi-plus-circle me-1"></i>행 추가</button></div>'
-    +'<table style="width:100%;border-collapse:collapse;margin-top:14px"><tr><td style="border:1px solid #000;padding:6px 10px;font-size:13px;font-weight:800">성과 및 진행 상황</td></tr></table>'
+    +'<div style="font-size:13px;font-weight:800;margin:16px 0 5px">□ 성과 및 진행 상황</div>'
     +'<table style="width:100%;border-collapse:collapse;margin-top:-1px"><tr>'
       +'<th style="'+th+'">총 병원 방문 수</th><th style="'+th+'">의사 상담 병원 수</th><th style="'+th+'">데모 요청 병원 수</th><th style="'+th+'">계약(진행/완료) 건수</th></tr>'
       +'<tr><td id="sdr-s1" contenteditable="true" style="'+td+';text-align:center">'+_schEsc(data.stats[0]||'')+'</td><td id="sdr-s2" contenteditable="true" style="'+td+';text-align:center">'+_schEsc(data.stats[1]||'')+'</td><td id="sdr-s3" contenteditable="true" style="'+td+';text-align:center">'+_schEsc(data.stats[2]||'')+'</td><td id="sdr-s4" contenteditable="true" style="'+td+';text-align:center">'+_schEsc(data.stats[3]||'')+'</td></tr></table>'
-    +'<table style="width:100%;border-collapse:collapse;margin-top:14px"><tr><td style="border:1px solid #000;padding:6px 10px;font-size:13px;font-weight:800">방문 후 특이 담당의견 구체화 <span style="font-weight:400;font-size:11px;color:#555">*업무 활동 내역 外 원장과 어떤 목적, 미팅을 통해 현장의 있는그대로 반응(장비, 경쟁사 대비, 정책부분) 최대한 구체화 要</span></td></tr></table>'
+    +'<div style="font-size:13px;font-weight:800;margin:16px 0 5px">□ 방문 후 특이 담당의견 구체화 <span style="font-weight:400;font-size:11px;color:#555">*업무 활동 내역 外 원장과 어떤 목적, 미팅을 통해 현장의 있는그대로 반응(장비, 경쟁사 대비, 정책부분) 최대한 구체화 要</span></div>'
     +'<div id="sdr-op" contenteditable="true" style="border:1px solid #000;margin-top:-1px;min-height:110px;padding:8px;font-size:12px;white-space:pre-wrap">'+_schEsc(data.opinion)+'</div>';
 }
 function sdrAddRow(){
