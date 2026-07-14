@@ -5766,22 +5766,64 @@ function saveCDUInsight(){
   var msg=document.getElementById('cdu-insight-msg'); if(msg)msg.innerHTML='<span style="color:#6b7280">저장 중…</span>';
   DB.save('logs').then(()=>{ if(msg)msg.innerHTML='<span style="color:#16a34a"><i class="bi bi-check-circle"></i> '+_cduNoteLabel(k)+' 의견 저장됨</span>'; });
 }
-var _cduInputView=(function(){try{return sessionStorage.getItem('cdu_input_view')||'cal';}catch(e){return 'cal';}})();
-var _cduWeekOff=0;
+var _cduInputView=(function(){try{var v=sessionStorage.getItem('cdu_input_view'); if(v==='cal'||v==='list'||!v) return 'week'; return v;}catch(e){return 'week';}})();
+var _cduWeekOff=0, _cduCalMonth=null;
 function _cduSetInputView(v){ _cduInputView=v; try{sessionStorage.setItem('cdu_input_view',v);}catch(e){} renderCDU(); }
 function _cduWeekNav(d){ _cduWeekOff+=d; renderCDU(); }
+function _cduMonthNav(d){ var now=new Date(); var y=(_cduCalMonth?_cduCalMonth.y:now.getFullYear()), m=(_cduCalMonth?_cduCalMonth.m:now.getMonth()+1)+d; if(m<1){m=12;y--;} if(m>12){m=1;y++;} _cduCalMonth={y:y,m:m}; renderCDU(); }
 function renderCDUInput(vs){
   var el=document.getElementById('cdu-input'); if(!el) return;
-  var toolbar='<div class="d-flex align-items-center mb-2"><div class="btn-group btn-group-sm">'
-    +'<button class="btn btn-'+(_cduInputView==='cal'?'primary':'outline-primary')+'" onclick="_cduSetInputView(\'cal\')"><i class="bi bi-calendar3 me-1"></i>주간</button>'
-    +'<button class="btn btn-'+(_cduInputView==='list'?'primary':'outline-primary')+'" onclick="_cduSetInputView(\'list\')"><i class="bi bi-list-ul me-1"></i>목록</button>'
-    +'</div><span style="font-size:11px;color:#94a3b8;margin-left:8px">'+(_cduInputView==='cal'?'방문 추가는 간단히 → 방문 후 카드의 [결과 입력] · 빈 칸을 누르면 그 날짜로 추가':'기간 필터 적용 · 행을 눌러 상세/수정')+'</span></div>';
-  // 결과 미입력 배너(지난 방문 예정인데 결과가 없는 것)
-  var todayS=_cduTodayStr();
-  var pend=_cduVisits().filter(v=>v.status==='planned'&&String(v.date||'').slice(0,10)<todayS);
+  var base=_cduBaseFiltered(), todayS=_cduTodayStr();
+  // 이번주 범위(통계용, 월요일 시작)
+  var t=new Date(todayS+'T00:00:00'); var dow=(t.getDay()+6)%7; var mon=new Date(t); mon.setDate(t.getDate()-dow); var sun=new Date(mon); sun.setDate(mon.getDate()+6);
+  var wkS=_cduFmtD(mon), wkE=_cduFmtD(sun);
+  var dOf=v=>String(v.date||'').slice(0,10);
+  var cToday=base.filter(v=>dOf(v)===todayS).length;
+  var cWeek=base.filter(v=>{var d=dOf(v); return d>=wkS&&d<=wkE;}).length;
+  var pend=base.filter(v=>v.status==='planned'&&dOf(v)<todayS);
+  var cPlan=base.filter(v=>v.status==='planned'&&dOf(v)>=todayS).length;
+  var cDone=base.filter(v=>v.status!=='planned').length;
+  // 뷰 전환 + 통계 카드(일정 메뉴와 동일 양식)
+  var vb=(k,lb)=>'<button class="btn btn-'+(_cduInputView===k?'primary':'outline-primary')+'" onclick="_cduSetInputView(\''+k+'\')">'+lb+'</button>';
+  var toolbar='<div class="d-flex align-items-center mb-2 flex-wrap" style="gap:8px"><div class="btn-group btn-group-sm">'+vb('today','오늘')+vb('week','이번주')+vb('month','월간')+'</div>'
+    +'<span style="font-size:11px;color:#94a3b8">방문 추가는 간단히(병원·날짜·담당) → 방문 후 카드의 <b>[결과 입력]</b></span></div>';
   var pendHtml=pend.length?'<div style="margin-bottom:8px;padding:8px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:9px;font-size:12.5px;color:#b91c1c"><i class="bi bi-exclamation-triangle-fill me-1"></i><b>결과 미입력 '+pend.length+'건</b> — 방문일은 지났는데 결과가 없어요. 눌러서 입력해 주세요: '
     +pend.slice(0,6).map(v=>'<span onclick="openCDUVisit(\''+v.id+'\')" style="display:inline-block;font-size:11.5px;font-weight:700;color:#b91c1c;background:#fff;border:1px solid #fecaca;border-radius:12px;padding:2px 9px;margin:2px 3px;cursor:pointer">'+_cduEsc(v.custName||'')+' '+_cduEsc(String(v.date||'').slice(5,10))+'</span>').join('')+(pend.length>6?' 외 '+(pend.length-6)+'건':'')+'</div>':'';
-  el.innerHTML=toolbar+pendHtml+_cduRevisitBox()+(_cduInputView==='cal'?_cduInputCal():_cduInputList(vs));
+  var stat=(lbl,n,col)=>'<div style="flex:1;min-width:78px;background:#fff;border:1px solid #eef2f7;border-radius:11px;padding:9px 13px;box-shadow:0 1px 2px rgba(15,23,42,.03)"><div style="font-size:11px;color:#64748b">'+lbl+'</div><div style="font-size:21px;font-weight:800;color:'+col+';line-height:1.15">'+n+'</div></div>';
+  var statsBar='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">'
+    +stat('오늘',cToday,'#2563eb')+stat('이번주',cWeek,'#0891b2')+stat('결과 미입력',pend.length,'#dc2626')+stat('예정',cPlan,'#ea580c')+stat('완료',cDone,'#16a34a')+'</div>';
+  var lg=(col,lb)=>'<span style="font-size:10.5px;color:'+col+';font-weight:600"><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:'+col+';margin-right:4px;vertical-align:middle"></span>'+lb+'</span>';
+  var legend='<div style="display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin-bottom:12px;padding:8px 12px;background:#f8fafc;border-radius:9px"><span style="font-size:10.5px;color:#94a3b8;font-weight:700">상태</span>'
+    +lg('#2563eb','방문 예정')+lg('#16a34a','완료')+lg('#ea580c','이탈위험 감지')+'</div>';
+  var body;
+  if(_cduInputView==='month') body=_cduInputMonth();
+  else if(_cduInputView==='today') body='<div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:6px">오늘 '+todayS.slice(5).replace('-','/')+' · '+cToday+'건</div>'+_cduInputList(base.filter(v=>dOf(v)===todayS));
+  else body=_cduInputCal();
+  el.innerHTML=toolbar+pendHtml+statsBar+legend+_cduRevisitBox()+body;
+}
+// 월간 달력(일정 메뉴 양식)
+function _cduInputMonth(){
+  var base=_cduBaseFiltered();
+  var now=new Date(); var y=(_cduCalMonth?_cduCalMonth.y:now.getFullYear()), m=(_cduCalMonth?_cduCalMonth.m:now.getMonth()+1);
+  var mp=y+'-'+String(m).padStart(2,'0');
+  var byd={}, cnt=0; base.forEach(function(v){ var d=String(v.date||'').slice(0,10); if(d.indexOf(mp)===0){ (byd[d]=byd[d]||[]).push(v); cnt++; } });
+  var first=new Date(y,m-1,1), startDow=first.getDay(), days=new Date(y,m,0).getDate();
+  var todayS=_cduTodayStr(), cells='';
+  for(var i=0;i<startDow;i++) cells+='<div style="min-height:84px;border:1px solid #f1f3f7;background:#fafbfc"></div>';
+  for(var d=1;d<=days;d++){ var ds=mp+'-'+String(d).padStart(2,'0');
+    var its=(byd[ds]||[]).sort(function(a,b){ return String(a.sales||'').localeCompare(String(b.sales||''),'ko')||String(a.custName||'').localeCompare(String(b.custName||''),'ko'); });
+    var isT=ds===todayS;
+    cells+='<div onclick="openCDUQuickFor(\''+ds+'\')" title="이 날짜에 방문 예정 추가" style="min-height:84px;border:1px solid #f1f3f7;padding:3px 4px;overflow:hidden;cursor:pointer;background:'+(isT?'#eff6ff':'')+'">'
+      +'<div style="font-size:11px;color:'+(isT?'#2563eb':'#9ca3af')+';font-weight:'+(isT?'800':'400')+'">'+d+(isT?' ●':'')+'</div>'
+      +its.slice(0,3).map(function(v){ var planned=(v.status==='planned'); var c=planned?'#2563eb':((v.churnRisk||'').trim()?'#ea580c':'#16a34a'); var rc=(typeof _schRepColor==='function')?_schRepColor((v.sales||'').trim()):'#64748b';
+        return '<div onclick="event.stopPropagation();openCDUVisit(\''+v.id+'\')" style="font-size:10px;margin-top:1px;padding:1px 4px;border-radius:3px;background:'+c+'22;color:'+c+';cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+_cduEsc((v.custName||'')+(planned?' · 예정':' · 완료'))+'">'+_cduEsc(v.custName||'')+((v.sales||'').trim()?' <span style="color:'+rc+';background:'+rc+'22;font-weight:700;border-radius:5px;padding:0 4px">'+_cduEsc(v.sales)+'</span>':'')+'</div>'; }).join('')
+      +(its.length>3?'<div style="font-size:9px;color:#9ca3af;margin-top:1px">+'+(its.length-3)+' 더</div>':'')
+    +'</div>';
+  }
+  var head=['일','월','화','수','목','금','토'].map(function(w,i){return '<div style="text-align:center;font-size:11px;padding:4px;color:'+(i===0?'#dc2626':i===6?'#2563eb':'#6b7280')+'">'+w+'</div>';}).join('');
+  var nav='<div class="d-flex align-items-center mb-2"><span style="font-size:14px;font-weight:800;color:#374151">'+y+'년 '+m+'월</span><span style="font-size:11px;color:#94a3b8;margin-left:6px">· '+cnt+'건</span>'
+    +'<span class="ms-auto"><button class="btn btn-sm btn-outline-secondary" onclick="_cduMonthNav(-1)"><i class="bi bi-chevron-left"></i></button> <button class="btn btn-sm btn-outline-secondary" onclick="_cduCalMonth=null;renderCDU()">이번달</button> <button class="btn btn-sm btn-outline-secondary" onclick="_cduMonthNav(1)"><i class="bi bi-chevron-right"></i></button></span></div>';
+  return nav+'<div class="card"><div class="card-body p-2"><div style="display:grid;grid-template-columns:repeat(7,1fr)">'+head+cells+'</div></div></div>';
 }
 // 재방문 추천(담당자 참고용) — 방문기록 탭에만, 접힌 상태 기본
 function _cduRevisitBox(){
