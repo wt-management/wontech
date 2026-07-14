@@ -950,6 +950,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   <!-- ROI 계산기 (네이티브 재구현: RF/HIFU · Laser) -->
   <div id="page-roi" class="page">
     <div class="d-flex justify-content-center mb-2"><div class="btn-group btn-group-sm"><button class="btn btn-outline-primary" type="button" onclick="showPage('quotes')"><i class="bi bi-file-earmark-text me-1"></i>견적서</button><button class="btn btn-primary" type="button">ROI 계산기</button></div></div>
+    <div id="roi-quote-banner" class="text-center mb-2" style="display:none;font-size:12px;color:#6b7280"></div>
     <div class="roi-top">
       <div class="roi-seg">
         <button id="roitab-rf" class="active" onclick="roiTab('rf')">RF / HIFU</button>
@@ -961,6 +962,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <div class="roi-form">
         <div class="rf-hd"><span class="dot"></span>RF / HIFU 입력</div>
         <div class="row g-3">
+          <div class="col-12"><label class="rf-lbl">병원 맞춤 추정(선택) — 병원명 입력 시 실제 팁 구매량으로 시술량 자동 추정</label><input id="rf-hosp" class="form-control" list="roi-hosp-list" placeholder="병원명 입력(선택)"><datalist id="roi-hosp-list"></datalist><div id="rf-hosp-note" style="font-size:11px;color:#bf6a45;margin-top:5px;font-weight:600"></div></div>
           <div class="col-12"><label class="rf-lbl">장비명</label><select id="rf-equipment" class="form-select"></select></div>
           <div class="col-12" id="rf-package-row"><label class="rf-lbl">패키지명</label><select id="rf-package" class="form-select"></select></div>
           <div class="col-6"><label class="rf-lbl">패키지 가격(원)</label><input id="rf-packagePrice" class="form-control" inputmode="numeric"></div>
@@ -1968,6 +1970,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <button id="qtmpl-premium" type="button" class="btn btn-outline-primary active" onclick="setQuoteTmpl('premium')">양식 1</button>
         <button id="qtmpl-classic" type="button" class="btn btn-outline-primary" onclick="setQuoteTmpl('classic')">양식 2</button>
       </div>
+      <span id="q-roi-wrap" style="display:none;align-items:center;gap:4px;font-size:12px;color:#374151"><input type="checkbox" id="q-inc-roi" checked style="accent-color:#16a34a">ROI 분석 포함</span>
       <button class="btn btn-success btn-sm" onclick="quotePDF()"><i class="bi bi-file-earmark-pdf me-1"></i>PDF 다운로드</button>
       <button class="btn btn-outline-secondary btn-sm" onclick="quotePDF()"><i class="bi bi-printer me-1"></i>인쇄</button>
       <button type="button" class="btn-close ms-1" data-bs-dismiss="modal"></button>
@@ -6316,6 +6319,7 @@ function renderQuotes() {
     <td style="white-space:nowrap">
       <button class="btn btn-outline-dark btn-sm me-1" style="font-size:11px;padding:1px 6px" onclick="openQuoteEditor('${q.id}')"><i class="bi bi-pencil"></i>편집</button>
       <button class="btn btn-outline-primary btn-sm me-1" style="font-size:11px;padding:1px 6px" onclick="viewQuote('${q.id}')">보기</button>
+      <button class="btn btn-outline-success btn-sm me-1" style="font-size:11px;padding:1px 6px" onclick="roiFromQuote('${q.id}')" title="이 견적 조건으로 ROI 분석"><i class="bi bi-calculator"></i>ROI${q.roi?' ✓':''}</button>
       <button class="btn btn-outline-secondary btn-sm me-1" style="font-size:11px;padding:1px 6px" onclick="copyQuoteLink('${q.id}')"><i class="bi bi-link-45deg"></i>링크</button>
       <button class="btn btn-outline-danger btn-sm" style="font-size:11px;padding:1px 6px" onclick="delQuote('${q.id}')">삭제</button>
     </td>
@@ -6585,11 +6589,38 @@ let _qCur=null, _qTmpl='premium';
 function _qLogoSrc(){ const im=document.querySelector('.sidebar-brand img'); return (im&&im.src)||''; }
 function setQuoteTmpl(t){ _qTmpl=t; ['premium','classic'].forEach(x=>{const b=document.getElementById('qtmpl-'+x); if(b)b.classList.toggle('active',x===t);}); _qRender(); }
 function _qRender(){ const el=document.getElementById('print-content'); if(el&&_qCur) el.innerHTML='<div style="max-width:820px;margin:0 auto">'+QDOC(_qCur,_qTmpl)+'</div>'; }
-function viewQuote(id){ const q=DB.d.quotes.find(x=>x.id===id); if(!q)return; _qCur=q; setQuoteTmpl(_qTmpl); new bootstrap.Modal(document.getElementById('quotePrintModal')).show(); }
+function viewQuote(id){ const q=DB.d.quotes.find(x=>x.id===id); if(!q)return; _qCur=q; const rw=document.getElementById('q-roi-wrap'); if(rw) rw.style.display=q.roi?'inline-flex':'none'; setQuoteTmpl(_qTmpl); new bootstrap.Modal(document.getElementById('quotePrintModal')).show(); }
 function quotePDF(){ if(!_qCur)return; const w=window.open('','_blank'); if(!w){alert('팝업이 차단되었습니다. 팝업 허용 후 다시 시도하세요.');return;}
   const fn='견적서_'+(_qCur.custName||'')+'_'+(_qCur.quoteDate||'').replace(/-/g,'');
-  w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+_qEscH(fn)+'</title><style>@page{size:A4;margin:0}body{margin:0;padding:8mm 10mm;font-family:"Malgun Gothic",sans-serif;background:#fff}.qfoot{position:fixed;bottom:6mm;left:10mm;right:10mm;background:#fff}</style></head><body><div id="qwrap">'+QDOC(_qCur,_qTmpl)+'</div><script>window.onload=function(){requestAnimationFrame(function(){requestAnimationFrame(function(){var pageH=1000;var el=document.getElementById("qwrap");var h=Math.max(el.scrollHeight,Math.ceil(el.getBoundingClientRect().height));if(h>pageH){document.body.style.zoom=Math.max(0.5,pageH/h).toFixed(3);}setTimeout(function(){window.print();},180);});});};<\/script></body></html>');
+  const _incRoi=!!(_qCur.roi && document.getElementById('q-inc-roi') && document.getElementById('q-inc-roi').checked);
+  w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+_qEscH(fn)+'</title><style>@page{size:A4;margin:0}body{margin:0;padding:8mm 10mm;font-family:"Malgun Gothic",sans-serif;background:#fff}.qfoot{position:fixed;bottom:6mm;left:10mm;right:10mm;background:#fff}</style></head><body><div id="qwrap">'+QDOC(_qCur,_qTmpl)+'</div>'+(_incRoi?'<div id="roiwrap" style="page-break-before:always">'+ROIDOC(_qCur)+'</div>':'')+'<script>window.onload=function(){requestAnimationFrame(function(){requestAnimationFrame(function(){var pageH=1000;var el=document.getElementById("qwrap");var h=Math.max(el.scrollHeight,Math.ceil(el.getBoundingClientRect().height));if(h>pageH){el.style.zoom=Math.max(0.5,pageH/h).toFixed(3);}setTimeout(function(){window.print();},180);});});};<\/script></body></html>');
   w.document.close();
+}
+function ROIDOC(q){   // 견적서에 첨부되는 ROI 분석 페이지(양식1 톤)
+  const s=q.roi||{}, r=s.r||{};
+  const INK='#1a1a1a', MUT='#8a8a8a', LINE='#e3e3e3', CLAY='#c8551b';
+  const won=v=>Math.round(v||0).toLocaleString('ko-KR');
+  const kr=v=>{ v=Math.round(v||0); if(v>=1e8){ const e=Math.floor(v/1e8), m=Math.round(v%1e8/1e4); return e+'억'+(m?' '+m.toLocaleString()+'만':''); } if(v>=1e4) return Math.round(v/1e4).toLocaleString()+'만원'; return v.toLocaleString()+'원'; };
+  const day=v=>(!isFinite(v)||v<=0)?'-':(v.toFixed(1)+'일');
+  const mos=v=>(!isFinite(v)||v<=0)?'':('약 '+(v/25).toFixed(1)+'개월 (영업일 월 25일 기준)');
+  const cell=x=>'<div style="flex:1;min-width:128px"><div style="font-size:10px;color:'+MUT+';font-weight:700;letter-spacing:.06em">'+x[0]+'</div><div style="font-size:13px;font-weight:700;color:'+INK+';margin-top:2px">'+x[1]+'</div></div>';
+  const item=(l,v,hi)=>'<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 2px;border-bottom:1px solid '+LINE+';font-size:13px"><span style="color:'+MUT+'">'+l+'</span><b style="font-size:14px;color:'+(hi?CLAY:INK)+'">'+v+'</b></div>';
+  let cells='', rows='';
+  if(s.mode==='rf'){
+    cells=[['패키지 가격',won(s.packagePrice)+' 원'],['제공 소모품',won(s.consumableCount)+'개'],['1회 시술 샷수',won(s.shotsPerTreatment)+' 샷'],['팁당 총 샷수',won(s.tipShots)+' 샷'],['1회 시술단가',won(s.pricePerTreatment)+' 원'],['일 시술 횟수',won(s.treatmentsPerDay)+'회']].map(cell).join('');
+    rows=item('하루 매출',kr(r.dailyRevenue))+item('총 시술 가능 횟수',won(r.totalTreatments)+'회')+item('총 매출(소모품 완주 시)',kr(r.totalRevenue))+item('패키지 총 순수익',kr(r.pureProfit),1);
+  }else{
+    cells=[['장비 가격',won(s.equipmentPrice)+' 원'],['1회 시술단가',won(s.sessionUnitPrice)+' 원'],['티케팅수',won(s.ticketingCount)+'회'],['고객수',won(s.customerCount)+'명/일']].map(cell).join('');
+    rows=item('하루 매출',kr(r.dailyRevenue))+item('월 매출(영업일 25일)',kr(r.monthlyRevenue||r.dailyRevenue*25),1);
+  }
+  return '<div style="max-width:760px;margin:0 auto;color:'+INK+'">'
+    +'<div style="height:6px;background:'+CLAY+';margin-bottom:26px"></div>'
+    +'<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px"><div style="font-size:23px;font-weight:900;letter-spacing:.02em">투자 회수(ROI) 분석</div><div style="font-size:11px;color:'+MUT+'">'+_qEscH(q.id||'')+' · '+_qEscH(q.custName||'')+(s.hosp&&s.hosp!==q.custName?' · '+_qEscH(s.hosp):'')+'</div></div>'
+    +'<div style="margin:24px 0;padding:26px 20px;border:1px solid '+LINE+';text-align:center"><div style="font-size:11px;letter-spacing:.18em;color:'+MUT+';font-weight:800">원금 회수 기간</div><div style="font-size:44px;font-weight:900;color:'+CLAY+';margin-top:6px;line-height:1">'+day(r.paybackDays)+'</div><div style="font-size:12px;color:'+MUT+';margin-top:8px">'+mos(r.paybackDays)+'</div></div>'
+    +'<div style="display:flex;gap:12px 18px;flex-wrap:wrap;padding:14px 2px;border-top:2px solid '+INK+';border-bottom:1px solid '+LINE+'">'+cells+'</div>'
+    +'<div style="margin-top:6px">'+rows+'</div>'
+    +'<div style="margin-top:18px;font-size:10px;color:'+MUT+'">※ 본 분석은 입력 조건 기준의 단순 추정치이며, 실제 성과는 병원 운영 상황에 따라 달라질 수 있습니다.</div>'
+  +'</div>';
 }
 function QDOC(q,tmpl){
   const items=q.items||[]; const won=v=>Number(v||0).toLocaleString('ko-KR');
@@ -9449,6 +9480,93 @@ window.addEventListener('popstate', function(e) {
       +'</div>';
   };
 
+  // ===== 견적서 연동 =====
+  let _roiQuoteId=null;
+  function _roiBanner(html){ const b=document.getElementById('roi-quote-banner'); if(!b) return; if(!html){ b.style.display='none'; return; } b.style.display='block'; b.innerHTML=html; }
+  function _roiBannerFor(q){
+    const items=(q.items||[]).slice().sort((a,b)=>Number(b.amount||0)-Number(a.amount||0));
+    const dev=(items[0]&&items[0].name)||'';
+    _roiBanner('<i class="bi bi-file-earmark-text me-1"></i>견적 <b>'+q.id+'</b> · '+(q.custName||'')+' · 합계 '+_kr(Number(q.total||0))+(dev?' · '+dev:'')+' 기준&nbsp; <button class="btn btn-sm btn-outline-primary" style="font-size:11px;padding:2px 10px" onclick="roiSaveToQuote()">이 분석을 견적서에 담기</button>'+(q.roi?' <span style="color:#16a34a;font-size:11px">✓ 저장됨 — 인쇄 시 [ROI 분석 포함]으로 출력</span>':''));
+  }
+  window.roiFromQuote=function(id){
+    const q=((window.DB&&DB.d&&DB.d.quotes)||[]).find(x=>x.id===id); if(!q){ alert('견적서를 찾을 수 없습니다.'); return; }
+    if(!window._roiInit){ roiInit(); window._roiInit=1; }
+    _roiQuoteId=id;
+    const items=(q.items||[]).slice().sort((a,b)=>Number(b.amount||0)-Number(a.amount||0));
+    const dev=(items[0]&&items[0].name)||'';
+    const total=Number(q.total||0);
+    if(/oligio|tightan|올리지오|타이탄/i.test(dev)){
+      roiTab('rf');
+      const eq=_rf('equipment'); let matched=false;
+      for(const nm of Object.keys(RF_PACKAGE_DATA)){
+        const idx=RF_PACKAGE_DATA[nm].findIndex(p=>p.packagePrice===total);
+        if(idx>=0){ eq.value=nm; document.getElementById('rf-package-row').style.display=''; _populateRFPackages(); _rf('package').value=String(idx); _setRFDefaults(RF_PACKAGE_DATA[nm][idx]); matched=true; break; }
+      }
+      if(!matched){
+        eq.value='custom'; _setAllRFEditable();
+        if(total>0) _rf('packagePrice').value=total.toLocaleString('ko-KR');
+        _rf('shotsPerTreatment').value=600; _rf('tipShots').value=900; _rf('consumableCount').value=90;
+        _rf('pricePerTreatment').value=(1200000).toLocaleString('ko-KR'); _rf('treatmentsPerDay').value=3;
+        calcRF();
+      }
+    } else {
+      roiTab('laser');
+      if(total>0){ _ls('equipmentPrice').value=total.toLocaleString('ko-KR'); }
+      calcLaser();
+    }
+    const hi=document.getElementById('rf-hosp'); if(hi&&q.custName){ hi.value=q.custName; _roiHospEst(); }
+    _roiBannerFor(q);
+    showPage('roi');
+  };
+  window.roiSaveToQuote=function(){
+    if(!_roiQuoteId){ alert('연결된 견적서가 없습니다. 견적서 목록의 [ROI] 버튼으로 들어오세요.'); return; }
+    const q=DB.d.quotes.find(x=>x.id===_roiQuoteId); if(!q){ alert('견적서를 찾을 수 없습니다.'); return; }
+    const rfShown=document.getElementById('roi-rf-panel').style.display!=='none';
+    let snap=null;
+    if(rfShown){
+      const pp=_n(_rf('packagePrice').value), cc=_n(_rf('consumableCount').value), st=_n(_rf('shotsPerTreatment').value),
+            pt=_n(_rf('pricePerTreatment').value), td=_n(_rf('treatmentsPerDay').value), ts=_n(_rf('tipShots').value);
+      if(pp<=0||cc<=0||st<=0||pt<=0||td<=0||ts<=0){ alert('모든 입력값을 채운 뒤 저장하세요.'); return; }
+      const totalTreatments=(ts/st)*cc, totalRevenue=totalTreatments*pt, pureProfit=totalRevenue-pp, dailyRevenue=pt*td, paybackDays=pp/dailyRevenue;
+      snap={mode:'rf', packagePrice:pp, consumableCount:cc, shotsPerTreatment:st, pricePerTreatment:pt, treatmentsPerDay:td, tipShots:ts,
+            hosp:((document.getElementById('rf-hosp')||{}).value||'').trim(),
+            r:{paybackDays:paybackDays, dailyRevenue:dailyRevenue, totalTreatments:totalTreatments, totalRevenue:totalRevenue, pureProfit:pureProfit}};
+    } else {
+      const ep=_n(_ls('equipmentPrice').value), su=_n(_ls('sessionUnitPrice').value), tc=_n(_ls('ticketingCount').value), cu=_n(_ls('customerCount').value);
+      if(ep<=0||su<=0||tc<=0||cu<=0){ alert('모든 입력값을 채운 뒤 저장하세요.'); return; }
+      const dailyRevenue=su*tc*cu, paybackDays=ep/dailyRevenue;
+      snap={mode:'laser', equipmentPrice:ep, sessionUnitPrice:su, ticketingCount:tc, customerCount:cu,
+            r:{paybackDays:paybackDays, dailyRevenue:dailyRevenue, monthlyRevenue:dailyRevenue*25}};
+    }
+    snap.at=new Date().toISOString();
+    q.roi=snap;
+    DB.save('quotes');
+    if(typeof showToast==='function') showToast('ROI 분석을 견적 '+q.id+'에 저장했습니다. 인쇄 시 [ROI 분석 포함]으로 함께 출력됩니다.', true);
+    if(typeof renderQuotes==='function') renderQuotes();
+    _roiBannerFor(q);
+  };
+  // ===== 병원 맞춤 추정(실제 팁 구매량 → 시술량) =====
+  const _ROI_TIP_PRICE=400000;   // 팁 1개 단가 가정(패키지 환산 35~49만원 범위의 중간값)
+  function _roiHospList(){ const dl=document.getElementById('roi-hosp-list'); if(!dl||dl.dataset.f) return; const hs=Object.keys((window.CONS&&CONS.hospitals)||{}).sort((a,b)=>a.localeCompare(b,'ko')); dl.innerHTML=hs.slice(0,2500).map(n=>'<option value="'+n.replace(/"/g,'&quot;')+'">').join(''); dl.dataset.f='1'; }
+  function _roiHospEst(){
+    const inp=document.getElementById('rf-hosp'), note=document.getElementById('rf-hosp-note'); if(!inp||!note) return;
+    const nm=(inp.value||'').trim();
+    if(!nm){ note.textContent=''; return; }
+    const h=((window.CONS&&CONS.hospitals)||{})[nm];
+    if(!h){ note.textContent='매출 데이터에 없는 병원명입니다(정확한 병원명을 선택하세요).'; return; }
+    const isTip=t=>String(t[2]||'').indexOf('Oligio Tip')===0;
+    const t26=(h.txns2026||[]).filter(isTip), t25=(h.txns2025||[]).filter(isTip);
+    const use=t26.length?t26:t25;
+    if(!use.length){ note.textContent='이 병원의 팁 구매 이력이 없습니다.'; return; }
+    const months=[...new Set(use.map(t=>t[0]))].length||1;
+    const moAmt=use.reduce((s,t)=>s+Number(t[3]||0),0)/months;
+    const st=_n(_rf('shotsPerTreatment').value)||600, ts=_n(_rf('tipShots').value)||900;
+    const trMo=(moAmt/_ROI_TIP_PRICE)*(ts/st);
+    const perDay=Math.max(1,Math.round(trMo/25));
+    _rf('treatmentsPerDay').value=perDay;
+    note.innerHTML='이 병원 '+(t26.length?'올해':'작년')+' 팁 구매 월평균 '+_kr(moAmt)+' ≈ 월 '+Math.round(trMo)+'회 시술 → <b>일 '+perDay+'회</b> 자동 반영 (팁단가 40만원 가정)';
+    calcRF();
+  }
   window.roiTab = function(which){
     document.getElementById('roi-rf-panel').style.display   = which==='rf'?'':'none';
     document.getElementById('roi-laser-panel').style.display= which==='laser'?'':'none';
@@ -9459,6 +9577,8 @@ window.addEventListener('popstate', function(e) {
     _bindRF();
     ['equipmentPrice','sessionUnitPrice'].forEach(k=>_ls(k).addEventListener('input',()=>_fmtPriceInput(_ls(k))));
     document.getElementById('roi-laser-panel').addEventListener('input',calcLaser);
+    _roiHospList();
+    const hi=document.getElementById('rf-hosp'); if(hi) hi.addEventListener('change',_roiHospEst);
     calcRF(); calcLaser();
   };
 
