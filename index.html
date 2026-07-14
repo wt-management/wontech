@@ -1921,7 +1921,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
             <div class="k">문서번호</div><div class="v" id="qed-docno">—</div>
             <div class="k">견적일자</div><div class="v"><input type="date" class="f" id="qed-date"></div>
             <div class="k">유효기간</div><div class="v"><input type="date" class="f blank" id="qed-valid" onchange="_qedValidSync()"></div>
-            <div class="k">담당영업</div><div class="v" style="display:flex;gap:4px"><input class="f blank" id="qed-team" placeholder="팀명" list="qed-team-list" autocomplete="off" style="width:112px;flex-shrink:0"><datalist id="qed-team-list"><option value="한국영업팀"><option value="한국영업1파트"><option value="한국영업2파트"><option value="CDU파트"></datalist><input class="f blank" id="qed-sales" placeholder="담당자명" style="flex:1;min-width:0" oninput="_qedSalesPhoneSync()" onchange="_qedSalesPhoneSync()"><select class="f" id="qed-rank" style="width:74px;flex-shrink:0"><option value="">직급</option><option>사원</option><option>주임</option><option>대리</option><option>과장</option><option>차장</option><option>부장</option><option>파트장</option><option>팀장</option><option>이사</option></select></div>
+            <div class="k">담당영업</div><div class="v" style="display:flex;gap:4px"><input class="f blank" id="qed-team" placeholder="팀명" list="qed-team-list" autocomplete="off" style="width:112px;flex-shrink:0"><datalist id="qed-team-list"><option value="한국영업팀"><option value="한국영업1파트"><option value="한국영업2파트"><option value="CDU파트"></datalist><input class="f blank" id="qed-sales" placeholder="담당자명" list="qed-sales-list" autocomplete="off" style="flex:1;min-width:0" oninput="_qedSalesPhoneSync()" onchange="_qedSalesPhoneSync()"><datalist id="qed-sales-list"></datalist><select class="f" id="qed-rank" style="width:74px;flex-shrink:0"><option value="">직급</option><option>사원</option><option>주임</option><option>대리</option><option>과장</option><option>차장</option><option>부장</option><option>파트장</option><option>팀장</option><option>이사</option></select></div>
             <div class="k">연락처</div><div class="v"><input class="f blank" id="qed-phone" placeholder="010-0000-0000"></div>
           </div>
         </div>
@@ -6362,6 +6362,7 @@ function openQuoteEditor(id){
   setV('qed-date', q?(q.quoteDate||today):today);
   setV('qed-valid', q?(q.validUntil||''):'');
   setV('qed-sales', q?(q.sales||''):(typeof currentUserName==='function'?currentUserName():''));
+  try{ var _sdl=document.getElementById('qed-sales-list'); if(_sdl) _sdl.innerHTML=(KOR_SALES_TEAM||[]).map(n=>'<option value="'+_qedA(n)+'">').join(''); }catch(e){}
   try{
     var _mgrQ=(typeof _isMgr!=='undefined'&&_isMgr);
     // 팀원에게는 파트장·팀장 직급이 드롭다운에 안 보이게
@@ -6459,11 +6460,15 @@ function _qedValidSync(){ var v=(document.getElementById('qed-valid')||{}).value
 // 담당자별 기본 연락처 — 담당자명 입력 시 자동 채움(수기 수정 가능)
 const WT_SALES_PHONE={'김정국':'010-9870-2838','조만식':'010-9981-1236','양준욱':'010-2827-0488','김세현':'010-7928-8792','구주영':'010-9950-9916','강지형':'010-5480-1823','송재원':'010-8935-8482','최준수':'010-3830-4292','김량현':'010-9034-4145'};
 function _qedSalesPhoneSync(){
-  var nm=((document.getElementById('qed-sales')||{}).value||'').trim();
+  var nm=((document.getElementById('qed-sales')||{}).value||'').trim(); if(!nm) return;
+  var mem=(typeof KOR_TEAM!=='undefined'?(KOR_TEAM||[]):[]).find(m=>(m.name||'').trim()===nm)||null;
+  var rk=document.getElementById('qed-rank');   // 직급: 팀원 명단 직급으로 자동 표기
+  if(rk&&mem){ var pos=(mem.pos||'').trim(); if(pos&&[...rk.options].some(o=>o.value===pos)) rk.value=pos; }
   var p=document.getElementById('qed-phone'); if(!p) return;
-  var def=WT_SALES_PHONE[nm]; if(!def) return;
+  var def=(mem&&(mem.phone||'').trim())||WT_SALES_PHONE[nm]||''; if(!def) return;   // 연락처: 명단 우선
   var cur=(p.value||'').trim();
-  if(!cur||Object.values(WT_SALES_PHONE).indexOf(cur)>=0) p.value=def;   // 비었거나 다른 팀원 기본값이면 교체(수기 입력은 보존)
+  var pool=Object.values(WT_SALES_PHONE).concat((KOR_TEAM||[]).map(m=>(m.phone||'').trim()));
+  if(!cur||pool.indexOf(cur)>=0) p.value=def;   // 수기 입력은 보존
 }
 function _qedTmpl(t,quiet){ _qed.tmpl=t; const s=document.getElementById('qedtpl-std'),p=document.getElementById('qedtpl-simple'); if(s)s.classList.toggle('on',t==='classic'); if(p)p.classList.toggle('on',t!=='classic'); if(!quiet) showToast((t==='classic'?'양식 1':'양식 2')+' 선택 — 인쇄·PDF 결과물에 적용됩니다. [미리보기]로 확인하세요', true); }
 function _qedPreview(){
