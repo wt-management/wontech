@@ -1952,7 +1952,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       </table></div>
       <div class="qed-foot">
         <div class="qed-terms"><span><b>납품기일</b> <input class="f" id="qed-t2" style="width:118px" value="계약 후 3일 이내"></span><span><b>결제조건</b> <input class="f" id="qed-t3" style="width:76px" value="선입금"></span><span><b>납품처</b> <input class="f" id="qed-t4" style="width:86px" value="지정장소"></span></div>
-        <div class="qed-memo"><textarea id="qed-note" onkeydown="_qedNoteKey(event)" placeholder="특이사항·협의 내용 — 줄 앞에 1. 을 붙이면 엔터 시 2. 3. 자동 번호 (예: 1. 무상 Lamp지원 3회)"></textarea></div>
+        <div class="qed-memo" id="qed-note-rows"></div>
         <div class="qed-tagline">원텍 주식회사 · www.wontech.com · 본 견적서는 발행일로부터 30일간 유효합니다.</div>
       </div>
     </div>
@@ -6380,7 +6380,7 @@ function openQuoteEditor(id){
   }catch(e){}
   try{ var _tv0=(q&&q.terms&&q.terms.length===4)?q.terms:[(q&&q.validUntil)?(fmtDate(q.validUntil)+' 까지'):'견적 후 30일','계약 후 3일 이내','선입금','지정장소']; setV('qed-t1',_tv0[0]); setV('qed-t2',_tv0[1]); setV('qed-t3',_tv0[2]); setV('qed-t4',_tv0[3]); }catch(e){}
   (function(){ var e=document.getElementById('qed-status'); if(e) e.value=q?(q.status||'임시'):'임시'; })();
-  setV('qed-note', q?(q.note||''):'');
+  _qedNoteSet(q?(q.note||''):'');
   document.getElementById('qed-rows').innerHTML='';
   const items = (q&&q.items&&q.items.length)?q.items:[{name:'',spec:'',unit:'EA',qty:1,price:'',note:''}];
   items.forEach(_qedAddRow);
@@ -6446,16 +6446,22 @@ function _qedCalc(){
   document.getElementById('qed-total-sum').innerHTML='<span class="won">₩</span> '+_qedFmt(total);
   (function(){ var b=document.getElementById('qed-total-band'); if(b) b.innerHTML='<span class="won">₩</span> '+_qedFmt(total); var k=document.getElementById('qed-kor'); if(k) k.textContent='一金 '+numKor(total)+'원整'; })();
 }
-function _qedNoteKey(e){
-  if(e.key!=='Enter'||e.isComposing) return;
-  var t=e.target, pos=t.selectionStart, val=t.value;
-  var ls=val.lastIndexOf('\n',pos-1)+1;
-  var m=val.slice(ls,pos).match(/^\s*(\d+)\.\s?/);
-  if(!m) return;
-  e.preventDefault();
-  var ins='\n'+((+m[1])+1)+'. ';
-  t.value=val.slice(0,pos)+ins+val.slice(t.selectionEnd);
-  t.selectionStart=t.selectionEnd=pos+ins.length;
+// 비고: 엑셀식 번호 행 입력 — 내용 있는 줄만 번호 붙여 결과물에 반영
+function _qedNoteRow(i,val){ return '<div style="display:flex;align-items:center;gap:8px;margin:3px 0"><span style="font-size:12.5px;font-weight:700;color:var(--mut);min-width:18px;text-align:right">'+i+'.</span><input class="f qed-note-i" style="flex:1" value="'+_qedA(val||'')+'" oninput="_qedNoteGrow()" placeholder="'+(i===1?'특이사항·협의 내용 (내용 있는 줄만 견적서에 표시)':'')+'"></div>'; }
+function _qedNoteSet(note){
+  var box=document.getElementById('qed-note-rows'); if(!box) return;
+  var lines=String(note||'').split(/\n/).map(s=>s.replace(/^\s*\d+\.\s?/,'').trim()).filter(Boolean);
+  while(lines.length<3) lines.push('');
+  box.innerHTML=lines.map((v,i)=>_qedNoteRow(i+1,v)).join('');
+}
+function _qedNoteGrow(){
+  var box=document.getElementById('qed-note-rows'); if(!box) return;
+  var ins=[...box.querySelectorAll('.qed-note-i')];
+  if(ins.length<8 && ins[ins.length-1].value.trim()!=='') box.insertAdjacentHTML('beforeend', _qedNoteRow(ins.length+1,''));
+}
+function _qedNoteVal(){
+  var vals=[...document.querySelectorAll('#qed-note-rows .qed-note-i')].map(e=>e.value.trim()).filter(Boolean);
+  return vals.map((v,i)=>(i+1)+'. '+v).join('\n');
 }
 function _qedValidSync(){ var v=(document.getElementById('qed-valid')||{}).value; var t=document.getElementById('qed-t1'); if(t&&v) t.value=fmtDate(v)+' 까지'; }
 // 담당자별 기본 연락처 — 담당자명 입력 시 자동 채움(수기 수정 가능)
@@ -6496,7 +6502,7 @@ function _qedCollect(){
   });
   const total=items.reduce((s,it)=>s+it.amount,0);   // 입력금액 = 부가세 포함
   const subtotal=Math.round(total/1.1), vat=total-subtotal;   // 공급가액·부가세 역산
-  return {id:document.getElementById('qed-id').value, custName:document.getElementById('qed-cust').value.trim(), quoteDate:document.getElementById('qed-date').value, validUntil:document.getElementById('qed-valid').value, sales:document.getElementById('qed-sales').value.trim(), salesRank:((document.getElementById('qed-rank')||{}).value||''), salesTeam:(((document.getElementById('qed-team')||{}).value||'').trim()), salesPhone:(((document.getElementById('qed-phone')||{}).value||'').trim()), status:(((document.getElementById('qed-status')||{}).value)||'임시'), note:document.getElementById('qed-note').value.trim(), terms:[1,2,3,4].map(i=>(((document.getElementById('qed-t'+i)||{}).value)||'').trim()), items, subtotal, vat, total};
+  return {id:document.getElementById('qed-id').value, custName:document.getElementById('qed-cust').value.trim(), quoteDate:document.getElementById('qed-date').value, validUntil:document.getElementById('qed-valid').value, sales:document.getElementById('qed-sales').value.trim(), salesRank:((document.getElementById('qed-rank')||{}).value||''), salesTeam:(((document.getElementById('qed-team')||{}).value||'').trim()), salesPhone:(((document.getElementById('qed-phone')||{}).value||'').trim()), status:(((document.getElementById('qed-status')||{}).value)||'임시'), note:_qedNoteVal(), terms:[1,2,3,4].map(i=>(((document.getElementById('qed-t'+i)||{}).value)||'').trim()), items, subtotal, vat, total};
 }
 function _qedSave(){
   const q=_qedCollect();
@@ -6650,7 +6656,7 @@ function QDOC(q,tmpl){
       +'<div style="margin-top:24px;border-top:1px solid '+LINE+';padding-top:13px;display:flex;flex-wrap:wrap;gap:6px 26px;font-size:11.5px;color:'+INK+'">'
         +termsList.map((t,i)=>'<span><b style="color:'+CLAY+';font-variant-numeric:tabular-nums">0'+(i+1)+'</b>&nbsp; '+t+'</span>').join('')
       +'</div>'
-      +(q.note?'<div style="margin-top:12px;border-left:3px solid '+CLAY+';padding:8px 12px;font-size:12.5px;color:'+INK+';font-weight:600">비고 · '+_qEscH(q.note)+'</div>':'')
+      +(q.note?'<div style="margin-top:12px;border-left:3px solid '+CLAY+';padding:8px 12px;font-size:12.5px;color:'+INK+';font-weight:600;white-space:pre-line">'+_qEscH(q.note)+'</div>':'')
     +'</div>'
     +'<div style="margin-top:24px;border-top:1px solid '+LINE+';padding:12px 40px 16px;text-align:center;font-size:10px;letter-spacing:.14em;color:'+MUT+';font-weight:700">'
       +WT_SUP.web
