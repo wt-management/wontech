@@ -8070,7 +8070,7 @@ function renderSchDaily(force){
       +'<th style="'+th+'">총 병원 방문 수</th><th style="'+th+'">의사 상담 병원 수</th><th style="'+th+'">데모 요청 병원 수</th><th style="'+th+'">계약(진행/완료) 건수</th></tr>'
       +'<tr><td id="sdr-s1" contenteditable="true" style="'+td+';text-align:center">'+_schEsc(data.stats[0]||'')+'</td><td id="sdr-s2" contenteditable="true" style="'+td+';text-align:center">'+_schEsc(data.stats[1]||'')+'</td><td id="sdr-s3" contenteditable="true" style="'+td+';text-align:center">'+_schEsc(data.stats[2]||'')+'</td><td id="sdr-s4" contenteditable="true" style="'+td+';text-align:center">'+_schEsc(data.stats[3]||'')+'</td></tr></table>'
     +'<div style="font-size:13px;font-weight:800;margin:16px 0 5px">□ 방문 후 특이 담당의견 구체화 <span style="font-weight:400;font-size:11px;color:#555">*업무 활동 내역 外 원장과 어떤 목적, 미팅을 통해 현장의 있는그대로 반응(장비, 경쟁사 대비, 정책부분) 최대한 구체화 要</span></div>'
-    +'<div id="sdr-op" contenteditable="true" style="border:1px solid #000;margin-top:-1px;min-height:110px;padding:8px;font-size:12px;white-space:pre-wrap">'+_schEsc(data.opinion)+'</div>';
+    +'<div id="sdr-op" contenteditable="true" style="border:0;border-bottom:1px solid #000;margin-top:0;min-height:110px;padding:8px;font-size:12px;white-space:pre-wrap">'+_schEsc(data.opinion)+'</div>';
 }
 function sdrAddRow(){
   var tb=document.getElementById('sdr-act-body'); if(!tb) return;
