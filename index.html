@@ -8181,7 +8181,8 @@ async function sdrIMG(){
   }
   showToast('이미지 생성 중...');
   // 시트가 모달보다 넓어 넘친 부분에 모달 배경이 회색으로 겹쳐 찍힘 → 모달 밖(화면 밖)에 복제해서 캡처
-  var W=Math.max(sheet.scrollWidth,sheet.offsetWidth);
+  // 폭 960px = 영업사원 화면캡처 수준. 복제본을 이 폭으로 '재배치'한 뒤 1:1로 찍으므로 선명도 유지(후축소 아님)
+  var W=960;
   var clone=sheet.cloneNode(true);
   clone.removeAttribute('id');
   clone.querySelectorAll('.sdr-noprint').forEach(function(el){ el.remove(); });
