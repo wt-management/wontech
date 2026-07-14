@@ -2167,9 +2167,12 @@ const DB = {
       showToast('저장 완료!', true);
     } catch(e) { showToast('저장 실패: '+e.message, true, true); }
   },
+  // 다음 save 때 이 행을 강제로 업로드하게 표시(스냅샷 무효화). 내용이 같아도 다시 밀어올려야 할 때 사용.
+  touch(name, id) { if(this._orig[name] && id!=null) delete this._orig[name][id]; },
   // 단건 삭제(전체 덮어쓰기 없이) — 삭제는 반드시 이걸로. 다른 행은 절대 건드리지 않음.
   del(name, id) {
     if(id==null) return Promise.resolve();
+    this.touch(name, id);   // 스냅샷도 제거 — 같은 id를 동일 내용으로 재등록해도 save가 건너뛰지 않게
     return _sb.from(name).delete().eq('id', id).then(function(r){ if(r&&r.error) showToast('삭제 실패: '+r.error.message, true, true); });
   }
 };
