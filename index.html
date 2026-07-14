@@ -1896,6 +1896,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <div class="qed-seg">
         <button id="qedtpl-std" class="on" onclick="_qedTmpl('classic')">양식 1</button>
         <button id="qedtpl-simple" onclick="_qedTmpl('premium')">양식 2</button>
+        <button onclick="_qedPreview()" style="margin-left:6px"><i class="bi bi-eye me-1"></i>미리보기</button>
       </div>
       <button class="qed-btn ghost" onclick="_qedPDF()"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</button>
       <button class="qed-btn dark" onclick="_qedSave()">저장</button>
@@ -6384,7 +6385,7 @@ function openQuoteEditor(id){
   // 실제 CI 로고 삽입 + 장비명 자동완성 목록 채우기
   var _lg=document.getElementById('qed-logo'); if(_lg)_lg.src=_WT_LOGO_URI;
   var _dl=document.getElementById('qed-dev-list'); if(_dl)_dl.innerHTML=Object.keys(WT_DEVICES).map(function(n){return '<option value="'+_qedA(n)+'">';}).join('');
-  _qedTmpl('classic'); _qedCalc();
+  _qedTmpl('classic',true); _qedCalc();
   new bootstrap.Modal(document.getElementById('quoteEditModal')).show();
 }
 function _qedMakeRow(it){
@@ -6464,7 +6465,13 @@ function _qedSalesPhoneSync(){
   var cur=(p.value||'').trim();
   if(!cur||Object.values(WT_SALES_PHONE).indexOf(cur)>=0) p.value=def;   // 비었거나 다른 팀원 기본값이면 교체(수기 입력은 보존)
 }
-function _qedTmpl(t){ _qed.tmpl=t; const s=document.getElementById('qedtpl-std'),p=document.getElementById('qedtpl-simple'); if(s)s.classList.toggle('on',t==='classic'); if(p)p.classList.toggle('on',t!=='classic'); }
+function _qedTmpl(t,quiet){ _qed.tmpl=t; const s=document.getElementById('qedtpl-std'),p=document.getElementById('qedtpl-simple'); if(s)s.classList.toggle('on',t==='classic'); if(p)p.classList.toggle('on',t!=='classic'); if(!quiet) showToast((t==='classic'?'양식 1':'양식 2')+' 선택 — 인쇄·PDF 결과물에 적용됩니다. [미리보기]로 확인하세요', true); }
+function _qedPreview(){
+  const q=_qedCollect();
+  if(!q.custName){ alert('병원명을 먼저 입력하세요.'); return; }
+  _qCur=q; setQuoteTmpl(_qed.tmpl);
+  new bootstrap.Modal(document.getElementById('quotePrintModal')).show();
+}
 function _qedCollect(){
   const items=[];
   document.querySelectorAll('#qed-rows tr').forEach(function(tr){
