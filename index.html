@@ -1933,7 +1933,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <tr class="g"><td class="k">합계 <span style="font-size:10px;font-weight:600;color:var(--mut)">VAT 포함</span></td><td class="v" id="qed-total-sum"><span class="won">₩</span> 0</td></tr>
       </table></div>
       <div class="qed-foot">
-        <div class="qed-terms"><span><b>유효기간</b> 견적 후 30일</span><span><b>납품기일</b> 계약 후 3일 이내</span><span><b>결제조건</b> 선입금</span><span><b>납품처</b> 지정장소</span></div>
+        <div class="qed-terms"><span><b>유효기간</b> <input class="f" id="qed-t1" style="width:100px" value="견적 후 30일"></span><span><b>납품기일</b> <input class="f" id="qed-t2" style="width:118px" value="계약 후 3일 이내"></span><span><b>결제조건</b> <input class="f" id="qed-t3" style="width:76px" value="선입금"></span><span><b>납품처</b> <input class="f" id="qed-t4" style="width:86px" value="지정장소"></span></div>
         <div class="qed-memo"><textarea id="qed-note" placeholder="특이사항·협의 내용을 입력하세요 (설치·교육·소모품 조건 등)"></textarea></div>
         <div class="qed-tagline">원텍 주식회사 · www.wtlaser.com · 본 견적서는 발행일로부터 30일간 유효합니다.</div>
       </div>
@@ -6251,6 +6251,7 @@ function openQuoteEditor(id){
   }catch(e){}
   try{ setV('qed-team', q?(q.salesTeam||'한국영업팀'):(localStorage.getItem('wt_qteam')||'한국영업팀')); }catch(e){}
   try{ setV('qed-phone', q?(q.salesPhone||''):(localStorage.getItem('wt_qphone')||'')); }catch(e){}
+  try{ var _tv0=(q&&q.terms&&q.terms.length===4)?q.terms:['견적 후 30일','계약 후 3일 이내','선입금','지정장소']; setV('qed-t1',_tv0[0]); setV('qed-t2',_tv0[1]); setV('qed-t3',_tv0[2]); setV('qed-t4',_tv0[3]); }catch(e){}
   document.getElementById('qed-status').value = q?(q.status||'임시'):'임시';
   setV('qed-note', q?(q.note||''):'');
   document.getElementById('qed-rows').innerHTML='';
@@ -6335,7 +6336,7 @@ function _qedCollect(){
   });
   const total=items.reduce((s,it)=>s+it.amount,0);   // 입력금액 = 부가세 포함
   const subtotal=Math.round(total/1.1), vat=total-subtotal;   // 공급가액·부가세 역산
-  return {id:document.getElementById('qed-id').value, custName:document.getElementById('qed-cust').value.trim(), quoteDate:document.getElementById('qed-date').value, validUntil:document.getElementById('qed-valid').value, sales:document.getElementById('qed-sales').value.trim(), salesRank:((document.getElementById('qed-rank')||{}).value||''), salesTeam:(((document.getElementById('qed-team')||{}).value||'').trim()), salesPhone:(((document.getElementById('qed-phone')||{}).value||'').trim()), status:document.getElementById('qed-status').value, note:document.getElementById('qed-note').value.trim(), items, subtotal, vat, total};
+  return {id:document.getElementById('qed-id').value, custName:document.getElementById('qed-cust').value.trim(), quoteDate:document.getElementById('qed-date').value, validUntil:document.getElementById('qed-valid').value, sales:document.getElementById('qed-sales').value.trim(), salesRank:((document.getElementById('qed-rank')||{}).value||''), salesTeam:(((document.getElementById('qed-team')||{}).value||'').trim()), salesPhone:(((document.getElementById('qed-phone')||{}).value||'').trim()), status:document.getElementById('qed-status').value, note:document.getElementById('qed-note').value.trim(), terms:[1,2,3,4].map(i=>(((document.getElementById('qed-t'+i)||{}).value)||'').trim()), items, subtotal, vat, total};
 }
 function _qedSave(){
   const q=_qedCollect();
@@ -6377,7 +6378,7 @@ function QDOC(q,tmpl){
   const total=Number(q.total||0);
   const INK='#1a1714',MUT='#8f8a82',CLAY='#ff4d00',LINE='#ece9e4',CREAM='#faf9f7';
   const logo = _wtLogo('#ff4d00','116');   // 정확한 CI(SVG) 고정 사용
-  const termsList=['유효기간 : 견적 후 30일','납품기일 : 계약 후 3일 이내','결제조건 : 선입금','납품처 : 지정장소'];
+  const _tv=(q.terms&&q.terms.length===4)?q.terms.map(x=>_qEscH(x)):['견적 후 30일','계약 후 3일 이내','선입금','지정장소']; const termsList=['유효기간 : '+_tv[0],'납품기일 : '+_tv[1],'결제조건 : '+_tv[2],'납품처 : '+_tv[3]];
 
   if(tmpl==='classic'){
     // 양식 1 · 표준 — 격식 있는 정식 견적서, 헤어라인 톤으로 재정리
@@ -6410,15 +6411,12 @@ function QDOC(q,tmpl){
           +'<div style="font-size:16px;font-weight:800;color:'+INK+';margin-bottom:12px">'+_qEscH(WT_SUP.name)+'</div>'
           +'<table style="width:100%;border-collapse:collapse;font-size:12px">'
             +'<tr><td style="padding:4px 0;color:'+MUT+';width:64px">등록번호</td><td style="padding:4px 0;font-weight:600">'+WT_SUP.reg+'</td></tr>'
-            +'<tr><td style="padding:4px 0;color:'+MUT+'">대표이사</td><td style="padding:4px 0;font-weight:600">'+_qEscH(WT_SUP.ceo)+' (인)<img src="'+_WT_SEAL+'" style="width:46px;height:46px;vertical-align:middle;margin:-18px 0 -14px -32px;opacity:.92" alt="인"></td></tr>'
+            +'<tr><td style="padding:4px 0;color:'+MUT+'">대표이사</td><td style="padding:4px 0;font-weight:600">'+_qEscH(WT_SUP.ceo)+'&nbsp;&nbsp;&nbsp;(인)<img src="'+_WT_SEAL+'" style="width:46px;height:46px;vertical-align:middle;margin:-18px 0 -14px -32px;opacity:.92" alt="인"></td></tr>'
             +'<tr><td style="padding:4px 0;color:'+MUT+'">주　소</td><td style="padding:4px 0;font-weight:600">'+_qEscH(WT_SUP.addr)+'</td></tr>'
             +'<tr><td style="padding:4px 0;color:'+MUT+'">전화/팩스</td><td style="padding:4px 0;font-weight:600">'+WT_SUP.tel+' / '+WT_SUP.fax+'</td></tr>'
             +'<tr><td style="padding:4px 0;color:'+MUT+'">담당자</td><td style="padding:4px 0;font-weight:600">'+_qEscH(((q.salesTeam||'한국영업팀')+' '+(q.sales||'')+(q.salesRank?' '+q.salesRank:'')).trim())+'</td></tr>'+(q.salesPhone?'<tr><td style="padding:4px 0;color:'+MUT+'">연락처</td><td style="padding:4px 0;font-weight:600">'+_qEscH(q.salesPhone)+'</td></tr>':'')+'</table>'
         +'</div>'
       +'</div>'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;background:'+INK+';border-radius:16px;padding:12px 20px;margin-bottom:14px">'
-        +'<div><div style="font-size:10.5px;font-weight:700;letter-spacing:.15em;color:rgba(255,255,255,.55);text-transform:uppercase">견적금액 · VAT 포함</div><div style="font-size:14px;color:rgba(255,255,255,.8);margin-top:6px;font-weight:600">一金 '+numKor(total)+'원整</div></div>'
-        +'<div style="font-size:30px;font-weight:800;color:#fff;letter-spacing:-.02em">₩ '+won(total)+'</div></div>'
       +'<table style="width:100%;border-collapse:collapse;font-size:12.5px">'
         +'<thead><tr style="border-bottom:2px solid '+INK+';color:'+MUT+';font-size:11px">'
         +'<th style="padding:7px 4px;width:36px;font-weight:700">번호</th><th style="padding:7px;text-align:left;font-weight:700">품　명</th><th style="padding:7px;width:74px;font-weight:700">규격</th><th style="padding:7px;width:46px;font-weight:700">단위</th><th style="padding:7px;width:52px;font-weight:700">수량</th><th style="padding:7px;width:100px;text-align:right;font-weight:700">단가</th><th style="padding:7px;width:112px;text-align:right;font-weight:700">금액</th><th style="padding:7px;width:80px;font-weight:700">비고</th></tr></thead>'
@@ -6454,11 +6452,8 @@ function QDOC(q,tmpl){
       +'<div style="flex:1;padding-left:30px;border-left:1px solid '+LINE+'">'
         +'<div style="font-size:10px;font-weight:700;letter-spacing:2px;color:'+CLAY+'">FROM</div>'
         +'<div style="font-size:14px;font-weight:800;color:'+INK+';margin:7px 0 6px">'+_qEscH(WT_SUP.name)+'</div>'
-        +'<div style="font-size:11px;color:'+MUT+';line-height:1.9">사업자 '+WT_SUP.reg+' · 대표 '+_qEscH(WT_SUP.ceo)+' (인)<img src="'+_WT_SEAL+'" style="width:36px;height:36px;vertical-align:middle;margin:-14px 0 -10px -24px;opacity:.92" alt="인"><br>'+_qEscH(WT_SUP.addr)+'<br>T '+WT_SUP.tel+' · 담당 '+_qEscH(q.salesTeam||'한국영업팀')+' <b style="color:'+INK+'">'+_qEscH(((q.sales||'')+(q.salesRank?' '+q.salesRank:'')).trim())+'</b>'+(q.salesPhone?' · '+_qEscH(q.salesPhone):'')+'</div></div>'
+        +'<div style="font-size:11px;color:'+MUT+';line-height:1.9">사업자 '+WT_SUP.reg+' · 대표 '+_qEscH(WT_SUP.ceo)+'&nbsp;&nbsp;(인)<img src="'+_WT_SEAL+'" style="width:36px;height:36px;vertical-align:middle;margin:-14px 0 -10px -24px;opacity:.92" alt="인"><br>'+_qEscH(WT_SUP.addr)+'<br>T '+WT_SUP.tel+' · 담당 '+_qEscH(q.salesTeam||'한국영업팀')+' <b style="color:'+INK+'">'+_qEscH(((q.sales||'')+(q.salesRank?' '+q.salesRank:'')).trim())+'</b>'+(q.salesPhone?' · '+_qEscH(q.salesPhone):'')+'</div></div>'
     +'</div>'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;padding:22px 26px;background:'+CREAM+';border:1px solid '+LINE+';border-radius:18px;margin-bottom:28px">'
-      +'<div><div style="font-size:10.5px;font-weight:700;letter-spacing:.15em;color:'+MUT+';text-transform:uppercase">견적 합계금액 · VAT 포함</div><div style="font-size:12px;color:'+MUT+';margin-top:5px">一金 '+numKor(total)+'원整</div></div>'
-      +'<div style="font-size:32px;font-weight:800;color:'+CLAY+';letter-spacing:-.02em">₩ '+won(total)+'</div></div>'
     +'<table style="width:100%;border-collapse:collapse;font-size:12.5px">'
       +'<thead><tr style="border-bottom:2px solid '+INK+';color:'+MUT+';font-size:11px"><th style="padding:7px 6px;text-align:center;width:34px;font-weight:700">No</th><th style="padding:7px 8px;text-align:left;font-weight:700">품명</th><th style="padding:7px 6px;text-align:center;width:46px;font-weight:700">단위</th><th style="padding:7px 6px;text-align:center;width:52px;font-weight:700">수량</th><th style="padding:7px 10px;text-align:right;width:100px;font-weight:700">단가</th><th style="padding:7px 10px;text-align:right;width:116px;font-weight:700">금액</th><th style="padding:7px 6px;text-align:center;width:70px;font-weight:700">비고</th></tr></thead>'
       +'<tbody>'+rowsP+'</tbody></table>'
