@@ -8182,7 +8182,7 @@ async function sdrIMG(){
   showToast('이미지 생성 중...');
   sheet.querySelectorAll('.sdr-noprint').forEach(function(el){ el.style.display='none'; });
   var canvas;
-  try{ canvas=await html2canvas(sheet,{scale:2,backgroundColor:'#ffffff'}); }
+  try{ canvas=await html2canvas(sheet,{scale:3,backgroundColor:'#ffffff'}); }
   finally{ sheet.querySelectorAll('.sdr-noprint').forEach(function(el){ el.style.display=''; }); }
   var D=(document.getElementById('sdr-date')||{}).value||'';
   var R=((document.getElementById('sdr-sales')||{}).value||'').trim();
@@ -8201,11 +8201,23 @@ async function sdrIMG(){
   while(canvas.height-pos>pageH+80){ pos=findBreak(pos+pageH); cuts.push(pos); }
   cuts.push(canvas.height);
   var pages=cuts.length-1;
+  var TW=1100;   // 메일 붙여넣기 기준 최종 가로폭(px) — 원본 화면 캡처 크기 수준
   for(var i=0;i<pages;i++){
     var h=cuts[i+1]-cuts[i];
     var c=document.createElement('canvas'); c.width=canvas.width; c.height=h;
     var cx=c.getContext('2d'); cx.fillStyle='#fff'; cx.fillRect(0,0,c.width,c.height);
     cx.drawImage(canvas,0,cuts[i],canvas.width,h,0,0,canvas.width,h);
+    // 3배 렌더링본을 단계적 1/2 축소(고품질 보간)로 TW까지 줄여 선명도 유지
+    while(c.width>TW*2){
+      var half=document.createElement('canvas'); half.width=Math.round(c.width/2); half.height=Math.round(c.height/2);
+      var hx=half.getContext('2d'); hx.imageSmoothingEnabled=true; hx.imageSmoothingQuality='high';
+      hx.drawImage(c,0,0,half.width,half.height); c=half;
+    }
+    if(c.width>TW){
+      var fin=document.createElement('canvas'); fin.width=TW; fin.height=Math.round(c.height*TW/c.width);
+      var fx=fin.getContext('2d'); fx.imageSmoothingEnabled=true; fx.imageSmoothingQuality='high';
+      fx.drawImage(c,0,0,fin.width,fin.height); c=fin;
+    }
     var a=document.createElement('a'); a.href=c.toDataURL('image/png'); a.download=fn+(pages>1?'_'+(i+1):'')+'.png';
     document.body.appendChild(a); a.click(); a.remove();
     await new Promise(function(r){ setTimeout(r,350); });
