@@ -1656,18 +1656,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <div class="row g-2">
       <div class="col-md-8"><label class="form-label" style="font-size:12px">병원 * <span class="text-muted" style="font-weight:400">(입력하면 자동완성)</span></label><input type="text" id="sch-cust" class="form-control form-control-sm" list="sch-cust-list" placeholder="병원명 입력…" oninput="_schHospInfo(this.value)" autocomplete="off"><datalist id="sch-cust-list"></datalist></div>
       <div class="col-md-4"><label class="form-label" style="font-size:12px">유형</label><select id="sch-type" class="form-select form-select-sm"><option>방문</option><option>콜</option><option>A/S</option><option>기타</option></select></div>
-      <div class="col-md-4"><label class="form-label" style="font-size:12px">날짜 *</label><input type="date" id="sch-date" class="form-control form-control-sm"></div>
-      <div class="col-md-4">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem">
-          <label class="form-label mb-0" style="font-size:12px">시간 *</label>
-          <label style="font-size:11.5px;color:#6b7280;cursor:pointer;display:flex;align-items:center;gap:4px;margin:0"><input type="checkbox" id="sch-tbd" onchange="_schTbdToggle()" style="cursor:pointer">협의중</label>
-        </div>
-        <div class="d-flex gap-1">
-          <select id="sch-hh" class="form-select form-select-sm"><option value="">시</option><option>08</option><option>09</option><option>10</option><option>11</option><option>12</option><option>13</option><option>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option>19</option><option>20</option><option>21</option></select>
-          <select id="sch-mm" class="form-select form-select-sm"><option value="">분</option><option>00</option><option>10</option><option>20</option><option>30</option><option>40</option><option>50</option></select>
-        </div>
-      </div>
-      <div class="col-md-4"><label class="form-label" style="font-size:12px">담당</label><input type="text" id="sch-sales" class="form-control form-control-sm"></div>
+      <div class="col-md-6"><label class="form-label" style="font-size:12px">날짜 *</label><input type="date" id="sch-date" class="form-control form-control-sm"></div>
+      <div class="col-md-6"><label class="form-label" style="font-size:12px">담당</label><input type="text" id="sch-sales" class="form-control form-control-sm"></div>
       <div class="col-12"><label class="form-label" style="font-size:12px">제품 / 장비 <span class="text-muted" style="font-weight:400">(자동완성)</span></label><input type="text" id="sch-prod" class="form-control form-control-sm" list="sch-prod-list" placeholder="예: Oligio Kiss / Pico Andy / Tips F4.0" autocomplete="off"><datalist id="sch-prod-list"></datalist></div>
       <div class="col-12"><label class="form-label" style="font-size:12px">내용 / 목적</label><textarea id="sch-note" class="form-control form-control-sm" rows="2" placeholder="예: 재구매 상담 / 데모 후 견적 협의 / 장비 정기 점검"></textarea></div>
     </div>
@@ -7456,29 +7446,6 @@ function renderSchedule(){
     body.innerHTML=_schListView(list);
   }
 }
-// 시간: 시·분(10분 단위) 드롭다운 + '협의중' 체크(시간 미정 저장 허용)
-function _schTbdToggle(){
-  const on=document.getElementById('sch-tbd').checked;
-  const hh=document.getElementById('sch-hh'), mm=document.getElementById('sch-mm');
-  hh.disabled=on; mm.disabled=on;
-  if(on){ hh.value=''; mm.value=''; }
-}
-function _schSetTimeUI(time){
-  const tbd=document.getElementById('sch-tbd'), hh=document.getElementById('sch-hh'), mm=document.getElementById('sch-mm');
-  tbd.checked=false; hh.disabled=false; mm.disabled=false; hh.value=''; mm.value='';
-  time=String(time||'').trim();
-  if(time==='협의'){ tbd.checked=true; hh.disabled=true; mm.disabled=true; return; }
-  const m=time.match(/^(\d{1,2}):(\d{2})$/);
-  if(m){ const h=String(parseInt(m[1],10)).padStart(2,'0'); const mi=String(Math.round(parseInt(m[2],10)/10)*10%60).padStart(2,'0');
-    if([...hh.options].some(o=>o.value===h)) hh.value=h;
-    if([...mm.options].some(o=>o.value===mi)) mm.value=mi; else mm.value='00'; }
-}
-function _schGetTimeUI(){
-  if(document.getElementById('sch-tbd').checked) return '협의';
-  const h=document.getElementById('sch-hh').value, m=document.getElementById('sch-mm').value;
-  if(!h) return '';
-  return h+':'+(m||'00');
-}
 function openSchedule(pre){ pre=pre||{};
   _schFillProdList();
   document.getElementById('sch-id').value=pre.id||'';
@@ -7487,7 +7454,6 @@ function openSchedule(pre){ pre=pre||{};
   document.getElementById('sch-cust').value=pre.custName||'';
   document.getElementById('sch-type').value=pre.type||'방문';
   document.getElementById('sch-date').value=pre.date||_schTodayStr();
-  _schSetTimeUI(pre.time||'');
   document.getElementById('sch-sales').value=pre.sales||_schMe();
   document.getElementById('sch-prod').value=pre.product||'';
   document.getElementById('sch-note').value=pre.content||'';
@@ -7583,11 +7549,9 @@ function closeSchModalThen(dealId){ try{ bootstrap.Modal.getInstance(document.ge
 async function saveSchedule(){
   const cust=document.getElementById('sch-cust').value.trim(), date=document.getElementById('sch-date').value;
   if(!cust||!date){ alert('병원과 날짜를 입력하세요.'); return; }
-  const timeV=_schGetTimeUI();
-  if(!timeV){ alert('시간을 선택하세요.\n아직 시간이 안 정해졌으면 [협의중]을 체크하면 저장됩니다.'); return; }
   const id=document.getElementById('sch-id').value||uid();
   const idx=(DB.d.logs||[]).findIndex(l=>l.id===id);
-  const rec={id:id,kind:'schedule',custName:cust,date:date,time:timeV,type:document.getElementById('sch-type').value,product:document.getElementById('sch-prod').value.trim(),content:document.getElementById('sch-note').value.trim(),sales:document.getElementById('sch-sales').value.trim(),done:(idx>=0?!!DB.d.logs[idx].done:false),dealId:document.getElementById('sch-deal-id').value||(idx>=0?DB.d.logs[idx].dealId||'':'')};
+  const rec={id:id,kind:'schedule',custName:cust,date:date,time:(idx>=0?(DB.d.logs[idx].time||''):''),type:document.getElementById('sch-type').value,product:document.getElementById('sch-prod').value.trim(),content:document.getElementById('sch-note').value.trim(),sales:document.getElementById('sch-sales').value.trim(),done:(idx>=0?!!DB.d.logs[idx].done:false),dealId:document.getElementById('sch-deal-id').value||(idx>=0?DB.d.logs[idx].dealId||'':'')};
   if(idx>=0) DB.d.logs[idx]=rec; else DB.d.logs.push(rec);
   try{ bootstrap.Modal.getInstance(document.getElementById('scheduleModal')).hide(); }catch(e){}
   renderSchedule(); showToast('일정 저장, 저장 중...'); await DB.save('logs'); showToast('저장 완료', true);
