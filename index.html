@@ -818,7 +818,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
   <!-- 일정 (방문·콜 스케줄) -->
   <div id="page-schedule" class="page">
-    <div class="page-header"><h5><i class="bi bi-calendar-week me-2"></i>일정 <span class="text-muted" style="font-size:12px;font-weight:400">· 누가 오늘 어디 가는지</span></h5><div class="d-flex flex-wrap" style="gap:6px"><button class="btn btn-primary btn-sm" onclick="openSchedule()"><i class="bi bi-plus-lg me-1"></i>일정 추가</button><button class="btn btn-outline-primary btn-sm" onclick="openSchDaily()"><i class="bi bi-file-earmark-text me-1"></i>일일보고</button><button id="sch-team-btn" class="btn btn-outline-secondary btn-sm" style="display:none" onclick="openTeamMgr()"><i class="bi bi-people me-1"></i>팀원 관리</button></div></div>
+    <div class="page-header"><h5><i class="bi bi-calendar-week me-2"></i>일정 <span class="text-muted" style="font-size:12px;font-weight:400">· 누가 오늘 어디 가는지</span></h5><div class="d-flex flex-wrap" style="gap:6px"><button class="btn btn-primary btn-sm" onclick="openSchedule()"><i class="bi bi-plus-lg me-1"></i>일정 추가</button><button class="btn btn-outline-primary btn-sm" onclick="openSchDaily()"><i class="bi bi-file-earmark-text me-1"></i>일일보고서</button><button class="btn btn-outline-primary btn-sm" onclick="openDaySum()"><i class="bi bi-clipboard-check me-1"></i>일 요약</button><button id="sch-team-btn" class="btn btn-outline-secondary btn-sm" style="display:none" onclick="openTeamMgr()"><i class="bi bi-people me-1"></i>팀원 관리</button></div></div>
     <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
       <div class="btn-group btn-group-sm" role="group">
         <button id="sch-v-today" type="button" class="btn btn-outline-primary" onclick="setSchView('today',this)">오늘</button>
@@ -1661,6 +1661,28 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <span id="hi-editmeta" class="text-muted ms-auto" style="font-size:11px"></span>
       </div>
     </div>
+  </div>
+</div></div></div>
+
+<!-- 일 요약(영업활동 요약) 모달 -->
+<div class="modal fade" id="daySumModal" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content">
+  <div class="modal-header">
+    <h5 class="modal-title"><i class="bi bi-clipboard-check me-1" style="color:#2563eb"></i>영업활동 요약 <span class="text-muted" style="font-size:11px;font-weight:400">· 일정·CDU·상담일지 취합</span></h5>
+    <div class="d-flex align-items-center flex-wrap" style="gap:8px">
+      <div class="btn-group btn-group-sm">
+        <button id="ds-mode-day" type="button" class="btn btn-primary" onclick="_dsMode='day';renderDaySum()">일</button>
+        <button id="ds-mode-week" type="button" class="btn btn-outline-primary" onclick="_dsMode='week';renderDaySum()">주간</button>
+      </div>
+      <button class="btn btn-outline-secondary btn-sm" type="button" onclick="_dsNav(-1)"><i class="bi bi-chevron-left"></i></button>
+      <input type="date" id="ds-date" class="form-control form-control-sm" style="width:auto" onchange="renderDaySum()">
+      <button class="btn btn-outline-secondary btn-sm" type="button" onclick="_dsNav(1)"><i class="bi bi-chevron-right"></i></button>
+      <button type="button" class="btn-close ms-1" data-bs-dismiss="modal"></button>
+    </div>
+  </div>
+  <div class="modal-body" style="background:#f8fafc">
+    <div id="ds-title" style="font-size:13px;font-weight:700;color:#334155;margin-bottom:8px"></div>
+    <div id="ds-stats" class="mb-3"></div>
+    <div id="ds-body"></div>
   </div>
 </div></div></div>
 
@@ -8077,6 +8099,84 @@ async function _schConfirmDone(){
 function _schMine(){ const sel=document.getElementById('sch-sales-filter'); if(!sel)return; const me=_schMe(); if(!me){alert('로그인 정보가 없습니다.');return;} let hit=''; for(const o of sel.options){ if(o.value&&(o.value.includes(me)||me.includes(o.value))){hit=o.value;break;} } if(!hit){alert('"'+me+'" 담당 일정을 찾지 못했어요.');return;} sel.value=hit; renderSchedule(); }
 
 // ── 일일보고 자동 생성((양식1) 일일보고(한국영업팀).docx 그대로) ──
+// ── 일 요약(영업활동 요약): 일정+CDU+상담일지 담당자별 취합 ──
+let _dsMode='day';
+function _dsFmt(dt){ return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); }
+function _dsParse(ds){ const p=String(ds||'').split('-').map(Number); return new Date(p[0],(p[1]||1)-1,p[2]||1); }
+function _dsDow(ds){ return ['일','월','화','수','목','금','토'][_dsParse(ds).getDay()]; }
+function openDaySum(){
+  const d=document.getElementById('ds-date'); if(d&&!d.value) d.value=_schTodayStr();
+  renderDaySum();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('daySumModal')).show();
+}
+function _dsNav(dir){
+  const d=document.getElementById('ds-date'); const dt=_dsParse(d.value||_schTodayStr());
+  dt.setDate(dt.getDate()+dir*(_dsMode==='week'?7:1)); d.value=_dsFmt(dt); renderDaySum();
+}
+function _dsRange(){
+  const dv=document.getElementById('ds-date').value||_schTodayStr();
+  if(_dsMode==='day') return [dv,dv];
+  const dt=_dsParse(dv); const dow=(dt.getDay()+6)%7;
+  const mon=new Date(dt); mon.setDate(dt.getDate()-dow);
+  const sun=new Date(mon); sun.setDate(mon.getDate()+6);
+  return [_dsFmt(mon),_dsFmt(sun)];
+}
+function renderDaySum(){
+  const bd=document.getElementById('ds-mode-day'), bw=document.getElementById('ds-mode-week');
+  if(bd){ bd.className='btn btn-sm '+(_dsMode==='day'?'btn-primary':'btn-outline-primary'); bw.className='btn btn-sm '+(_dsMode==='week'?'btn-primary':'btn-outline-primary'); }
+  const [from,to]=_dsRange();
+  const today=_schTodayStr();
+  const title=document.getElementById('ds-title');
+  if(title) title.textContent=_dsMode==='day' ? (from+' ('+_dsDow(from)+')') : (from+' ('+_dsDow(from)+') ~ '+to+' ('+_dsDow(to)+')');
+  const logs=DB.d.logs||[];
+  const inR=l=>l.date&&l.date>=from&&l.date<=to;
+  const sch=logs.filter(l=>l.kind==='schedule'&&inR(l));
+  const cdu=logs.filter(l=>l.kind==='cdu'&&inR(l));
+  const auto=id=>String(id||'').indexOf('schdone_')===0||String(id||'').indexOf('sdrdone_')===0;
+  const cons=logs.filter(l=>!l.kind&&inR(l)&&!auto(l.id)&&String(l.content||'').indexOf('[일정 완료]')!==0);
+  // 담당자별 그룹(팀원 명단 순서 우선)
+  const items={};
+  const push=(rep,it)=>{ const k=(rep||'').trim()||'(담당 미지정)'; (items[k]=items[k]||[]).push(it); };
+  const gradeChip=g=>{ const c=g==='긍정적'?['#16a34a','#f0fdf4']:g==='보류'?['#d97706','#fffbeb']:g==='거절'?['#dc2626','#fef2f2']:null; return c?'<span style="font-size:10px;font-weight:700;color:'+c[0]+';background:'+c[1]+';border-radius:4px;padding:1px 6px">'+g+'</span>':''; };
+  sch.forEach(l=>{
+    let res='';
+    if(l.done){
+      res='<div style="margin-top:3px;font-size:12px;color:#374151">'+gradeChip(l.resultGrade)+' '+_escH(l.resultMemo||'')+(l.resultComp?' <span style="color:#9ca3af">· 경쟁품: '+_escH(l.resultComp)+'</span>':'')+'</div>';
+      if(!l.resultMemo&&!l.resultGrade) res='<div style="margin-top:3px;font-size:11px;color:#16a34a">완료 처리됨(결과 메모 없음)</div>';
+    } else res='<div style="margin-top:3px;font-size:11px;color:'+(l.date<today?'#dc2626':'#9ca3af')+'">'+(l.date<today?'결과 미입력':'예정')+'</div>';
+    push(l.sales,{date:l.date,ord:l.done?1:0,html:
+      '<span class="badge '+(l.done?'bg-success':'bg-primary')+'" style="font-size:9px">'+_escH(l.type||'방문')+(l.done?' ✓':'')+'</span> <b style="font-size:13px">'+_escH(l.custName||'')+'</b>'+(l.product?' <span style="color:#0891b2;font-size:11px">'+_escH(l.product)+'</span>':'')+(l.content?' <span style="color:#6b7280;font-size:11px">— '+_escH(String(l.content).slice(0,40))+'</span>':'')+res});
+  });
+  cdu.forEach(l=>{
+    const planned=l.status==='planned';
+    push(l.sales,{date:l.date,ord:2,html:
+      '<span class="badge" style="background:#7c3aed;font-size:9px">소모품'+(planned?'':' ✓')+'</span> <b style="font-size:13px">'+_escH(l.custName||'')+'</b>'+(l.mainProc?' <span style="color:#0891b2;font-size:11px">'+_escH(l.mainProc)+'</span>':'')
+      +(planned?'<div style="margin-top:3px;font-size:11px;color:'+(l.date<today?'#dc2626':'#9ca3af')+'">'+(l.date<today?'결과 미입력':'예정')+'</div>'
+               :(l.feedback?'<div style="margin-top:3px;font-size:12px;color:#374151">'+_escH(String(l.feedback).slice(0,80))+(l.competitor?' <span style="color:#9ca3af">· 경쟁: '+_escH(l.competitor)+'</span>':'')+'</div>':''))});
+  });
+  cons.forEach(l=>{
+    push(l.sales,{date:l.date,ord:3,html:
+      '<span class="badge bg-secondary" style="font-size:9px">상담</span> <b style="font-size:13px">'+_escH(l.custName||'')+'</b>'+(l.content?' <span style="color:#6b7280;font-size:12px">— '+_escH(String(l.content).slice(0,60))+'</span>':'')});
+  });
+  // 통계
+  const doneN=sch.filter(l=>l.done).length, resN=sch.filter(l=>l.done&&(l.resultMemo||l.resultGrade)).length;
+  const missN=sch.filter(l=>!l.done&&l.date<today).length + cdu.filter(l=>l.status==='planned'&&l.date<today).length;
+  const stat=(lb,v,c)=>'<div style="flex:1;min-width:100px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:9px 12px;text-align:center"><div style="font-size:10px;color:#6b7280">'+lb+'</div><div style="font-size:18px;font-weight:800;color:'+(c||'#111827')+'">'+v+'</div></div>';
+  document.getElementById('ds-stats').innerHTML='<div style="display:flex;gap:8px;flex-wrap:wrap">'
+    +stat('일정',sch.length+'건')+stat('완료·결과입력',doneN+'건 · '+resN+'건','#16a34a')
+    +stat('소모품(CDU)',cdu.length+'건','#7c3aed')+stat('상담일지',cons.length+'건','#64748b')
+    +stat('결과 미입력',missN+'건',missN?'#dc2626':'#9ca3af')+stat('활동 담당자',Object.keys(items).length+'명','#2563eb')+'</div>';
+  // 담당자 카드
+  const order=[].concat((typeof KOR_SALES_TEAM!=='undefined'?KOR_SALES_TEAM:[]).filter(n=>items[n]), Object.keys(items).filter(n=>(typeof KOR_SALES_TEAM==='undefined'||KOR_SALES_TEAM.indexOf(n)<0)).sort((a,b)=>a.localeCompare(b,'ko')));
+  const body=document.getElementById('ds-body');
+  if(!order.length){ body.innerHTML='<div class="text-center text-muted py-5" style="font-size:13px">이 '+(_dsMode==='day'?'날':'주')+'의 영업활동 기록이 없습니다.</div>'; return; }
+  body.innerHTML=order.map(nm=>{
+    const arr=items[nm].sort((a,b)=>a.date.localeCompare(b.date)||a.ord-b.ord);
+    const rows=arr.map(it=>'<div style="padding:8px 0;border-bottom:1px solid #f1f5f9">'+(_dsMode==='week'?'<span style="font-size:10px;color:#9ca3af;margin-right:6px">'+it.date.slice(5).replace('-','/')+'('+_dsDow(it.date)+')</span>':'')+it.html+'</div>').join('');
+    return '<div class="card p-3 mb-2"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><b style="font-size:14px;color:#1d4ed8">'+_escH(nm)+'</b><span style="font-size:11px;color:#9ca3af">'+arr.length+'건</span></div>'+rows+'</div>';
+  }).join('');
+}
+
 function openSchDaily(){
   var sel=document.getElementById('sdr-sales');
   if(sel){
