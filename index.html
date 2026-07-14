@@ -997,6 +997,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <div class="btn-group btn-group-sm" role="group">
         <button id="cdu-tab-report" class="btn btn-primary" onclick="_cduTab('report')"><i class="bi bi-graph-up-arrow me-1"></i>대시보드</button>
         <button id="cdu-tab-input" class="btn btn-outline-primary" onclick="_cduTab('input')"><i class="bi bi-pencil-square me-1"></i>방문 기록</button>
+        <button id="cdu-tab-target" class="btn btn-outline-primary" onclick="_cduTab('target')"><i class="bi bi-bullseye me-1"></i>타깃 병원</button>
       </div>
     </div>
     <div class="card p-2 mb-3" id="cdu-filterbar">
@@ -1017,6 +1018,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     </div>
     <div id="cdu-report"></div>
     <div id="cdu-input" style="display:none"></div>
+    <div id="cdu-target" style="display:none"></div>
     <div id="cdu-plan" style="display:none"></div>
     <div id="cdu-keyman" style="display:none"></div>
   </div>
@@ -5676,17 +5678,81 @@ function _cduFiltered(){ var r=_cduPeriodRange(); var vs=_cduBaseFiltered(); if(
 function renderCDU(){
   _cduFillSales(); _cduFillPeriodChips();
   var dl=document.getElementById('cdu-hosp-list'); if(dl && CONS.hospitals){ dl.innerHTML=Object.keys(CONS.hospitals).slice(0,800).map(n=>'<option value="'+_cduEsc(n)+'">').join(''); }
-  var fb=document.getElementById('cdu-filterbar'); if(fb) fb.style.display=(_cduView==='keyman'||_cduView==='plan')?'none':'';
+  var fb=document.getElementById('cdu-filterbar'); if(fb) fb.style.display=(_cduView==='keyman'||_cduView==='plan'||_cduView==='target')?'none':'';
+  if(_cduView==='target'){ renderCDUTarget(); return; }
   if(_cduView==='keyman'){ renderCDUKeyman(); return; }
   if(_cduView==='plan'){ renderCDUPlan(); return; }
   var vs=_cduFiltered();
   var cc=document.getElementById('cdu-count'); if(cc) cc.textContent='· '+vs.length+'건 · '+_cduPeriodLabel();
   if(_cduView==='report') renderCDUReport(vs); else renderCDUInput(vs);
 }
+// ── 타깃 병원: 데이터가 찍어주는 다음 방문지 (재구매 도래 + 휴면 장비) ──
+function renderCDUTarget(){
+  var el=document.getElementById('cdu-target'); if(!el) return;
+  var H=(typeof CONS!=='undefined'&&CONS.hospitals)||{};
+  var DVH=(typeof DEVICE!=='undefined'&&DEVICE.hospitals)||{};
+  var todayMs=Date.now();
+  var tipOnly=t=>String(t[2]||'').indexOf('Oligio Tip')===0;
+  // A. 재구매 도래: 팁 구매 3회 이상 병원의 평균 구매 주기 vs 마지막 구매 경과일
+  var due=[];
+  Object.keys(H).forEach(function(n){
+    var h=H[n];
+    var tx=((h.txns2025||[]).concat(h.txns2026||[])).filter(tipOnly);
+    if(tx.length<3) return;
+    var dates=[...new Set(tx.map(t=>t[1]).filter(Boolean))].sort();   // 같은 날 분할 주문은 1회 취급
+    if(dates.length<3) return;
+    var gaps=[]; for(var i=1;i<dates.length;i++){ gaps.push((new Date(dates[i])-new Date(dates[i-1]))/864e5); }
+    var avgGap=gaps.reduce((s,g)=>s+g,0)/gaps.length;
+    if(avgGap<7||avgGap>200) return;                                  // 비정상 주기(일회성·연단위) 제외
+    var since=Math.floor((todayMs-new Date(dates[dates.length-1]).getTime())/864e5);
+    if(since<=avgGap*1.1) return;                                     // 주기+10% 넘겨야 도래로 판단
+    var avgAmt=tx.reduce((s,t)=>s+Number(t[3]||0),0)/dates.length;
+    due.push({n:n, gap:Math.round(avgGap), since:since, over:Math.round(since-avgGap), amt:avgAmt, mgr:_repOf(n)||''});
+  });
+  due.sort((a,b)=>b.amt-a.amt);
+  // B. 휴면 장비: 팁 쓰는 장비(Oligio·Tightan) 보유 병원인데 올해 팁 매출 0 또는 급감
+  var mm=Math.max(1,(typeof _dataMaxMonth==='function'?_dataMaxMonth():6));
+  var tipDev=/oligio|tightan/i;
+  var dormant=[], drop=[];
+  Object.keys(DVH).forEach(function(n){
+    var dv=DVH[n]; if((dv.total||0)<=0) return;
+    var prods=Object.keys(dv.prods||{}).concat(Object.keys(dv.prods2025||{}),Object.keys(dv.prods2026||{}));
+    if(!prods.some(p=>tipDev.test(p))) return;                        // 레이저 전용 병원 제외(팁 무관)
+    var key=H[n]?n:(_cduNMap()[_cduNorm(n)]||null);
+    var y26=key?(H[key].y2026||0):0, y25=key?(H[key].y2025||0):0;
+    var devName=prods.filter(p=>tipDev.test(p))[0]||'';
+    if(y26<=0) dormant.push({n:n, y25:y25, dev:devName, mgr:_repOf(n)||''});
+    else if(y25>0 && (y26*12/mm)<y25*0.4) drop.push({n:n, y25:y25, y26:y26, dev:devName, mgr:_repOf(n)||''});
+  });
+  dormant.sort((a,b)=>b.y25-a.y25); drop.sort((a,b)=>b.y25-a.y25);
+  // 렌더
+  var esc=_cduEsc, LIM=30;
+  var row=function(name,mgr,mid,right){
+    var q=esc(name).replace(/\x27/g,"\\x27");
+    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f1f5f9">'
+      +'<span onclick="openCDUHosp(\''+q+'\')" style="font-size:12.5px;font-weight:700;color:#0f172a;min-width:150px;flex-shrink:0;cursor:pointer">'+esc(name)+' <i class="bi bi-search" style="font-size:9px;color:#cbd5e1"></i></span>'
+      +'<span style="font-size:11.5px;color:#475569;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+mid+'</span>'
+      +'<span style="font-size:12px;font-weight:700;color:#0891b2;flex-shrink:0">'+right+'</span>'
+      +(mgr?'<span style="font-size:10px;color:#94a3b8;flex-shrink:0">'+esc(mgr)+'</span>':'')
+      +'<button class="btn btn-outline-primary btn-sm" style="font-size:10px;padding:1px 8px;flex-shrink:0" onclick="openCDUVisitFor(\''+q+'\')">방문 등록</button></div>';
+  };
+  var more=function(arr){ return arr.length>LIM?'<div style="font-size:11px;color:#9ca3af;margin-top:6px">외 '+(arr.length-LIM)+'곳 (상위 '+LIM+'곳 표시)</div>':''; };
+  var dueHtml=due.slice(0,LIM).map(d=>row(d.n,d.mgr,'주기 <b>'+d.gap+'일</b>인데 마지막 구매 <b style="color:#dc2626">'+d.since+'일 전</b> ('+d.over+'일 초과)','회당 '+_cduWon(d.amt))).join('')||'<div class="text-muted" style="font-size:12px;padding:8px 0">재구매 도래 병원이 없습니다.</div>';
+  var dorHtml=dormant.slice(0,LIM).map(d=>row(d.n,d.mgr,esc(d.dev)+' 보유 · <b style="color:#dc2626">올해 팁 매출 0</b>',d.y25>0?'작년 '+_cduWon(d.y25):'구매이력 없음')).join('')||'<div class="text-muted" style="font-size:12px;padding:8px 0">휴면 병원이 없습니다.</div>';
+  var drpHtml=drop.slice(0,LIM).map(d=>row(d.n,d.mgr,esc(d.dev)+' 보유 · 작년 '+_cduWon(d.y25)+' → 올해 '+_cduWon(d.y26)+' <b style="color:#dc2626">급감</b>','회복 여지 '+_cduWon(Math.max(0,d.y25-d.y26*12/mm)))).join('')||'<div class="text-muted" style="font-size:12px;padding:8px 0">급감 병원이 없습니다.</div>';
+  var dueSum=due.reduce((s,d)=>s+d.amt,0), dorSum=dormant.reduce((s,d)=>s+d.y25,0), drpSum=drop.reduce((s,d)=>s+d.y25,0);
+  var card=function(title,ic,col,badge,inner,tip){ return '<div class="card p-3 mb-3"><div class="d-flex justify-content-between align-items-center mb-1"><div class="fw-bold" style="font-size:13.5px"><i class="bi '+ic+' me-1" style="color:'+col+'"></i>'+title+'</div><span style="font-size:11px;font-weight:700;color:'+col+'">'+badge+'</span></div><div style="font-size:10.5px;color:#9ca3af;margin-bottom:6px">'+tip+'</div>'+inner+'</div>'; };
+  el.innerHTML=
+    '<div style="font-size:12px;color:#64748b;margin-bottom:10px"><i class="bi bi-lightbulb me-1" style="color:#d97706"></i>실제 구매 데이터가 찍어주는 <b>다음 방문 우선순위</b>입니다. 병원명 클릭 = 이력 조회 · [방문 등록] = 바로 일정 잡기</div>'
+    +card('재구매 도래','bi-arrow-repeat','#2563eb',due.length+'곳 · 회당 합계 '+_cduWon(dueSum),dueHtml,'평균 구매 주기가 지났는데 아직 재구매하지 않은 병원 — 지금 방문하면 주문 가능성이 가장 높은 곳(회당 평균 구매액 순)')
+    +card('휴면 장비 병원','bi-battery','#dc2626',dormant.length+'곳 · 작년 팁매출 '+_cduWon(dorSum),dorHtml,'Oligio·Tightan 장비를 보유하고 있는데 올해 팁 매출이 0인 병원 — 장비 방치 또는 경쟁 소모품 사용 의심(작년 매출 순)')
+    +card('구매 급감 병원','bi-graph-down-arrow','#ea580c',drop.length+'곳 · 작년 팁매출 '+_cduWon(drpSum),drpHtml,'작년 대비 올해 팁 구매가 60% 이상 줄어든 병원(연환산 기준) — 이탈 전 방어 방문 필요');
+}
 function _cduTab(t){ _cduView=t;
-  ['report','input','plan','keyman'].forEach(function(x){ var b=document.getElementById('cdu-tab-'+x); if(b) b.className='btn btn-'+(x===t?'primary':'outline-primary'); });
+  ['report','input','target','plan','keyman'].forEach(function(x){ var b=document.getElementById('cdu-tab-'+x); if(b) b.className='btn btn-'+(x===t?'primary':'outline-primary'); });
   document.getElementById('cdu-report').style.display=t==='report'?'':'none';
   document.getElementById('cdu-input').style.display=t==='input'?'':'none';
+  var tg=document.getElementById('cdu-target'); if(tg) tg.style.display=t==='target'?'':'none';
   document.getElementById('cdu-plan').style.display=t==='plan'?'':'none';
   document.getElementById('cdu-keyman').style.display=t==='keyman'?'':'none';
   var ab=document.getElementById('cdu-add-btn'); if(ab){
