@@ -1861,8 +1861,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   .qed-total .amt .won{color:var(--orange);margin-right:2px}
   .qed-tblwrap{overflow-x:auto}
   .qed-tbl{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed}
-  .qed-tbl thead th{font-size:10px;font-weight:800;letter-spacing:.04em;color:var(--mut);text-transform:uppercase;padding:0 8px 11px;border-bottom:1.5px solid var(--ink);text-align:left;white-space:nowrap}
-  .qed-tbl thead th.r{text-align:right}.qed-tbl thead th.c{text-align:center}
+  .qed-tbl thead th{font-size:10px;font-weight:800;letter-spacing:.04em;color:var(--mut);text-transform:uppercase;padding:0 8px 11px;border-bottom:1.5px solid var(--ink);text-align:center;white-space:nowrap}
+  .qed-tbl thead th.r{text-align:center}.qed-tbl thead th.c{text-align:center}
   .qed-tbl tbody td{padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:middle}
   .qed-tbl .no{color:var(--mut);text-align:center;font-size:11px;font-variant-numeric:tabular-nums}
   .qed-tbl .amt-cell{text-align:right;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;padding-right:8px}
@@ -1950,7 +1950,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <tr class="g"><td class="k">합계 <span style="font-size:10px;font-weight:600;color:var(--mut)">VAT 포함</span></td><td class="v" id="qed-total-sum"><span class="won">₩</span> 0</td></tr>
       </table></div>
       <div class="qed-foot">
-        <div class="qed-terms"><span><b>유효기간</b> <input class="f" id="qed-t1" style="width:100px" value="견적 후 30일"></span><span><b>납품기일</b> <input class="f" id="qed-t2" style="width:118px" value="계약 후 3일 이내"></span><span><b>결제조건</b> <input class="f" id="qed-t3" style="width:76px" value="선입금"></span><span><b>납품처</b> <input class="f" id="qed-t4" style="width:86px" value="지정장소"></span></div>
+        <div class="qed-terms"><span><b>납품기일</b> <input class="f" id="qed-t2" style="width:118px" value="계약 후 3일 이내"></span><span><b>결제조건</b> <input class="f" id="qed-t3" style="width:76px" value="선입금"></span><span><b>납품처</b> <input class="f" id="qed-t4" style="width:86px" value="지정장소"></span></div>
         <div class="qed-memo"><textarea id="qed-note" placeholder="특이사항·협의 내용을 입력하세요 (설치·교육·소모품 조건 등)"></textarea></div>
         <div class="qed-tagline">원텍 주식회사 · www.wtlaser.com · 본 견적서는 발행일로부터 30일간 유효합니다.</div>
       </div>
@@ -6511,7 +6511,7 @@ function QDOC(q,tmpl){
   const total=Number(q.total||0);
   const INK='#1a1714',MUT='#8f8a82',CLAY='#ff4d00',LINE='#ece9e4',CREAM='#faf9f7';
   const logo = _wtLogo('#ff4d00','116');   // 정확한 CI(SVG) 고정 사용
-  const _tv=(q.terms&&q.terms.length===4)?q.terms.map(x=>_qEscH(x)):[(q.validUntil?_qEscH(fmtDate(q.validUntil)+' 까지'):'견적 후 30일'),'계약 후 3일 이내','선입금','지정장소']; const termsList=['유효기간 : '+_tv[0],'납품기일 : '+_tv[1],'결제조건 : '+_tv[2],'납품처 : '+_tv[3]];
+  const _tv=(q.terms&&q.terms.length===4)?q.terms.map(x=>_qEscH(x)):[(q.validUntil?_qEscH(fmtDate(q.validUntil)+' 까지'):'견적 후 30일'),'계약 후 3일 이내','선입금','지정장소']; const termsList=['납품기일 : '+_tv[1],'결제조건 : '+_tv[2],'납품처 : '+_tv[3]];
 
   if(tmpl==='classic'){
     // 양식 1 — 격식 있는 정식 견적서, 헤어라인 톤으로 재정리
