@@ -1700,10 +1700,10 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <textarea id="schd-memo" class="form-control form-control-sm mb-2" rows="6" style="font-size:13px;line-height:1.6" placeholder="예: 원장님 관심 있음, 다음달 예산 편성 후 재문의 예정&#10;&#10;장비 반응, 경쟁사 대비 의견, 정책 관련 이야기 등 현장에서 들은 그대로 구체적으로"></textarea>
     <label class="form-label" style="font-size:12px">경쟁품 현황 <span class="text-muted">(선택 · 일일보고 경쟁품 칸)</span></label>
     <input id="schd-comp" class="form-control form-control-sm mb-2" placeholder="예: RF: 써마지 / HIFU: 울쎄라">
-    <label class="form-label" style="font-size:12px">다음 방문 잡을까요?</label>
+    <label class="form-label" style="font-size:12px">다음 일정이 있을까요?</label>
     <div class="d-flex gap-2 mb-2" id="schd-next-btns">
-      <button type="button" class="btn btn-outline-primary btn-sm flex-fill" onclick="_schPickNext('7',this)">+1주</button>
-      <button type="button" class="btn btn-outline-primary btn-sm flex-fill" onclick="_schPickNext('14',this)">+2주</button>
+      <select id="schd-next-type" class="form-select form-select-sm" style="width:auto;flex-shrink:0"><option>방문</option><option>콜</option><option>데모</option><option>A/S</option><option>기타</option></select>
+      <button type="button" class="btn btn-outline-primary btn-sm flex-fill" onclick="_schPickNext('pick',this)"><i class="bi bi-calendar3 me-1"></i>일정 선택</button>
       <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" onclick="_schPickNext('none',this)">안 잡음</button>
     </div>
     <input type="date" id="schd-next-date" class="form-control form-control-sm" style="display:none" oninput="_schDoneState.nextDate=this.value">
@@ -7743,7 +7743,7 @@ function _schPickNext(v,btn){
   _schDoneState.nextChoice=v;
   const inp=document.getElementById('schd-next-date');
   if(v==='none'){ inp.style.display='none'; inp.value=''; _schDoneState.nextDate=''; }
-  else { const d=new Date(); d.setDate(d.getDate()+parseInt(v,10)); const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); inp.value=ds; inp.style.display='block'; _schDoneState.nextDate=ds; }
+  else { inp.style.display='block'; _schDoneState.nextDate=inp.value||''; try{ inp.focus(); if(inp.showPicker) inp.showPicker(); }catch(e){} }
 }
 async function _schConfirmDone(){
   const id=document.getElementById('schd-id').value;
@@ -7766,12 +7766,13 @@ async function _schConfirmDone(){
   }
   // 다음 방문 원클릭 예약
   if(nextDate){
-    DB.d.logs.push({id:uid(),kind:'schedule',custName:l.custName,date:nextDate,time:'',type:l.type||'방문',product:l.product||'',content:(result?'('+result+' 후속) ':'')+'다음 방문',sales:l.sales||by,done:false,dealId:l.dealId||''});
+    const nType=((document.getElementById('schd-next-type')||{}).value)||l.type||'방문';
+    DB.d.logs.push({id:uid(),kind:'schedule',custName:l.custName,date:nextDate,time:'',type:nType,product:l.product||'',content:(result?'('+result+' 후속) ':'')+'다음 '+nType,sales:l.sales||by,done:false,dealId:l.dealId||''});
   }
   try{ bootstrap.Modal.getInstance(document.getElementById('schDoneModal')).hide(); }catch(e){}
   renderSchedule();
   try{ if(document.getElementById('page-dashboard').classList.contains('active')) renderDashboard(); }catch(e){}
-  showToast(nextDate?('완료 처리 + 다음 방문 '+nextDate+' 등록됨'):'완료 처리됨', true);
+  showToast(nextDate?('완료 처리 + 다음 일정 '+nextDate+' 등록됨'):'완료 처리됨', true);
   await Promise.all(saves);
 }
 function _schMine(){ const sel=document.getElementById('sch-sales-filter'); if(!sel)return; const me=_schMe(); if(!me){alert('로그인 정보가 없습니다.');return;} let hit=''; for(const o of sel.options){ if(o.value&&(o.value.includes(me)||me.includes(o.value))){hit=o.value;break;} } if(!hit){alert('"'+me+'" 담당 일정을 찾지 못했어요.');return;} sel.value=hit; renderSchedule(); }
