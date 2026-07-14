@@ -7898,21 +7898,34 @@ function renderSchDaily(force){
     data={part:_pt, author:saved.author||R, rows:(saved.rows||[]).slice(), stats:(saved.stats||['','','','']).slice(), opinion:saved.opinion||''};
   } else {
     var rows=[];
+    var _gen=l=>l.kind!=='schedule'&&l.kind!=='cdu'&&l.kind!=='cdu_meta'&&l.kind!=='cdu_key'&&l.kind!=='cdu_plan'&&l.kind!=='cdu_note'&&l.kind!=='sdr';   // 상담일지 등 일반 로그
+    var usedLog=new Set();
     logs.filter(l=>l.kind==='schedule'&&l.date===D&&(l.sales||'').trim()===R).forEach(function(s){
       var reaction='';
       if(s.resultMemo||s.resultGrade){ reaction=(s.resultGrade?'['+s.resultGrade+'] ':'')+(s.resultMemo||''); }   // 완료 모달의 구조화 결과 우선
-      else { var res=logs.find(l=>l.kind!=='schedule'&&(l.custName||'')===s.custName&&String(l.content||'').indexOf('[일정 완료]')===0&&l.date===D);
-        reaction=res?String(res.content).replace('[일정 완료] ',''):(s.done?'완료':''); }
+      else {
+        var res=logs.find(l=>_gen(l)&&(l.custName||'')===s.custName&&String(l.content||'').indexOf('[일정 완료]')===0&&l.date===D);
+        if(!res) res=logs.find(l=>_gen(l)&&(l.custName||'')===s.custName&&l.date===D&&(l.content||'').trim());   // 같은 날 상담일지도 반응으로
+        if(res){ usedLog.add(res.id); reaction=String(res.content).replace('[일정 완료] ',''); }
+        else reaction=(s.done?'완료':'');
+      }
       var comp=s.resultComp||_sdrCompFor((s.custName||'').trim());
       rows.push({sid:s.id, hosp:s.custName||'', purpose:((s.type&&s.type!=='방문')?('['+s.type+'] '):'')+(s.content||'')+(s.product?' — '+s.product:''), reaction:reaction, comp:comp});
     });
     logs.filter(l=>l.kind==='cdu'&&l.status!=='planned'&&String(l.date||'').slice(0,10)===D&&(l.sales||'').trim()===R).forEach(function(v){
       rows.push({hosp:v.custName||'', purpose:'[소모품] '+(v.mainProc?v.mainProc+' ':'')+'방문'+(v.price?' · 수가 '+v.price+'천':''), reaction:(v.feedback||''), comp:(v.competitor||'')});
     });
+    // 일정에 안 잡혀 있어도 그날 쓴 상담일지는 활동으로 포함
+    logs.filter(l=>_gen(l)&&l.date===D&&(l.sales||'').trim()===R&&!usedLog.has(l.id)&&String(l.content||'').indexOf('[일정 완료]')!==0&&(l.custName||'').trim()).forEach(function(l){
+      rows.push({hosp:l.custName||'', purpose:'[상담] '+(l.type||'')+(l.product?' — '+l.product:''), reaction:(l.content||''), comp:_sdrCompFor((l.custName||'').trim())});
+    });
     var uniq=new Set(rows.map(r=>r.hosp).filter(Boolean));
     var demoN=logs.filter(l=>l.kind==='schedule'&&l.date===D&&(l.sales||'').trim()===R&&l.type==='데모').length;
-    var _team='한국영업1파트'; try{ _team=localStorage.getItem('wt_sdr_team')||_team; }catch(e){}
-    var _rk=''; if(typeof _isMgr!=='undefined'&&_isMgr){ _rk='파트장'; } else { try{ _rk=localStorage.getItem('wt_qrank')||''; }catch(e){} if(_rk==='파트장'||_rk==='팀장') _rk=''; }
+    // 부서·직급 = 팀원 명단(kor_team) 기준: 선택된 작성자의 실제 파트·직급
+    var _mem=null; try{ _mem=(KOR_TEAM||[]).find(x=>(x.name||'').trim()===R)||null; }catch(e){}
+    var _team=_mem&&_mem.dept?('한국영업'+String(_mem.dept).replace(/^한국영업/,'')):'한국영업1파트';
+    if(!_mem){ try{ _team=localStorage.getItem('wt_sdr_team')||_team; }catch(e){} }
+    var _rk=(_mem&&(_mem.pos||'').trim())||'';
     data={part:_team, author:R+(_rk?' '+_rk:''), rows:rows, stats:[String(uniq.size||''),'',String(demoN||''),''], opinion:rows.filter(r=>r.reaction).slice(0,5).map(r=>r.hosp+' : '+r.reaction).join('\n')};
   }
   var st=document.getElementById('sdr-status');
