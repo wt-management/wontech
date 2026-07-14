@@ -6249,9 +6249,9 @@ function _qedMakeRow(it){
     +'<td><input class="f" data-k="name" list="qed-dev-list" placeholder="제품명(장비 선택 시 부속품 자동)" value="'+_qedA(it.name)+'" onchange="_qedDevPick(this)"></td>'
     +'<td><input class="f" data-k="spec" placeholder="규격" value="'+_qedA(it.spec)+'"></td>'
     +'<td><input class="f" data-k="unit" style="text-align:center" value="'+_qedA(it.unit||'EA')+'"></td>'
-    +'<td><input class="f num" data-k="qty" inputmode="numeric" value="'+(it.qty!=null?it.qty:1)+'" oninput="_qedCalc()"></td>'
-    +'<td><input class="f num" data-k="price" inputmode="numeric" placeholder="0" value="'+(it.price!==''&&it.price!=null?_qedFmt(it.price):'')+'" oninput="_qedCalc()" onblur="var n=_qedParse(this.value);this.value=n?_qedFmt(n):\'\'"></td>'
-    +'<td class="amt-cell" data-amt>0</td>'
+    +'<td><input class="f num" data-k="qty" inputmode="numeric" value="'+(it.qty!=null?it.qty:1)+'" oninput="_qedRowQP(this)"></td>'
+    +'<td><input class="f num" data-k="price" inputmode="numeric" placeholder="0" value="'+(it.price!==''&&it.price!=null?_qedFmt(it.price):'')+'" oninput="_qedRowQP(this)" onblur="var n=_qedParse(this.value);this.value=n?_qedFmt(n):\'\'"></td>'
+    +'<td><input class="f num" data-k="amt" inputmode="numeric" placeholder="0" value="'+(function(){var a=(it.amount!=null&&it.amount!=='')?it.amount:((it.qty&&it.price)?Math.round(it.qty*it.price):''); return a?_qedFmt(a):'';})()+'" oninput="_qedRowAmt(this)" onblur="var n=_qedParse(this.value);this.value=n?_qedFmt(n):\'\'"></td>'
     +'<td><input class="f" data-k="note" placeholder="—" value="'+_qedA(it.note)+'"></td>'
     +'<td><button type="button" class="qed-rowdel" title="삭제" onclick="this.closest(\'tr\').remove();_qedCalc()">×</button></td>';
   return tr;
@@ -6268,15 +6268,29 @@ function _qedDevPick(inp){
   });
   _qedCalc();
 }
+// 수량·단가 입력 → 금액 자동 / 금액 입력 → 단가 자동 역산 (양방향)
+function _qedRowQP(el){
+  const tr=el.closest('tr'); if(!tr) return;
+  const qty=_qedParse(tr.querySelector('[data-k=qty]').value);
+  const price=_qedParse(tr.querySelector('[data-k=price]').value);
+  const amt=tr.querySelector('[data-k=amt]');
+  if(amt) amt.value=(qty&&price)?_qedFmt(Math.round(qty*price)):'';
+  _qedCalc();
+}
+function _qedRowAmt(el){
+  const tr=el.closest('tr'); if(!tr) return;
+  const qty=_qedParse(tr.querySelector('[data-k=qty]').value)||1;
+  const a=_qedParse(el.value);
+  const p=tr.querySelector('[data-k=price]');
+  if(p) p.value=a?_qedFmt(Math.round(a/qty)):'';
+  _qedCalc();
+}
 function _qedCalc(){
   let total=0,i=1;
   document.querySelectorAll('#qed-rows tr').forEach(function(tr){
     tr.querySelector('.no').textContent=i++;
-    const qty=_qedParse(tr.querySelector('[data-k=qty]').value);
-    const price=_qedParse(tr.querySelector('[data-k=price]').value);   // 입력단가 = 부가세 포함
-    const amt=Math.round(qty*price);
-    tr.querySelector('[data-amt]').textContent=_qedFmt(amt);
-    total+=amt;
+    const ai=tr.querySelector('[data-k=amt]');   // 금액(부가세 포함)이 합계의 기준
+    total+=_qedParse(ai?ai.value:'');
   });
   const supply=Math.round(total/1.1), vat=total-supply;   // VAT 포함액 → 공급가액·부가세 역산
   document.getElementById('qed-sub').textContent=_qedFmt(supply)+' 원';
@@ -6291,8 +6305,13 @@ function _qedCollect(){
   document.querySelectorAll('#qed-rows tr').forEach(function(tr){
     const g=k=>tr.querySelector('[data-k='+k+']');
     const name=(g('name').value||'').trim(); if(!name) return;
-    const qty=_qedParse(g('qty').value)||1, price=_qedParse(g('price').value);
-    items.push({name, spec:(g('spec').value||'').trim(), unit:(g('unit').value||'EA').trim(), qty, price, amount:Math.round(qty*price), note:(g('note').value||'').trim()});
+    const qty=_qedParse(g('qty').value)||1;
+    let price=_qedParse(g('price').value);
+    const amtEl=g('amt');
+    let amount=amtEl?_qedParse(amtEl.value):0;
+    if(!amount&&price) amount=Math.round(qty*price);      // 금액 미입력 → 단가×수량
+    if(!price&&amount) price=Math.round(amount/qty);      // 단가 미입력 → 금액에서 역산
+    items.push({name, spec:(g('spec').value||'').trim(), unit:(g('unit').value||'EA').trim(), qty, price, amount, note:(g('note').value||'').trim()});
   });
   const total=items.reduce((s,it)=>s+it.amount,0);   // 입력금액 = 부가세 포함
   const subtotal=Math.round(total/1.1), vat=total-subtotal;   // 공급가액·부가세 역산
