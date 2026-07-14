@@ -8014,13 +8014,13 @@ function renderSchDaily(force){
     var usedLog=new Set();
     logs.filter(l=>l.kind==='schedule'&&l.date===D&&(l.sales||'').trim()===R).forEach(function(s){
       var reaction='', extComp='';
-      if(s.resultMemo||s.resultGrade){ reaction=(s.resultGrade?'['+s.resultGrade+'] ':'')+(s.resultMemo||''); }   // 완료 모달의 구조화 결과 우선
+      if(s.resultMemo||s.resultGrade){ reaction=(s.resultMemo||'').trim(); }   // 완료 모달의 구조화 결과 우선(등급 표기는 보고서에서 생략)
       else {
         // 완료 기록은 '처리한 날'로 저장되므로 날짜 무관하게 병원 기준 매칭(일정일 이후 가장 가까운 것)
         var res=logs.filter(l=>_gen(l)&&(l.custName||'')===s.custName&&String(l.content||'').indexOf('[일정 완료]')===0&&String(l.date||'')>=s.date&&!usedLog.has(l.id)).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')))[0];
         if(!res) res=logs.find(l=>_gen(l)&&(l.custName||'')===s.custName&&l.date===D&&(l.content||'').trim()&&!usedLog.has(l.id));   // 같은 날 상담일지도 반응으로
         if(res){ usedLog.add(res.id);
-          var txt=String(res.content).replace('[일정 완료] ','');
+          var txt=String(res.content).replace('[일정 완료] ','').replace(/^\[(긍정적|보류|거절)\]\s*/,'');
           var cm=txt.match(/\s*\/\s*경쟁품:\s*(.+)$/);                       // '… / 경쟁품: X'는 경쟁품 칸으로 분리
           if(cm){ extComp=cm[1].trim(); txt=txt.replace(cm[0],'').trim(); }
           reaction=txt;
