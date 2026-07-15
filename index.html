@@ -2005,7 +2005,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <button id="qtmpl-premium" type="button" class="btn btn-outline-primary active" onclick="setQuoteTmpl('premium')">양식 1</button>
         <button id="qtmpl-classic" type="button" class="btn btn-outline-primary" onclick="setQuoteTmpl('classic')">양식 2</button>
       </div>
-      <span id="q-roi-wrap" style="display:none;align-items:center;gap:4px;font-size:12px;color:#374151"><input type="checkbox" id="q-inc-roi" checked style="accent-color:#16a34a">ROI 분석 포함</span>
+      <span id="q-roi-wrap" style="display:none;align-items:center;gap:4px;font-size:12px;color:#374151"><input type="checkbox" id="q-inc-roi" checked style="accent-color:#16a34a" onchange="_qRender()">ROI 요약 포함</span>
       <button class="btn btn-success btn-sm" onclick="quotePDF()"><i class="bi bi-file-earmark-pdf me-1"></i>PDF 다운로드</button>
       <button class="btn btn-outline-secondary btn-sm" onclick="quotePDF()"><i class="bi bi-printer me-1"></i>인쇄</button>
       <button type="button" class="btn-close ms-1" data-bs-dismiss="modal"></button>
@@ -6693,35 +6693,20 @@ function _qRender(){ const el=document.getElementById('print-content'); if(el&&_
 function viewQuote(id){ const q=DB.d.quotes.find(x=>x.id===id); if(!q)return; _qCur=q; const rw=document.getElementById('q-roi-wrap'); if(rw) rw.style.display=q.roi?'inline-flex':'none'; setQuoteTmpl(_qTmpl); new bootstrap.Modal(document.getElementById('quotePrintModal')).show(); }
 function quotePDF(){ if(!_qCur)return; const w=window.open('','_blank'); if(!w){alert('팝업이 차단되었습니다. 팝업 허용 후 다시 시도하세요.');return;}
   const fn='견적서_'+(_qCur.custName||'')+'_'+(_qCur.quoteDate||'').replace(/-/g,'');
-  const _incRoi=!!(_qCur.roi && document.getElementById('q-inc-roi') && document.getElementById('q-inc-roi').checked);
-  w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+_qEscH(fn)+'</title><style>@page{size:A4;margin:0}body{margin:0;padding:8mm 10mm;font-family:"Malgun Gothic",sans-serif;background:#fff}.qfoot{position:fixed;bottom:6mm;left:10mm;right:10mm;background:#fff}</style></head><body><div id="qwrap">'+QDOC(_qCur,_qTmpl)+'</div>'+(_incRoi?'<div id="roiwrap" style="page-break-before:always">'+ROIDOC(_qCur)+'</div>':'')+'<script>window.onload=function(){requestAnimationFrame(function(){requestAnimationFrame(function(){var pageH=1000;var el=document.getElementById("qwrap");var h=Math.max(el.scrollHeight,Math.ceil(el.getBoundingClientRect().height));if(h>pageH){el.style.zoom=Math.max(0.5,pageH/h).toFixed(3);}setTimeout(function(){window.print();},180);});});};<\/script></body></html>');
+  w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+_qEscH(fn)+'</title><style>@page{size:A4;margin:0}body{margin:0;padding:8mm 10mm;font-family:"Malgun Gothic",sans-serif;background:#fff}.qfoot{position:fixed;bottom:6mm;left:10mm;right:10mm;background:#fff}</style></head><body><div id="qwrap">'+QDOC(_qCur,_qTmpl)+'</div><script>window.onload=function(){requestAnimationFrame(function(){requestAnimationFrame(function(){var pageH=1000;var el=document.getElementById("qwrap");var h=Math.max(el.scrollHeight,Math.ceil(el.getBoundingClientRect().height));if(h>pageH){el.style.zoom=Math.max(0.5,pageH/h).toFixed(3);}setTimeout(function(){window.print();},180);});});};<\/script></body></html>');
   w.document.close();
 }
-function ROIDOC(q){   // 견적서에 첨부되는 ROI 분석 페이지(양식1 톤)
-  const s=q.roi||{}, r=s.r||{};
-  const INK='#1a1a1a', MUT='#8a8a8a', LINE='#e3e3e3', CLAY='#c8551b';
+function _qRoiLine(q){   // 견적서 비고 하단 ROI 요약(1장 유지, 회수 일수 주황 강조)
+  const s=q.roi, r=(s&&s.r)||{}; if(!s) return '';
+  const chk=document.getElementById('q-inc-roi'); if(chk&&!chk.checked) return '';
+  const CLAY='#c8551b', INK='#1a1a1a', MUT='#8a8a8a';
+  const kr=v=>{ v=Math.round(v||0); if(v>=1e8){ const e=Math.floor(v/1e8), m2=Math.round(v%1e8/1e4); return e+'억'+(m2?' '+m2.toLocaleString()+'만':''); } if(v>=1e4) return Math.round(v/1e4).toLocaleString()+'만원'; return v.toLocaleString()+'원'; };
   const won=v=>Math.round(v||0).toLocaleString('ko-KR');
-  const kr=v=>{ v=Math.round(v||0); if(v>=1e8){ const e=Math.floor(v/1e8), m=Math.round(v%1e8/1e4); return e+'억'+(m?' '+m.toLocaleString()+'만':''); } if(v>=1e4) return Math.round(v/1e4).toLocaleString()+'만원'; return v.toLocaleString()+'원'; };
-  const day=v=>(!isFinite(v)||v<=0)?'-':(v.toFixed(1)+'일');
-  const mos=v=>(!isFinite(v)||v<=0)?'':('약 '+(v/25).toFixed(1)+'개월 (영업일 월 25일 기준)');
-  const cell=x=>'<div style="flex:1;min-width:128px"><div style="font-size:10px;color:'+MUT+';font-weight:700;letter-spacing:.06em">'+x[0]+'</div><div style="font-size:13px;font-weight:700;color:'+INK+';margin-top:2px">'+x[1]+'</div></div>';
-  const item=(l,v,hi)=>'<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 2px;border-bottom:1px solid '+LINE+';font-size:13px"><span style="color:'+MUT+'">'+l+'</span><b style="font-size:14px;color:'+(hi?CLAY:INK)+'">'+v+'</b></div>';
-  let cells='', rows='';
-  if(s.mode==='rf'){
-    cells=[['패키지 가격',won(s.packagePrice)+' 원'],['제공 소모품',won(s.consumableCount)+'개'],['1회 시술 샷수',won(s.shotsPerTreatment)+' 샷'],['팁당 총 샷수',won(s.tipShots)+' 샷'],['1회 시술단가',won(s.pricePerTreatment)+' 원'],['일 시술 횟수',won(s.treatmentsPerDay)+'회']].map(cell).join('');
-    rows=item('하루 매출',kr(r.dailyRevenue))+item('총 시술 가능 횟수',won(r.totalTreatments)+'회')+item('총 매출(소모품 완주 시)',kr(r.totalRevenue))+item('패키지 총 순수익',kr(r.pureProfit),1);
-  }else{
-    cells=[['장비 가격',won(s.equipmentPrice)+' 원'],['1회 시술단가',won(s.sessionUnitPrice)+' 원'],['티케팅수',won(s.ticketingCount)+'회'],['고객수',won(s.customerCount)+'명/일']].map(cell).join('');
-    rows=item('하루 매출',kr(r.dailyRevenue))+item('월 매출(영업일 25일)',kr(r.monthlyRevenue||r.dailyRevenue*25),1);
-  }
-  return '<div style="max-width:760px;margin:0 auto;color:'+INK+'">'
-    +'<div style="height:6px;background:'+CLAY+';margin-bottom:26px"></div>'
-    +'<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px"><div style="font-size:23px;font-weight:900;letter-spacing:.02em">투자 회수(ROI) 분석</div><div style="font-size:11px;color:'+MUT+'">'+_qEscH(q.id||'')+' · '+_qEscH(q.custName||'')+(s.hosp&&s.hosp!==q.custName?' · '+_qEscH(s.hosp):'')+'</div></div>'
-    +'<div style="margin:24px 0;padding:26px 20px;border:1px solid '+LINE+';text-align:center"><div style="font-size:11px;letter-spacing:.18em;color:'+MUT+';font-weight:800">원금 회수 기간</div><div style="font-size:44px;font-weight:900;color:'+CLAY+';margin-top:6px;line-height:1">'+day(r.paybackDays)+'</div><div style="font-size:12px;color:'+MUT+';margin-top:8px">'+mos(r.paybackDays)+'</div></div>'
-    +'<div style="display:flex;gap:12px 18px;flex-wrap:wrap;padding:14px 2px;border-top:2px solid '+INK+';border-bottom:1px solid '+LINE+'">'+cells+'</div>'
-    +'<div style="margin-top:6px">'+rows+'</div>'
-    +'<div style="margin-top:18px;font-size:10px;color:'+MUT+'">※ 본 분석은 입력 조건 기준의 단순 추정치이며, 실제 성과는 병원 운영 상황에 따라 달라질 수 있습니다.</div>'
-  +'</div>';
+  const dayB='<b style="color:'+CLAY+';font-size:13.5px">'+((isFinite(r.paybackDays)&&r.paybackDays>0)?(r.paybackDays.toFixed(1)+'일'):'-')+'</b>';
+  let txt='';
+  if(s.mode==='rf') txt='원금 회수 기간 '+dayB+' <span style="color:'+MUT+'">(1회 '+won(s.pricePerTreatment)+'원 × 일 '+won(s.treatmentsPerDay)+'회 · 하루 매출 '+kr(r.dailyRevenue)+')</span> · 소모품 완주 시 총 순수익 <b>'+kr(r.pureProfit)+'</b>';
+  else txt='장비 원금 회수 기간 '+dayB+' <span style="color:'+MUT+'">(1회 '+won(s.sessionUnitPrice)+'원 × '+won(s.ticketingCount)+'회 × '+won(s.customerCount)+'명 · 하루 매출 '+kr(r.dailyRevenue)+')</span> · 월 매출(영업일 25일) <b>'+kr(r.monthlyRevenue||r.dailyRevenue*25)+'</b>';
+  return '<div style="margin-top:10px;border-left:3px solid '+CLAY+';padding:7px 12px;font-size:11.5px;color:'+INK+'"><b style="color:'+CLAY+';letter-spacing:.06em">ROI 분석</b> · '+txt+'</div>';
 }
 function QDOC(q,tmpl){
   const items=q.items||[]; const won=v=>Number(v||0).toLocaleString('ko-KR');
@@ -6777,6 +6762,7 @@ function QDOC(q,tmpl){
           +'<tr><td style="padding:6px 14px;color:'+MUT+';border-bottom:1px solid '+LINE+'"><span style="display:inline-flex;width:86px;justify-content:space-between"><span style="display:inline-flex;width:48px;justify-content:space-between"><span>부</span><span>가</span><span>세</span></span><span>(10%)</span></span></td><td style="padding:6px 0;text-align:right;font-weight:600;border-bottom:1px solid '+LINE+'">'+won(q.vat)+' 원</td></tr>'
           +'<tr><td style="padding:12px 14px 0;font-weight:800;font-size:15px;color:'+INK+'"><span style="display:inline-flex;width:86px;justify-content:space-between"><span>합</span><span>계</span></span></td><td style="padding:12px 0 0;text-align:right;font-weight:800;font-size:19px;color:'+INK+'">₩ '+won(total)+'</td></tr></table></div>'
       +'<div style="margin-top:14px;padding-top:10px;border-top:1px solid '+LINE+';font-size:11.5px;color:'+MUT+';line-height:2">'+termsList.map((t,i)=>(i+1)+'. '+t).join('　　')+(q.note?'<div style="margin-top:8px;color:'+INK+';font-size:13px;font-weight:600">※ '+_qEscH(q.note)+'</div>':'')+'</div>'
+      +_qRoiLine(q)
       +'<div class="qfoot" style="margin-top:20px;border-top:1px solid '+LINE+';padding:10px 0 4px;text-align:center;font-size:10px;letter-spacing:.14em;color:'+MUT+';font-weight:700">'+WT_SUP.web+'</div>'
     +'</div>';
   }
@@ -6842,6 +6828,7 @@ function QDOC(q,tmpl){
         +termsList.map((t,i)=>'<span><b style="color:'+INK+';font-variant-numeric:tabular-nums">'+String(i+1).padStart(2,'0')+'</b>&nbsp; '+t+'</span>').join('')
       +'</div>'
       +(q.note?'<div style="margin-top:12px;border-left:3px solid '+CLAY+';padding:8px 12px;font-size:12.5px;color:'+INK+';font-weight:600;white-space:pre-line">'+_qEscH(q.note)+'</div>':'')
+      +_qRoiLine(q)
     +'</div>'
     +'<div class="qfoot" style="margin-top:24px;border-top:1px solid '+LINE+';padding:12px 40px 16px;text-align:center;font-size:10px;letter-spacing:.14em;color:'+MUT+';font-weight:700">'
       +WT_SUP.web
@@ -9720,7 +9707,7 @@ window.addEventListener('popstate', function(e) {
   function _roiBannerFor(q){
     const items=(q.items||[]).slice().sort((a,b)=>Number(b.amount||0)-Number(a.amount||0));
     const dev=(items[0]&&items[0].name)||'';
-    _roiBanner('<i class="bi bi-file-earmark-text me-1"></i>견적 <b>'+q.id+'</b> · '+(q.custName||'')+' · 합계 '+_kr(Number(q.total||0))+(dev?' · '+dev:'')+' 기준&nbsp; <button class="btn btn-sm btn-outline-primary" style="font-size:11px;padding:2px 10px" onclick="roiSaveToQuote()">이 분석을 견적서에 담기</button>'+(q.roi?' <span style="color:#16a34a;font-size:11px">✓ 저장됨 — 인쇄 시 [ROI 분석 포함]으로 출력</span>':''));
+    _roiBanner('<i class="bi bi-file-earmark-text me-1"></i>견적 <b>'+q.id+'</b> · '+(q.custName||'')+' · 합계 '+_kr(Number(q.total||0))+(dev?' · '+dev:'')+' 기준&nbsp; <button class="btn btn-sm btn-outline-primary" style="font-size:11px;padding:2px 10px" onclick="roiSaveToQuote()">이 분석을 견적서에 담기</button>'+(q.roi?' <span style="color:#16a34a;font-size:11px">✓ 저장됨 — 견적서 비고 하단에 요약 표기</span>':''));
   }
   window.roiFromQuote=function(id){
     const q=((typeof DB!=='undefined'&&DB.d&&DB.d.quotes)||[]).find(x=>x.id===id); if(!q){ alert('견적서를 찾을 수 없습니다.'); return; }
@@ -9775,7 +9762,7 @@ window.addEventListener('popstate', function(e) {
     snap.at=new Date().toISOString();
     q.roi=snap;
     DB.save('quotes');
-    if(typeof showToast==='function') showToast('ROI 분석을 견적 '+q.id+'에 저장했습니다. 인쇄 시 [ROI 분석 포함]으로 함께 출력됩니다.', true);
+    if(typeof showToast==='function') showToast('ROI 분석을 견적 '+q.id+'에 저장했습니다. 견적서 비고 하단에 ROI 요약이 표기됩니다.', true);
     if(typeof renderQuotes==='function') renderQuotes();
     _roiBannerFor(q);
   };
