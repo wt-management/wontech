@@ -825,10 +825,10 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <button id="sch-v-week" type="button" class="btn btn-outline-primary active" onclick="setSchView('week',this)">이번주</button>
         <button id="sch-v-month" type="button" class="btn btn-outline-primary" onclick="setSchView('month',this)">월간</button>
       </div>
+      <span id="sch-monthnav"></span>
       <select id="sch-sales-filter" class="form-select form-select-sm" style="max-width:180px" onchange="renderSchedule()"><option value="">👥 담당 전체</option></select>
       <button class="btn btn-sm btn-outline-secondary" style="font-size:12px" onclick="_schMine()"><i class="bi bi-person-check me-1"></i>내 일정</button>
       <span id="sch-title" class="ms-2" style="font-size:13px;font-weight:700;color:#374151"></span>
-      <span id="sch-monthnav" class="ms-auto"></span>
     </div>
     <div id="sch-stats"></div>
     <div id="sch-body"></div>
