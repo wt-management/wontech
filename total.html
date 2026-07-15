@@ -540,15 +540,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <div id="site-dropdown" style="display:none;position:absolute;bottom:110%;left:0;right:0;background:#1e293b;border:1px solid #334155;border-radius:10px;overflow:hidden;box-shadow:0 -8px 24px rgba(0,0,0,.5);z-index:200">
         <div style="padding:6px">
           <div style="border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:#4f46e5;font-size:12px;font-weight:700;background:rgba(79,70,229,.12)"><span class="sw-badge" style="background:#4f46e5">종합</span><span style="flex:1">전사 종합 경영현황</span><i class="bi bi-check2" style="font-size:12px"></i></div>
-          <div class="sw-item" onclick="goSite('https://wt-management.github.io/wontech/','&app=korea')"><span class="sw-badge" style="background:#0891b2">KR</span><span style="flex:1">한국 영업</span><i class="bi bi-arrow-right sw-ar"></i></div>
-          <div class="sw-item" onclick="goSite('https://wt-management.github.io/wontech-intl/','')"><span class="sw-badge" style="background:#0d9488">INT</span><span style="flex:1">해외 영업</span><i class="bi bi-arrow-right sw-ar"></i></div>
-          <div class="sw-item" onclick="goSite('https://wt-management.github.io/wtj-management/','')"><span class="sw-badge" style="background:#f59e0b">JP</span><span style="flex:1">일본법인 관리</span><i class="bi bi-arrow-right sw-ar"></i></div>
-          <div class="sw-item" onclick="location.href='https://wt-management.github.io/wt-corps/us.html'"><span class="sw-badge" style="background:#1e3a8a">US</span><span style="flex:1">미국법인 관리</span><i class="bi bi-arrow-right sw-ar"></i></div>
-          <div class="sw-item" onclick="location.href='https://wt-management.github.io/wt-corps/th.html'"><span class="sw-badge" style="background:#b45309">TH</span><span style="flex:1">태국법인 관리</span><i class="bi bi-arrow-right sw-ar"></i></div>
-          <div class="sw-item" onclick="location.href='https://wt-management.github.io/wt-consumables/ilbo.html'"><span class="sw-badge" style="background:#16a34a">일보</span><span style="flex:1">일일매출보고</span><i class="bi bi-arrow-right sw-ar"></i></div>
-          <div class="sw-item" onclick="location.href='https://wt-management.github.io/sales-portfolio/'"><span class="sw-badge" style="background:#3f5e7a">PF</span><span style="flex:1">Sales Portfolio</span><i class="bi bi-arrow-right sw-ar"></i></div>
-          <div class="sw-item" onclick="location.href='https://wt-management.github.io/demo-schedule/'"><span class="sw-badge" style="background:#2563eb">데모</span><span style="flex:1">데모 일정</span><i class="bi bi-arrow-right sw-ar"></i></div>
-          <div class="sw-item" onclick="goSite('https://wt-management.github.io/wontech/','&app=admin')"><span class="sw-badge" style="background:#6b7280">ADM</span><span style="flex:1">관리자 페이지</span><i class="bi bi-arrow-right sw-ar"></i></div>
+          <div id="swdd-dyn"><!-- 사이트 목록은 _wtRenderSwitcher()가 site_registry 권한 기반으로 동적 렌더 --></div>
         </div>
       </div>
     </div>
@@ -866,6 +858,44 @@ async function goSite(base,extra){
   try{ const {data:{session:s}}=await _sb.auth.getSession(); if(s) u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token)+(extra||''); }catch(_){}
   location.href=u;
 }
+/* ===== 권한 기반 사이트 이동 (site_registry 공통) — WT_SWITCHER ===== */
+var _WT_MASTER='pmw0406@gmail.com';
+var _WT_OWN=["total"];                 /* 이 사이트 자신의 registry key(들) */
+var _WT_WONTECH='https://wt-management.github.io/wontech/';
+var _wtReg=null, _wtItems=[];
+async function _wtLoadReg(){ if(_wtReg) return _wtReg; try{ var r=await _sb.from('site_registry').select('*').order('sort_order'); _wtReg=r.data||[]; }catch(e){ _wtReg=[]; } return _wtReg; }
+function _wtVis(s,ac,ad){ if(ac.indexOf(s.key)>=0) return true; if(s.admin_bypass&&ad) return true; if(s.extra_visible_rule){ try{ return !!(new Function('access','isAdmin','return ('+s.extra_visible_rule+')'))(ac,ad); }catch(e){ return false; } } return false; }
+async function _wtGo(i){
+  var s=_wtItems[i]; if(!s) return;
+  var u=(s.key==='korea'||s.url==='LOCAL')?_WT_WONTECH:s.url;
+  var extra=s.key==='korea'?'&app=korea':(s.key==='admin'?'&app=admin':'');
+  var sess=null; try{ sess=(await _sb.auth.getSession()).data.session; }catch(e){}
+  if(sess && u.indexOf('#')<0) u+='#at='+encodeURIComponent(sess.access_token)+'&rt='+encodeURIComponent(sess.refresh_token);
+  u+=extra; location.href=u;
+}
+async function _wtRenderSwitcher(){
+  await _wtLoadReg();
+  var ac=[], ad=false;
+  try{ var ses=(await _sb.auth.getSession()).data.session;
+    if(ses&&ses.user){ if(ses.user.email===_WT_MASTER) ad=true;
+      var p=await _sb.from('crm_profiles').select('access,role').eq('id',ses.user.id).maybeSingle();
+      if(p&&p.data){ ac=(p.data.access||'').split(',').map(function(x){return x.trim();}).filter(Boolean); if(p.data.role==='admin') ad=true; }
+    }
+  }catch(e){}
+  var seen={};
+  _wtItems=_wtReg.filter(function(s){
+    if(_WT_OWN.indexOf(s.key)>=0) return false;
+    if(!_wtVis(s,ac,ad)) return false;
+    var dest=(s.key==='korea'||s.url==='LOCAL')?'wontech':s.url; if(seen[dest]) return false; seen[dest]=1;
+    return true;
+  }).sort(function(a,b){ return a.sort_order-b.sort_order; });
+  if(ad){ _wtItems.push({key:'admin',badge:'ADM',grad_from:'#6b7280',title:'관리자 페이지',url:_WT_WONTECH}); }
+  var wesc=function(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+  var box=document.getElementById('swdd-dyn'); if(!box) return;
+  box.innerHTML=_wtItems.map(function(s,i){
+    return '<div class="sw-item" onclick="_wtGo('+i+')"><span class="sw-badge" style="background:'+(s.grad_from||'#64748b')+'">'+wesc(s.badge)+'</span><span style="flex:1">'+wesc(s.title)+'</span><i class="bi bi-arrow-right sw-ar"></i></div>';
+  }).join('');
+}
 document.addEventListener('click',function(e){
   const dd=document.getElementById('site-dropdown');
   if(dd&&dd.style.display==='block'&&!e.target.closest('#site-dropdown')&&!e.target.closest('[onclick*="site-dropdown"]')) dd.style.display='none';
@@ -891,6 +921,7 @@ async function afterLogin(user){
   await loadAll();
   buildSelectors();
   renderOverview();
+  try{_wtRenderSwitcher();}catch(e){}
 }
 
 // ── 데이터 로드 ──────────────────────────────────────────
