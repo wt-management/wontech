@@ -7916,8 +7916,10 @@ function _schStatsBar(all){
   const pend=pendArr.length;
   const nextUp=pendArr.filter(i=>i.date>today).map(i=>i.date).sort()[0]||'';
   const overdue=all.filter(i=>i.kind==='sched'&&!i.done&&i.date<today).length;
+  const _hasRes=i=>{ const l=(DB.d.logs||[]).find(x=>x.id===i.id); return !!(l&&(l.resultMemo||l.resultGrade)); };
   const doneWk=all.filter(i=>i.kind==='sched'&&i.done&&i.date>=wk.start&&i.date<=wk.end);
-  const done=doneWk.length, resN=doneWk.filter(i=>{ const l=(DB.d.logs||[]).find(x=>x.id===i.id); return l&&(l.resultMemo||l.resultGrade); }).length;
+  const done=doneWk.length, resN=doneWk.filter(_hasRes).length;
+  const noResAll=all.filter(i=>i.kind==='sched'&&i.done&&!_hasRes(i)).length;   // 전체 기간, 완료했지만 결과 미기재
   const byType={}; all.forEach(i=>byType[i.type]=(byType[i.type]||0)+1);
   const stat=(lbl,n,col,sub,click)=>'<div'+(click?' onclick="'+click+'" ':' ')+'style="flex:1;min-width:170px;background:#fff;border:1px solid #eef2f7;border-radius:11px;padding:8px 14px;box-shadow:0 1px 2px rgba(15,23,42,.03);display:flex;align-items:center;gap:9px'+(click?';cursor:pointer':'')+'">'
     +'<span style="font-size:11.5px;color:#64748b;font-weight:700;flex-shrink:0">'+lbl+'</span>'
@@ -7935,7 +7937,7 @@ function _schStatsBar(all){
       +stat('이번주',w,'#0891b2','방문 '+wVisit+' · 완료 '+wDone+'/'+w+(w?' ('+Math.round(wDone/w*100)+'%)':''),"setSchView('week',document.getElementById('sch-v-week'))")
       +stat('지연',overdue,'#dc2626',overdue?'결과 미입력 — 눌러서 처리':'없음 👍',overdue?'_schShowOverdueOnly()':'')
       +stat('예정',pend,'#ea580c',nextUp?'다음 '+nextUp.slice(5).replace('-','/')+' 이후 '+pend+'건':'오늘 이후 예정',"setSchView('week',document.getElementById('sch-v-week'))")
-      +stat('완료',done,'#16a34a','이번주 · 결과입력 '+resN+'/'+done,'_schShowDoneOnly()')
+      +stat('완료',done,'#16a34a','이번주 '+resN+'/'+done+(noResAll?' · <b style="color:#dc2626">결과 미기재 누적 '+noResAll+'건</b>':' · 미기재 없음 👍'),'_schShowDoneOnly()')
     +'</div>'
     +'<div style="display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin-bottom:14px;padding:8px 12px;background:#f8fafc;border-radius:9px">'
       +'<span style="font-size:10.5px;color:#94a3b8;font-weight:700">유형</span>'+legend+'</div>';
