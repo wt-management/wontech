@@ -7061,7 +7061,7 @@ function renderPerformance(){
       }).join('')}
       <div style="margin-top:6px;padding:8px 12px;background:#f0fdf4;border-radius:8px;display:flex;justify-content:space-between">
         <span style="font-size:12px;font-weight:700;color:#15803d">Win Rate</span>
-        <span style="font-size:14px;font-weight:800;color:#15803d">${total2>0?Math.round(funnel[4].count/total2*100):0}%</span>
+        <span style="font-size:14px;font-weight:800;color:#15803d">${total2>0?Math.round(funnel[funnel.length-1].count/total2*100):0}%</span>
       </div>
     </div>`;
 }
