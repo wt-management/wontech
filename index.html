@@ -8390,7 +8390,15 @@ function sdrPickOpen(){
       +(r.reaction?'<div style="font-size:11.5px;color:#475569">'+_schEsc(String(r.reaction).slice(0,70))+'</div>':'')
       +'</span>'+(dup?'<span style="font-size:10px;color:#16a34a;flex-shrink:0">이미 있음</span>':'')+'</label>';
   }).join('') : '<div class="text-center text-muted py-4">최근 1주 내 '+_schEsc(R)+' 방문 내역이 없습니다.</div>';
-  new bootstrap.Modal(document.getElementById('sdrPickModal')).show();
+  var pm=document.getElementById('sdrPickModal');
+  if(pm.parentElement!==document.body) document.body.appendChild(pm);   // 다른 모달 내부 중첩 방지
+  new bootstrap.Modal(pm).show();
+  // 일일보고서 모달 위로 강제(중첩 모달 z-index)
+  setTimeout(function(){
+    pm.style.zIndex=1082;
+    var bds=document.querySelectorAll('.modal-backdrop'); var bd=bds[bds.length-1];
+    if(bd) bd.style.zIndex=1081;
+  },0);
 }
 function sdrPickAdd(){
   var tb=document.getElementById('sdr-act-body'); if(!tb) return;
