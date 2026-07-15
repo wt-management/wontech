@@ -68,7 +68,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 .pipeline-board{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px}
 .pipeline-col{min-width:200px;flex:1;background:#f9fafb;border-radius:12px;padding:14px;border:1px solid var(--border)}
 .pipeline-col-header{font-size:11px;font-weight:700;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;letter-spacing:.05em;text-transform:uppercase}
-.deal-card{background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);cursor:pointer;transition:all .2s;border:1px solid var(--border)}
+.deal-card{background:#fff;border-radius:10px;padding:8px 11px;margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.06);cursor:pointer;transition:all .2s;border:1px solid var(--border)}
 .deal-card:hover{box-shadow:0 6px 16px rgba(0,0,0,.1);transform:translateY(-1px)}
 .saving-toast{position:fixed;bottom:24px;right:24px;background:#1e293b;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;z-index:9999;display:none;box-shadow:0 4px 12px rgba(0,0,0,.2);display:flex;align-items:center;gap:8px}
 .saving-toast{display:none}
@@ -5540,14 +5540,16 @@ function renderPipeline() {
             <div style="font-size:13px;font-weight:600;flex:1;line-height:1.3">${_escH(d.custName)}</div>
             ${daysBadge}
           </div>
-          <div style="font-size:11px;color:#9ca3af;margin-top:2px">${_escH(d.model)}</div>
-          <div style="font-size:15px;font-weight:800;color:#1d4ed8;margin-top:6px">${fmtAmt(Number(d.amount||0))}</div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-            <span style="font-size:11px;font-weight:600;color:#374151">${_escH(d.sales)}</span>
-            <span style="background:${probColor(d.prob)};color:#fff;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700">${d.prob||0}%</span>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:6px;margin-top:2px">
+            <span style="font-size:11px;color:#9ca3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escH(d.model)}</span>
+            <span style="font-size:14px;font-weight:800;color:#1d4ed8;flex-shrink:0">${fmtAmt(Number(d.amount||0))}</span>
           </div>
-          ${d.expectedDate?`<div style="font-size:10px;color:${isOverdue?'#dc2626':isClosingThis?'#d97706':'#9ca3af'};margin-top:5px;font-weight:${isOverdue||isClosingThis?'700':'400'}"><i class="bi bi-calendar3 me-1"></i>마감 ${fmtDate(d.expectedDate)}${isOverdue?' ⚠️ 기한초과':isClosingThis?' · 이달마감':''}</div>`:''}
-          ${d.nextAction?`<div style="font-size:10px;color:#059669;margin-top:4px;background:#ecfdf5;border-radius:4px;padding:3px 6px;display:flex;gap:4px;align-items:center"><i class="bi bi-arrow-right-circle-fill"></i><span>${_escH(d.nextAction)}${d.nextDate?' · '+fmtDate(d.nextDate):''}</span></div>`:''}
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:3px">
+            <span style="font-size:11px;font-weight:600;color:#374151;flex-shrink:0">${_escH(d.sales)}</span>
+            ${d.expectedDate?`<span style="font-size:10px;color:${isOverdue?'#dc2626':isClosingThis?'#d97706':'#9ca3af'};font-weight:${isOverdue||isClosingThis?'700':'400'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">마감 ${fmtDate(d.expectedDate)}${isOverdue?' ⚠️':isClosingThis?' · 이달마감':''}</span>`:'<span></span>'}
+            <span style="background:${probColor(d.prob)};color:#fff;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:700;flex-shrink:0">${d.prob||0}%</span>
+          </div>
+          ${d.nextAction?`<div style="font-size:10px;color:#059669;margin-top:3px;background:#ecfdf5;border-radius:4px;padding:2px 6px;display:flex;gap:4px;align-items:center"><i class="bi bi-arrow-right-circle-fill"></i><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escH(d.nextAction)}${d.nextDate?' · '+fmtDate(d.nextDate):''}</span></div>`:''}
         </div>`;
       }).join('')}
     </div>`;
