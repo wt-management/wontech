@@ -7857,12 +7857,16 @@ function _hospEquipStatus(sel){
 
 // ── 일정 (방문·콜 스케줄) — logs 재사용(kind:'schedule') + 후속조치(nextDate) 병합 ──
 let _schView=(function(){try{return sessionStorage.getItem('sch_view')||'week';}catch(e){return 'week';}})(), _schMonth=null, _schOverdueOnly=false;
-function _schShowOverdueOnly(){ _schOverdueOnly=true; renderSchedule(); }
+function _schShowOverdueOnly(){ _schOverdueOnly=true; _schDoneOnly=false; renderSchedule(); }
+let _schDoneOnly=false, _schDoneMode='week', _schDoneRef=null;
+function _schShowDoneOnly(){ _schDoneOnly=true; _schOverdueOnly=false; _schDoneRef=_schTodayStr(); renderSchedule(); }
+function _schDoneModeSet(m){ _schDoneMode=m; renderSchedule(); }
+function _schDoneNav(d){ const p=(_schDoneRef||_schTodayStr()).split('-').map(Number); const dt=new Date(p[0],p[1]-1,p[2]); dt.setDate(dt.getDate()+d*(_schDoneMode==='week'?7:1)); _schDoneRef=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); renderSchedule(); }
 const _SCH_COL={'방문':'#2563eb','콜':'#0891b2','데모':'#7c3aed','A/S':'#ea580c','기타':'#64748b','후속':'#9ca3af','견적발송':'#7c3aed','계약검토':'#7c3aed'};
 function _schEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function _schTodayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function _schMe(){ return ((typeof _meName!=='undefined'&&_meName)||(typeof currentUserName==='function'?currentUserName():'')||'').trim(); }
-function setSchView(v,btn){ _schView=v; _schOverdueOnly=false; try{sessionStorage.setItem('sch_view',v);}catch(e){} document.querySelectorAll('#page-schedule .btn-group .btn').forEach(b=>b.classList.remove('active')); if(btn)btn.classList.add('active'); renderSchedule(); }
+function setSchView(v,btn){ _schView=v; _schOverdueOnly=false; _schDoneOnly=false; try{sessionStorage.setItem('sch_view',v);}catch(e){} document.querySelectorAll('#page-schedule .btn-group .btn').forEach(b=>b.classList.remove('active')); if(btn)btn.classList.add('active'); renderSchedule(); }
 function _schSyncViewBtn(){ const m={today:'sch-v-today',week:'sch-v-week',month:'sch-v-month'}; document.querySelectorAll('#page-schedule .btn-group .btn').forEach(b=>b.classList.remove('active')); const b=document.getElementById(m[_schView]); if(b)b.classList.add('active'); }
 // 데모 일정 사이트(demo_schedules) 병합읽기 — 읽기전용, 데모사이트가 쓰는 테이블. 오늘~+7일 범위만 표시(그 이후는 숨김).
 let _demoSched=[];
@@ -7931,7 +7935,10 @@ function _schStatsBar(all){
   const byType={}; all.forEach(i=>byType[i.type]=(byType[i.type]||0)+1);
   const stat=(lbl,n,col)=>'<div style="flex:1;min-width:78px;background:#fff;border:1px solid #eef2f7;border-radius:11px;padding:9px 13px;box-shadow:0 1px 2px rgba(15,23,42,.03)"><div style="font-size:11px;color:#64748b">'+lbl+'</div><div style="font-size:21px;font-weight:800;color:'+col+';line-height:1.15">'+n+'</div></div>';
   const legend=Object.keys(_SCH_COL).filter(x=>x!=='후속').map(x=>'<span style="font-size:10.5px;color:'+_SCH_COL[x]+';font-weight:600"><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:'+_SCH_COL[x]+';margin-right:4px;vertical-align:middle"></span>'+x+(byType[x]?' <span style="color:#94a3b8">'+byType[x]+'</span>':'')+'</span>').join('&nbsp;&nbsp;&nbsp;');
-  return (overdue?'<div style="margin-bottom:8px;padding:8px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:9px;font-size:12.5px;color:#b91c1c;cursor:pointer" onclick="_schShowOverdueOnly()"><i class="bi bi-exclamation-triangle-fill me-1"></i><b>놓친 일정 '+overdue+'건</b> — 지난 일정인데 결과가 안 남았어요. 눌러서 목록 확인 후, 각 일정의 <b>[✓ 완료·결과]</b> 버튼으로 방문 결과와 다음 일정을 남겨주세요.</div>':'')
+  return ((overdue||done)?'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'
+      +(overdue?'<div style="flex:1;min-width:300px;padding:8px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:9px;font-size:12.5px;color:#b91c1c;cursor:pointer" onclick="_schShowOverdueOnly()"><i class="bi bi-exclamation-triangle-fill me-1"></i><b>놓친 일정 '+overdue+'건</b> — 지난 일정인데 결과가 안 남았어요. 눌러서 확인 후 <b>[✓ 완료·결과]</b>로 결과를 남겨주세요.</div>':'')
+      +(done?'<div style="flex:1;min-width:300px;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:9px;font-size:12.5px;color:#15803d;cursor:pointer" onclick="_schShowDoneOnly()"><i class="bi bi-check-circle-fill me-1"></i><b>완료된 일정 '+done+'건</b> — 눌러서 일간·주간으로 완료 결과를 확인하고 피드백을 주세요.</div>':'')
+    +'</div>':'')
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">'
       +stat('오늘',t,'#2563eb')+stat('이번주',w,'#0891b2')+stat('지연',overdue,'#dc2626')+stat('예정',pend,'#ea580c')+stat('완료',done,'#16a34a')
     +'</div>'
@@ -8018,6 +8025,24 @@ function renderSchedule(){
     const today=_schTodayStr();
     const list=items.filter(i=>i.kind==='sched'&&!i.done&&i.date<today);
     title.innerHTML='<span style="color:#dc2626">놓친 일정</span> '+list.length+'건'+(sfv?' · '+_schEsc(sfv):'')+' <button class="btn btn-sm btn-link p-0 ms-2" style="font-size:12px" onclick="_schOverdueOnly=false;renderSchedule()">전체 보기로 돌아가기</button>';
+    body.innerHTML=_schListView(list);
+    return;
+  }
+  if(_schDoneOnly){
+    const ref=_schDoneRef||_schTodayStr();
+    let from=ref, to=ref, lab=ref.slice(5).replace('-','/');
+    if(_schDoneMode==='week'){
+      const p=ref.split('-').map(Number); const dt=new Date(p[0],p[1]-1,p[2]);
+      const dow=(dt.getDay()+6)%7; const mon=new Date(dt); mon.setDate(dt.getDate()-dow);
+      const sun=new Date(mon); sun.setDate(mon.getDate()+6);
+      const f=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+      from=f(mon); to=f(sun); lab=from.slice(5).replace('-','.')+'~'+to.slice(5).replace('-','.');
+    }
+    const list=items.filter(i=>i.kind==='sched'&&i.done&&i.date>=from&&i.date<=to);
+    title.innerHTML='<span style="color:#16a34a">완료된 일정</span> '+list.length+'건 · '+lab+(sfv?' · '+_schEsc(sfv):'')
+      +' <span class="btn-group ms-2"><button class="btn btn-sm btn-'+(_schDoneMode==='day'?'success':'outline-success')+'" style="font-size:11px;padding:2px 10px" onclick="_schDoneModeSet(\'day\')">일간</button><button class="btn btn-sm btn-'+(_schDoneMode==='week'?'success':'outline-success')+'" style="font-size:11px;padding:2px 10px" onclick="_schDoneModeSet(\'week\')">주간</button></span>'
+      +' <button class="btn btn-sm btn-outline-secondary" style="font-size:11px;padding:2px 8px" onclick="_schDoneNav(-1)"><i class="bi bi-chevron-left"></i></button> <button class="btn btn-sm btn-outline-secondary" style="font-size:11px;padding:2px 8px" onclick="_schDoneNav(1)"><i class="bi bi-chevron-right"></i></button>'
+      +' <button class="btn btn-sm btn-link p-0 ms-2" style="font-size:12px" onclick="_schDoneOnly=false;renderSchedule()">전체 보기로 돌아가기</button>';
     body.innerHTML=_schListView(list);
     return;
   }
