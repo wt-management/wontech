@@ -5805,32 +5805,78 @@ var _cduRepVs=[];
 function _cduDrillComp(c){ _cduDrill('경쟁사 노출: '+c, _cduRepVs.filter(v=>(v.competitor||'').trim()===c)); }
 function _cduDrillChan(c){ _cduDrill('마케팅 채널: '+c, _cduRepVs.filter(v=>(v.channels||'').split(/[\/,·]/).map(s=>s.trim()).indexOf(c)>=0)); }
 function _cduDrillSales(s){ _cduDrill('담당자 방문: '+s, _cduRepVs.filter(v=>((v.sales||'').trim()||'미지정')===s)); }
-function _cduDrillBand(i){ var b=_CDU_BANDS[i]; if(!b)return; _cduDrill('시술 수가 '+b[0], _cduRepVs.filter(v=>{var p=Number(v.price)||0; return p>0&&b[1](p);})); }
+function _cduDrillBand(i){ var b=_CDU_BANDS[i]; if(!b)return; _cduDrill('시술 수가 '+b[0], _cduRepVs.filter(v=>{var p=Number(v.price)||0; return p>0&&b[1](p);}), 'price'); }
 function _cduDrillEvent(){ _cduDrill('이벤트 진행 병원', _cduRepVs.filter(v=>String(v.event||'').toUpperCase()==='O')); }
 function _cduDrillReels(){ _cduDrill('릴스 촬영 병원', _cduRepVs.filter(v=>String(v.reels||'').toUpperCase()==='O')); }
 function _cduDrillAll(){ _cduDrill('전체 방문 병원', _cduRepVs.slice()); }
 function _cduDrillChurn(){ _cduDrill('선제 감지 · 집중 대응 병원', _cduRepVs.filter(v=>(v.churnRisk||'').trim())); }
 var _cduNewSet={};
 function _cduDrillNew(){ _cduDrill('신규 개척 방문 (기간 내 첫 방문)', _cduRepVs.filter(v=>_cduNewSet[(v.custName||'').trim()])); }
-function _cduDrillPrice(){ _cduDrill('시술 수가 파악 병원', _cduRepVs.filter(v=>(Number(v.price)||0)>0)); }
+function _cduDrillPrice(){ _cduDrill('시술 수가 파악 병원', _cduRepVs.filter(v=>(Number(v.price)||0)>0), 'price'); }
 function _cduDrillVip(){ var m={}; _cduRepVs.forEach(v=>{var n=(v.custName||'').trim(); if(n)m[n]=1;}); var arr=Object.keys(m).map(n=>({n:n,r:_cduRev(n).y2026||0})).sort((a,b)=>b.r-a.r); _cduDrill('매출 상위 방문 병원', _cduRepVs.filter(v=>{ var top=arr.slice(0,15).map(x=>x.n); return top.indexOf((v.custName||'').trim())>=0; })); }
-function _cduDrill(title, arr){
+function _cduDrill(title, arr, kind){
   var t=document.getElementById('cduDrillTitle'); if(t) t.innerHTML=_cduEsc(title)+' <span style="font-size:12px;font-weight:400;color:#94a3b8">· '+arr.length+'건</span>';
   var body=document.getElementById('cduDrillBody'); if(!body) return;
   if(!arr.length){ body.innerHTML='<div class="text-muted" style="font-size:13px">해당 항목이 없습니다.</div>'; new bootstrap.Modal(document.getElementById('cduDrillModal')).show(); return; }
-  var rows=arr.slice().sort(function(a,b){ return (_cduRev(b.custName).y2026||0)-(_cduRev(a.custName).y2026||0); });
-  var totRev=0, seen={}; rows.forEach(v=>{ var n=(v.custName||'').trim(); if(n&&!seen[n]){seen[n]=1;totRev+=(_cduRev(n).y2026||0);} });
-  var head='<div style="font-size:12px;color:#475569;background:#f8fafc;border-radius:8px;padding:8px 12px;margin-bottom:10px">병원 <b>'+Object.keys(seen).length+'</b>곳 · 이 병원들의 올해 팁 매출 합계 <b style="color:#0891b2">'+_cduWon(totRev)+'원</b></div>';
-  var list=rows.map(function(v){ var rev=_cduRev(v.custName);
+  // ── 분석 요약 집계 ──
+  var uniq={}, totRev=0, prices=[], compHosp={}, bySales={}, byProc={};
+  arr.forEach(function(v){
+    var n=(v.custName||'').trim();
+    if(n&&!uniq[n]){ uniq[n]=1; totRev+=(_cduRev(n).y2026||0); }
+    var p=Number(v.price)||0; if(p>0) prices.push(p);
+    if((v.competitor||'').trim()&&n) compHosp[n]=1;
+    var s=(v.sales||'').trim()||'미지정'; bySales[s]=(bySales[s]||0)+1;
+    (v.mainProc||'').split(/[\/,·]/).map(x=>x.trim()).filter(Boolean).forEach(pc=>byProc[pc]=(byProc[pc]||0)+1);
+  });
+  var nH=Object.keys(uniq).length;
+  var avg=prices.length?Math.round(prices.reduce((s,p)=>s+p,0)/prices.length):0;
+  var chip=(l,v,c)=>'<div style="flex:1;min-width:88px;background:#fff;border:1px solid #e5e7eb;border-radius:9px;padding:7px 10px;text-align:center"><div style="font-size:9.5px;color:#94a3b8">'+l+'</div><div style="font-size:14px;font-weight:800;color:'+(c||'#111827')+'">'+v+'</div></div>';
+  var head='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">'
+    +chip('병원',nH+'곳')+chip('방문',arr.length+'건')
+    +chip('올해 팁매출',_cduWon(totRev),'#0891b2')
+    +(prices.length?chip('평균 수가',avg+'천','#7c3aed'):'')
+    +(Object.keys(compHosp).length?chip('경쟁 노출',Object.keys(compHosp).length+'곳','#dc2626'):'')
+    +'</div>';
+  // ── 분포 미니 차트 ──
+  var barLine=(name,cnt,max,col,suf)=>'<div style="display:flex;align-items:center;gap:8px;padding:3px 0"><span style="font-size:11px;min-width:86px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">'+_cduEsc(name)+'</span>'+_cduBar(cnt/max*100,col)+'<span style="font-size:11px;font-weight:700;min-width:34px;text-align:right">'+cnt+(suf||'건')+'</span></div>';
+  var box=(tt,inner)=>'<div style="background:#f8fafc;border-radius:10px;padding:10px 12px;height:100%"><div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:4px">'+tt+'</div>'+inner+'</div>';
+  var mini='';
+  if(kind==='price'&&prices.length){
+    var bands=_CDU_BANDS.map(b=>[b[0],prices.filter(b[1]).length]);
+    var mxB=Math.max.apply(null,bands.map(b=>b[1]).concat([1]));
+    mini='<div class="row g-2 mb-2">'
+      +'<div class="col-md-6">'+box('수가 분포 <span style="font-weight:400;color:#94a3b8">최저 '+Math.min.apply(null,prices)+' · 평균 '+avg+' · 최고 '+Math.max.apply(null,prices)+'천</span>',bands.map(b=>barLine(b[0],b[1],mxB,'#7c3aed')).join(''))+'</div>'
+      +'<div class="col-md-6">'+box('보는 법','<div style="font-size:11.5px;color:#64748b;line-height:1.7">평균('+avg+'천)보다 <b style="color:#dc2626">낮은 병원</b> = 저가 경쟁 압박·수가 인상 제안 여지, <b style="color:#16a34a">높은 병원</b> = 프리미엄 포지션·시술량 확대 여지. 아래 목록은 <b>수가 높은 순</b>이며 평균 대비 편차를 표시합니다.</div>')+'</div>'
+      +'</div>';
+  } else {
+    var sArr=Object.entries(bySales).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    var pArr=Object.entries(byProc).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    var mxS=Math.max.apply(null,sArr.map(x=>x[1]).concat([1]));
+    var mxP=Math.max.apply(null,pArr.map(x=>x[1]).concat([1]));
+    var cells=[];
+    if(sArr.length>1) cells.push('<div class="col-md-6">'+box('담당자별 방문',sArr.map(x=>barLine(x[0],x[1],mxS,'#2563eb')).join(''))+'</div>');
+    if(pArr.length)   cells.push('<div class="col-md-6">'+box('주력 시술 TOP5',pArr.map(x=>barLine(x[0],x[1],mxP,'#0d9488')).join(''))+'</div>');
+    if(cells.length) mini='<div class="row g-2 mb-2">'+cells.join('')+'</div>';
+  }
+  // ── 목록(수가 드릴=수가순+평균편차, 그 외=매출순) ──
+  var rows=arr.slice().sort(kind==='price'
+    ? function(a,b){ return (Number(b.price)||0)-(Number(a.price)||0); }
+    : function(a,b){ return (_cduRev(b.custName).y2026||0)-(_cduRev(a.custName).y2026||0); });
+  var list=rows.map(function(v){ var rev=_cduRev(v.custName); var p=Number(v.price)||0;
+    var priceTag='';
+    if(p>0){
+      var dv=(kind==='price'&&avg)?(p-avg):null;
+      priceTag='<span style="font-size:10.5px;color:#64748b;flex-shrink:0">수가 <b style="color:#7c3aed">'+p+'천</b>'+(dv!==null&&dv!==0?' <span style="color:'+(dv>0?'#16a34a':'#dc2626')+';font-weight:700">'+(dv>0?'+':'')+dv+'</span>':'')+'</span>';
+    }
     return '<div onclick="bootstrap.Modal.getInstance(document.getElementById(\'cduDrillModal\')).hide();openCDUHosp(\''+_cduEsc(v.custName||'').replace(/\x27/g,"\\x27")+'\')" style="display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid #f1f5f9;cursor:pointer">'
       +'<span style="font-size:11px;color:#94a3b8;min-width:42px">'+_cduEsc(String(v.date||'').slice(5,10))+'</span>'
       +'<span style="font-size:12.5px;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_cduEsc(v.custName||'')+(v.churnRisk?' <i class="bi bi-exclamation-triangle-fill" style="color:#ea580c;font-size:10px"></i>':'')+'</span>'
       +(rev.y2026?'<span style="font-size:11px;color:#0891b2;font-weight:700;flex-shrink:0">'+_cduWon(rev.y2026)+'</span>':'<span style="font-size:10px;color:#cbd5e1;flex-shrink:0">매출無</span>')
       +(v.competitor?'<span style="font-size:10px;font-weight:700;color:#dc2626;background:#fef2f2;border-radius:4px;padding:1px 6px;flex-shrink:0">'+_cduEsc(v.competitor)+'</span>':'')
-      +(v.price?'<span style="font-size:10.5px;color:#64748b;flex-shrink:0">수가 '+_cduEsc(v.price)+'천</span>':'')
+      +priceTag
       +(v.sales?'<span style="font-size:10px;color:#94a3b8;flex-shrink:0;min-width:44px;text-align:right">'+_cduEsc(v.sales)+'</span>':'')
       +'</div>'; }).join('');
-  body.innerHTML=head+list;
+  body.innerHTML=head+mini+list;
   new bootstrap.Modal(document.getElementById('cduDrillModal')).show();
 }
 // ── 방문 입력 자동채움(한국영업 CRM 공유정보) ──
