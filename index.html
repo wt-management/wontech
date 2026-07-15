@@ -7846,8 +7846,8 @@ function _hospEquipStatus(sel){
 
 // ── 일정 (방문·콜 스케줄) — logs 재사용(kind:'schedule') + 후속조치(nextDate) 병합 ──
 let _schView=(function(){try{return sessionStorage.getItem('sch_view')||'week';}catch(e){return 'week';}})(), _schMonth=null, _schOverdueOnly=false;
-function _schShowOverdueOnly(){ _schOverdueOnly=true; _schDoneOnly=false; _schOdRef=_schTodayStr(); renderSchedule(); }
-let _schOdMode='week', _schOdRef=null;
+function _schShowOverdueOnly(){ _schOverdueOnly=true; _schDoneOnly=false; _schOdMode='all'; _schOdRef=_schTodayStr(); renderSchedule(); }
+let _schOdMode='all', _schOdRef=null;
 function _schOdModeSet(m){ _schOdMode=m; renderSchedule(); }
 function _schOdNav(d){ const p=(_schOdRef||_schTodayStr()).split('-').map(Number); const dt=new Date(p[0],p[1]-1,p[2]); dt.setDate(dt.getDate()+d*(_schOdMode==='week'?7:1)); _schOdRef=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); renderSchedule(); }
 let _schDoneOnly=false, _schDoneMode='week', _schDoneRef=null, _schNoDim=false;
@@ -8031,7 +8031,8 @@ function renderSchedule(){
     const allOd=items.filter(i=>i.kind==='sched'&&!i.done&&i.date<today);
     const ref=_schOdRef||today;
     let from=ref, to=ref, lab=ref.slice(5).replace('-','/');
-    if(_schOdMode==='week'){
+    if(_schOdMode==='all'){ from='0000-00-00'; to=today; lab='전체'; }
+    else if(_schOdMode==='week'){
       const p=ref.split('-').map(Number); const dt=new Date(p[0],p[1]-1,p[2]);
       const dow=(dt.getDay()+6)%7; const mon=new Date(dt); mon.setDate(dt.getDate()-dow);
       const sun=new Date(mon); sun.setDate(mon.getDate()+6);
@@ -8039,9 +8040,9 @@ function renderSchedule(){
       from=f(mon); to=f(sun); lab=from.slice(5).replace('-','.')+'~'+to.slice(5).replace('-','.');
     }
     const list=allOd.filter(i=>i.date>=from&&i.date<=to);
-    title.innerHTML='<span style="color:#dc2626">놓친 일정</span> '+list.length+'건 · '+lab+' <span style="font-size:11px;color:#94a3b8">(전체 '+allOd.length+'건)</span>'+(sfv?' · '+_schEsc(sfv):'')
-      +' <span class="btn-group ms-2"><button class="btn btn-sm btn-'+(_schOdMode==='day'?'danger':'outline-danger')+'" style="font-size:11px;padding:2px 10px" onclick="_schOdModeSet(\'day\')">일간</button><button class="btn btn-sm btn-'+(_schOdMode==='week'?'danger':'outline-danger')+'" style="font-size:11px;padding:2px 10px" onclick="_schOdModeSet(\'week\')">주간</button></span>'
-      +' <button class="btn btn-sm btn-outline-secondary" style="font-size:11px;padding:2px 8px" onclick="_schOdNav(-1)"><i class="bi bi-chevron-left"></i></button> <button class="btn btn-sm btn-outline-secondary" style="font-size:11px;padding:2px 8px" onclick="_schOdNav(1)"><i class="bi bi-chevron-right"></i></button>'
+    title.innerHTML='<span style="color:#dc2626">놓친 일정</span> '+list.length+'건 · '+lab+(_schOdMode==='all'?'':' <span style="font-size:11px;color:#94a3b8">(전체 '+allOd.length+'건)</span>')+(sfv?' · '+_schEsc(sfv):'')
+      +' <span class="btn-group ms-2"><button class="btn btn-sm btn-'+(_schOdMode==='all'?'danger':'outline-danger')+'" style="font-size:11px;padding:2px 10px" onclick="_schOdModeSet(\'all\')">전체</button><button class="btn btn-sm btn-'+(_schOdMode==='day'?'danger':'outline-danger')+'" style="font-size:11px;padding:2px 10px" onclick="_schOdModeSet(\'day\')">일간</button><button class="btn btn-sm btn-'+(_schOdMode==='week'?'danger':'outline-danger')+'" style="font-size:11px;padding:2px 10px" onclick="_schOdModeSet(\'week\')">주간</button></span>'
+      +(_schOdMode==='all'?'':' <button class="btn btn-sm btn-outline-secondary" style="font-size:11px;padding:2px 8px" onclick="_schOdNav(-1)"><i class="bi bi-chevron-left"></i></button> <button class="btn btn-sm btn-outline-secondary" style="font-size:11px;padding:2px 8px" onclick="_schOdNav(1)"><i class="bi bi-chevron-right"></i></button>')
       +' <button class="btn btn-sm btn-link p-0 ms-2" style="font-size:12px" onclick="_schOverdueOnly=false;renderSchedule()">전체 보기로 돌아가기</button>';
     body.innerHTML=(_schOdMode==='week')?_schWeekGrid(list,ref):_schListView(list);
     return;
