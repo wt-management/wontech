@@ -7935,9 +7935,9 @@ function _schStatsBar(all){
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">'
       +stat('오늘',t,'#2563eb','방문 '+tVisit+' · 완료 '+tDone+'/'+t,"setSchView('today',document.getElementById('sch-v-today'))")
       +stat('이번주',w,'#0891b2','방문 '+wVisit+' · 완료 '+wDone+'/'+w+(w?' ('+Math.round(wDone/w*100)+'%)':''),"setSchView('week',document.getElementById('sch-v-week'))")
-      +stat('지연',overdue,'#dc2626',overdue?'결과 미입력 — 눌러서 처리':'없음 👍',overdue?'_schShowOverdueOnly()':'')
+      +stat('지연',overdue,'#dc2626',overdue?'지난 일정 · 완료+결과 입력 필요':'없음 👍',overdue?'_schShowOverdueOnly()':'')
       +stat('예정',pend,'#ea580c',nextUp?'다음 '+nextUp.slice(5).replace('-','/')+' 이후 '+pend+'건':'오늘 이후 예정',"setSchView('week',document.getElementById('sch-v-week'))")
-      +stat('완료',done,'#16a34a','이번주 '+resN+'/'+done+(noResAll?' · <b style="color:#dc2626">결과 미기재 누적 '+noResAll+'건</b>':' · 미기재 없음 👍'),'_schShowDoneOnly()')
+      +stat('완료',done,'#16a34a','이번주 '+resN+'/'+done+(noResAll?' · <b style="color:#dc2626">완료건 중 결과누락 '+noResAll+'</b>':''),'_schShowDoneOnly()')
     +'</div>'
     +'<div style="display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin-bottom:14px;padding:8px 12px;background:#f8fafc;border-radius:9px">'
       +'<span style="font-size:10.5px;color:#94a3b8;font-weight:700">유형</span>'+legend+'</div>';
