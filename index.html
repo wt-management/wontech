@@ -8391,13 +8391,13 @@ function sdrPickOpen(){
       +'</span>'+(dup?'<span style="font-size:10px;color:#16a34a;flex-shrink:0">이미 있음</span>':'')+'</label>';
   }).join('') : '<div class="text-center text-muted py-4">최근 1주 내 '+_schEsc(R)+' 방문 내역이 없습니다.</div>';
   var pm=document.getElementById('sdrPickModal');
-  if(pm.parentElement!==document.body) document.body.appendChild(pm);   // 다른 모달 내부 중첩 방지
+  document.body.appendChild(pm);   // body 맨 끝으로 이동(전역 .modal z-index 동률 시 DOM 순서가 우선)
   new bootstrap.Modal(pm).show();
-  // 일일보고서 모달 위로 강제(중첩 모달 z-index)
+  // 전역 .modal{z-index:10000!important}를 이기려면 !important로 지정해야 함
   setTimeout(function(){
-    pm.style.zIndex=1082;
+    pm.style.setProperty('z-index','10002','important');
     var bds=document.querySelectorAll('.modal-backdrop'); var bd=bds[bds.length-1];
-    if(bd) bd.style.zIndex=1081;
+    if(bd) bd.style.setProperty('z-index','10001','important');
   },0);
 }
 function sdrPickAdd(){
