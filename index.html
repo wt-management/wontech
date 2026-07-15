@@ -761,7 +761,6 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <!-- 탭 -->
     <ul class="nav nav-tabs mb-3" id="sales-tabs">
       <li class="nav-item"><a class="nav-link active" style="cursor:pointer" onclick="salesTab('pipeline',this)"><i class="bi bi-kanban me-1"></i>파이프라인</a></li>
-      <li class="nav-item"><a class="nav-link" style="cursor:pointer" onclick="salesTab('analysis',this)"><i class="bi bi-bar-chart-line me-1"></i>실적 분석</a></li>
       <li class="nav-item"><a class="nav-link" style="cursor:pointer" id="sales-tab-logs-btn" onclick="salesTab('logs',this)"><i class="bi bi-journal-text me-1"></i>상담일지</a></li>
     </ul>
     <!-- 파이프라인 탭 -->
@@ -777,7 +776,6 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
           <span class="pipe-chip" onclick="setPipeChip('계약완료',this)">계약완료</span>
         </div>
       </div>
-      <div id="pipe-summary" class="mb-3"></div>
       <div class="pipeline-board" id="kanban-board" style="align-items:stretch"></div>
       <div id="deal-drawer-bg" onclick="closeDealDrawer()" style="position:fixed;inset:0;background:rgba(15,23,42,.4);display:none;z-index:1059"></div>
       <div id="deal-drawer" style="position:fixed;top:0;right:0;bottom:0;width:560px;max-width:96vw;background:#fff;box-shadow:-12px 0 40px rgba(0,0,0,.2);transform:translateX(100%);transition:transform .25s;z-index:1060;display:flex;flex-direction:column"></div>
@@ -2723,10 +2721,6 @@ function renderSalesPage(hint) {
   if(pg) { document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); pg.classList.add('active'); }
   renderPerformance();
   renderPipeline();
-  if(hint==='performance') {
-    const tabs = document.querySelectorAll('#sales-tabs .nav-link');
-    salesTab('analysis', tabs[1]);
-  }
 }
 
 function salesTab(tab, el) {
@@ -5477,30 +5471,6 @@ function renderPipeline() {
   const closingRaw=activeRaw.filter(d=>d.expectedDate&&d.expectedDate.startsWith(thisYm));
   const wonRaw=allRaw.filter(d=>d.stage==='계약완료').reduce((s,d)=>s+Number(d.amount||0),0);
 
-  // 상단 요약 바 (전체 기준 3개 수치)
-  document.getElementById('pipe-summary').innerHTML=`
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:2px">
-      <div style="display:flex;align-items:center;gap:6px;background:#eff6ff;border-radius:8px;padding:6px 14px">
-        <i class="bi bi-layers" style="color:#2563eb;font-size:13px"></i>
-        <span style="font-size:11px;color:#6b7280">진행중</span>
-        <span style="font-size:14px;font-weight:800;color:#2563eb">${activeRaw.length}건</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;background:#f5f3ff;border-radius:8px;padding:6px 14px">
-        <i class="bi bi-graph-up" style="color:#7c3aed;font-size:13px"></i>
-        <span style="font-size:11px;color:#6b7280">예상매출</span>
-        <span style="font-size:14px;font-weight:800;color:#7c3aed">${fmtAmt(Math.round(weightedRaw))}</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;background:#fff7ed;border-radius:8px;padding:6px 14px">
-        <i class="bi bi-calendar-check" style="color:#d97706;font-size:13px"></i>
-        <span style="font-size:11px;color:#6b7280">이달 마감 예정</span>
-        <span style="font-size:14px;font-weight:800;color:#d97706">${closingRaw.length}건</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;background:#f0fdf4;border-radius:8px;padding:6px 14px">
-        <i class="bi bi-check-circle" style="color:#16a34a;font-size:13px"></i>
-        <span style="font-size:11px;color:#6b7280">계약완료 누계</span>
-        <span style="font-size:14px;font-weight:800;color:#16a34a">${fmtAmt(wonRaw)}</span>
-      </div>
-    </div>`;
 
   // 필터 적용
   let allDeals=DB.d.pipeline;
@@ -6977,7 +6947,16 @@ function renderPerformance(){
   const totalLog=salesData.reduce((s,x)=>s+x.logCnt,0);
   const newDeals = DB.d.pipeline.filter(d=>yms.some(ym=>(d.createdAt||d.stageUpdatedAt||'').startsWith(ym)));
   const _yms = yms;
+  const _actAll=DB.d.pipeline.filter(d=>d.stage!=='계약완료');
+  const _actAmt=_actAll.reduce((s,d)=>s+Number(d.amount||0),0);
+  const _thisYm=now.toISOString().substring(0,7);
+  const _closingMon=_actAll.filter(d=>d.expectedDate&&d.expectedDate.startsWith(_thisYm));
+  const _wonAmtAll=DB.d.pipeline.filter(d=>d.stage==='계약완료').reduce((s,d)=>s+Number(d.amount||0),0);
   document.getElementById('perf-kpi').innerHTML=[
+    {icon:'bi-layers-fill',c:'#2563eb',label:'진행중 딜',value:_actAll.length+'건',sub:`예상매출 ${fmtAmt(_actAmt)}`,
+      onclick:`showPerfDrill('deals','진행중 딜(전체)',d=>d.stage!=='계약완료')`},
+    {icon:'bi-calendar-check-fill',c:'#d97706',label:'이달 마감 예정',value:_closingMon.length+'건',sub:fmtAmt(_closingMon.reduce((s,d)=>s+Number(d.amount||0),0)),
+      onclick:`showPerfDrill('deals','이달 마감 예정 딜',d=>d.stage!=='계약완료'&&d.expectedDate&&d.expectedDate.startsWith('${_thisYm}'))`},
     {icon:'bi-alarm-fill',c:'#ea580c',label:'마감 임박',value:closingSoon.length+'건',sub:`${fmtAmt(closingSoonAmt)} · 30일 이내`,
       onclick:`showPerfDrill('deals','마감 임박 딜 (30일 이내)',d=>d.stage!=='계약완료'&&d.expectedDate&&d.expectedDate>='${todayStr2}'&&d.expectedDate<='${in30Str}')`},
     {icon:'bi-exclamation-triangle-fill',c:'#dc2626',label:'지연 딜',value:overdue.length+'건',sub:'예정일 초과 미완료',
@@ -6986,7 +6965,9 @@ function renderPerformance(){
       onclick:`showPerfDrill('logs','${periodLabel} 상담일지',l=>[${_yms.map(y=>`'${y}'`).join(',')}].some(ym=>(l.date||'').startsWith(ym)))`},
     {icon:'bi-plus-circle-fill',c:'#16a34a',label:periodLabel+' 신규 딜',value:newDeals.length+'건',sub:`${newDeals.reduce((s,d)=>s+Number(d.amount||0),0)>=1e4?Math.round(newDeals.reduce((s,d)=>s+Number(d.amount||0),0)/1e4).toLocaleString()+'만원':'0원'} 유입`,
       onclick:`showPerfDrill('deals','${periodLabel} 신규 딜',d=>[${_yms.map(y=>`'${y}'`).join(',')}].some(ym=>(d.createdAt||d.stageUpdatedAt||'').startsWith(ym)))`},
-  ].map(k=>`<div class="col-6 col-lg-3"><div class="card p-3" style="border-top:3px solid ${k.c};${k.onclick?'cursor:pointer;':''}" ${k.onclick?`onclick="${k.onclick}"`:''}">
+    {icon:'bi-check-circle-fill',c:'#16a34a',label:'계약완료 누계',value:fmtAmt(_wonAmtAll),sub:'전체 기간 · 클릭 목록',
+      onclick:`showPerfDrill('deals','계약완료 딜(누계)',d=>d.stage==='계약완료')`},
+  ].map(k=>`<div class="col-6 col-md-4 col-lg-3"><div class="card p-3" style="border-top:3px solid ${k.c};${k.onclick?'cursor:pointer;':''}" ${k.onclick?`onclick="${k.onclick}"`:''}">
     <div style="font-size:11px;color:#6b7280;margin-bottom:4px"><i class="bi ${k.icon} me-1" style="color:${k.c}"></i>${k.label}</div>
     <div style="font-size:1.4rem;font-weight:800;${k.onclick?'color:#2563eb;text-decoration:underline dotted;':''}">${k.value}</div>
     <div style="font-size:11px;color:#9ca3af">${k.sub}</div>
