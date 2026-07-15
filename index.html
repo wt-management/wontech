@@ -771,7 +771,6 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <select id="pipe-sales-filter" class="form-select form-select-sm" style="max-width:120px" onchange="renderPipeline()"><option value="">전체 담당자</option></select>
         <div class="d-flex gap-1 flex-wrap" id="pipe-stage-chips">
           <span class="pipe-chip on" onclick="setPipeChip('all',this)">전체</span>
-          <span class="pipe-chip" onclick="setPipeChip('리드',this)">리드</span>
           <span class="pipe-chip" onclick="setPipeChip('상담중',this)">상담중</span>
           <span class="pipe-chip" onclick="setPipeChip('견적발송',this)">견적발송</span>
           <span class="pipe-chip" onclick="setPipeChip('협의중',this)">협의중</span>
@@ -1793,7 +1792,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <div class="col-12"><label class="form-label">병원명 *</label><div class="ac-wrap"><input type="text" id="p-cust" class="form-control form-control-sm" oninput="acInput(this,'p-cust')" onkeydown="acKey(event,'p-cust')" autocomplete="off"><div class="ac-dropdown" id="ac-p-cust"></div></div></div>
       <div class="col-12"><label class="form-label">제품/모델 *</label><div class="ac-wrap"><input type="text" id="p-model" class="form-control form-control-sm" oninput="acInput(this,'p-model')" onkeydown="acKey(event,'p-model')" autocomplete="off"><div class="ac-dropdown" id="ac-p-model"></div></div></div>
       <div class="col-6"><label class="form-label">예상금액 (원)</label><input type="number" id="p-amount" class="form-control form-control-sm"></div>
-      <div class="col-6"><label class="form-label">단계</label><select id="p-stage" class="form-select form-select-sm"><option>리드</option><option>상담중</option><option>견적발송</option><option>협의중</option><option>계약완료</option></select></div>
+      <div class="col-6"><label class="form-label">단계</label><select id="p-stage" class="form-select form-select-sm"><option>상담중</option><option>견적발송</option><option>협의중</option><option>계약완료</option></select></div>
       <div class="col-6"><label class="form-label">성공확률 (%)</label><input type="number" id="p-prob" class="form-control form-control-sm" value="50"></div>
       <div class="col-6"><label class="form-label">예상마감일</label><input type="date" id="p-date" class="form-control form-control-sm"></div>
       <div class="col-12"><label class="form-label">담당영업사원</label><input type="text" id="p-sales" class="form-control form-control-sm"></div>
@@ -2149,7 +2148,7 @@ const BRANCH = 'main';
 const SUPABASE_URL = 'https://mhfacbsittfdkknwybhc.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_aPMOOWAlyJlMcP1ZM_gpPA_jlrcvCRd';
 const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-const STAGES = ['리드','상담중','견적발송','협의중','계약완료'];
+const STAGES = ['상담중','견적발송','협의중','계약완료'];
 const SC = {'리드':'#adb5bd','상담중':'#4f8ef7','견적발송':'#fd7e14','협의중':'#6f42c1','계약완료':'#28a745'};
 
 // ── 사이트 레지스트리(신규 사이트 추가 시 코드 수정 없이 전 화면 자동 반영) ──
@@ -5559,7 +5558,7 @@ function openModal(type,data={}) {
   if(type==='pipeline'){
     ['p-id','p-cust','p-model','p-amount','p-sales','p-note','p-next-action','p-next-date'].forEach(id=>setV(id,''));
     setV('p-sales', currentUserName());
-    document.getElementById('p-stage').value='리드';
+    document.getElementById('p-stage').value='상담중';
     document.getElementById('p-prob').value='50';
     document.getElementById('p-date').value='';
     document.getElementById('p-next-type').value='';
@@ -5602,7 +5601,7 @@ function editPipeline(id) {
   setV('p-amount',d.amount); setV('p-sales',d.sales); setV('p-note',d.note||'');
   setV('p-next-action',d.nextAction||''); setV('p-next-date',d.nextDate||'');
   document.getElementById('p-next-type').value=d.nextType||'';
-  document.getElementById('p-stage').value=d.stage||'리드';
+  document.getElementById('p-stage').value=(d.stage==='리드'?'상담중':d.stage)||'상담중';
   document.getElementById('p-prob').value=d.prob||50;
   setV('p-date',d.expectedDate||'');
   document.getElementById('p-del-btn').style.display='inline-block';
@@ -5639,7 +5638,7 @@ function probColor(p){p=Number(p)||0;return p>=80?'#16a34a':p>=50?'#ea580c':'#ad
 function openDealFromWarranty(custName, model) {
   setV('p-id',''); setV('p-cust',custName); setV('p-model',`${model} 재계약`);
   setV('p-amount',''); setV('p-sales',''); setV('p-note',`보증만료 임박 — ${model} 재계약 제안`);
-  document.getElementById('p-stage').value='리드';
+  document.getElementById('p-stage').value='상담중';
   document.getElementById('p-prob').value='50';
   setV('p-date','');
   document.getElementById('p-del-btn').style.display='none';
