@@ -7921,23 +7921,17 @@ function _schStatsBar(all){
   const done=doneWk.length, resN=doneWk.filter(_hasRes).length;
   const noResAll=all.filter(i=>i.kind==='sched'&&i.done&&!_hasRes(i)).length;   // 전체 기간, 완료했지만 결과 미기재
   const byType={}; all.forEach(i=>byType[i.type]=(byType[i.type]||0)+1);
-  const stat=(lbl,n,col,sub,click)=>'<div'+(click?' onclick="'+click+'" ':' ')+'style="flex:1;min-width:170px;background:#fff;border:1px solid #eef2f7;border-radius:11px;padding:8px 14px;box-shadow:0 1px 2px rgba(15,23,42,.03);display:flex;align-items:center;gap:9px'+(click?';cursor:pointer':'')+'">'
-    +'<span style="font-size:11.5px;color:#64748b;font-weight:700;flex-shrink:0">'+lbl+'</span>'
-    +'<span style="font-size:19px;font-weight:800;color:'+col+';line-height:1;flex-shrink:0">'+n+'</span>'
-    +(sub?'<span style="font-size:10.5px;color:#94a3b8;margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+sub+'</span>':'')
-    +(click?'<i class="bi bi-chevron-right" style="font-size:10px;color:#cbd5e1;flex-shrink:0"></i>':'')
+  const stat=(lbl,n,col,sub,click,hot)=>'<div'+(click?' onclick="'+click+'"':'')+' style="flex:1;min-width:150px;background:'+(hot?'#fef2f2':'#fff')+';border:1px solid '+(hot?'#fecaca':'#eef2f7')+';border-left:3px solid '+col+';border-radius:11px;padding:8px 12px;box-shadow:0 1px 2px rgba(15,23,42,.03)'+(click?';cursor:pointer':'')+'">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;color:'+(hot?'#b91c1c':'#64748b')+';font-weight:700">'+lbl+'</span>'+(click?'<i class="bi bi-chevron-right" style="font-size:9px;color:#cbd5e1"></i>':'')+'</div>'
+    +'<div style="display:flex;align-items:baseline;gap:8px;margin-top:1px"><span style="font-size:20px;font-weight:800;color:'+col+';line-height:1.1">'+n+'</span>'+(sub?'<span style="font-size:10.5px;color:'+(hot?'#dc2626':'#94a3b8')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+sub+'</span>':'')+'</div>'
     +'</div>';
   const legend=Object.keys(_SCH_COL).filter(x=>x!=='후속').map(x=>'<span style="font-size:10.5px;color:'+_SCH_COL[x]+';font-weight:600"><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:'+_SCH_COL[x]+';margin-right:4px;vertical-align:middle"></span>'+x+(byType[x]?' <span style="color:#94a3b8">'+byType[x]+'</span>':'')+'</span>').join('&nbsp;&nbsp;&nbsp;');
-  return ((overdue||done)?'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'
-      +(overdue?'<div style="flex:1;min-width:300px;padding:8px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:9px;font-size:12.5px;color:#b91c1c;cursor:pointer" onclick="_schShowOverdueOnly()"><i class="bi bi-exclamation-triangle-fill me-1"></i><b>놓친 일정 '+overdue+'건</b> — 지난 일정인데 결과가 안 남았어요. 눌러서 확인 후 <b>[✓ 완료·결과]</b>로 결과를 남겨주세요.</div>':'')
-      +(done?'<div style="flex:1;min-width:300px;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:9px;font-size:12.5px;color:#15803d;cursor:pointer" onclick="_schShowDoneOnly()"><i class="bi bi-check-circle-fill me-1"></i><b>완료된 일정 '+done+'건</b> — 눌러서 일간·주간으로 완료 결과를 확인하고 피드백을 주세요.</div>':'')
-    +'</div>':'')
-    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">'
-      +stat('오늘',t,'#2563eb','방문 '+tVisit+' · 완료 '+tDone+'/'+t,"setSchView('today',document.getElementById('sch-v-today'))")
-      +stat('이번주',w,'#0891b2','방문 '+wVisit+' · 완료 '+wDone+'/'+w+(w?' ('+Math.round(wDone/w*100)+'%)':''),"setSchView('week',document.getElementById('sch-v-week'))")
-      +stat('지연',overdue,'#dc2626',overdue?'지난 일정 · 완료+결과 입력 필요':'없음 👍',overdue?'_schShowOverdueOnly()':'')
-      +stat('예정',pend,'#ea580c',nextUp?'다음 '+nextUp.slice(5).replace('-','/')+' 이후 '+pend+'건':'오늘 이후 예정',"setSchView('week',document.getElementById('sch-v-week'))")
-      +stat('완료',done,'#16a34a','이번주 '+resN+'/'+done+(noResAll?' · <b style="color:#dc2626">완료건 중 결과누락 '+noResAll+'</b>':''),'_schShowDoneOnly()')
+  return '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">'
+      +stat('오늘',t,'#2563eb','방문 '+tVisit+' · 완료 '+tDone,"setSchView('today',document.getElementById('sch-v-today'))")
+      +stat('이번주',w,'#0891b2','방문 '+wVisit+' · 완료 '+wDone+'/'+w,"setSchView('week',document.getElementById('sch-v-week'))")
+      +stat('놓친 일정',overdue,'#dc2626',overdue?'눌러서 결과 입력':'없음 👍',overdue?'_schShowOverdueOnly()':'',overdue>0)
+      +stat('예정',pend,'#ea580c',nextUp?'다음 '+nextUp.slice(5).replace('-','/'):'오늘 이후',"setSchView('week',document.getElementById('sch-v-week'))")
+      +stat('완료',done,'#16a34a','이번주 · 눌러서 결과 보기'+(noResAll?' · <b style="color:#dc2626">결과누락 '+noResAll+'</b>':''),'_schShowDoneOnly()')
     +'</div>'
     +'<div style="display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin-bottom:14px;padding:8px 12px;background:#f8fafc;border-radius:9px">'
       +'<span style="font-size:10.5px;color:#94a3b8;font-weight:700">유형</span>'+legend+'</div>';
