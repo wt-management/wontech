@@ -7926,7 +7926,7 @@ function _schStatsBar(all){
       +(done?'<div style="flex:1;min-width:300px;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:9px;font-size:12.5px;color:#15803d;cursor:pointer" onclick="_schShowDoneOnly()"><i class="bi bi-check-circle-fill me-1"></i><b>완료된 일정 '+done+'건</b> — 눌러서 일간·주간으로 완료 결과를 확인하고 피드백을 주세요.</div>':'')
     +'</div>':'')
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">'
-      +stat('오늘',t,'#2563eb','방문 '+tVisit+' · 완료 '+tDone+'/'+t,"setSchView('day',document.getElementById('sch-v-day'))")
+      +stat('오늘',t,'#2563eb','방문 '+tVisit+' · 완료 '+tDone+'/'+t,"setSchView('today',document.getElementById('sch-v-today'))")
       +stat('이번주',w,'#0891b2','방문 '+wVisit+' · 완료 '+wDone+'/'+w+(w?' ('+Math.round(wDone/w*100)+'%)':''),"setSchView('week',document.getElementById('sch-v-week'))")
       +stat('지연',overdue,'#dc2626',overdue?'결과 미입력 — 눌러서 처리':'없음 👍',overdue?'_schShowOverdueOnly()':'')
       +stat('예정',pend,'#ea580c',nextUp?'다음 '+nextUp.slice(5).replace('-','/')+' 이후 '+pend+'건':'오늘 이후 예정',"setSchView('week',document.getElementById('sch-v-week'))")
