@@ -7892,7 +7892,7 @@ function _schWeekRange(ref){ const d=ref?new Date(ref+'T00:00'):new Date(); cons
 function _schBadge(t){ const c=_SCH_COL[t]||'#64748b'; return '<span style="font-size:10px;font-weight:800;color:'+c+';background:'+c+'1a;border-radius:4px;padding:1px 6px;flex-shrink:0">'+t+'</span>'; }
 // 팀원 생일(매년 반복) — 팀원 관리(kor_team)의 bday(MM-DD) 기준, 퇴사 처리 시 자동 제거
 function _schBdays(ds){ const md=String(ds||'').slice(5,10); if(!md) return []; return (KOR_TEAM||[]).filter(m=>(m.bday||'')===md&&(m.name||'').trim()); }
-function _schBdayCard(m){ return '<div style="background:#fdf4ff;border:1px dashed #d946ef;border-radius:6px;padding:3px 6px;margin-bottom:4px"><span style="font-size:10px;font-weight:800;color:#a21caf">🎂 '+_schEsc(m.name)+' 생일</span></div>'; }
+function _schBdayCard(m){ return '<div style="background:#fdf4ff;border:1px dashed #d946ef;border-radius:6px;padding:3px 6px;margin-bottom:4px"><span style="font-size:10px;font-weight:800;color:#a21caf">🎂 '+_schEsc((m.name+' '+(m.pos||'')).trim())+' 생일</span></div>'; }
 // 담당자별 고유 색상 — 일정 카드의 담당자명 글씨색을 담당자마다 다르게(이름 해시→팔레트)
 function _schRepColor(name){
   name=String(name||'').trim(); if(!name) return '#64748b';
@@ -8083,7 +8083,7 @@ function renderSchedule(){
     title.textContent=(ref===today?'오늘 ':'')+ref.slice(5).replace('-','/')+' ('+WDD+') · '+list.length+'건'+(sfv?' · '+_schEsc(sfv):'');
     nav.innerHTML=_schNavBtns();
     const bd=_schBdays(ref);
-    body.innerHTML=(bd.length?'<div style="margin-bottom:8px;padding:9px 12px;background:#fdf4ff;border:1px dashed #d946ef;border-radius:9px;font-size:13px;font-weight:700;color:#a21caf">🎂 오늘은 '+bd.map(m=>_schEsc(m.name)).join(', ')+' 님의 생일입니다!</div>':'')+_schListView(list);
+    body.innerHTML=(bd.length?'<div style="margin-bottom:8px;padding:9px 12px;background:#fdf4ff;border:1px dashed #d946ef;border-radius:9px;font-size:13px;font-weight:700;color:#a21caf">🎂 오늘은 '+bd.map(m=>_schEsc((m.name+' '+(m.pos||'')).trim())).join(', ')+' 님의 생일입니다!</div>':'')+_schListView(list);
   }
 }
 function openSchedule(pre){ pre=pre||{};
