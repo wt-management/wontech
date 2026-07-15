@@ -7908,20 +7908,29 @@ function _schItemRow(i){
 // 요약 통계바 + 유형 범례
 function _schStatsBar(all){
   const today=_schTodayStr(), wk=_schWeekRange();
-  const t=all.filter(i=>i.date===today).length;
-  const w=all.filter(i=>i.date>=wk.start&&i.date<=wk.end).length;
-  const pend=all.filter(i=>i.kind==='sched'&&!i.done&&i.date>=today).length;
+  const tArr=all.filter(i=>i.date===today);
+  const t=tArr.length, tDone=tArr.filter(i=>i.kind==='sched'&&i.done).length, tVisit=tArr.filter(i=>i.type==='방문').length;
+  const wArr=all.filter(i=>i.date>=wk.start&&i.date<=wk.end);
+  const w=wArr.length, wDone=wArr.filter(i=>i.kind==='sched'&&i.done).length, wVisit=wArr.filter(i=>i.type==='방문').length;
+  const pendArr=all.filter(i=>i.kind==='sched'&&!i.done&&i.date>=today);
+  const pend=pendArr.length;
+  const nextUp=pendArr.filter(i=>i.date>today).map(i=>i.date).sort()[0]||'';
   const overdue=all.filter(i=>i.kind==='sched'&&!i.done&&i.date<today).length;
-  const done=all.filter(i=>i.kind==='sched'&&i.done).length;
+  const doneArr=all.filter(i=>i.kind==='sched'&&i.done);
+  const done=doneArr.length, resN=doneArr.filter(i=>{ const l=(DB.d.logs||[]).find(x=>x.id===i.id); return l&&(l.resultMemo||l.resultGrade); }).length;
   const byType={}; all.forEach(i=>byType[i.type]=(byType[i.type]||0)+1);
-  const stat=(lbl,n,col)=>'<div style="flex:1;min-width:78px;background:#fff;border:1px solid #eef2f7;border-radius:11px;padding:9px 13px;box-shadow:0 1px 2px rgba(15,23,42,.03)"><div style="font-size:11px;color:#64748b">'+lbl+'</div><div style="font-size:21px;font-weight:800;color:'+col+';line-height:1.15">'+n+'</div></div>';
+  const stat=(lbl,n,col,sub,click)=>'<div'+(click?' onclick="'+click+'" ':' ')+'style="flex:1;min-width:100px;background:#fff;border:1px solid #eef2f7;border-radius:11px;padding:9px 13px;box-shadow:0 1px 2px rgba(15,23,42,.03)'+(click?';cursor:pointer':'')+'"><div style="font-size:11px;color:#64748b">'+lbl+(click?' <i class="bi bi-chevron-right" style="font-size:9px;color:#cbd5e1"></i>':'')+'</div><div style="font-size:21px;font-weight:800;color:'+col+';line-height:1.15">'+n+'</div>'+(sub?'<div style="font-size:10px;color:#94a3b8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+sub+'</div>':'')+'</div>';
   const legend=Object.keys(_SCH_COL).filter(x=>x!=='후속').map(x=>'<span style="font-size:10.5px;color:'+_SCH_COL[x]+';font-weight:600"><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:'+_SCH_COL[x]+';margin-right:4px;vertical-align:middle"></span>'+x+(byType[x]?' <span style="color:#94a3b8">'+byType[x]+'</span>':'')+'</span>').join('&nbsp;&nbsp;&nbsp;');
   return ((overdue||done)?'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'
       +(overdue?'<div style="flex:1;min-width:300px;padding:8px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:9px;font-size:12.5px;color:#b91c1c;cursor:pointer" onclick="_schShowOverdueOnly()"><i class="bi bi-exclamation-triangle-fill me-1"></i><b>놓친 일정 '+overdue+'건</b> — 지난 일정인데 결과가 안 남았어요. 눌러서 확인 후 <b>[✓ 완료·결과]</b>로 결과를 남겨주세요.</div>':'')
       +(done?'<div style="flex:1;min-width:300px;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:9px;font-size:12.5px;color:#15803d;cursor:pointer" onclick="_schShowDoneOnly()"><i class="bi bi-check-circle-fill me-1"></i><b>완료된 일정 '+done+'건</b> — 눌러서 일간·주간으로 완료 결과를 확인하고 피드백을 주세요.</div>':'')
     +'</div>':'')
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">'
-      +stat('오늘',t,'#2563eb')+stat('이번주',w,'#0891b2')+stat('지연',overdue,'#dc2626')+stat('예정',pend,'#ea580c')+stat('완료',done,'#16a34a')
+      +stat('오늘',t,'#2563eb','방문 '+tVisit+' · 완료 '+tDone+'/'+t,"setSchView('day',document.getElementById('sch-v-day'))")
+      +stat('이번주',w,'#0891b2','방문 '+wVisit+' · 완료 '+wDone+'/'+w+(w?' ('+Math.round(wDone/w*100)+'%)':''),"setSchView('week',document.getElementById('sch-v-week'))")
+      +stat('지연',overdue,'#dc2626',overdue?'결과 미입력 — 눌러서 처리':'없음 👍',overdue?'_schShowOverdueOnly()':'')
+      +stat('예정',pend,'#ea580c',nextUp?'다음 '+nextUp.slice(5).replace('-','/')+' 이후 '+pend+'건':'오늘 이후 예정',"setSchView('week',document.getElementById('sch-v-week'))")
+      +stat('완료',done,'#16a34a','결과입력 '+resN+'/'+done,'_schShowDoneOnly()')
     +'</div>'
     +'<div style="display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin-bottom:14px;padding:8px 12px;background:#f8fafc;border-radius:9px">'
       +'<span style="font-size:10.5px;color:#94a3b8;font-weight:700">유형</span>'+legend+'</div>';
