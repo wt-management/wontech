@@ -8183,12 +8183,22 @@ function _schHospInfo(name){
 function _schDealsBox(name){
   const deals=(DB.d.pipeline||[]).filter(d=>d.custName===name && d.stage!=='계약완료');
   if(!deals.length) return '';
-  const rows=deals.map(d=>'<div onclick="closeSchModalThen(\''+d.id+'\')" style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;cursor:pointer">'
-    +'<span style="font-size:11.5px;color:#334155">'+_schEsc(d.model||'')+' <span style="color:#7c3aed;font-weight:700">['+_schEsc(d.stage)+']</span></span>'
-    +'<span style="font-size:11px;color:#2563eb;font-weight:600">딜 보기 ↗</span></div>').join('');
+  const rows=deals.map(d=>{
+    const amt=Number(d.amount)||0;
+    const parts=[];
+    if(amt) parts.push('<b style="color:#0f172a">'+((typeof fmtAmt==='function')?fmtAmt(amt):amt.toLocaleString()+'원')+'</b>');
+    if(d.prob) parts.push('확률 '+d.prob+'%');
+    if(d.expectedDate) parts.push('예상 '+String(d.expectedDate).slice(2,7).replace('-','.')+'월');
+    const next=(d.nextDate||d.nextAction)?('다음: '+(d.nextDate?String(d.nextDate).slice(5).replace('-','/')+' ':'')+_schEsc(((d.nextType||'')+' '+(d.nextAction||'')).trim())):'';
+    return '<div onclick="closeSchModalThen(\''+d.id+'\')" style="padding:6px 0;border-bottom:1px dashed #eef2f7;cursor:pointer">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11.5px;color:#334155;font-weight:700">'+_schEsc(d.model||'')+' <span style="color:#7c3aed;font-weight:700">['+_schEsc(d.stage)+']</span></span><span style="font-size:11px;color:#2563eb;font-weight:600">딜 보기 ↗</span></div>'
+      +((parts.length||next)?'<div style="font-size:11px;color:#64748b;margin-top:2px">'+parts.join(' · ')+(next?(parts.length?' · ':'')+next:'')+'</div>':'')
+      +(d.note?'<div style="font-size:10.5px;color:#94a3b8;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_schEsc(String(d.note).slice(0,70))+'</div>':'')
+    +'</div>';
+  }).join('');
   return '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0"><div style="font-size:11px;color:#7c3aed;font-weight:700;margin-bottom:3px"><i class="bi bi-kanban me-1"></i>진행중 딜 '+deals.length+'건</div>'+rows+'</div>';
 }
-function closeSchModalThen(dealId){ try{ bootstrap.Modal.getInstance(document.getElementById('scheduleModal')).hide(); }catch(e){} setTimeout(function(){ openDealDrawer(dealId); }, 230); }
+function closeSchModalThen(dealId){ try{ bootstrap.Modal.getInstance(document.getElementById('scheduleModal')).hide(); }catch(e){} setTimeout(function(){ if(typeof showPage==='function') showPage('sales'); openDealDrawer(dealId); }, 230); }
 async function saveSchedule(){
   const cust=document.getElementById('sch-cust').value.trim(), date=document.getElementById('sch-date').value;
   if(!cust||!date){ alert('병원과 날짜를 입력하세요.'); return; }
