@@ -2537,7 +2537,7 @@ function _buildLauncherCardsHTML(access) {
   const cardOut   = "this.style.transform='';this.style.boxShadow='';this.style.borderColor='rgba(255,255,255,.1)'";
   return _siteRegistry.filter(s=>_siteVisible(s, access, _isAdmin)).map(s=>{
     const onclick = s.url==='LOCAL'
-      ? "sessionStorage.setItem('wt_app','korea');history.replaceState({page:'launcher'},'',location.href);document.getElementById('launcher-screen').style.display='none';document.getElementById('app-loading').style.display='flex';_bootApp(_currentAccess);"
+      ? "sessionStorage.setItem('wt_app','korea');history.replaceState({page:'launcher'},'',(location.hash&&location.hash.indexOf('=')===-1)?location.href:location.pathname+location.search);document.getElementById('launcher-screen').style.display='none';document.getElementById('app-loading').style.display='flex';_bootApp(_currentAccess);"
       : (s.needs_token
           ? `(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='${s.url}';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()`
           : `location.href='${s.url}'`);
@@ -2583,6 +2583,9 @@ async function _showLauncherOrApp(user) {
     document.getElementById('launcher-cards').innerHTML = _buildLauncherCardsHTML(access);
     if(_isAdmin) document.getElementById('launcher-admin-btn').style.display = '';
     document.getElementById('launcher-screen').style.display = 'flex';
+    // 위생: 파라미터형 해시(#app=..·#at=..)는 주소창·히스토리에서 제거하며 첫 엔트리에 launcher state를 심음(페이지 딥링크 해시는 보존)
+    var _lh=(location.hash||'').replace(/^#/,'');
+    history.replaceState({page:'launcher'}, '', (_lh && _lh.indexOf('=')===-1) ? location.href : location.pathname+location.search);
     _hideLoading();
   } else if(access.includes('korea')) {
     await _bootApp(access);
@@ -2598,7 +2601,7 @@ async function _showLauncherOrApp(user) {
     }
     let dest = site.url;
     if(site.needs_token){ const {data:{session:_s}}=await _sb.auth.getSession(); if(_s)dest+='#at='+encodeURIComponent(_s.access_token)+'&rt='+encodeURIComponent(_s.refresh_token); }
-    location.href=dest;
+    location.replace(dest);   // 자동 라우팅은 replace — 뒤로가기 시 이 페이지로 돌아와 다시 밀려나는 핑퐁 방지
   }
 }
 
@@ -2635,10 +2638,19 @@ async function _bootApp(access) {
   await _loadPending();
   await _loadIlboPending();
   await _loadHospRegions();
-  var _nav=(performance.getEntriesByType('navigation')[0]||{}).type;   // reload=새로고침 / navigate=신규진입
+  var _nav=(performance.getEntriesByType('navigation')[0]||{}).type;   // reload=새로고침 / back_forward=복귀 / navigate=신규진입
   var _sv=sessionStorage.getItem('wt_page');
-  var _t=(_nav==='reload' && _sv && document.getElementById('page-'+_sv)) ? _sv : 'sales-overview';
-  showPage(_t);   // 새로고침=머문 페이지, 신규진입=종합현황(첫 메뉴)
+  var _validPage=function(k){ return !!(k && document.getElementById('page-'+k) && !(k==='device-reps' && typeof _isMgr!=='undefined' && !_isMgr)); };   // 요소 존재 + 권한 게이트
+  var _hp=(location.hash||'').replace(/^#/,'');   // 딥링크 해시(#페이지키)
+  var _t = _validPage(_hp) ? _hp
+         : ((_nav==='reload'||_nav==='back_forward') && _validPage(_sv)) ? _sv
+         : 'sales-overview';   // 새로고침·뒤로가기복귀=머문 페이지, 신규진입=종합현황(첫 메뉴)
+  if(history.state && history.state.page==='launcher'){
+    showPage(_t);   // 런처 경유 진입 — 런처 엔트리를 남기고 push(뒤로가기=런처 복귀)
+  } else {
+    showPage(_t, null, true);   // 직접 진입 — push 없이 첫 엔트리에 state를 심음(state=null 트랩·여분 엔트리 방지)
+    history.replaceState({page:_t}, '', location.href.split('#')[0] + '#' + _t);
+  }
   document.getElementById('main-content').style.display='block';
   try{ _bellSync(); }catch(e){}
   _hideLoading();
@@ -2695,7 +2707,7 @@ function showPage(name, el, noPush) {
   // 담당자별 분석 = 파트장/관리자 전용 (팀원 접근 차단)
   if(name==='device-reps' && typeof _isMgr!=='undefined' && !_isMgr){ name='sales-overview'; el=null; }
   sessionStorage.setItem('wt_page', name);
-  if(!noPush) history.pushState({page: name}, '', location.href.split('#')[0] + '#' + name);
+  if(!noPush && !(history.state && history.state.page===name)) history.pushState({page: name}, '', location.href.split('#')[0] + '#' + name);   // 같은 페이지 중복 push 금지(재클릭 시 엔트리 누적 방지)
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(a=>a.classList.remove('active'));
   const page = document.getElementById('page-'+name);
@@ -3915,6 +3927,7 @@ async function doLogin() {
   if(error) { if(errEl) errEl.style.display='block'; return; }
   if(errEl) errEl.style.display='none';
   sessionStorage.removeItem('wt_app');   // 로그인 시 이전 앱 상태 무시 → 런처부터
+  sessionStorage.removeItem('wt_page');  // 이전 계정이 머문 페이지 복원 방지
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-loading').style.display='flex';
   _applyLoginUI(data.user);   // 좌측하단 사용자 블록 표시(신규 로그인 시 누락되던 버그)
@@ -9677,23 +9690,36 @@ document.addEventListener('click', function(e) {
 });
 
 window.addEventListener('popstate', function(e) {
+  // 0) 열려있는 오버레이(모달/사이드 드로어)가 있으면 오버레이만 닫고, 소모된 엔트리를 복구 — 모바일 '뒤로가기=닫기'
+  const _openModal = document.querySelector('.modal.show');
+  const _openDrawer = document.querySelector('.sidebar.open');
+  if(_openModal || _openDrawer) {
+    if(_openModal) { try{ (bootstrap.Modal.getInstance(_openModal)||bootstrap.Modal.getOrCreateInstance(_openModal)).hide(); }catch(err){} }
+    if(_openDrawer) { try{ _closeSidebar(); }catch(err){} }
+    const _onLauncher = document.getElementById('main-content').style.display === 'none';
+    const _cur = _onLauncher ? 'launcher' : (sessionStorage.getItem('wt_page') || 'sales-overview');
+    history.pushState({page: _cur}, '', _cur==='launcher' ? (location.pathname+location.search) : (location.href.split('#')[0] + '#' + _cur));
+    return;
+  }
   if(e.state?.page === 'launcher') {
     sessionStorage.removeItem('wt_app');
     sessionStorage.removeItem('wt_page');
     document.getElementById('main-content').style.display = 'none';
+    if(!document.getElementById('launcher-cards').innerHTML.trim()) { try{ _renderLauncherCards(_currentAccess); }catch(err){} }   // 새로고침으로 앱 직행 부팅한 세션은 카드 미렌더 상태 — 빈 런처 방지
     document.getElementById('launcher-screen').style.display = 'flex';
   } else if(e.state?.page === 'speech' && e.state?.sd) {
     showPage('speech', null, true);
     if(typeof showSpeechDetail==='function') showSpeechDetail(e.state.sd, true);
   } else if(e.state?.page) {
-    showPage(e.state.page, null, true);
+    showPage(e.state.page, null, true);   // showPage 내부에서 권한 게이트(device-reps 등) 재검증됨
   } else {
-    // 히스토리 첫 엔트리 이전 — 현재 페이지 유지
-    const cur = sessionStorage.getItem('wt_page');
-    if(cur && document.getElementById('main-content').style.display !== 'none') {
-      history.pushState({page: cur}, '', location.href.split('#')[0] + '#' + cur);
-    }
+    // state 없는 엔트리(사이트 밖/시드 이전) — 아무것도 하지 않음. pushState로 되밀면 forward 파괴 + 무한 트랩.
   }
+});
+
+// bfcache 복원 시 세션 확인 — 로그아웃/만료 후 뒤로가기로 이전 계정 화면 노출 차단(세션 유효하면 그대로 유지)
+window.addEventListener('pageshow', function(e){
+  if(e.persisted){ _sb.auth.getSession().then(function(r){ if(!(r&&r.data&&r.data.session)) location.reload(); }); }
 });
 </script>
 

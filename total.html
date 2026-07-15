@@ -841,6 +841,7 @@ async function doLogin(){
 })();
 async function doLogout(){
   try{ await _sb.auth.signOut(); }catch(e){}
+  try{ sessionStorage.removeItem('total_page'); }catch(_){}   // 다음 계정에 이전 계정 페이지 복원 방지
   location.href='https://wt-management.github.io/wontech/';
 }
 async function wtChangePw(){
@@ -1052,7 +1053,8 @@ function toggleNav(force){
   sb.classList.toggle('open', open);
   if(bd) bd.classList.toggle('open', open);
 }
-function showPage(name,el){
+function showPage(name,el,push){
+  try{ sessionStorage.setItem('total_page', name); }catch(_){}   // 렌더 전에 저장 — 렌더 중 이탈해도 머문 페이지 유지
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.getElementById('page-'+name).classList.add('on');
   document.querySelectorAll('.nav-link').forEach(n=>n.classList.remove('active'));
@@ -1070,7 +1072,8 @@ function showPage(name,el){
   if(name==='units') renderUnits();
   if(name==='leaderboard') renderLeaderboard();
   if(name==='customers') renderCustomers();
-  try{ sessionStorage.setItem('total_page', name); }catch(_){}
+  // WT_NAV[1] 히스토리 적재 — 같은 키 중복 push 금지(같은 메뉴 재클릭 시 엔트리 누적 방지)
+  if(push!==false && !(history.state && history.state.p===name)){ try{ history.pushState({p:name},'','#p='+name); }catch(_){} }
 }
 
 // ── 전사 종합 ────────────────────────────────────────────
@@ -2815,22 +2818,56 @@ document.addEventListener('keydown',function(e){ if(e.key!=='Escape') return;
     // 로딩 오버레이는 저장된 페이지로 전환 완료 후에 해제 — 새로고침 시 '전사 종합 잠깐 보였다가 이동' 플래시 방지
     try{
       await afterLogin(session.user);
-      const _nav=(performance.getEntriesByType('navigation')[0]||{}).type;   // reload=새로고침 / navigate=신규진입
-      let _t=_initPage||((_nav==='reload')?(sessionStorage.getItem('total_page')||''):'');   // #p(외부) 우선·새로고침이면 머문 페이지·신규는 첫메뉴
-      if(_t && _t!=='overview' && document.getElementById('page-'+_t)) showPage(_t, document.getElementById('nav-'+_t));
+      // WT_NAV[2] 초기 페이지: 딥링크(#p=) > 새로고침·뒤로가기 복원(sessionStorage) > 기본 첫 메뉴
+      if(document.getElementById('login-screen').style.display==='none'){   // afterLogin 권한 게이트 통과 시에만
+        const _nav=(performance.getEntriesByType('navigation')[0]||{}).type;   // reload=새로고침 / back_forward=뒤로가기 / navigate=신규진입
+        let _t=_initPage||((_nav==='reload'||_nav==='back_forward')?(sessionStorage.getItem('total_page')||''):'');
+        const _pe=_t?document.getElementById('page-'+_t):null;
+        if(!(_pe&&_pe.classList.contains('page'))) _t='overview';   // page-title 등 유사 id 오탐 방지
+        if(_t!=='overview') showPage(_t, document.getElementById('nav-'+_t), false);
+        try{ history.replaceState({p:_t},'','#p='+_t); }catch(_){}   // 첫 렌더는 push 아닌 replace로 seed(state=null 트랩 방지)
+      }
     } finally { document.getElementById('app-loading').style.display='none'; }
   }
-  else { document.getElementById('app-loading').style.display='none'; location.href='https://wt-management.github.io/wontech/'; }
+  else { document.getElementById('app-loading').style.display='none'; location.replace('https://wt-management.github.io/wontech/'); }
 })();
 
-// bfcache(뒤로/앞으로 캐시) 복원 시에도 머물던 페이지 유지
+// bfcache(뒤로/앞으로 캐시) 복원 시에도 머물던 페이지 유지 + 세션 만료 화면 노출 차단(WT_NAV[4])
 window.addEventListener('pageshow', function(e){
   if(!e.persisted) return;
+  _sb.auth.getSession().then(function(r){ if(!(r&&r.data&&r.data.session)) location.reload(); });   // 로그아웃/만료 후 뒤로가기로 이전 계정 화면 노출 차단
   if(document.getElementById('login-screen').style.display!=='none') return;
   var p=sessionStorage.getItem('total_page')||'overview';
-  if(!document.getElementById('page-'+p)) p='overview';
-  showPage(p, document.getElementById('nav-'+p));
+  var pe=document.getElementById('page-'+p);
+  if(!(pe&&pe.classList.contains('page'))) p='overview';
+  showPage(p, document.getElementById('nav-'+p), false);
   if(p==='overview'){ try{ renderOverview(); }catch(_){} }
+});
+
+// WT_NAV[3] popstate — 오버레이 열려있으면 닫기만(모바일 뒤로가기=닫기), 아니면 페이지 전환
+window.addEventListener('popstate', function(e){
+  if(document.getElementById('login-screen').style.display!=='none') return;
+  var closed=false;
+  var inf=document.getElementById('info-dbg');
+  var dbg=document.getElementById('rpt-dbg');
+  var ov=document.getElementById('ovDetailModal');
+  var em=document.getElementById('ex-edit-modal');
+  var sb=document.querySelector('.sidebar');
+  if(inf&&inf.classList.contains('on')){ closeInfo(); closed=true; }
+  else if(dbg&&dbg.classList.contains('on')){ closeDrill(); closed=true; }
+  else if(ov&&ov.style.display==='flex'){ closeOvDetail(); closed=true; }
+  else if(em&&em.style.display==='flex'){ exCloseEdit(); closed=true; }
+  else if(sb&&sb.classList.contains('open')&&window.innerWidth<=820){ toggleNav(false); closed=true; }
+  if(closed){
+    var cur='overview'; try{ cur=sessionStorage.getItem('total_page')||'overview'; }catch(_){}
+    try{ history.pushState({p:cur},'','#p='+cur); }catch(_){}   // 소모된 엔트리 복구
+    return;
+  }
+  if(e.state&&e.state.p){
+    var pe=document.getElementById('page-'+e.state.p);
+    if(pe&&pe.classList.contains('page')) showPage(e.state.p, document.getElementById('nav-'+e.state.p), false);
+  }
+  // state 없으면 아무것도 하지 않음 — pushState로 되밀면 무한 트랩
 });
 </script>
 <button id="pdf-fab" onclick="printPDF()" title="이 페이지를 PDF로 추출"><i class="bi bi-filetype-pdf me-1"></i>PDF</button>
