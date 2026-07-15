@@ -798,10 +798,6 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
           </div>
         </div>
       </div>
-      <div class="card p-3 mb-3">
-        <div class="fw-bold mb-3" style="font-size:14px"><i class="bi bi-people-fill me-2" style="color:#2563eb"></i>영업사원별 실적</div>
-        <div id="sales-perf-table"></div>
-      </div>
     </div>
     <!-- 드릴다운 패널 -->
     <div id="perf-drill-panel" style="display:none" class="mt-3">
@@ -6997,7 +6993,7 @@ function renderPerformance(){
   </div></div>`).join('');
 
   // 영업사원별 카드
-  document.getElementById('sales-perf-table').innerHTML=salesData.length?`
+  var _spt=document.getElementById('sales-perf-table'); if(_spt) _spt.innerHTML=salesData.length?`
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
       ${salesData.map((x,i)=>{
         const barW=(x.wonAmt/maxWon*100).toFixed(0);
