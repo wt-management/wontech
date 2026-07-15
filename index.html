@@ -5750,16 +5750,20 @@ function renderCDUTarget(){
       +'<button class="btn btn-outline-primary btn-sm" style="font-size:10px;padding:1px 8px;flex-shrink:0" onclick="openCDUVisitFor(\''+q+'\')">방문 등록</button></div>';
   };
   var more=function(arr){ return arr.length>LIM?'<div style="font-size:11px;color:#9ca3af;margin-top:6px">외 '+(arr.length-LIM)+'곳 (상위 '+LIM+'곳 표시)</div>':''; };
-  var dueHtml=due.slice(0,LIM).map(d=>row(d.n,d.mgr,'주기 <b>'+d.gap+'일</b>인데 마지막 구매 <b style="color:#dc2626">'+d.since+'일 전</b> ('+d.over+'일 초과)','회당 '+_cduWon(d.amt))).join('')||'<div class="text-muted" style="font-size:12px;padding:8px 0">재구매 도래 병원이 없습니다.</div>';
-  var dorHtml=dormant.slice(0,LIM).map(d=>row(d.n,d.mgr,esc(d.dev)+' 보유 · <b style="color:#dc2626">올해 팁 매출 0</b>',d.y25>0?'작년 '+_cduWon(d.y25):'구매이력 없음')).join('')||'<div class="text-muted" style="font-size:12px;padding:8px 0">휴면 병원이 없습니다.</div>';
-  var drpHtml=drop.slice(0,LIM).map(d=>row(d.n,d.mgr,esc(d.dev)+' 보유 · 작년 '+_cduWon(d.y25)+' → 올해 '+_cduWon(d.y26)+' <b style="color:#dc2626">급감</b>','회복 여지 '+_cduWon(Math.max(0,d.y25-d.y26*12/mm)))).join('')||'<div class="text-muted" style="font-size:12px;padding:8px 0">급감 병원이 없습니다.</div>';
+  var dueHtml=due.slice(0,LIM).map(d=>row(d.n,d.mgr,'주기 <b>'+d.gap+'일</b> · 마지막 <b style="color:#dc2626">'+d.since+'일 전</b>','회당 '+_cduWon(d.amt))).join('')||'<div class="text-muted" style="font-size:12px;padding:8px 0">재구매 도래 병원이 없습니다.</div>';
+  var dorHtml=dormant.slice(0,LIM).map(d=>row(d.n,d.mgr,esc(d.dev)+' · <b style="color:#dc2626">팁 0</b>',d.y25>0?'작년 '+_cduWon(d.y25):'이력 없음')).join('')||'<div class="text-muted" style="font-size:12px;padding:8px 0">휴면 병원이 없습니다.</div>';
+  var drpHtml=drop.slice(0,LIM).map(d=>row(d.n,d.mgr,esc(d.dev)+' · '+_cduWon(d.y25)+'→'+_cduWon(d.y26)+' <b style="color:#dc2626">급감</b>','회복 '+_cduWon(Math.max(0,d.y25-d.y26*12/mm)))).join('')||'<div class="text-muted" style="font-size:12px;padding:8px 0">급감 병원이 없습니다.</div>';
   var dueSum=due.reduce((s,d)=>s+d.amt,0), dorSum=dormant.reduce((s,d)=>s+d.y25,0), drpSum=drop.reduce((s,d)=>s+d.y25,0);
-  var card=function(title,ic,col,badge,inner,tip){ return '<div class="card p-3 mb-3"><div class="d-flex justify-content-between align-items-center mb-1"><div class="fw-bold" style="font-size:13.5px"><i class="bi '+ic+' me-1" style="color:'+col+'"></i>'+title+'</div><span style="font-size:11px;font-weight:700;color:'+col+'">'+badge+'</span></div><div style="font-size:10.5px;color:#9ca3af;margin-bottom:6px">'+tip+'</div>'+inner+'</div>'; };
+  var card=function(title,ic,col,badge,inner,tip){ return '<div class="card p-3 h-100"><div class="d-flex justify-content-between align-items-center mb-1"><div class="fw-bold" style="font-size:13.5px"><i class="bi '+ic+' me-1" style="color:'+col+'"></i>'+title+'</div><span style="font-size:11px;font-weight:700;color:'+col+'">'+badge+'</span></div><div style="font-size:10.5px;color:#9ca3af;margin-bottom:6px">'+tip+'</div>'+inner+'</div>'; };
   el.innerHTML=
     '<div style="font-size:12px;color:#64748b;margin-bottom:10px"><i class="bi bi-lightbulb me-1" style="color:#d97706"></i>실제 구매 데이터가 찍어주는 <b>다음 방문 우선순위</b>입니다. 병원명 클릭 = 병원 상세(구매이력·장비·상담) · [방문 등록] = 바로 일정 잡기</div>'
-    +card('재구매 도래','bi-arrow-repeat','#2563eb',due.length+'곳 · 회당 합계 '+_cduWon(dueSum),dueHtml,'평균 구매 주기가 지났는데 아직 재구매하지 않은 병원 — 지금 방문하면 주문 가능성이 가장 높은 곳(회당 평균 구매액 순)')
-    +card('휴면 장비 병원','bi-battery','#dc2626',dormant.length+'곳 · 작년 팁매출 '+_cduWon(dorSum),dorHtml,'Oligio·Tightan 장비를 보유하고 있는데 올해 팁 매출이 0인 병원 — 장비 방치 또는 경쟁 소모품 사용 의심(작년 매출 순)')
-    +card('구매 급감 병원','bi-graph-down-arrow','#ea580c',drop.length+'곳 · 작년 팁매출 '+_cduWon(drpSum),drpHtml,'작년 대비 올해 팁 구매가 60% 이상 줄어든 병원(연환산 기준) — 이탈 전 방어 방문 필요');
+    +'<div class="row g-3 mb-3">'
+      +'<div class="col-lg-6">'+card('구매 급감 병원','bi-graph-down-arrow','#ea580c',drop.length+'곳 · 작년 팁매출 '+_cduWon(drpSum),drpHtml,'작년 대비 올해 팁 구매 60%↓(연환산) — 이탈 전 방어 방문 필요')+'</div>'
+      +'<div class="col-lg-6">'+card('재구매 도래','bi-arrow-repeat','#2563eb',due.length+'곳 · 회당 합계 '+_cduWon(dueSum),dueHtml,'평균 구매 주기가 지났는데 아직 재구매하지 않은 병원(회당 평균 구매액 순)')+'</div>'
+    +'</div>'
+    +card('휴면 장비 병원','bi-battery','#dc2626',dormant.length+'곳 · 작년 팁매출 '+_cduWon(dorSum),
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));column-gap:28px">'+dorHtml+'</div>',
+      'Oligio·Tightan 보유인데 올해 팁 매출 0 — 장비 방치 또는 경쟁 소모품 사용 의심(작년 매출 순)');
 }
 function _cduTab(t){ _cduView=t;
   ['report','input','target','plan','keyman'].forEach(function(x){ var b=document.getElementById('cdu-tab-'+x); if(b) b.className='btn btn-'+(x===t?'primary':'outline-primary'); });
