@@ -5742,12 +5742,12 @@ function renderCDUTarget(){
   var esc=_cduEsc, LIM=30;
   var row=function(name,mgr,mid,right){
     var q=esc(name).replace(/\x27/g,"\\x27");
-    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f1f5f9">'
-      +'<span onclick="showHospitalDetail(\''+q+'\')" style="font-size:12.5px;font-weight:700;color:#0f172a;min-width:150px;flex-shrink:0;cursor:pointer" title="병원 상세(구매이력·장비·상담)">'+esc(name)+' <i class="bi bi-search" style="font-size:9px;color:#cbd5e1"></i></span>'
-      +'<span style="font-size:11.5px;color:#475569;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+mid+'</span>'
-      +'<span style="font-size:12px;font-weight:700;color:#0891b2;flex-shrink:0">'+right+'</span>'
-      +(mgr?'<span style="font-size:10px;color:#94a3b8;flex-shrink:0">'+esc(mgr)+'</span>':'')
-      +'<button class="btn btn-outline-primary btn-sm" style="font-size:10px;padding:1px 8px;flex-shrink:0" onclick="openCDUVisitFor(\''+q+'\')">방문 등록</button></div>';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f1f5f9">'
+      +'<span onclick="showHospitalDetail(\''+q+'\')" style="font-size:12.5px;font-weight:700;color:#0f172a;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" title="병원 상세(구매이력·장비·상담)">'+esc(name)+' <i class="bi bi-search" style="font-size:9px;color:#cbd5e1"></i></span>'
+      +(mid?'<span style="font-size:11.5px;color:#475569;flex-shrink:0;width:186px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+mid+'</span>':'')
+      +'<span style="font-size:12px;font-weight:700;color:#0891b2;flex-shrink:0;width:96px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap">'+right+'</span>'
+      +'<span style="font-size:10px;color:#94a3b8;flex-shrink:0;width:58px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(mgr?esc(mgr):'')+'</span>'
+      +'<button class="btn btn-outline-primary btn-sm" style="font-size:10px;padding:1px 8px;flex-shrink:0;white-space:nowrap" onclick="openCDUVisitFor(\''+q+'\')">방문 등록</button></div>';
   };
   var more=function(arr){ return arr.length>LIM?'<div style="font-size:11px;color:#9ca3af;margin-top:6px">외 '+(arr.length-LIM)+'곳 (상위 '+LIM+'곳 표시)</div>':''; };
   var dueHtml=due.slice(0,LIM).map(d=>row(d.n,d.mgr,'주기 <b>'+d.gap+'일</b> · 마지막 <b style="color:#dc2626">'+d.since+'일 전</b>','회당 '+_cduWon(d.amt))).join('')||'<div class="text-muted" style="font-size:12px;padding:8px 0">재구매 도래 병원이 없습니다.</div>';
