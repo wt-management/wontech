@@ -8300,7 +8300,7 @@ function renderSchDaily(force){
         else reaction=(s.done?'완료':'');
       }
       var comp=s.resultComp||extComp||_sdrCompFor((s.custName||'').trim());
-      rows.push({sid:s.id, hosp:s.custName||'', purpose:((s.type&&s.type!=='방문')?('['+s.type+'] '):'')+(s.content||'')+(s.product?' — '+s.product:''), reaction:reaction, comp:comp});
+      rows.push({sid:s.id, hosp:s.custName||'', purpose:((s.type&&s.type!=='방문')?('['+s.type+'] '):'')+(s.product?s.product+((s.content||'').trim()?' — ':''):'')+(s.content||''), reaction:reaction, comp:comp});
     });
     logs.filter(l=>l.kind==='cdu'&&l.status!=='planned'&&String(l.date||'').slice(0,10)===D&&(l.sales||'').trim()===R).forEach(function(v){
       rows.push({hosp:v.custName||'', purpose:'[소모품] '+(v.mainProc?v.mainProc+' ':'')+'방문'+(v.price?' · 수가 '+v.price+'천':''), reaction:(v.feedback||''), comp:(v.competitor||'')});
@@ -8370,7 +8370,7 @@ function sdrPickOpen(){
   (DB.d.logs||[]).forEach(function(l){
     var dt=String(l.date||'').slice(0,10); if(!dt||dt<from||dt>D) return;
     if(l.kind==='schedule'&&mine(l.sales)){
-      out.push({sid:l.id, date:dt, hosp:l.custName||'', purpose:((l.type&&l.type!=='방문')?('['+l.type+'] '):'')+(l.content||'')+(l.product?' — '+l.product:''), reaction:(l.resultMemo||''), comp:(l.resultComp||'')});
+      out.push({sid:l.id, date:dt, hosp:l.custName||'', purpose:((l.type&&l.type!=='방문')?('['+l.type+'] '):'')+(l.product?l.product+((l.content||'').trim()?' — ':''):'')+(l.content||''), reaction:(l.resultMemo||''), comp:(l.resultComp||'')});
     } else if(l.kind==='cdu'&&l.status!=='planned'&&mine(l.sales)){
       out.push({date:dt, hosp:l.custName||'', purpose:'[소모품] '+(l.mainProc?l.mainProc+' ':'')+'방문'+(l.price?' · 수가 '+l.price+'천':''), reaction:(l.feedback||''), comp:(l.competitor||'')});
     }
