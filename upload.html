@@ -167,7 +167,7 @@ async function _canUpload(user){
     try{
       if(typeof _sb!=='undefined' && _sb && _sb.auth && _sb.auth.getSession){
         _sb.auth.getSession().then(function(r){
-          var s=r&&r.data&&r.data.session; var _noAutoLogout=['pmw0406@gmail.com','megan@wontech.com']; if(s&&s.user&&_noAutoLogout.indexOf(s.user.email)>=0){ _arm(); return; } /* 마스터·megan은 자동로그아웃 제외 */ if(s){ _logout(); } else { _arm(); }
+          var s=r&&r.data&&r.data.session; var _noAutoLogout=['pmw0406@gmail.com','son8704@wontech.com','megan@wontech.com','hyerin0519@wontech.com','tndnjs890@wontech.com']; if(s&&s.user&&_noAutoLogout.indexOf(s.user.email)>=0){ _arm(); return; } /* 마스터·megan은 자동로그아웃 제외 */ if(s){ _logout(); } else { _arm(); }
         }).catch(function(){ _logout(); });
       } else { _logout(); }
     }catch(e){ _logout(); }
@@ -182,9 +182,8 @@ async function showApp(){
   const {data:{session}}=await _sb.auth.getSession();
   if(!session){ document.getElementById('loginBox').style.display='block'; return; }
   if(!(await _canUpload(session.user))){
-    await _sb.auth.signOut();
     alert('업로드 권한이 없습니다. (영업전략팀·관리자 전용)');
-    location.href='https://wt-management.github.io/wontech/'; return;
+    location.replace('https://wt-management.github.io/wontech/'); return;
   }
   document.getElementById('loginBox').style.display='none'; document.getElementById('appBox').style.display='block';
 }
@@ -401,6 +400,8 @@ async function doWrite(){
     }
   }catch(err){ log('오류: '+err.message); btn.disabled=false; btn.innerHTML='<i class="bi bi-database-check me-1"></i> 다시 시도'; }
 }
+// bfcache 복원 시 세션 확인 — 로그아웃/만료 후 뒤로가기로 이전 화면 노출 차단
+window.addEventListener('pageshow',function(e){ if(e.persisted){ _sb.auth.getSession().then(function(r){ if(!(r&&r.data&&r.data.session)) location.reload(); }); } });
 init();
 </script>
 </body>
