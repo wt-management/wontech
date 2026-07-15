@@ -7859,6 +7859,9 @@ function _hospEquipStatus(sel){
 let _schView=(function(){try{return sessionStorage.getItem('sch_view')||'week';}catch(e){return 'week';}})(), _schMonth=null, _schOverdueOnly=false;
 function _schShowOverdueOnly(){ _schOverdueOnly=true; _schDoneOnly=false; renderSchedule(); }
 let _schDoneOnly=false, _schDoneMode='week', _schDoneRef=null;
+let _schRef=null;   // 오늘/이번주 뷰의 기준일(null=오늘)
+function _schShift(d){ const unit=(_schView==='week')?7:1; const p=(_schRef||_schTodayStr()).split('-').map(Number); const dt=new Date(p[0],p[1]-1,p[2]); dt.setDate(dt.getDate()+d*unit); _schRef=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); renderSchedule(); }
+function _schNavBtns(){ return '<button class="btn btn-sm btn-outline-secondary" onclick="_schShift(-1)"><i class="bi bi-chevron-left"></i></button> <button class="btn btn-sm btn-outline-secondary" onclick="_schRef=null;renderSchedule()">오늘</button> <button class="btn btn-sm btn-outline-secondary" onclick="_schShift(1)"><i class="bi bi-chevron-right"></i></button>'; }
 function _schShowDoneOnly(){ _schDoneOnly=true; _schOverdueOnly=false; _schDoneRef=_schTodayStr(); renderSchedule(); }
 function _schDoneModeSet(m){ _schDoneMode=m; renderSchedule(); }
 function _schDoneNav(d){ const p=(_schDoneRef||_schTodayStr()).split('-').map(Number); const dt=new Date(p[0],p[1]-1,p[2]); dt.setDate(dt.getDate()+d*(_schDoneMode==='week'?7:1)); _schDoneRef=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); renderSchedule(); }
@@ -7866,7 +7869,7 @@ const _SCH_COL={'방문':'#2563eb','콜':'#0891b2','데모':'#7c3aed','A/S':'#ea
 function _schEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function _schTodayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function _schMe(){ return ((typeof _meName!=='undefined'&&_meName)||(typeof currentUserName==='function'?currentUserName():'')||'').trim(); }
-function setSchView(v,btn){ _schView=v; _schOverdueOnly=false; _schDoneOnly=false; try{sessionStorage.setItem('sch_view',v);}catch(e){} document.querySelectorAll('#page-schedule .btn-group .btn').forEach(b=>b.classList.remove('active')); if(btn)btn.classList.add('active'); renderSchedule(); }
+function setSchView(v,btn){ _schView=v; _schOverdueOnly=false; _schDoneOnly=false; _schRef=null; try{sessionStorage.setItem('sch_view',v);}catch(e){} document.querySelectorAll('#page-schedule .btn-group .btn').forEach(b=>b.classList.remove('active')); if(btn)btn.classList.add('active'); renderSchedule(); }
 function _schSyncViewBtn(){ const m={today:'sch-v-today',week:'sch-v-week',month:'sch-v-month'}; document.querySelectorAll('#page-schedule .btn-group .btn').forEach(b=>b.classList.remove('active')); const b=document.getElementById(m[_schView]); if(b)b.classList.add('active'); }
 // 데모 일정 사이트(demo_schedules) 병합읽기 — 읽기전용, 데모사이트가 쓰는 테이블. 오늘~+7일 범위만 표시(그 이후는 숨김).
 let _demoSched=[];
@@ -7893,7 +7896,7 @@ function _schItems(){
   });
   return out;
 }
-function _schWeekRange(){ const d=new Date(); const day=(d.getDay()+6)%7; const mon=new Date(d); mon.setDate(d.getDate()-day); const sun=new Date(mon); sun.setDate(mon.getDate()+6); const f=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'); return {start:f(mon),end:f(sun)}; }
+function _schWeekRange(ref){ const d=ref?new Date(ref+'T00:00'):new Date(); const day=(d.getDay()+6)%7; const mon=new Date(d); mon.setDate(d.getDate()-day); const sun=new Date(mon); sun.setDate(mon.getDate()+6); const f=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'); return {start:f(mon),end:f(sun)}; }
 function _schBadge(t){ const c=_SCH_COL[t]||'#64748b'; return '<span style="font-size:10px;font-weight:800;color:'+c+';background:'+c+'1a;border-radius:4px;padding:1px 6px;flex-shrink:0">'+t+'</span>'; }
 // 팀원 생일(매년 반복) — 팀원 관리(kor_team)의 bday(MM-DD) 기준, 퇴사 처리 시 자동 제거
 function _schBdays(ds){ const md=String(ds||'').slice(5,10); if(!md) return []; return (KOR_TEAM||[]).filter(m=>(m.bday||'')===md&&(m.name||'').trim()); }
@@ -7961,7 +7964,7 @@ function _schMiniCard(i){
 }
 // 이번주 7일 그리드 뷰
 function _schWeekGrid(items){
-  const wk=_schWeekRange(); const mon=new Date(wk.start+'T00:00');
+  const wk=_schWeekRange(_schRef); const mon=new Date(wk.start+'T00:00');
   const f=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
   const WD=['월','화','수','목','금','토','일'];
   const byd={}; items.forEach(i=>{ if(i.date>=wk.start&&i.date<=wk.end)(byd[i.date]=byd[i.date]||[]).push(i); });
@@ -8048,15 +8051,20 @@ function renderSchedule(){
   }
   if(_schView==='month'){ body.innerHTML=_schMonthView(items); }
   else if(_schView==='week'){
-    const wk=_schWeekRange();
-    title.textContent='이번주 '+wk.start.slice(5).replace('-','.')+'~'+wk.end.slice(5).replace('-','.')+' · '+items.filter(i=>i.date>=wk.start&&i.date<=wk.end).length+'건'+(sfv?' · '+_schEsc(sfv):'');
+    const wk=_schWeekRange(_schRef);
+    const isCur=(_schTodayStr()>=wk.start&&_schTodayStr()<=wk.end);
+    title.textContent=(isCur?'이번주 ':'')+wk.start.slice(5).replace('-','.')+'~'+wk.end.slice(5).replace('-','.')+' · '+items.filter(i=>i.date>=wk.start&&i.date<=wk.end).length+'건'+(sfv?' · '+_schEsc(sfv):'');
+    nav.innerHTML=_schNavBtns();
     body.innerHTML=_schWeekGrid(items);
   }
   else {
     const today=_schTodayStr();
-    const list=items.filter(i=>i.date===today);
-    title.textContent='오늘 '+today.slice(5).replace('-','/')+' · '+list.length+'건'+(sfv?' · '+_schEsc(sfv):'');
-    const bd=_schBdays(today);
+    const ref=_schRef||today;
+    const list=items.filter(i=>i.date===ref);
+    const WDD=['일','월','화','수','목','금','토'][new Date(ref+'T00:00').getDay()];
+    title.textContent=(ref===today?'오늘 ':'')+ref.slice(5).replace('-','/')+' ('+WDD+') · '+list.length+'건'+(sfv?' · '+_schEsc(sfv):'');
+    nav.innerHTML=_schNavBtns();
+    const bd=_schBdays(ref);
     body.innerHTML=(bd.length?'<div style="margin-bottom:8px;padding:9px 12px;background:#fdf4ff;border:1px dashed #d946ef;border-radius:9px;font-size:13px;font-weight:700;color:#a21caf">🎂 오늘은 '+bd.map(m=>_schEsc(m.name)).join(', ')+' 님의 생일입니다!</div>':'')+_schListView(list);
   }
 }
