@@ -1670,6 +1670,19 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   </div>
 </div></div></div>
 
+<!-- 활동 알림함(벨) -->
+<div id="wt-bell" onclick="openBellFeed()" title="최근 활동 알림" style="display:none;position:fixed;right:18px;bottom:148px;z-index:99990;width:44px;height:44px;border-radius:50%;background:#1d4ed8;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.3);cursor:pointer;align-items:center;justify-content:center;font-size:18px">
+  <i class="bi bi-bell-fill"></i>
+  <span id="wt-bell-badge" style="display:none;position:absolute;top:-4px;right:-4px;min-width:19px;height:19px;border-radius:10px;background:#dc2626;color:#fff;font-size:10.5px;font-weight:800;line-height:19px;text-align:center;padding:0 4px"></span>
+</div>
+<div class="modal fade" id="bellModal" tabindex="-1"><div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
+  <div class="modal-header">
+    <h5 class="modal-title"><i class="bi bi-bell-fill me-1" style="color:#1d4ed8"></i>최근 활동 <span class="text-muted" style="font-size:11px;font-weight:400">· 최근 4일 · 일정/완료/상담/CDU/견적/딜</span></h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+  </div>
+  <div class="modal-body" id="bell-body" style="font-size:13px;background:#f8fafc"></div>
+</div></div></div>
+
 <!-- 일 요약(영업활동 요약) 모달 -->
 <div class="modal fade" id="daySumModal" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content">
   <div class="modal-header">
@@ -2627,6 +2640,7 @@ async function _bootApp(access) {
   var _t=(_nav==='reload' && _sv && document.getElementById('page-'+_sv)) ? _sv : 'sales-overview';
   showPage(_t);   // 새로고침=머문 페이지, 신규진입=종합현황(첫 메뉴)
   document.getElementById('main-content').style.display='block';
+  try{ _bellSync(); }catch(e){}
   _hideLoading();
 }
 
@@ -8261,6 +8275,62 @@ async function _schConfirmDone(){
 function _schMine(){ const sel=document.getElementById('sch-sales-filter'); if(!sel)return; const me=_schMe(); if(!me){alert('로그인 정보가 없습니다.');return;} let hit=''; for(const o of sel.options){ if(o.value&&(o.value.includes(me)||me.includes(o.value))){hit=o.value;break;} } if(!hit){alert('"'+me+'" 담당 일정을 찾지 못했어요.');return;} sel.value=hit; renderSchedule(); }
 
 // ── 일일보고 자동 생성((양식1) 일일보고(한국영업팀).docx 그대로) ──
+// ── 활동 알림함(벨): 최근 4일 입력 피드 ──
+function _bellCut(){ const d=new Date(); d.setDate(d.getDate()-3); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function _bellFeed(){
+  const cut=_bellCut(), out=[];
+  const push=(date,ts,who,badge,col,text)=>{ if(date&&date>=cut) out.push({date:date,ts:ts||date,who:who||'',badge:badge,col:col,text:text}); };
+  const auto=id=>String(id||'').indexOf('schdone_')===0||String(id||'').indexOf('sdrdone_')===0;
+  (DB.d.logs||[]).forEach(l=>{
+    const nm=l.custName||'';
+    if(l.kind==='schedule'){
+      push(l.date,null,l.sales,'일정','#2563eb',(l.type||'방문')+' — '+nm+(l.product?' · '+l.product:''));
+      if(l.done&&l.doneAt) push(String(l.doneAt).slice(0,10),l.doneAt,l.sales,'완료','#16a34a',nm+(l.resultGrade?' ['+l.resultGrade+']':'')+(l.resultMemo?' '+String(l.resultMemo).slice(0,50):''));
+    } else if(l.kind==='cdu'){
+      push(l.date,null,l.sales,l.status==='planned'?'CDU 예정':'CDU 방문','#7c3aed',nm+(l.mainProc?' · '+l.mainProc:'')+(l.feedback?' — '+String(l.feedback).slice(0,40):''));
+    } else if(l.kind==='sdr'){
+      if(l.updatedAt) push(String(l.updatedAt).slice(0,10),l.updatedAt,l.by||l.sales,'일일보고','#0891b2',(l.date||'')+' 보고서 저장');
+    } else if(!l.kind&&!auto(l.id)&&String(l.content||'').indexOf('[일정 완료]')!==0){
+      push(l.date,null,l.sales,'상담','#64748b',nm+(l.content?' — '+String(l.content).slice(0,50):''));
+    }
+  });
+  (DB.d.quotes||[]).forEach(q=>{ push(q.quoteDate,null,q.by||q.sales,'견적서','#d97706',(q.custName||'')+' · '+q.id+(q.total?' · '+fmtAmt(Number(q.total)):'')); });
+  (DB.d.pipeline||[]).forEach(d=>{ const t=d.stageUpdatedAt||d.createdAt; if(t) push(String(t).slice(0,10),t,d.sales,'딜 '+(d.stage||''),'#9333ea',(d.custName||'')+(d.model?' · '+d.model:'')+(d.amount?' · '+fmtAmt(Number(d.amount)):'')); });
+  out.sort((a,b)=>String(b.ts).localeCompare(String(a.ts))||b.date.localeCompare(a.date));
+  return out;
+}
+function _bellSync(){
+  const bell=document.getElementById('wt-bell'); if(!bell) return;
+  if(!DB.d||!(DB.d.logs||[]).length){ bell.style.display='none'; return; }
+  bell.style.display='flex';
+  let seen=''; try{ seen=localStorage.getItem('wt_bell_seen')||''; }catch(e){}
+  const n=_bellFeed().filter(x=>String(x.ts)>seen).length;
+  const bd=document.getElementById('wt-bell-badge');
+  if(bd){ bd.style.display=n?'block':'none'; bd.textContent=n>99?'99+':n; }
+}
+function openBellFeed(){
+  const feed=_bellFeed();
+  const body=document.getElementById('bell-body');
+  if(!feed.length){ body.innerHTML='<div class="text-center text-muted py-5">최근 4일 활동이 없습니다.</div>'; }
+  else{
+    const byd={}; feed.forEach(x=>{ (byd[x.date]=byd[x.date]||[]).push(x); });
+    const WD=['일','월','화','수','목','금','토'];
+    const today=_schTodayStr();
+    body.innerHTML=Object.keys(byd).sort().reverse().map(d=>{
+      const wd=WD[new Date(d+'T00:00').getDay()];
+      return '<div class="card mb-2"><div class="card-body p-0">'
+        +'<div style="padding:7px 12px;background:#f1f5f9;border-bottom:1px solid #e2e8f0;font-weight:700;font-size:12px">'+(d===today?'오늘 · ':'')+d.slice(5).replace('-','/')+' ('+wd+') <span style="color:#94a3b8;font-weight:400">'+byd[d].length+'건</span></div>'
+        +byd[d].map(x=>'<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 12px;border-bottom:1px solid #f8fafc">'
+          +'<span style="font-size:9.5px;font-weight:800;color:#fff;background:'+x.col+';border-radius:4px;padding:2px 7px;flex-shrink:0;white-space:nowrap">'+x.badge+'</span>'
+          +'<span style="flex:1;min-width:0;font-size:12.5px;color:#334155">'+_escH(x.text)+'</span>'
+          +(x.who?'<span style="font-size:10.5px;color:#94a3b8;flex-shrink:0;font-weight:600">'+_escH(x.who)+'</span>':'')
+        +'</div>').join('')+'</div></div>';
+    }).join('');
+  }
+  try{ localStorage.setItem('wt_bell_seen',new Date().toISOString()); }catch(e){}
+  _bellSync();
+  new bootstrap.Modal(document.getElementById('bellModal')).show();
+}
 // ── 일 요약(영업활동 요약): 일정+CDU+상담일지 담당자별 취합 ──
 let _dsMode='day';
 function _dsFmt(dt){ return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); }
