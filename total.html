@@ -290,8 +290,40 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .ccl-h{font-size:13px;font-weight:800;margin-bottom:8px;color:#dc2626}
 .ccl-row{display:flex;gap:10px;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:12.5px}
 @media(max-width:1100px){.u-kpis,.q-cards{grid-template-columns:1fr}.cust-cards{grid-template-columns:repeat(2,1fr)}#page-goals .g-twin{grid-template-columns:1fr}}
-/* ── 수출의 탑 ── */
-#page-export .ex-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
+/* ── 수출의 탑 : 개편(표 우선 레이아웃 + 진행차수 히어로) ── */
+#page-export .ex-main{display:grid;grid-template-columns:1fr 236px;gap:16px;align-items:start;margin-bottom:16px}
+@media(max-width:1100px){#page-export .ex-main{grid-template-columns:1fr}}
+#page-export .ex-side{display:flex;flex-direction:column;gap:12px}
+#page-export .ex-sbox{background:#fff;border:1px solid #e8edf3;border-radius:12px;padding:12px 13px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+#page-export .ex-sh{font-size:11.5px;font-weight:800;color:#0f172a;padding-bottom:8px;margin-bottom:6px;border-bottom:1px solid #eef2f7}
+#page-export .ex-sh span{display:block;font-size:10px;font-weight:500;color:#94a3b8;margin-top:2px}
+#page-export .ex-kita .kr{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:7px 2px;border-bottom:1px dashed #f1f5f9;font-size:11.5px}
+#page-export .ex-kita .kr:last-child{border-bottom:0}
+#page-export .ex-kita .kr span{color:#64748b}
+#page-export .ex-kita .kr em{font-style:normal;font-size:9px;color:#0d9488;font-weight:700}
+#page-export .ex-kita .kr b{font-size:12.5px;font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums}
+/* 진행 차수 히어로 */
+#page-export .ex-hero{display:grid;grid-template-columns:1fr 210px;gap:18px;background:#fff;border:1px solid #e8edf3;border-radius:14px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+@media(max-width:820px){#page-export .ex-hero{grid-template-columns:1fr}}
+#page-export .ex-hero-tag{font-size:12.5px;font-weight:700;color:#475569}
+#page-export .ex-hero-tag b{color:#0d9488;margin-left:2px}
+#page-export .ex-run{display:inline-block;margin-left:7px;background:#0d9488;color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:9px;vertical-align:1px}
+#page-export .ex-hero-rate{font-size:2.6rem;font-weight:800;line-height:1;margin:8px 0 3px;font-variant-numeric:tabular-nums}
+#page-export .ex-hero-rate span{font-size:1.1rem;margin-left:2px}
+#page-export .ex-hero-amt{font-size:12.5px;color:#475569;font-variant-numeric:tabular-nums}
+#page-export .ex-hero-amt b{color:#0f172a;font-weight:800}
+#page-export .ex-hero-sub{font-size:12px;font-weight:700;margin-top:3px}
+#page-export .ex-hero-foot{font-size:11px;color:#94a3b8;margin-top:7px}
+#page-export .ex-hero-r{display:flex;flex-direction:column;gap:7px;justify-content:center;border-left:1px solid #eef2f7;padding-left:16px}
+@media(max-width:820px){#page-export .ex-hero-r{border-left:0;padding-left:0;border-top:1px solid #eef2f7;padding-top:12px}}
+#page-export .ex-mini{font-size:10.5px;color:#94a3b8}
+#page-export .ex-mini b{display:block;font-size:11.5px;color:#334155;font-weight:700;margin-top:1px}
+#page-export .ex-etbl.cur{outline:1.5px solid #0d9488;outline-offset:3px;border-radius:2px}
+#page-export .ex-etbl caption em{font-style:normal;background:#0d9488;color:#fff;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:6px}
+#page-export .ex-etbl tr.fut td{color:#cbd5e1}
+#page-export .ex-etbl .pv{font-size:9px;color:#0d9488;font-weight:700}
+#page-export .ex-charts{margin-bottom:8px}
+#page-export .ex-kpis{margin-bottom:16px}
 #page-export .ex-kpi{background:#fff;border-radius:14px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.08);position:relative;overflow:hidden;border:1px solid #eef2f7}
 #page-export .ex-kpi.cur{box-shadow:0 0 0 2px #0d9488 inset,0 1px 3px rgba(0,0,0,.08)}
 #page-export .ex-kpi.done{background:linear-gradient(180deg,#fef2f2,#fff)}
@@ -311,7 +343,8 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 #page-export .ex-bar input{font-size:13px;padding:5px 9px;border:1px solid #cbd5e1;border-radius:8px;width:110px;text-align:right;font-variant-numeric:tabular-nums}
 #page-export .ex-bar .prov{margin-left:auto;font-size:12px;color:#64748b}
 #page-export .ex-bar .prov b{color:#b45309;font-size:14px}
-#page-export .ex-tbls{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+#page-export .ex-tbls{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;background:#fff;border:1px solid #e8edf3;border-radius:14px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+@media(max-width:900px){#page-export .ex-tbls{grid-template-columns:1fr}}
 #page-export .ex-etbl{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
 #page-export .ex-etbl caption{caption-side:top;font-size:13px;font-weight:800;color:#0f172a;text-align:left;padding:0 0 9px}
 #page-export .ex-etbl caption .lv{color:#0d9488}
@@ -664,7 +697,23 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
     <div class="ex-kpis" id="ex-kpis"></div>
 
-    <div class="row g-3 mb-2">
+    <!-- ① 실적표(차수별) + 3개년 요약 — 보고양식 순서: 표가 먼저 -->
+    <div class="ex-main">
+      <div class="ex-tbls" id="ex-tbls"></div>
+      <div class="ex-side">
+        <div class="ex-sbox">
+          <div class="ex-sh">최근 3개년 수출 실적<span>전년 7월~당해 6월 집계 · KITA</span></div>
+          <div class="ex-kita" id="ex-kita-exp"></div>
+        </div>
+        <div class="ex-sbox">
+          <div class="ex-sh">최근 3개년 해외 실적<span>1월~12월 집계 · KITA</span></div>
+          <div class="ex-kita" id="ex-kita"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ② 최근 5년 추이 — 표 아래 -->
+    <div class="row g-3 ex-charts">
       <div class="col-lg-6"><div class="card p-3">
         <div class="ex-ycard-head"><div class="ex-ytitle">회계실적 기준</div><div class="ex-ymeta">단위 : 만 $<br>기간 : 회계연도</div></div>
         <div id="ex-yacc"></div>
@@ -675,16 +724,6 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       </div></div>
     </div>
     <div class="ex-insight" id="ex-insight"></div>
-
-    <div class="card p-3 mb-3">
-      <div style="font-size:13.5px;font-weight:800;margin-bottom:10px"><i class="bi bi-table me-1" style="color:#0d9488"></i>차수별 실적표</div>
-      <div class="ex-tbls" id="ex-tbls"></div>
-    </div>
-
-    <div class="card p-3">
-      <div style="font-size:13.5px;font-weight:800;margin-bottom:10px"><i class="bi bi-globe2 me-1" style="color:#0d9488"></i>최근 3개년 해외 실적 <span style="font-weight:500;font-size:11.5px;color:#94a3b8">· KITA 한국무역협회 기준</span></div>
-      <div class="ex-kita" id="ex-kita"></div>
-    </div>
   </div>
 
   <!-- ===== 법인별 상세현황 (태국·미국·일본) ===== -->
@@ -2612,7 +2651,10 @@ const EXPORT_DEFAULT={
     {id:'c2026_70',target:70000000,label:'7천만불',title:'2026년 수출의 탑',start:'2025-07',months:{}},
     {id:'c2026_100',target:100000000,label:'1억불',title:'2027년 수출의 탑',start:'2026-07',months:{}}
   ],
+  // 해외 실적(1~12월, KITA). 진행연도(2026)는 회계 USD로 자동 산출하므로 여기 값은 과거 확정연도만 의미 있음.
   kita:[{year:'2024',amount:53670859},{year:'2025',amount:74055678},{year:'2026',amount:31604896}],
+  // 수출 실적(차수, KITA). 차수 데이터가 없는 과거연도만 시드 — 2025~는 cycles에서 자동 산출.
+  kitaExp:[{year:'2024',amount:50458499}],
   yearly:{labels:['2022년','2023년','2024년','2025년','2026년'],acc:[3050,4363,5367,7405,3979],exp:[2768,3520,5045,6342,7729],insight:'회계기준은 2026년 하반기 미집계로 인해 일시 하락처럼 보이나, 수출실적 기준에서는 5년 연속 성장(CAGR +28.8%)이 확인'}
 };
 const exUsd=v=>'$'+Math.round(Number(v)||0).toLocaleString();
@@ -2621,6 +2663,7 @@ function exLoadData(saved){
   if(saved){
     if(saved.rate!=null&&Number(saved.rate)>0) base.rate=Number(saved.rate);  // 저장된 0/음수 환율은 무시(기본 1450 복원)
     if(Array.isArray(saved.kita)) base.kita=saved.kita;
+    if(Array.isArray(saved.kitaExp)) base.kitaExp=saved.kitaExp;
     if(saved.yearly) base.yearly=saved.yearly;
     if(Array.isArray(saved.cycles)) saved.cycles.forEach(sc=>{ const bc=base.cycles.find(c=>c.id===sc.id); if(bc){ if(sc.months) bc.months=sc.months; } else { base.cycles.push(sc); } });
     base.cycles.sort(function(a,b){return a.start<b.start?-1:1;});
@@ -2682,64 +2725,98 @@ function exOnRate(){ const v=Number(document.getElementById('ex-rate').value);
   EXPORT.rate=v; exUpdProv(); exRenderKPI(); exRenderTables(); _exRateTimer=setTimeout(exPersist,600); }
 
 function exRenderKPI(){
+  // ★현재 진행 차수 1장만 표시(완료 차수는 아래 실적표에 달성률까지 다 나옴 — 카드 중복 제거)
   const el=document.getElementById('ex-kpis'); el.innerHTML='';
-  const colors=['#0891b2','#0d9488','#6366f1','#db2777','#ca8a04'];
-  const curId=exCurCycleId();
-  EXPORT.cycles.forEach((cyc,i)=>{
-    const col=colors[i%colors.length];
-    const tot=exCycleTotal(cyc), rate=cyc.target>0?tot/cyc.target*100:0, diff=tot-cyc.target, done=diff>=0, empty=tot<=0;
-    const keys=exCycleMonths(cyc.start), startLbl=exMonLabel(keys[0]);
-    const carry=exCarryBase(cyc);
-    const isCur=(cyc.id===curId), elapsed=exElapsed(cyc), pacePos=Math.min(elapsed/12*100,100);
-    const remain=Math.max(12-elapsed,0), needAvg=remain>0?(cyc.target-tot)/remain:0;
-    let foot='';
-    if(empty) foot='';
-    else if(done) foot='목표 달성 ✓'+(elapsed>0?' ('+elapsed+'개월)':'');
-    else if(carry>0&&elapsed<=0) foot='전 차수 이월 '+exUsd(carry)+' + 7월부터 누적';
-    else if(remain<=0) foot='차수 종료 · 달성 '+rate.toFixed(0)+'%';
-    else foot=elapsed+'/12개월 · 남은 '+remain+'개월 월 '+exUsd(needAvg)+' 필요';
-    el.insertAdjacentHTML('beforeend',
-      '<div class="ex-kpi '+(isCur?'cur':'')+' '+(done&&!empty?'done':'')+'">'+
-        '<div><span class="tag">'+esc(cyc.title)+'</span><span class="tgt">'+esc(cyc.label)+'</span>'+(isCur?' <span style="font-size:10px;background:#0d9488;color:#fff;padding:1px 6px;border-radius:8px;font-weight:700">진행중</span>':'')+'</div>'+
-        '<div class="rate" style="color:'+(empty?'#94a3b8':done?'#dc2626':col)+'">'+(empty?'—':rate.toFixed(0)+'<span style="font-size:1.05rem">%</span>')+'</div>'+
-        '<div class="amt">실적 '+exUsd(tot)+' / 목표 '+exUsd(cyc.target)+'</div>'+
-        '<div class="sub" style="color:'+(empty?'#94a3b8':done?'#dc2626':'#2563eb')+'">'+(empty?(startLbl+' 시작 예정'):(done?'초과 '+exUsd(diff):'잔여 '+exUsd(Math.abs(diff))))+'</div>'+
-        '<div class="ex-gauge"><div class="fill" style="width:'+(empty?0:Math.min(rate,100))+'%;background:'+(done?'#dc2626':col)+'"></div>'+((!empty&&!done&&elapsed<12&&!carry)?'<div class="pace" style="left:'+pacePos+'%" title="현재 경과 페이스"></div>':'')+'</div>'+
-        (foot?'<div class="ex-pace-lbl">'+foot+'</div>':'')+
-      '</div>');
-  });
+  const cyc=EXPORT.cycles.find(c=>c.id===exCurCycleId()); if(!cyc) return;
+  const tot=exCycleTotal(cyc), rate=cyc.target>0?tot/cyc.target*100:0, diff=tot-cyc.target, done=diff>=0;
+  const keys=exCycleMonths(cyc.start), elapsed=exElapsed(cyc), remain=Math.max(12-elapsed,0);
+  const needAvg=remain>0?Math.max(cyc.target-tot,0)/remain:0;
+  const pacePos=Math.min(elapsed/12*100,100);
+  const barCol=done?'#dc2626':'#0d9488';
+  el.insertAdjacentHTML('beforeend',
+    '<div class="ex-hero">'+
+      '<div class="ex-hero-l">'+
+        '<div class="ex-hero-tag">'+esc(cyc.title)+' <b>'+esc(cyc.label)+'</b><span class="ex-run">진행중</span></div>'+
+        '<div class="ex-hero-rate" style="color:'+barCol+'">'+rate.toFixed(1)+'<span>%</span></div>'+
+        '<div class="ex-hero-amt">실적 <b>'+exUsd(tot)+'</b> / 목표 '+exUsd(cyc.target)+'</div>'+
+        '<div class="ex-hero-sub" style="color:'+(done?'#dc2626':'#2563eb')+'">'+(done?'초과 '+exUsd(diff):'잔여 '+exUsd(Math.abs(diff)))+'</div>'+
+        '<div class="ex-gauge"><div class="fill" style="width:'+Math.min(rate,100).toFixed(1)+'%;background:'+barCol+'"></div>'+
+          (elapsed<12?'<div class="pace" style="left:'+pacePos+'%" title="시간 진도 '+elapsed+'/12개월"></div>':'')+'</div>'+
+        '<div class="ex-hero-foot">'+(done?'목표 달성 ✓':(elapsed+'/12개월 경과 · 남은 '+remain+'개월 월평균 '+exUsd(needAvg)+' 필요'))+'</div>'+
+      '</div>'+
+      '<div class="ex-hero-r">'+
+        '<div class="ex-mini"><span>차수 기간</span><b>'+exMonLabel(keys[0])+' ~ '+exMonLabel(keys[11])+'</b></div>'+
+        '<div class="ex-mini"><span>집계 기준</span><b>KITA 수출신고</b></div>'+
+        '<div class="ex-mini"><span>자동 산출</span><b>수기 미입력 월은 회계 USD</b></div>'+
+      '</div>'+
+    '</div>');
 }
 function exYoyCells(amt,p){ const up=amt>=0,cls=up?'ex-up':'ex-down',ar=up?'▲':'▼'; const pc=p===null?'-':ar+Math.abs(p).toFixed(0)+'%'; return '<td class="'+cls+'">'+ar+' '+Math.abs(Math.round(amt)).toLocaleString()+'</td><td class="'+cls+'">'+pc+'</td>'; }
 function exRenderTables(){
   const el=document.getElementById('ex-tbls'); el.innerHTML='';
-  const curId=exCurCycleId(), yoyPrev=EXPORT.cycles.find(c=>c.id===exPrevCycleId(curId));
-  EXPORT.cycles.forEach(cyc=>{
+  const curId=exCurCycleId(), prevId=exPrevCycleId(curId);
+  const yoyPrev=EXPORT.cycles.find(c=>c.id===prevId);
+  // ★직전 차수 + 현재 차수 2개만(그 이전 완료 차수는 3개년 요약표로 충분)
+  const show=EXPORT.cycles.filter(c=>c.id===prevId||c.id===curId).sort((a,b)=>a.start<b.start?-1:1);
+  show.forEach(cyc=>{
     const keys=exCycleMonths(cyc.start);
     const h1=keys.slice(0,6).reduce((s,k)=>s+exMonVal(cyc,k),0);
     const h2=keys.slice(6).reduce((s,k)=>s+exMonVal(cyc,k),0);
-    const carry=exCarryBase(cyc), tot=h1+h2+carry, diff=tot-cyc.target, done=diff>=0, showYoY=(cyc.id===curId && !!yoyPrev);
+    const tot=h1+h2, diff=tot-cyc.target, done=diff>=0;
+    const showYoY=(cyc.id===curId && !!yoyPrev);   // 증감열은 현재 차수에만
+    const blank=showYoY?'<td></td><td></td>':'';
     let rows='';
-    const rowFor=k=>{ const prov=exIsProv(cyc,k); const vv=exMonVal(cyc,k); const fut=(k>exCurKey()&&vv===0); let yoy=''; if(showYoY){ const pv=exMonVal(yoyPrev,exPrevYearKey(k)); yoy=exYoyCells(vv-pv,exPct(vv,pv)); }
-      return '<tr class="'+(prov?'prov':'')+'"><td class="mon">'+exMonLabel(k)+(prov?' <span style="font-size:9px">잠정</span>':'')+'</td><td>'+(fut?'<span class="muted">-</span>':exUsd(vv))+'</td>'+(showYoY?yoy:'')+'</tr>'; };
-    const subRow=(label,val,prevVal)=>{ let yoy=''; if(showYoY) yoy=exYoyCells(val-prevVal,exPct(val,prevVal)); return '<tr class="sub"><td class="mon">'+label+'</td><td>'+exUsd(val)+'</td>'+(showYoY?yoy:'')+'</tr>'; };
+    const rowFor=k=>{
+      const prov=exIsProv(cyc,k), vv=exMonVal(cyc,k), fut=(k>exCurKey()&&vv===0);
+      // ★증감액·증감률은 "그 달에 실적이 있을 때만". 미래·빈 월은 빈 칸(과거엔 ▼100%가 전부 찍혀 지저분했음)
+      let yoy=blank;
+      if(showYoY && vv>0){ const pv=exMonVal(yoyPrev,exPrevYearKey(k)); yoy=exYoyCells(vv-pv,exPct(vv,pv)); }
+      return '<tr class="'+(prov?'prov':'')+(fut?' fut':'')+'"><td class="mon">'+exMonLabel(k)+(prov?' <span class="pv">잠정</span>':'')+'</td>'+
+        '<td>'+(fut?'<span class="muted">-</span>':exUsd(vv))+'</td>'+yoy+'</tr>';
+    };
+    const subRow=(label,val)=>'<tr class="sub"><td class="mon">'+label+'</td><td>'+exUsd(val)+'</td>'+blank+'</tr>';
     keys.slice(0,6).forEach(k=>rows+=rowFor(k));
-    const p1=yoyPrev?exCycleMonths(yoyPrev.start).slice(0,6).reduce((s,k)=>s+exMonVal(yoyPrev,k),0):0;
-    rows+=subRow(exMonLabel(keys[0]).slice(0,3)+'하반기 소계',h1,p1);
+    rows+=subRow(exMonLabel(keys[0]).slice(0,3)+'하반기 소계',h1);
     keys.slice(6).forEach(k=>rows+=rowFor(k));
-    const p2=yoyPrev?exCycleMonths(yoyPrev.start).slice(6).reduce((s,k)=>s+exMonVal(yoyPrev,k),0):0;
-    rows+=subRow(exMonLabel(keys[6]).slice(0,3)+'상반기 소계',h2,p2);
-    const ptot=p1+p2;
-    rows+='<tr class="tot"><td class="mon">총계</td><td>'+exUsd(tot)+'</td>'+(showYoY?exYoyCells(tot-ptot,exPct(tot,ptot)):'')+'</tr>';
-    rows+='<tr class="res '+(done?'':'short')+'"><td class="mon">'+(done?'초과분':'과부족')+'</td><td class="'+(done?'ex-up':'ex-down')+'">'+(done?exUsd(diff):'-'+exUsd(Math.abs(diff)))+'</td>'+(showYoY?'<td></td><td></td>':'')+'</tr>';
-    rows+='<tr class="res"><td class="mon">달성률</td><td>'+(cyc.target>0?tot/cyc.target*100:0).toFixed(0)+'%</td>'+(showYoY?'<td></td><td></td>':'')+'</tr>';
-    el.insertAdjacentHTML('beforeend','<table class="ex-etbl"><caption>'+esc(cyc.title)+' <span class="lv">('+esc(cyc.label)+')</span></caption><thead><tr><th>년/월</th><th>금액</th>'+(showYoY?'<th>전년동월<br>증감액</th><th>증감률</th>':'')+'</tr></thead><tbody>'+rows+'</tbody></table>');
+    rows+=subRow(exMonLabel(keys[6]).slice(0,3)+'상반기 소계',h2);
+    rows+='<tr class="tot"><td class="mon">총계</td><td>'+exUsd(tot)+'</td>'+blank+'</tr>';
+    rows+='<tr class="res '+(done?'':'short')+'"><td class="mon">'+(done?'초과분':'부족분')+'</td><td class="'+(done?'ex-up':'ex-down')+'">'+(done?exUsd(diff):'-'+exUsd(Math.abs(diff)))+'</td>'+blank+'</tr>';
+    rows+='<tr class="res"><td class="mon">달성율</td><td class="'+(done?'ex-up':'')+'">'+(cyc.target>0?tot/cyc.target*100:0).toFixed(1)+'%</td>'+blank+'</tr>';
+    el.insertAdjacentHTML('beforeend',
+      '<table class="ex-etbl'+(cyc.id===curId?' cur':'')+'">'+
+        '<caption>'+esc(cyc.title)+' 실적현황 <span class="lv">'+esc(cyc.label)+'</span>'+(cyc.id===curId?'<em>진행중</em>':'')+'</caption>'+
+        '<thead><tr><th>년/월</th><th>금액</th>'+(showYoY?'<th>전년동월<br>증감액</th><th>전년동월<br>증감율</th>':'')+'</tr></thead>'+
+        '<tbody>'+rows+'</tbody></table>');
   });
 }
 function exRenderKITA(){
-  const el=document.getElementById('ex-kita'); el.innerHTML='';
-  EXPORT.kita.forEach((k,i)=>{ const prev=EXPORT.kita[i-1]; let d='';
-    if(prev){ const g=k.amount-prev.amount,up=g>=0; d='<div class="d '+(up?'ex-up':'ex-down')+'">'+(up?'▲':'▼')+' '+exUsd(Math.abs(g))+' ('+(k.amount/prev.amount*100-100).toFixed(0)+'%)</div>'; }
-    el.insertAdjacentHTML('beforeend','<div class="k"><div class="y">'+esc(k.year)+'년 무역실적</div><div class="v">'+exUsd(k.amount)+'</div>'+d+'</div>'); });
+  const nowY=new Date().getFullYear();
+  // ── 해외 실적(1~12월): 과거는 확정 시드, 진행연도는 회계 USD 합으로 자동 산출(옛 하드코딩 스냅샷이 굳는 것 방지)
+  const el=document.getElementById('ex-kita');
+  if(el){
+    const rows=(EXPORT.kita||[]).map(function(k){
+      let v=Number(k.amount)||0;
+      if(Number(k.year)===nowY){ const src=(nowY===2026)?INTL.monthly_usd:null;
+        if(src){ let t=0; for(let m=1;m<=12;m++) t+=Number(src[m]||0); if(t>0) v=t; } }
+      return {y:k.year, v:v, live:Number(k.year)===nowY};
+    });
+    el.innerHTML=rows.map(function(r){
+      return '<div class="kr"><span>'+esc(r.y)+'년 실적'+(r.live?' <em>진행</em>':'')+'</span><b>'+exUsd(r.v)+'</b></div>'; }).join('');
+  }
+  // ── 수출 실적(차수, 전년7월~당해6월): 완료 차수만 자동 산출 + 차수데이터 없는 과거연도는 시드. 최근 3개
+  const el2=document.getElementById('ex-kita-exp');
+  if(el2){
+    const curId=exCurCycleId();
+    const fromCyc=EXPORT.cycles.filter(function(c){ return c.id!==curId; })   // 진행 차수 제외(미완결)
+      .map(function(c){ return {y:String(Number(c.start.split('-')[0])+1), v:exCycleOwn(c)}; })
+      .filter(function(r){ return r.v>0; });
+    const seen={}; fromCyc.forEach(function(r){ seen[r.y]=1; });
+    const seed=(EXPORT.kitaExp||[]).filter(function(k){ return !seen[String(k.year)]; })
+      .map(function(k){ return {y:String(k.year), v:Number(k.amount)||0}; });
+    const all=seed.concat(fromCyc).sort(function(a,b){ return a.y<b.y?-1:1; }).slice(-3);
+    el2.innerHTML=all.map(function(r){
+      return '<div class="kr"><span>'+esc(r.y)+'년 무역실적</span><b>'+exUsd(r.v)+'</b></div>'; }).join('');
+  }
 }
 function exRenderYearly(){
   const y=EXPORT.yearly||{}, labels=(y.labels||[]).slice(), acc=(y.acc||[]).slice(), exp=(y.exp||[]).slice();
