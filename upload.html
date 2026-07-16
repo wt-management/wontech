@@ -144,12 +144,22 @@ function log(m){ const el=document.getElementById('log'); el.textContent+=(el.te
 const e8=x=>Math.round(x/1e8*10)/10;
 const mline=m=>Object.keys(m).map(Number).sort((a,b)=>a-b).map(k=>k+'월 '+e8(m[k])).join('  ');
 
+// ── 중앙 로그인(WT_SSO) ──────────────────────────────────
+// 자체 로그인 화면은 더 이상 노출하지 않는다. 세션 없음 → 중앙(wontech)으로 ret 붙여 보냄(로그인 후 복귀).
+// 권한 없음은 ret 없이 보낸다(붙이면 중앙→여기→중앙 무한루프).
+var _WT_CENTRAL='https://wt-management.github.io/wontech/';
+function _wtToCentral(withRet){
+  var u=_WT_CENTRAL;
+  if(withRet) u+='#ret='+encodeURIComponent(location.origin+location.pathname+location.search);   // 해시 제외(토큰 유출·오염 방지)
+  location.replace(u);
+}
+
 async function init(){
   // 세션 해시(#at/#rt) 수신 (다른 사이트에서 진입)
   try{ const hp=new URLSearchParams(location.hash.replace('#','')); const at=hp.get('at'),rt=hp.get('rt');
     if(at&&rt){ await _sb.auth.setSession({access_token:decodeURIComponent(at),refresh_token:decodeURIComponent(rt)}); history.replaceState(null,'',location.pathname); } }catch(e){}
   const {data:{session}}=await _sb.auth.getSession();
-  if(!session){ document.getElementById('loginBox').style.display='block'; return; }
+  if(!session){ _wtToCentral(true); return; }   // 세션 없음 → 중앙 로그인(로그인 후 여기로 복귀)
   await showApp();
 }
 // 업로드 권한 = 마스터(pmw0406) 전용 (당분간)
@@ -180,10 +190,10 @@ async function _canUpload(user){
 })();
 async function showApp(){
   const {data:{session}}=await _sb.auth.getSession();
-  if(!session){ document.getElementById('loginBox').style.display='block'; return; }
+  if(!session){ _wtToCentral(true); return; }   // 세션 없음 → 중앙 로그인(로그인 후 여기로 복귀)
   if(!(await _canUpload(session.user))){
     alert('업로드 권한이 없습니다. (영업전략팀·관리자 전용)');
-    location.replace('https://wt-management.github.io/wontech/'); return;
+    _wtToCentral(false); return;   // 권한 없음 → ret 없이(무한루프 방지)
   }
   document.getElementById('loginBox').style.display='none'; document.getElementById('appBox').style.display='block';
 }

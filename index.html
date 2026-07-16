@@ -2487,6 +2487,11 @@ async function init() {
   const hashParams = new URLSearchParams(location.hash.replace('#',''));
   // 외부 사이트에서 app= 파라미터로 바로 진입
   if(hashParams.get('app')) sessionStorage.setItem('wt_app', hashParams.get('app'));
+  // ── 중앙 로그인 복귀(ret): 하위 사이트가 세션 없이 진입 시 여기로 보내며 원래 URL을 넘긴다.
+  //    로그인 완료 후 _consumeRet()이 그 사이트로 되돌려보냄. 오픈 리다이렉트 방지로 오리진 검증.
+  if(hashParams.get('ret')){ const _r=_retOk(hashParams.get('ret')); if(_r) sessionStorage.setItem('wt_ret', _r);
+    try{ history.replaceState(null,'',location.pathname); }catch(e){}   // 주소창에서 ret 제거
+  }
   if(hashParams.get('type') === 'recovery') {
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('login-screen').querySelectorAll(':scope > div').forEach(d=>d.style.display='none');
@@ -2556,7 +2561,24 @@ function _buildLauncherCardsHTML(access) {
   }).join('');
 }
 
+// ── 중앙 로그인 복귀(ret) 헬퍼 ─────────────────────────────
+// 하위 사이트는 세션이 없을 때만 ret을 붙여 여기로 보낸다(권한 없음일 땐 ret 없이 → 무한 루프 방지).
+const _WT_BASE='https://wt-management.github.io/';
+function _retOk(u){
+  try{ const d=decodeURIComponent(String(u||''));
+    if(d.indexOf(_WT_BASE)!==0) return '';                       // 동일 오리진·경로만 허용(오픈 리다이렉트 차단)
+    const p=new URL(d); if(/^\/wontech\/?(index\.html)?$/.test(p.pathname)) return '';  // 중앙 자기 자신 → 루프 방지
+    return p.origin+p.pathname+p.search;                          // 토큰 등 해시는 버림
+  }catch(e){ return ''; }
+}
+// 로그인/세션 확인 직후 1회 소비. 되돌려보낼 곳이 있으면 true(호출부는 즉시 중단).
+function _consumeRet(){
+  let r=''; try{ r=sessionStorage.getItem('wt_ret')||''; sessionStorage.removeItem('wt_ret'); }catch(e){}
+  if(!r) return false;
+  location.replace(r); return true;
+}
 async function _showLauncherOrApp(user) {
+  if(_consumeRet()) return;   // 하위 사이트에서 로그인하러 온 경우 → 원래 사이트로 복귀
   const [{data: profile}] = await Promise.all([
     _sb.from('crm_profiles').select('access,role').eq('id', user.id).single(),
     _loadSiteRegistry()
