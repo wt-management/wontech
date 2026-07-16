@@ -533,13 +533,13 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 .xt caption{caption-side:top;text-align:left;font-size:12.5px;font-weight:800;color:#111827;padding-bottom:7px}
 .xt caption b{color:#e2483d}
 .xt th{background:#dfe9f5;border:1px solid #b7c6d9;color:#1f2937;font-weight:700;padding:6px 8px;text-align:center;line-height:1.25}
-.xt td{border:1px solid #cfd9e5;padding:5px 9px;text-align:right;color:#1f2937;background:#fff}
+.xt td{border:1px solid #cfd9e5;padding:0 9px;height:31px;text-align:right;color:#1f2937;background:#fff}
 .xt td:first-child{text-align:center;color:#334155}
 .xt tr.sub td{background:#eef3f9;font-weight:700}
 .xt tr.tot td{background:#e3ebf5;font-weight:800}
-.xt tr.prov td{background:#fff6c9}
+.xt tr.prov td,.xt tr.last td{background:#fff6c9}
 .xt tr.prov i{font-style:normal;font-size:9px;color:#b45309;font-weight:700}
-.xt tr.fut td{color:#b6c2cf;height:29px}
+.xt tr.fut td{color:#b6c2cf}
 .xt tr.res td{font-weight:800}
 .xt tr.res td:last-child{color:#dc2626}
 .xt tr.res.short td{background:#fde047}
@@ -573,7 +573,10 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 .xm-l{font-size:11.5px;color:#99f6e4;margin-top:2px}
 .xm-big{font-size:22px;font-weight:800;margin-top:8px;font-variant-numeric:tabular-nums}
 .xm-sub{font-size:12px;color:#ccfbf1}
-.xm-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:12px 0}
+.xm-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.xm-st b{white-space:nowrap}
+.xm-gg{height:6px;background:rgba(255,255,255,.18);border-radius:99px;margin-top:10px;overflow:hidden}
+.xm-gg i{display:block;height:100%;background:#5eead4;border-radius:99px;min-width:3px}
 .xm-st{background:#fff;border:1px solid #e8edf3;border-radius:14px;padding:12px 8px;text-align:center}
 .xm-st span{font-size:11px;color:#94a3b8;display:block}
 .xm-st b{font-size:14px;font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums}
@@ -591,8 +594,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 .xm-prev summary::before{content:'\25B8';margin-right:8px;color:#94a3b8}
 .xm-prev[open] summary::before{content:'\25BE'}
 .xm-prev .xm-list{border:0;border-top:1px solid #f1f5f9;border-radius:0}
-.xm-caps{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media(max-width:560px){.xm-caps{grid-template-columns:1fr}}
+.xm-caps{display:grid;grid-template-columns:1fr;gap:10px}
 .xm-cap{background:#fff;border:1px solid #e8edf3;border-radius:16px;padding:6px 0 2px}
 .xm-cap .t{font-size:12px;font-weight:800;color:#334155;padding:8px 16px 6px}
 .xm-cap .t span{font-weight:500;color:#94a3b8;font-size:10px}
@@ -622,7 +624,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 .xd-leg{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:10.5px;color:#94a3b8}
 .xd-leg i{width:9px;height:9px;border-radius:2px;display:inline-block}
 .xd-leg .a{background:#5eead4}.xd-leg .b{background:#334155}
-.xd-bars{display:flex;gap:6px;align-items:flex-end;height:150px}
+.xd-bars{display:flex;gap:6px;align-items:flex-end;height:150px;border-bottom:1px solid #1e2a44;padding-bottom:0}
+.xd-bg .bl{font-size:9px;color:#94a3b8;text-align:center;margin-bottom:3px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .xd-bg{flex:1;display:flex;flex-direction:column;height:100%}
 .xd-bg .bw{flex:1;display:flex;align-items:flex-end;justify-content:center;gap:2px}
 .xd-bg .b{width:44%;border-radius:3px 3px 0 0}
@@ -642,8 +645,9 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 .xn-kicker{font-size:12px;font-weight:700;color:#94a3b8;letter-spacing:.06em}
 .xn-rate{font-size:4.4rem;font-weight:250;color:#0f172a;line-height:1.05;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .xn-rate i{font-style:normal;font-size:1.6rem;color:#94a3b8}
-.xn-line{height:2px;background:#f1f5f9;margin:14px 0;position:relative}
+.xn-line{height:2px;background:#f1f5f9;margin:18px 0 14px;position:relative}
 .xn-line i{position:absolute;left:0;top:0;height:100%;background:#0f172a;display:block}
+.xn-line i::after{content:"";position:absolute;right:-4px;top:-3px;width:8px;height:8px;border-radius:50%;background:#0f172a}
 .xn-nums{display:flex;gap:26px;flex-wrap:wrap;font-size:12.5px;color:#94a3b8}
 .xn-nums b{color:#0f172a;font-weight:700;margin-left:4px;font-variant-numeric:tabular-nums}
 .xn-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;margin-top:30px}
@@ -661,7 +665,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 .xs2-rt{font-size:14px;font-weight:800;color:#0f172a;margin-bottom:26px}
 .xs2-rt b{color:#0d9488}
 .xs2-rt span{font-size:11px;font-weight:500;color:#94a3b8;margin-left:10px}
-.xs2-track{position:relative;height:8px;background:#eef2f7;border-radius:99px;margin:44px 30px 58px}
+.xs2-track{position:relative;height:8px;background:#eef2f7;border-radius:99px;margin:44px 36px 58px}
 .xs2-track .f{height:100%;background:linear-gradient(90deg,#0d9488,#2dd4bf);border-radius:99px}
 .xs2-track .ms{position:absolute;top:-4px;transform:translateX(-50%)}
 .xs2-track .ms i{display:block;width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid #cbd5e1}
@@ -670,6 +674,9 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 .xs2-track .now b{display:block;font-size:12.5px;font-weight:800;color:#0d9488;white-space:nowrap}
 .xs2-track .now span{font-size:10px;color:#64748b}
 .xs2-track .now::after{content:'';position:absolute;left:50%;top:32px;transform:translateX(-50%);width:12px;height:12px;background:#0d9488;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 2px #0d9488}
+.xs2-track .now.edge{transform:none;text-align:left}
+.xs2-track .now.edge b,.xs2-track .now.edge span{display:inline-block;margin-right:6px}
+.xs2-track .now.edge::after{left:0;transform:none}
 .xs2-tl{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:30px}
 @media(max-width:900px){.xs2-tl{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:560px){.xs2-tl{grid-template-columns:repeat(2,1fr)}}
@@ -685,10 +692,11 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 .xs2-n .bx i{font-style:normal;font-size:9px;color:#b45309}
 .xs2-steps .row2{display:flex;gap:18px;align-items:flex-end;padding:0 8px}
 .xs2-steps .stp{flex:1;text-align:center}
-.xs2-steps .stp b{display:block;font-size:11.5px;font-weight:800;color:#334155;margin-bottom:6px;font-variant-numeric:tabular-nums}
+.xs2-steps .stp b{display:block;font-size:11.5px;font-weight:800;color:#334155;margin-bottom:6px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .xs2-steps .stp .bar{background:linear-gradient(180deg,#2dd4bf,#0d9488);border-radius:8px 8px 0 0;margin:0 auto;max-width:110px}
 .xs2-steps .stp.goal .bar{background:repeating-linear-gradient(45deg,#e2e8f0,#e2e8f0 6px,#f1f5f9 6px,#f1f5f9 12px)}
 .xs2-steps .stp span{display:block;font-size:11px;color:#64748b;margin-top:7px;font-weight:700}
+@media(max-width:680px){.xs2{padding:18px 14px}.xs2-steps .row2{gap:6px;padding:0}.xs2-steps .stp b{font-size:9px;letter-spacing:-.03em}.xs2-track{margin:44px 26px 58px}.xs2-track .ms span{font-size:9px}}
 /* ── 인쇄: 보고서형 A4 가로 1장 ── */
 @media print{
   #page-export .ex-dsg,#page-export .ex-bar button{display:none!important}
@@ -2926,6 +2934,10 @@ function _exData(){
   return {cur:cur,prev:prev,elapsed:elapsed,remain:remain,needAvg:needAvg,kita:kita,kitaExp:kitaExp,
     yearly:{labels:labels,acc:acc,exp:exp},updatedAt:(INTL&&INTL.updatedAt)||''};
 }
+function exUsdM(v){ v=Number(v)||0; var a=Math.abs(v);
+  if(a>=1e6) return '$'+(v/1e6>=100?Math.round(v/1e6):(Math.round(v/1e5)/10))+'M';
+  if(a>=1e3) return '$'+Math.round(v/1e3)+'K';
+  return '$'+Math.round(v).toLocaleString(); }
 function _exYoyTd(r){
   if(!(r.v>0)||r.d==null) return '<td></td><td></td>';
   var up=r.d>=0, cls=up?'ex-up':'ex-down', ar=up?'\u25B2':'\u25BC';
@@ -2946,7 +2958,7 @@ function _exdReport(D){
     h+='<thead><tr><th>\uB144/\uC6D4</th><th>\uAE08\uC561</th>'+(yoy?'<th>\uC804\uB144\uB3D9\uC6D4<br>\uC99D\uAC10\uC561</th><th>\uC804\uB144\uB3D9\uC6D4<br>\uC99D\uAC10\uC728</th>':'')+'</tr></thead><tbody>';
     var blank=yoy?'<td></td><td></td>':'';
     c.rows.forEach(function(r,i){
-      h+='<tr class="'+(r.prov?'prov':'')+(r.fut?' fut':'')+'"><td>'+r.label+(r.prov?' <i>\uC7A0\uC815</i>':'')+'</td><td>'+(r.fut?'':exUsd(r.v))+'</td>'+(yoy?_exYoyTd(r):'')+'</tr>';
+      h+='<tr class="'+(r.prov?'prov':'')+(r.fut?' fut':'')+((!c.isCur&&i===c.rows.length-1)?' last':'')+'"><td>'+r.label+(r.prov?' <i>\uC7A0\uC815</i>':'')+'</td><td>'+(r.fut?'':exUsd(r.v))+'</td>'+(yoy?_exYoyTd(r):'')+'</tr>';
       if(i===5) h+='<tr class="sub"><td>'+c.subH1+'</td><td>'+exUsd(c.h1)+'</td>'+blank+'</tr>';
     });
     h+='<tr class="sub"><td>'+c.subH2+'</td><td>'+exUsd(c.h2)+'</td>'+blank+'</tr>';
@@ -2983,11 +2995,11 @@ function _exdMobile(D){
   h+='<div class="xm-hero"><div class="xm-ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="'+R+'" class="bg"/><circle cx="60" cy="60" r="'+R+'" class="fg" stroke-dasharray="'+CIRC.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'"/></svg>'
     +'<div class="xm-ring-c"><b>'+c.pct.toFixed(1)+'<i>%</i></b><span>\uB2EC\uC131\uC728</span></div></div>'
     +'<div class="xm-hd"><div class="xm-t">'+esc(c.title)+'</div><div class="xm-l">'+esc(c.label)+' \u00B7 \uC9C4\uD589\uC911</div>'
-    +'<div class="xm-big">'+exUsd(c.tot)+'</div><div class="xm-sub">\uBAA9\uD45C '+exUsd(c.target)+'</div></div></div>';
+    +'<div class="xm-big">'+exUsd(c.tot)+'</div><div class="xm-sub">\uBAA9\uD45C '+exUsdM(c.target)+'</div><div class="xm-gg"><i style="width:'+Math.max(Math.min(c.pct,100),0.8).toFixed(1)+'%"></i></div></div></div>';
   h+='<div class="xm-stats">'
-    +'<div class="xm-st"><span>'+(c.done?'\uCD08\uACFC':'\uC794\uC5EC')+'</span><b>'+exUsd(Math.abs(c.diff))+'</b></div>'
+    +'<div class="xm-st"><span>'+(c.done?'\uCD08\uACFC':'\uC794\uC5EC')+'</span><b>'+exUsdM(Math.abs(c.diff))+'</b></div>'
     +'<div class="xm-st"><span>\uACBD\uACFC</span><b>'+D.elapsed+'/12\uAC1C\uC6D4</b></div>'
-    +'<div class="xm-st"><span>\uC6D4\uD3C9\uADE0 \uD544\uC694</span><b>'+exUsd(D.needAvg)+'</b></div></div>';
+    +'<div class="xm-st"><span>\uC6D4\uD3C9\uADE0 \uD544\uC694</span><b>'+exUsdM(D.needAvg)+'</b></div></div>';
   h+='<div class="xm-sec">\uC774\uBC88 \uCC28\uC218 \uC6D4\uBCC4</div><div class="xm-list">';
   pastRows.forEach(function(r){ h+='<div class="xm-row"><span>'+r.label+(r.prov?' <i>\uC7A0\uC815</i>':'')+'</span><b>'+exUsd(r.v)+'</b></div>'; });
   if(c.rows.length>pastRows.length) h+='<div class="xm-row mut"><span>\uC774\uD6C4 '+(c.rows.length-pastRows.length)+'\uAC1C\uC6D4</span><b>\uB300\uAE30</b></div>';
@@ -3024,7 +3036,8 @@ function _exdDark(D){
     +'<span class="xd-leg"><i class="a"></i>\uC774\uBC88 \uCC28\uC218 <i class="b"></i>\uC9C1\uC804 \uCC28\uC218</span></div><div class="xd-bars">';
   c.rows.forEach(function(r,i){
     var pv=D.prev?D.prev.rows[i].v:0;
-    h+='<div class="xd-bg"><div class="bw">'
+    var isMax=(pv===maxV||r.v===maxV);
+    h+='<div class="xd-bg">'+(isMax?'<div class="bl">'+exUsdM(Math.max(pv,r.v))+'</div>':'')+'<div class="bw">'
       +'<div class="b prev" style="height:'+Math.max(pv/maxV*100,1).toFixed(1)+'%"></div>'
       +'<div class="b cur'+(r.prov?' pv':'')+'" style="height:'+Math.max(r.v/maxV*100,r.v>0?2:0).toFixed(1)+'%"></div>'
       +'</div><span>'+r.label.replace(/^\d+\uB144 /,'')+'</span></div>';
@@ -3041,21 +3054,23 @@ function _exdDark(D){
 function _exdMinimal(D){
   var c=D.cur; if(!c) return '';
   var h='<div class="xn">';
-  h+='<div class="xn-head"><div class="xn-kicker">'+esc(c.title)+' \u00B7 '+esc(c.label)+'</div>'
+  h+='<div class="xn-head"><div class="xn-kicker">'+esc(c.title)+' \u00B7 '+esc(c.label)+'<span style="float:right;font-weight:500;color:#cbd5e1">'+esc(c.period)+' \u00B7 KITA</span></div>'
     +'<div class="xn-rate">'+c.pct.toFixed(1)+'<i>%</i></div>'
     +'<div class="xn-line"><i style="width:'+Math.min(c.pct,100).toFixed(1)+'%"></i></div>'
     +'<div class="xn-nums"><span>\uC2E4\uC801 <b>'+exUsd(c.tot)+'</b></span><span>\uBAA9\uD45C <b>'+exUsd(c.target)+'</b></span><span>'+(c.done?'\uCD08\uACFC':'\uC794\uC5EC')+' <b>'+exUsd(Math.abs(c.diff))+'</b></span><span>\uC6D4\uD3C9\uADE0 \uD544\uC694 <b>'+exUsd(D.needAvg)+'</b></span></div></div>';
   h+='<div class="xn-grid"><div>';
   h+='<div class="xn-st">'+esc(c.title)+' \uC6D4\uBCC4</div><table class="xnt">';
-  c.rows.forEach(function(r){ h+='<tr class="'+(r.fut?'fut':'')+'"><td>'+r.label+(r.prov?' <i>\uC7A0\uC815</i>':'')+'</td><td>'+(r.fut?'\u00B7':exUsd(r.v))+'</td></tr>'; });
-  h+='<tr class="tot"><td>\uCD1D\uACC4</td><td>'+exUsd(c.tot)+'</td></tr></table></div><div>';
-  if(D.prev){ h+='<div class="xn-st">'+esc(D.prev.title)+' \u00B7 '+D.prev.pct.toFixed(0)+'%'+(D.prev.done?' \u2713':'')+'</div><table class="xnt sm">';
-    D.prev.rows.forEach(function(r){ h+='<tr><td>'+r.label+'</td><td>'+exUsd(r.v)+'</td></tr>'; });
-    h+='<tr class="tot"><td>\uCD1D\uACC4</td><td>'+exUsd(D.prev.tot)+'</td></tr></table>'; }
+  var futN=0; c.rows.forEach(function(r){ if(r.fut){futN++;return;} h+='<tr class=""><td>'+r.label+(r.prov?' <i>\uC7A0\uC815</i>':'')+'</td><td>'+exUsd(r.v)+'</td></tr>'; });
+  if(futN) h+='<tr class="fut"><td>\uC774\uD6C4 '+futN+'\uAC1C\uC6D4</td><td>\uC608\uC815</td></tr>';
+  h+='<tr class="tot"><td>\uCD1D\uACC4</td><td>'+exUsd(c.tot)+'</td></tr></table>';
   h+='<div class="xn-st" style="margin-top:26px">\uCD5C\uADFC 3\uAC1C\uB144</div><table class="xnt sm">';
   D.kitaExp.forEach(function(r){ h+='<tr><td>'+esc(r.y)+' \uC218\uCD9C(\uCC28\uC218)</td><td>'+exUsd(r.v)+'</td></tr>'; });
   D.kita.forEach(function(r){ h+='<tr><td>'+esc(r.y)+' \uD574\uC678(1~12\uC6D4)'+(r.live?' <i>\uC9C4\uD589</i>':'')+'</td><td>'+exUsd(r.v)+'</td></tr>'; });
-  h+='</table></div></div></div>';
+  h+='</table></div><div>';
+  if(D.prev){ h+='<div class="xn-st">'+esc(D.prev.title)+' \u00B7 '+D.prev.pct.toFixed(0)+'%'+(D.prev.done?' \u2713':'')+'</div><table class="xnt sm">';
+    D.prev.rows.forEach(function(r){ h+='<tr><td>'+r.label+'</td><td>'+exUsd(r.v)+'</td></tr>'; });
+    h+='<tr class="tot"><td>\uCD1D\uACC4</td><td>'+exUsd(D.prev.tot)+'</td></tr></table>'; }
+  h+='</div></div></div>';
   return h;
 }
 
@@ -3067,7 +3082,7 @@ function _exdStory(D){
   h+='<div class="xs2-road"><div class="xs2-rt">'+esc(c.title)+' <b>'+esc(c.label)+'</b> \uB85C\uB4DC\uB9F5<span>'+esc(c.period)+'</span></div>'
     +'<div class="xs2-track"><div class="f" style="width:'+pctPos.toFixed(1)+'%"></div>'
     +[0,25,50,75,100].map(function(m){return '<div class="ms" style="left:'+m+'%"><i></i><span>$'+(m)+'M</span></div>';}).join('')
-    +'<div class="now" style="left:'+pctPos.toFixed(1)+'%"><b>'+exUsd(c.tot)+'</b><span>'+c.pct.toFixed(1)+'%</span></div></div></div>';
+    +'<div class="now'+(pctPos<10?' edge':'')+'" style="left:'+pctPos.toFixed(1)+'%"><b>'+exUsd(c.tot)+'</b><span>'+c.pct.toFixed(1)+'%</span></div></div></div>';
   h+='<div class="xs2-tl">';
   c.rows.forEach(function(r){
     h+='<div class="xs2-n'+(r.fut?' fut':'')+(r.prov?' pv':'')+'"><div class="dot"></div><div class="bx"><span>'+r.label+(r.prov?' <i>\uC7A0\uC815</i>':'')+'</span><b>'+(r.fut?'\uC608\uC815':exUsd(r.v))+'</b></div></div>';
