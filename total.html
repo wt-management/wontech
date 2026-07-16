@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
 <style>
 /* ═══ DESIGN TOKENS (2026-07 리디자인: teal 단일 브랜드 · slate 램프 · 3радиус/2그림자/6타입) ═══ */
 :root{
@@ -521,6 +522,10 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 #page-export .exd-chip{border:1px solid #dbe2ec;background:#fff;color:#5b6b7f;font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:16px;cursor:pointer;transition:.15s}
 #page-export .exd-chip:hover{border-color:#16324f;color:#16324f}
 #page-export .exd-chip.on{background:#16324f;border-color:#16324f;color:#fff}
+#page-export .exd-sep{width:1px;height:20px;background:#dbe2ec;margin:0 4px;align-self:center}
+#page-export .exd-exp{border:1px solid #16324f;background:#16324f;color:#fff;font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:16px;cursor:pointer;transition:.15s}
+#page-export .exd-exp:hover{background:#0f2740;border-color:#0f2740}
+#page-export .exd-exp:disabled{opacity:.6;cursor:default}
 
 /* ── ① 보고서(공식 문서형) ── */
 .xr{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:30px 34px;box-shadow:0 1px 4px rgba(22,50,79,.06);container-type:inline-size}
@@ -809,6 +814,33 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   .xf3.side .xf3-row.charts{gap:12px}
   .xf3-c.chart{height:200px}
   .xb4-two{gap:14px}
+}
+
+/* ── 캡처용 모바일 강제 레이아웃(컨테이너쿼리 의존 없이 확정) ── */
+/* html2canvas는 음수 자간·tabular-nums를 글자단위로 그려 간격이 깨짐 → 캡처 시 정상화 */
+.exp-mobile,.exp-mobile *{letter-spacing:normal!important;font-variant-numeric:normal!important}
+.exp-mobile .xb4{padding:20px 14px}
+.exp-mobile .xb4-t{display:none}
+.exp-mobile .xb4-tm{display:table}
+.exp-mobile .xb4-st.ph{display:none}
+.exp-mobile .xb4-two{grid-template-columns:1fr;gap:14px}
+.exp-mobile .xb4-hd{flex-direction:column;align-items:flex-start;gap:4px}
+.exp-mobile .xr{padding:20px 14px}
+.exp-mobile .xr-grid{grid-template-columns:1fr;gap:14px}
+.exp-mobile .xr-side{grid-column:1/-1}
+.exp-mobile .xs-row{grid-template-columns:1fr}
+.exp-mobile .xf3-row{grid-template-columns:1fr}
+.exp-mobile .xf3-c.chart{height:190px}
+.exp-mobile .xr-doc{flex-direction:column;align-items:flex-start;gap:6px}
+.exp-mobile .xr-doc .meta{text-align:left}
+/* ── 출력(PDF): 현재 디자인만 크게 ── */
+@media print{
+  #page-export .ex-bar{display:none!important}
+  #page-export #ex-body{width:100%!important}
+  .xr,.xb4,.xc4,.xp4{border:0!important;box-shadow:none!important;padding:0!important}
+  .xt-wrap,.xs-card,.xf3-c{break-inside:avoid}
+  .xb4-tm{display:none!important}
+  .xb4-t{display:table!important}
 }
 
 </style>
@@ -2988,7 +3020,13 @@ function renderExport(){
   document.getElementById('ex-prov-month').textContent=exMonLabel(exCurKey());
   exUpdProv();
   var dsg=document.getElementById('ex-dsg');
-  if(dsg) dsg.innerHTML=_EXD_LIST.map(function(d){return '<button class="exd-chip'+(d[0]===_exDesign?' on':'')+'" onclick="exSetDesign(\''+d[0]+'\')">'+d[1]+'</button>';}).join('');
+  if(dsg){ var _chips=_EXD_LIST.map(function(d){return '<button class="exd-chip'+(d[0]===_exDesign?' on':'')+'" onclick="exSetDesign(\''+d[0]+'\')">'+d[1]+'</button>';}).join('');
+    if(_exDesign==='report'||_exDesign==='brief'){
+      _chips+='<span class="exd-sep"></span>'
+        +'<button class="exd-exp" onclick="exPrintDesign()" title="현재 화면을 PDF로 추출">📄 PDF 추출</button>'
+        +'<button class="exd-exp" onclick="exSaveImage(this)" title="휴대폰 화면 구성으로 이미지(PNG) 저장">🖼 모바일 캡처</button>';
+    }
+    dsg.innerHTML=_chips; }
   var pg=document.getElementById('page-export'); if(pg) pg.setAttribute('data-exd',_exDesign);
   var D=_exData();
   var fn={report:_exdReport,brief:_exdBrief,mobile:_exdMobile,score:_exdScore,plan:_exdPlan}[_exDesign]||_exdReport;
@@ -3042,6 +3080,8 @@ function _exData(){
   return {cur:cur,prev:prev,elapsed:elapsed,remain:remain,needAvg:needAvg,kita:kita,kitaExp:kitaExp,
     yearly:{labels:labels,acc:acc,exp:exp},updatedAt:(INTL&&INTL.updatedAt)||''};
 }
+/* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
+/* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
@@ -3163,13 +3203,6 @@ function _exdBrief(D){
   var c=D.cur, p=D.prev; if(!c) return '';
   var h='<div class="xb4">';
   h+='<div class="xb4-hd"><div class="t">원텍 주식회사 수출의 탑 현황</div><div class="d">'+esc(D.updatedAt)+' 기준 · KITA 수출신고</div></div>';
-  h+='<div class="xb4-say">'+esc(_exSentence(D))+'</div>';
-  h+='<div class="xb4-kpi">'
-    +'<div class="k"><span>달성률</span><b>'+c.pct.toFixed(1)+'%</b></div>'
-    +'<div class="k"><span>지금까지 수출</span><b>'+exMan(c.tot)+'</b></div>'
-    +'<div class="k"><span>더 필요한 금액</span><b>'+exMan(Math.abs(c.diff))+'</b></div>'
-    +'<div class="k hl"><span>매달 필요 ('+D.remain+'개월)</span><b>'+exMan(D.needAvg)+'</b></div>'
-    +'</div>';
   // 두 차수 통합 월별 비교표
   h+='<div class="xb4-two"><div class="xb4-left">';
   h+='<div class="xb4-st">차수별 월 실적 비교</div>';
@@ -3343,6 +3376,47 @@ function printPDF(){
   var restore=function(){ document.title=ot; window.removeEventListener('afterprint',restore); };
   window.addEventListener('afterprint',restore);
   window.print();
+}
+/* ── 수출의 탑: 현재 디자인 PDF 추출 ── */
+function _exDocName(){
+  var d=(_EXD_LIST.filter(function(x){return x[0]===_exDesign;})[0]||['','']) [1].replace(/^[^가-힣A-Za-z]+/,'').trim();
+  var t=(EXPORT&&EXPORT.updatedAt)?String(EXPORT.updatedAt).replace(/[^0-9]/g,''):'';
+  return '원텍_수출의탑_'+(d||_exDesign)+(t?'_'+t:'');
+}
+function exPrintDesign(){
+  var ot=document.title;
+  document.title=_exDocName();
+  var restore=function(){ document.title=ot; window.removeEventListener('afterprint',restore); };
+  window.addEventListener('afterprint',restore);
+  window.print();
+}
+/* ── 수출의 탑: 모바일 화면 구성으로 PNG 저장 ── */
+function exSaveImage(btn){
+  var root=document.querySelector('#ex-body > *');
+  if(!root){ alert('먼저 화면이 표시된 뒤 눌러주세요.'); return; }
+  if(typeof html2canvas==='undefined'){ alert('이미지 모듈을 불러오는 중입니다. 잠시 후 다시 눌러주세요.'); return; }
+  var ob=btn?btn.innerHTML:''; if(btn){ btn.disabled=true; btn.innerHTML='⏳ 생성 중…'; }
+  var W=420;
+  var holder=document.createElement('div');
+  holder.className='exp-mobile';
+  holder.style.cssText='position:fixed;left:-99999px;top:0;width:'+W+'px;background:#eef1f6;padding:14px;box-sizing:border-box';
+  holder.appendChild(root.cloneNode(true));
+  document.body.appendChild(holder);
+  var done=function(){ holder.remove(); if(btn){ btn.disabled=false; btn.innerHTML=ob; } };
+  setTimeout(function(){
+    html2canvas(holder,{scale:2,backgroundColor:'#eef1f6',width:W,windowWidth:W,scrollX:0,scrollY:0,logging:false})
+      .then(function(cv){
+        cv.toBlob(function(blob){
+          if(!blob){ done(); alert('이미지 생성에 실패했습니다.'); return; }
+          var url=URL.createObjectURL(blob), a=document.createElement('a');
+          a.href=url; a.download=_exDocName()+'_모바일.png';
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(function(){ URL.revokeObjectURL(url); },1000);
+          done();
+        },'image/png');
+      })
+      .catch(function(e){ done(); alert('이미지 생성 실패: '+(e&&e.message?e.message:e)); });
+  },80);
 }
 function exOpenEdit(){
   const body=document.getElementById('ex-edit-body'); body.innerHTML='';
