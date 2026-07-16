@@ -234,10 +234,14 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 <!-- 런처 화면 -->
 <style id="launcher-opt">
 #launcher-screen{padding:44px 24px}
-#launcher-cards{max-width:812px!important;gap:16px!important}
-#launcher-cards>div{width:186px!important}
-#launcher-cards>div>div:nth-child(2){padding:20px 18px!important}
-@media(max-width:860px){#launcher-cards{max-width:600px!important}}
+#launcher-cards{max-width:840px!important;display:flex!important;flex-direction:column;gap:24px!important;justify-content:flex-start}
+.lc-grp{width:100%}
+.lc-grp-t{font-size:11.5px;font-weight:800;color:#64748b;letter-spacing:.16em;margin:0 0 10px 2px;display:flex;align-items:center;gap:12px}
+.lc-grp-t:after{content:'';flex:1;height:1px;background:rgba(255,255,255,.09)}
+.lc-grp-row{display:flex;gap:16px;flex-wrap:wrap}
+.lc-grp-row>div{width:186px!important}
+.lc-grp-row>div>div:nth-child(2){padding:20px 18px!important}
+@media(max-width:860px){#launcher-cards{max-width:600px!important}.lc-grp-row{justify-content:center}}
 @media(max-width:640px){
   #launcher-screen{padding:22px 12px!important;justify-content:flex-start!important}
   #launcher-main{padding:0 6px;width:100%}
@@ -2535,19 +2539,20 @@ async function init() {
   await _showLauncherOrApp(session.user);
 }
 
+// 런처 카테고리(키→그룹). 여기 없는 신규 키는 '기타'로 자동 표시(registry 자동반영 유지)
+const _LAUNCH_GRPS=[['매출 현황',['total','korea','intl']],['해외법인',['japan','us','th']],['영업전략 도구',['daily','portfolio','equip','ar']]];
 function _buildLauncherCardsHTML(access) {
   // site_registry 기반 — 신규 사이트는 DB row 추가만으로 여기 자동 반영됨
   const cardStyle = 'background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(12px);border-radius:20px;width:200px;cursor:pointer;transition:transform .18s,box-shadow .18s,border-color .18s;overflow:hidden';
   const cardHover = "this.style.transform='translateY(-6px)';this.style.boxShadow='0 24px 48px rgba(0,0,0,.5)';this.style.borderColor='rgba(255,255,255,.25)'";
   const cardOut   = "this.style.transform='';this.style.boxShadow='';this.style.borderColor='rgba(255,255,255,.1)'";
-  return _siteRegistry.filter(s=>_siteVisible(s, access, _isAdmin)).map(s=>{
+  const card = s=>{
     const onclick = s.url==='LOCAL'
       ? "sessionStorage.setItem('wt_app','korea');history.replaceState({page:'launcher'},'',(location.hash&&location.hash.indexOf('=')===-1)?location.href:location.pathname+location.search);document.getElementById('launcher-screen').style.display='none';document.getElementById('app-loading').style.display='flex';_bootApp(_currentAccess);"
       : (s.needs_token
           ? `(async()=>{const {data:{session:s}}=await _sb.auth.getSession();let u='${s.url}';if(s)u+='#at='+encodeURIComponent(s.access_token)+'&rt='+encodeURIComponent(s.refresh_token);location.href=u;})()`
           : `location.href='${s.url}'`);
-    const order = s.key==='total' ? ';order:-1' : '';
-    return `<div onclick="${onclick.replace(/"/g,'&quot;')}" style="${cardStyle}${order}" onmouseover="${cardHover}" onmouseout="${cardOut}">
+    return `<div onclick="${onclick.replace(/"/g,'&quot;')}" style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
       <div style="height:5px;background:linear-gradient(90deg,${s.grad_from},${s.grad_to})"></div>
       <div style="padding:28px 24px">
         <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,${s.grad_from},${s.grad_to});display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px ${s.grad_from}59">
@@ -2558,7 +2563,18 @@ function _buildLauncherCardsHTML(access) {
         <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:${s.accent_color};font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
       </div>
     </div>`;
-  }).join('');
+  };
+  const vis=_siteRegistry.filter(s=>_siteVisible(s, access, _isAdmin));
+  const used={};
+  let html='';
+  _LAUNCH_GRPS.forEach(([label,keys])=>{
+    const sites=keys.map(k=>vis.find(s=>s.key===k)).filter(Boolean);
+    sites.forEach(s=>used[s.key]=1);
+    if(sites.length)html+=`<div class="lc-grp"><div class="lc-grp-t">${label}</div><div class="lc-grp-row">${sites.map(card).join('')}</div></div>`;
+  });
+  const etc=vis.filter(s=>!used[s.key]);
+  if(etc.length)html+=`<div class="lc-grp"><div class="lc-grp-t">기타</div><div class="lc-grp-row">${etc.map(card).join('')}</div></div>`;
+  return html;
 }
 
 // ── 중앙 로그인 복귀(ret) 헬퍼 ─────────────────────────────
