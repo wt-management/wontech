@@ -793,6 +793,8 @@ tr.lb-clk:hover td,tr.qs-clk:hover td{background:var(--surface-2)}
 /* ── 캡처용 모바일 강제 레이아웃(컨테이너쿼리 의존 없이 확정) ── */
 /* html2canvas는 음수 자간·tabular-nums를 글자단위로 그려 간격이 깨짐 → 캡처 시 정상화 */
 .exp-mobile,.exp-mobile *{letter-spacing:normal!important;font-variant-numeric:normal!important}
+/* html2canvas는 inset box-shadow를 셀 전체 칠하기로 오인해 배경을 덮음(총계 흰글씨 실종·강조행 날아감) → 캡처 시 그림자 제거 */
+.exp-mobile *{box-shadow:none!important}
 .exp-mobile .xb4{padding:20px 14px}
 .exp-mobile .xb4-t{display:none}
 .exp-mobile .xb4-tm{display:table}
@@ -3081,6 +3083,7 @@ function _exData(){
   return {cur:cur,prev:prev,elapsed:elapsed,remain:remain,needAvg:needAvg,kita:kita,kitaExp:kitaExp,
     yearly:{labels:labels,acc:acc,exp:exp},updatedAt:(INTL&&INTL.updatedAt)||''};
 }
+/* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
