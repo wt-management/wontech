@@ -529,57 +529,52 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 .xr-doc h1 small{display:block;font-size:11px;font-weight:700;color:#8a97a8;letter-spacing:.16em;margin-bottom:6px}
 .xr-doc .meta{text-align:right;font-size:11px;color:#5b6b7f;line-height:1.7}
 .xr-doc .meta b{color:#182230}
-.xr-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr) 308px;gap:18px;align-items:start}
+.xr-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr) 300px;gap:16px;align-items:stretch}
 @media(max-width:1150px){.xr-grid{grid-template-columns:1fr 1fr}.xr-side{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:14px}}
 @media(max-width:760px){.xr-grid{grid-template-columns:1fr}.xr-side{grid-template-columns:1fr}}
+/* 표 = 카드 */
+.xt-wrap{border:1px solid #dfe6ef;border-radius:13px;overflow:hidden;background:#fff;box-shadow:0 3px 10px rgba(22,50,79,.07);display:flex;flex-direction:column}
+.xt-wrap.cur{border-color:#c8d6e8;box-shadow:0 4px 14px rgba(22,50,79,.11)}
+.xt-cap{height:46px;flex-shrink:0;display:flex;align-items:center;gap:7px;padding:0 16px;background:linear-gradient(180deg,#ffffff,#f6f9fc);border-bottom:1px solid #e5eaf1;font-size:13px;font-weight:800;color:#182230;white-space:nowrap}
+.xt-cap b{color:#c62828}
+.xt-cap em{font-style:normal;background:#16324f;color:#fff;font-size:9.5px;font-weight:700;padding:2px 9px;border-radius:9px;margin-left:2px}
+.xt-cap i.dn{font-style:normal;background:#eef2f7;color:#5b6b7f;font-size:9.5px;font-weight:700;padding:2px 9px;border-radius:9px;margin-left:2px}
 .xt{width:100%;border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-nums}
-.xt caption{caption-side:top;text-align:left;font-size:12.5px;font-weight:800;color:#182230;height:30px;box-sizing:border-box;padding-bottom:10px;white-space:nowrap}
-.xt caption b{color:#c62828}
-.xt caption em{font-style:normal;background:#16324f;color:#fff;font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:9px;margin-left:7px;vertical-align:1px}
-.xt th{background:#16324f;border:1px solid #16324f;color:#fff;font-weight:700;padding:0 8px;height:46px;vertical-align:middle;text-align:center;line-height:1.35;font-size:11px;letter-spacing:.02em}
-.xt th+th{border-left-color:rgba(255,255,255,.22)}
-.xt td{border:1px solid #e5eaf1;padding:0 11px;height:31px;text-align:right;color:#26313f;background:#fff;font-size:11.5px}
-.xt th:first-child,.xt td:first-child{width:112px;min-width:112px}
+.xt th{background:linear-gradient(180deg,#1d3c60,#122b47);border:0;color:#fff;font-weight:700;padding:0 10px;height:44px;vertical-align:middle;text-align:center;line-height:1.35;font-size:11px;letter-spacing:.02em}
+.xt th+th{box-shadow:inset 1px 0 rgba(255,255,255,.14)}
+.xt td{border:0;border-bottom:1px solid #eef2f7;padding:0 12px;height:31px;text-align:right;color:#26313f;background:#fff;font-size:11.5px}
+.xt td+td{box-shadow:inset 1px 0 #f2f5fa}
+.xt th:first-child,.xt td:first-child{width:106px;min-width:106px}
 .xt td:first-child{text-align:center;color:#5b6b7f}
-.xt tbody tr:nth-child(odd) td{background:#fbfcfe}
-.xt tbody tr.sub td{background:#eef3f9;font-weight:700;color:#26313f}
-.xt tbody tr.tot td{background:#e3ebf4;font-weight:800;border-top:2px solid #16324f}
+.xt tbody tr:nth-child(even) td{background:#fafcfe}
+.xt tbody tr:hover td{background:#f3f7fc}
+.xt tbody tr.sub td{background:#eaf1f8;font-weight:700;color:#16324f;border-bottom:1px solid #dbe5f0}
+.xt tbody tr.tot td{background:#16324f;color:#fff;font-weight:800;font-size:12px;height:36px;border-bottom:0}
 .xt tbody tr.prov td,.xt tbody tr.last td{background:#fff3c4}
 .xt tr.prov i{font-style:normal;font-size:9px;color:#9a6b00;font-weight:800;margin-left:3px}
-.xt tbody tr.fut td{color:#c3ccd8}
-.xt tbody tr.res td{font-weight:800}
+.xt tbody tr.fut td{color:#c9d2dd}
+.xt tbody tr.res td{font-weight:800;background:#fff}
 .xt tbody tr.res td:last-child{color:#c62828}
-.xt tbody tr.res.short td{background:#ffe45e}
+.xt tbody tr.res.short td{background:#ffe45e;color:#5b4a00}
+.xt tbody tr.res.short td:last-child{color:#a03a00}
 .xt .ex-up{color:#c62828}.xt .ex-down{color:#1565c0}
-.xs-box{background:#fff;border:1px solid #dfe6ef;border-radius:8px;overflow:hidden;margin-bottom:14px}
-.xs-t{font-size:12px;font-weight:800;color:#fff;padding:10px 13px;background:#16324f}
-.xs-t span{display:block;font-size:9.5px;font-weight:500;color:#b8c6d8;margin-top:2px;letter-spacing:.03em}
-.xst{width:100%;border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-nums}
-.xst td{padding:9px 13px;border-bottom:1px solid #eef2f7;color:#5b6b7f}
-.xst tr:last-child td{border-bottom:0}
-.xst td:last-child{text-align:right;font-weight:800;color:#182230}
-.xst i{font-style:normal;font-size:9px;color:#16324f;font-weight:800;background:#e3ebf4;padding:1px 6px;border-radius:8px;margin-left:4px}
-
-.xs-card{background:#fff;border:1px solid #e2e8f0;border-radius:11px;padding:13px 15px;margin-bottom:12px;box-shadow:0 1px 2px rgba(22,50,79,.04)}
-.xs-card:last-child{margin-bottom:0}
-.xs-ct{font-size:12px;font-weight:800;color:#16324f;padding-bottom:9px;margin-bottom:4px;border-bottom:2px solid #16324f}
+/* 우측: 카드 + 차트(잔여 높이 자동 분배 → 표 하단과 정렬) */
+.xr-side{display:flex;flex-direction:column;gap:12px}
+.xs-card{background:#fff;border:1px solid #dfe6ef;border-radius:13px;padding:12px 15px;margin:0;box-shadow:0 3px 10px rgba(22,50,79,.07)}
+.xs-card.chart{flex:1;display:flex;flex-direction:column;min-height:0}
+.xs-ct{font-size:12px;font-weight:800;color:#16324f;padding-bottom:9px;margin-bottom:4px;border-bottom:2px solid #16324f;flex-shrink:0}
 .xs-ct span{display:block;font-size:9.5px;font-weight:500;color:#8a97a8;margin-top:2px;letter-spacing:.02em}
-.xs-cr{display:flex;justify-content:space-between;align-items:baseline;padding:8px 1px;border-bottom:1px solid #f0f3f8;font-size:11.5px}
+.xs-cr{display:flex;justify-content:space-between;align-items:baseline;padding:7px 1px;border-bottom:1px solid #f0f3f8;font-size:11.5px}
 .xs-cr:last-child{border-bottom:0}
 .xs-cr span{color:#5b6b7f;font-weight:600}
 .xs-cr b{font-weight:800;color:#182230;font-variant-numeric:tabular-nums;font-size:12.5px}
 .xs-cr i{font-style:normal;font-size:9px;color:#16324f;font-weight:800;background:#e3ebf4;padding:1px 6px;border-radius:8px;margin-left:5px}
-.ex-ybars.mini{height:104px;padding:16px 2px 0;gap:7px;border-bottom:1.5px solid #16324f;margin-top:6px}
+.ex-ybars.mini{flex:1;height:auto;min-height:54px;padding:14px 2px 0;gap:7px;border-bottom:1.5px solid #16324f;margin-top:4px}
 .ex-ybars.mini .v{font-size:9.5px;margin-bottom:4px}
-.ex-ybars.mini .bar{width:62%}
-.ex-yx.mini{margin-top:5px;gap:7px}
+.ex-ybars.mini .bar{width:60%}
+.ex-yx.mini{margin-top:5px;gap:7px;flex-shrink:0}
 .ex-yx.mini span{font-size:9.5px}
-
-.xr-charts{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:24px;padding-top:18px;border-top:1px solid #e5eaf1}
-@media(max-width:760px){.xr-charts{grid-template-columns:1fr}}
-.xr-cht{font-size:13px;font-weight:800;color:#182230;display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-left:11px;border-left:4px solid #16324f}
-.xr-cht span{font-size:10.5px;font-weight:500;color:#8a97a8}
-.xr-foot{margin-top:18px;padding-top:12px;border-top:1px solid #e5eaf1;font-size:10.5px;color:#8a97a8;display:flex;gap:18px;flex-wrap:wrap}
+.xr-foot{margin-top:16px;padding-top:12px;border-top:1px solid #e5eaf1;font-size:10.5px;color:#8a97a8;display:flex;gap:18px;flex-wrap:wrap}
 .ex-ybars{display:flex;align-items:flex-end;justify-content:space-around;height:190px;gap:12px;padding:24px 6px 0;border-bottom:2px solid #16324f}
 .ex-ybar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
 .ex-ybar .v{font-size:12px;font-weight:700;color:#26313f;margin-bottom:6px;font-variant-numeric:tabular-nums}
@@ -2972,6 +2967,7 @@ function _exData(){
 }
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
+/* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 function exUsdM(v){ v=Number(v)||0; var a=Math.abs(v);
   if(a>=1e6) return '$'+(a/1e6>=100?Math.round(v/1e6):(Math.round(v/1e5)/10))+'M';
   if(a>=1e3) return '$'+Math.round(v/1e3)+'K';
@@ -3005,8 +3001,8 @@ function _exBarsMini(vals,labels,color){
 function _exdReport(D){
   function tbl(c,yoy){
     if(!c) return '';
-    var h='<table class="xt'+(c.isCur?' cur':'')+'"><caption>※ '+esc(c.title)+' 실적현황 <b>('+esc(c.label)+')</b>'+(c.isCur?'<em>진행중</em>':'')+'</caption>';
-    h+='<thead><tr><th>년/월</th><th>금액</th>'+(yoy?'<th>전년동월<br>증감액</th><th>전년동월<br>증감율</th>':'')+'</tr></thead><tbody>';
+    var h='<div class="xt-wrap'+(c.isCur?' cur':'')+'"><div class="xt-cap">'+esc(c.title)+' 실적현황 <b>'+esc(c.label)+'</b>'+(c.isCur?'<em>진행중</em>':'<i class="dn">완료</i>')+'</div>';
+    h+='<table class="xt"><thead><tr><th>년/월</th><th>금액</th>'+(yoy?'<th>전년동월<br>증감액</th><th>전년동월<br>증감율</th>':'')+'</tr></thead><tbody>';
     var blank=yoy?'<td></td><td></td>':'';
     c.rows.forEach(function(r,i){
       h+='<tr class="'+(r.prov?'prov':'')+(r.fut?' fut':'')+((!c.isCur&&i===c.rows.length-1)?' last':'')+'"><td>'+r.label+(r.prov?' <i>잠정</i>':'')+'</td><td>'+(r.fut?'':exUsd(r.v))+'</td>'+(yoy?_exYoyTd(r):'')+'</tr>';
@@ -3016,7 +3012,7 @@ function _exdReport(D){
     h+='<tr class="tot"><td>총계</td><td>'+exUsd(c.tot)+'</td>'+blank+'</tr>';
     h+='<tr class="res'+(c.done?'':' short')+'"><td>'+(c.done?'초과분':'부족분')+'</td><td>'+(c.done?exUsd(c.diff):'-'+exUsd(Math.abs(c.diff)))+'</td>'+blank+'</tr>';
     h+='<tr class="res"><td>달성율</td><td>'+c.pct.toFixed(1)+'%</td>'+blank+'</tr>';
-    return h+'</tbody></table>';
+    return h+'</tbody></table></div>';
   }
   function card(t,sub,rows,label){
     return '<div class="xs-card"><div class="xs-ct">'+t+'<span>'+sub+'</span></div>'
@@ -3031,8 +3027,8 @@ function _exdReport(D){
     +'<div class="xr-side">'
       +card('최근 3개년 수출 실적','전년 7월 ~ 당해 6월 · KITA',D.kitaExp,'무역실적')
       +card('최근 3개년 해외 실적','1월 ~ 12월 · KITA',D.kita,'실적')
-      +'<div class="xs-card"><div class="xs-ct">회계실적 추이<span>단위: 만 $ · 회계연도</span></div>'+_exBarsMini(D.yearly.acc,D.yearly.labels,'#c98a4b')+'</div>'
-      +'<div class="xs-card"><div class="xs-ct">수출실적 추이<span>단위: 만 $ · 전년 7월~당해 6월</span></div>'+_exBarsMini(D.yearly.exp,D.yearly.labels,'#16324f')+'</div>'
+      +'<div class="xs-card chart"><div class="xs-ct">회계실적 추이<span>단위: 만 $ · 회계연도</span></div>'+_exBarsMini(D.yearly.acc,D.yearly.labels,'#c98a4b')+'</div>'
+      +'<div class="xs-card chart"><div class="xs-ct">수출실적 추이<span>단위: 만 $ · 전년 7월~당해 6월</span></div>'+_exBarsMini(D.yearly.exp,D.yearly.labels,'#16324f')+'</div>'
     +'</div></div>'
     +'<div class="xr-foot"><span>· 수기 미입력 월은 회계 USD 자동 반영(잠정)</span><span>· 미반영(선적 전) 물량은 실적에 포함하지 않음</span></div>'
     +'</div>';
