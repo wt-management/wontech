@@ -582,45 +582,34 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 .ex-yx{display:flex;justify-content:space-around;gap:12px;margin-top:8px}
 .ex-yx span{flex:1;text-align:center;font-size:11px;color:#5b6b7f;font-weight:600}
 
-/* ── ② 임원 브리핑 ── */
-.xb{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(22,50,79,.06)}
-.xb-top{background:#16324f;color:#fff;padding:26px 34px 24px}
-.xb-k{font-size:11px;font-weight:700;letter-spacing:.18em;color:#9fb2c8;margin-bottom:14px;display:flex;justify-content:space-between}
-.xb-k b{color:#e9eef5;font-weight:700;letter-spacing:0}
-.xb-lead{font-size:23px;font-weight:800;line-height:1.45;letter-spacing:-.01em;max-width:900px}
-.xb-lead em{font-style:normal;color:#ffd662}
-.xb-sub{font-size:13px;color:#b8c6d8;margin-top:10px}
-.xb-g{height:10px;background:rgba(255,255,255,.14);border-radius:99px;margin-top:20px;position:relative}
-.xb-g .f{height:100%;border-radius:99px;background:linear-gradient(90deg,#ffd662,#ffb02e);min-width:4px}
-.xb-g .p{position:absolute;top:-5px;width:2px;height:20px;background:#fff;opacity:.85}
-.xb-g .p::after{content:'시간 진도';position:absolute;top:-16px;left:-14px;font-size:9px;color:#9fb2c8;white-space:nowrap}
-.xb-gx{display:flex;justify-content:space-between;font-size:10px;color:#9fb2c8;margin-top:7px}
-.xb-stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #e5eaf1}
-@media(max-width:760px){.xb-stats{grid-template-columns:1fr}}
-.xb-st{padding:22px 30px;border-right:1px solid #e5eaf1}
-.xb-st:last-child{border-right:0}
-@media(max-width:760px){.xb-st{border-right:0;border-bottom:1px solid #e5eaf1}}
-.xb-st .l{font-size:11px;font-weight:700;color:#8a97a8;letter-spacing:.08em;margin-bottom:8px}
-.xb-st .v{font-size:26px;font-weight:800;color:#182230;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
-.xb-st .s{font-size:11.5px;color:#5b6b7f;margin-top:6px}
-.xb-st .s b{color:#c62828}
-.xb-bottom{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:0;border-top:1px solid #e5eaf1}
-@media(max-width:860px){.xb-bottom{grid-template-columns:1fr}}
-.xb-hist{padding:20px 30px;border-right:1px solid #e5eaf1}
-@media(max-width:860px){.xb-hist{border-right:0;border-bottom:1px solid #e5eaf1}}
-.xb-ht{font-size:11.5px;font-weight:800;color:#182230;margin-bottom:14px}
-.xb-ht span{font-weight:500;color:#8a97a8;font-size:10px;margin-left:8px}
-.xb-steps{display:flex;gap:14px;align-items:flex-end;height:110px}
-.xb-stp{flex:1;text-align:center;display:flex;flex-direction:column;justify-content:flex-end;height:100%}
-.xb-stp b{font-size:11px;font-weight:800;color:#26313f;margin-bottom:5px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.xb-stp .bar{background:#16324f;border-radius:3px 3px 0 0;min-height:4px}
-.xb-stp.goal .bar{background:repeating-linear-gradient(45deg,#dbe3ee,#dbe3ee 5px,#eef2f8 5px,#eef2f8 10px);border:1px dashed #b9c6d8;border-bottom:0}
-.xb-stp span{font-size:10px;color:#8a97a8;margin-top:6px;font-weight:700}
-.xb-prev{padding:20px 26px;display:flex;flex-direction:column;justify-content:center;gap:12px;background:#f8fafc}
-.xb-pv{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:#5b6b7f}
-.xb-pv b{font-size:14px;font-weight:800;color:#182230;font-variant-numeric:tabular-nums}
-.xb-pv .ok{color:#c62828}
-
+/* ── ② 임원 브리핑 — 메모/신문(화이트·잉크·레드) ── */
+.xb2{background:#fff;border:1px solid #e6e6e2;border-radius:12px;padding:34px 40px;box-shadow:0 1px 4px rgba(0,0,0,.05);color:#141414}
+.xb2-rule{display:flex;justify-content:space-between;font-size:10.5px;font-weight:800;letter-spacing:.22em;color:#8a8a85;padding-bottom:10px;border-bottom:1.5px solid #141414;margin-bottom:22px}
+.xb2-head{font-size:40px;font-weight:850;letter-spacing:-.025em;line-height:1.18;color:#111}
+.xb2-head i{display:block;width:64px;height:5px;background:#c62828;margin-top:14px}
+.xb2-lead{font-size:14.5px;line-height:1.75;color:#3c3c38;margin:16px 0 24px;max-width:860px}
+.xb2-facts{display:grid;grid-template-columns:repeat(4,1fr);border-top:1.5px solid #141414;border-bottom:1px solid #e2e2de}
+@media(max-width:900px){.xb2-facts{grid-template-columns:repeat(2,1fr)}}
+.xb2-facts .f{padding:16px 18px 15px;border-right:1px solid #ececea}
+.xb2-facts .f:last-child{border-right:0}
+.xb2-facts .f span{display:block;font-size:10.5px;font-weight:700;color:#8a8a85;letter-spacing:.08em;margin-bottom:6px}
+.xb2-facts .f b{font-size:22px;font-weight:800;color:#111;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.xb2-facts .f b u{text-decoration:none;font-size:12px;color:#8a8a85;font-weight:600}
+.xb2-facts .f em{display:block;font-style:normal;font-size:11px;color:#6b6b66;margin-top:4px}
+.xb2-cols{display:grid;grid-template-columns:1fr 1fr;gap:36px;margin-top:24px}
+@media(max-width:820px){.xb2-cols{grid-template-columns:1fr}}
+.xb2-st{font-size:12px;font-weight:800;color:#111;padding-bottom:7px;border-bottom:1.5px solid #141414;margin-bottom:4px}
+.xb2-st span{font-weight:500;color:#8a8a85;font-size:10px;margin-left:7px}
+.xb2-t{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+.xb2-t td{padding:9px 2px;border-bottom:1px solid #efefec;color:#3c3c38}
+.xb2-t tr:last-child td{border-bottom:0}
+.xb2-t td:nth-child(2){text-align:right;font-weight:700;color:#111}
+.xb2-t td:nth-child(3){text-align:right;width:74px}
+.xb2-t i{font-style:normal;font-size:11px;font-weight:800}
+.xb2-t i.up,.xb2-t b.up{color:#c62828}
+.xb2-t i.dn{color:#1565c0}
+.xb2-t tr.goal td{background:#faf7ef}
+.xb2-foot{margin-top:22px;padding-top:12px;border-top:1px solid #e2e2de;font-size:10.5px;color:#9a9a95}
 /* ── ③ 모바일 ── */
 .xm{max-width:520px;margin:0 auto;font-size:15px}
 .xm-hero{background:linear-gradient(155deg,#1d3d5f,#0f2540);border-radius:18px;padding:22px;display:flex;gap:18px;align-items:center;color:#fff;box-shadow:0 8px 22px rgba(15,37,64,.28)}
@@ -663,76 +652,89 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 .xm-cap .t span{font-weight:500;color:#8a97a8;font-size:10px}
 .xm-cap .xm-row{padding:9px 16px;font-size:13px}
 
-/* ── ④ 스코어카드 ── */
-.xc{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:40px 44px;box-shadow:0 1px 4px rgba(22,50,79,.06)}
-.xc-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:44px;align-items:center;padding-bottom:30px;border-bottom:1px solid #e5eaf1}
-@media(max-width:860px){.xc-top{grid-template-columns:1fr;gap:22px}}
-.xc-kick{font-size:11px;font-weight:800;color:#8a97a8;letter-spacing:.2em;margin-bottom:10px}
-.xc-rate{font-size:6rem;font-weight:200;color:#16324f;line-height:.95;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
-.xc-rate i{font-style:normal;font-size:2rem;color:#8a97a8;font-weight:400}
-.xc-amt{font-size:13px;color:#5b6b7f;margin-top:14px}
-.xc-amt b{color:#182230;font-weight:800}
-.xc-dots{display:flex;gap:7px;margin-top:20px}
-.xc-dot{width:22px;height:6px;border-radius:3px;background:#e5eaf1}
-.xc-dot.on{background:#16324f}
-.xc-dot.pv{background:#ffb02e}
-.xc-dlbl{font-size:10px;color:#8a97a8;margin-top:7px;letter-spacing:.04em}
-.xc-facts{display:flex;flex-direction:column;gap:0}
-.xc-f{display:flex;justify-content:space-between;align-items:baseline;padding:13px 2px;border-bottom:1px solid #eef2f7;font-size:13px}
-.xc-f:last-child{border-bottom:0}
-.xc-f span{color:#8a97a8;font-weight:600}
-.xc-f b{font-weight:800;color:#182230;font-variant-numeric:tabular-nums;font-size:15px}
-.xc-f b.neg{color:#c62828}
-.xc-bottom{display:grid;grid-template-columns:1fr 1fr;gap:44px;padding-top:26px}
-@media(max-width:860px){.xc-bottom{grid-template-columns:1fr}}
-.xc-bt{font-size:11px;font-weight:800;color:#182230;letter-spacing:.08em;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #16324f}
-.xc-li{display:flex;justify-content:space-between;padding:8px 2px;border-bottom:1px solid #f2f5f9;font-size:12.5px;font-variant-numeric:tabular-nums}
-.xc-li:last-child{border-bottom:0}
-.xc-li span{color:#5b6b7f}
-.xc-li b{font-weight:700;color:#182230}
-.xc-li i{font-style:normal;font-size:9px;color:#16324f;font-weight:800;background:#e3ebf4;padding:1px 6px;border-radius:8px;margin-left:5px}
 
-/* ── ⑤ 플랜 보드 ── */
-.xp{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:30px 34px;box-shadow:0 1px 4px rgba(22,50,79,.06)}
-.xp-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:24px}
-.xp-hd h2{font-size:16px;font-weight:800;color:#182230;margin:0}
-.xp-hd h2 b{color:#16324f}
-.xp-hd h2 em{font-style:normal;background:#16324f;color:#fff;font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px;margin-left:9px;vertical-align:2px}
-.xp-hd span{font-size:11px;color:#8a97a8;font-weight:600}
-.xp-track{position:relative;height:12px;background:#eef2f8;border-radius:99px;margin:40px 40px 54px}
-.xp-track .f{height:100%;background:linear-gradient(90deg,#2c5f82,#16324f);border-radius:99px;min-width:6px}
-.xp-track .ms{position:absolute;top:-3px}
-.xp-track .ms i{display:block;width:18px;height:18px;border-radius:50%;background:#fff;border:4px solid #dbe3ee;transform:translateX(-50%)}
-.xp-track .ms span{position:absolute;top:24px;left:0;transform:translateX(-50%);font-size:10.5px;color:#8a97a8;white-space:nowrap;font-weight:700}
-.xp-track .now{position:absolute;top:-40px}
-.xp-track .now .tag{background:#16324f;color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:8px;white-space:nowrap;transform:translateX(-50%);display:inline-block}
-.xp-track .now.edge .tag{transform:none;margin-left:-9px}
-.xp-track .now .tag i{font-style:normal;color:#ffd662;margin-left:5px}
-.xp-track .now::after{content:'';position:absolute;left:0;top:34px;width:14px;height:14px;background:#16324f;border:3px solid #fff;border-radius:50%;transform:translateX(-50%);box-shadow:0 0 0 2px #16324f}
-.xp-months{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;margin-bottom:26px}
-@media(max-width:1100px){.xp-months{grid-template-columns:repeat(6,1fr)}}
-@media(max-width:640px){.xp-months{grid-template-columns:repeat(4,1fr)}}
-.xp-m{border:1px solid #e5eaf1;border-radius:9px;padding:9px 4px;text-align:center;background:#fbfcfe}
-.xp-m.on{background:#16324f;border-color:#16324f}
-.xp-m.on .mv,.xp-m.on .ml{color:#fff}
-.xp-m.on .mv i{color:#ffd662}
-.xp-m .ml{font-size:9.5px;color:#8a97a8;font-weight:700;letter-spacing:.02em}
-.xp-m .mv{font-size:10.5px;font-weight:800;color:#26313f;margin-top:3px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.xp-m .mv i{font-style:normal;font-size:8.5px;font-weight:800}
-.xp-m.fut .mv{color:#c3ccd8;font-weight:600}
-.xp-two{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:26px;align-items:start;border-top:1px solid #e5eaf1;padding-top:20px}
-@media(max-width:900px){.xp-two{grid-template-columns:1fr}}
-.xp-bt{font-size:11.5px;font-weight:800;color:#182230;margin-bottom:12px}
-.xp-bt span{font-weight:500;color:#8a97a8;font-size:10px;margin-left:8px}
-.xp-steps{display:flex;gap:16px;align-items:flex-end;height:130px}
-.xp-stp{flex:1;text-align:center;display:flex;flex-direction:column;justify-content:flex-end;height:100%}
-.xp-stp b{font-size:11px;font-weight:800;color:#26313f;margin-bottom:5px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.xp-stp .bar{background:#16324f;border-radius:3px 3px 0 0;min-height:4px}
-.xp-stp.goal .bar{background:repeating-linear-gradient(45deg,#dbe3ee,#dbe3ee 5px,#eef2f8 5px,#eef2f8 10px);border:1px dashed #b9c6d8;border-bottom:0}
-.xp-stp span{font-size:10px;color:#8a97a8;margin-top:6px;font-weight:700}
-.xp-note{background:#f8fafc;border:1px solid #e5eaf1;border-radius:10px;padding:16px 18px;font-size:12px;color:#5b6b7f;line-height:1.8}
-.xp-note b{color:#182230}
-.xp-note .hl{color:#c62828;font-weight:800}
+/* ── ③ 모바일 보강 ── */
+.xm-note{background:#eef6f4;border:1px solid #d3e8e3;border-radius:12px;padding:11px 14px;font-size:12px;color:#155e52;margin-bottom:4px;line-height:1.6}
+.xm-note b{font-weight:800}
+.xm-row .r{display:flex;align-items:baseline;gap:8px}
+.xm-row em{font-style:normal;font-size:10.5px;font-weight:800}
+.xm-row em.up{color:#e25c5c}
+.xm-row em.dn{color:#7ba7d9}
+.xm-row i.best{background:#e3ebf4;color:#16324f}
+.xm-pvsum{display:flex;gap:6px;justify-content:space-between;padding:10px 16px;border-top:1px solid #f2f5f9;font-size:10.5px;color:#5b6b7f;flex-wrap:wrap}
+.xm-sec span{font-weight:500;color:#8a97a8;font-size:10px;margin-left:6px}
+/* ── ④ 스코어카드 — 아이보리·골드 ── */
+.xc2{background:linear-gradient(180deg,#fbf9f4,#f7f4ec);border:1px solid #e7e1d3;border-radius:14px;padding:38px 42px;box-shadow:0 1px 5px rgba(80,65,30,.07);color:#2b2620}
+.xc2-top{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:44px;align-items:center;padding-bottom:26px;border-bottom:1px solid #e2dbc9}
+@media(max-width:880px){.xc2-top{grid-template-columns:1fr;gap:20px}}
+.xc2-kick{font-size:11px;font-weight:800;color:#a8863c;letter-spacing:.24em;margin-bottom:12px}
+.xc2-rate{font-size:5.6rem;font-weight:200;color:#2b2620;line-height:.95;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.xc2-rate i{font-style:normal;font-size:1.9rem;color:#b3a88e;font-weight:400}
+.xc2-amt{font-size:13.5px;color:#6d6555;margin-top:13px;font-variant-numeric:tabular-nums}
+.xc2-amt span{color:#a39a83}
+.xc2-dots{display:flex;gap:6px;margin-top:18px}
+.xc2-dot{width:20px;height:7px;border-radius:3px;background:#e6dfcf;transform:skewX(-18deg)}
+.xc2-dot.on{background:#2b2620}
+.xc2-dot.pv{background:#c9a24a}
+.xc2-dlbl{font-size:10px;color:#a39a83;margin-top:8px;letter-spacing:.05em}
+.xc2-r{display:flex;flex-direction:column}
+.xc2-f{display:flex;justify-content:space-between;align-items:baseline;padding:11px 2px;border-bottom:1px solid #eae4d6;font-size:12.5px}
+.xc2-f:last-child{border-bottom:0}
+.xc2-f span{color:#8d846f;font-weight:600}
+.xc2-f b{font-weight:800;color:#2b2620;font-variant-numeric:tabular-nums;font-size:14.5px}
+.xc2-bottom{display:grid;grid-template-columns:1fr 1fr;gap:44px;padding-top:24px}
+@media(max-width:880px){.xc2-bottom{grid-template-columns:1fr}}
+.xc2-bt{font-size:11px;font-weight:800;color:#2b2620;letter-spacing:.1em;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #c9a24a}
+.xc2-li{display:flex;justify-content:space-between;padding:8px 2px;border-bottom:1px solid #efe9dc;font-size:12.5px;font-variant-numeric:tabular-nums}
+.xc2-li:last-child{border-bottom:0}
+.xc2-li span{color:#6d6555}
+.xc2-li b{font-weight:700;color:#2b2620}
+.xc2-li.mut span,.xc2-li.mut b{color:#c5bca6}
+.xc2-li i{font-style:normal;font-size:9px;color:#a8863c;font-weight:800;background:#f3ead3;padding:1px 7px;border-radius:8px;margin-left:6px}
+/* ── ⑤ 플랜 보드 — 틸 실행보드 ── */
+.xp2{background:#fff;border:1px solid #dfe7e6;border-radius:12px;padding:28px 32px;box-shadow:0 1px 4px rgba(13,80,72,.06)}
+.xp2-hd{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-bottom:18px}
+.xp2-hd h2{font-size:17px;font-weight:800;color:#123f38;margin:0}
+.xp2-hd h2 b{color:#0f766e}
+.xp2-hd h2 em{font-style:normal;background:#0f766e;color:#fff;font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px;margin-left:9px;vertical-align:2px}
+.xp2-hd>div>span{font-size:11px;color:#7d938f;font-weight:600}
+.xp2-kpis{display:flex;gap:8px}
+.xp2-kpis .k{background:#f2f7f6;border:1px solid #dcE8e6;border-radius:10px;padding:8px 14px;text-align:center}
+.xp2-kpis .k span{display:block;font-size:9.5px;color:#7d938f;font-weight:700}
+.xp2-kpis .k b{font-size:14px;font-weight:800;color:#123f38;font-variant-numeric:tabular-nums;white-space:nowrap}
+.xp2-kpis .k.hl{background:#0f766e;border-color:#0f766e}
+.xp2-kpis .k.hl span{color:#b5e3dc}
+.xp2-kpis .k.hl b{color:#fff}
+.xp2-g{height:12px;background:#e9f1ef;border-radius:99px;position:relative;margin-top:4px}
+.xp2-g .f{height:100%;background:linear-gradient(90deg,#14b8a6,#0f766e);border-radius:99px}
+.xp2-g .lbl{position:absolute;top:-22px;transform:translateX(-50%);font-size:11px;font-weight:800;color:#0f766e;white-space:nowrap}
+.xp2-gx{display:flex;justify-content:space-between;font-size:9.5px;color:#9fb3af;margin:6px 1px 20px;font-weight:600}
+.xp2-bt{font-size:12.5px;font-weight:800;color:#123f38;margin-bottom:10px}
+.xp2-bt span{font-weight:500;color:#7d938f;font-size:10px;margin-left:8px}
+.xp2-rows{border:1px solid #e3ecea;border-radius:11px;overflow:hidden}
+.xp2-row{display:grid;grid-template-columns:74px minmax(0,1fr) 150px;gap:12px;align-items:center;padding:6px 14px;border-bottom:1px solid #eef4f2;background:#fff}
+.xp2-row:nth-child(even){background:#fbfdfc}
+.xp2-row:last-child{border-bottom:0}
+.xp2-row .m{font-size:11px;font-weight:700;color:#4f6763;white-space:nowrap}
+.xp2-row .tr{position:relative;height:16px;background:#f0f5f4;border-radius:5px;overflow:hidden}
+.xp2-row .pv{position:absolute;left:0;top:0;height:100%;background:#d8e5e2}
+.xp2-row .cu{position:absolute;left:0;top:3px;height:10px;background:#0f766e;border-radius:0 4px 4px 0}
+.xp2-row .cu.pv2{background:#d9a514}
+.xp2-row .need{position:absolute;top:-2px;bottom:-2px;width:0;border-left:2px dashed #d9a514}
+.xp2-row .v{font-size:11.5px;font-weight:800;color:#123f38;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.xp2-row .v i{font-style:normal;font-size:9px;color:#a97b00;font-weight:800}
+.xp2-row .v u{text-decoration:none;color:#b9c9c5;font-weight:600;font-size:10.5px}
+.xp2-row.fut .m{color:#a9bcb8}
+.xp2-foot{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;margin-top:18px;padding-top:14px;border-top:1px solid #e3ecea}
+.xp2-steps{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.xp2-steps .s{text-align:center}
+.xp2-steps .s span{display:block;font-size:9.5px;color:#7d938f;font-weight:700}
+.xp2-steps .s b{font-size:13px;font-weight:800;color:#123f38;font-variant-numeric:tabular-nums}
+.xp2-steps .s.goal b{color:#0f766e}
+.xp2-steps .a{color:#b9c9c5;font-size:12px}
+.xp2-note{font-size:11.5px;color:#4f6763}
+.xp2-note b{color:#123f38}
+.xp2-note b.hl{color:#0f766e}
 
 </style>
 </head>
@@ -2968,6 +2970,7 @@ function _exData(){
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
+/* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 function exUsdM(v){ v=Number(v)||0; var a=Math.abs(v);
   if(a>=1e6) return '$'+(a/1e6>=100?Math.round(v/1e6):(Math.round(v/1e5)/10))+'M';
   if(a>=1e3) return '$'+Math.round(v/1e3)+'K';
@@ -3034,113 +3037,154 @@ function _exdReport(D){
     +'</div>';
 }
 
-/* ══ ② 임원 브리핑 ══ */
+/* ══ ② 임원 브리핑 — 메모/신문 스타일 ══ */
 function _exdBrief(D){
   var c=D.cur; if(!c) return '';
   var pace=Math.min(D.elapsed/12*100,100);
-  // 결론 문장 자동 생성
-  var lead;
-  if(c.done) lead='<em>'+esc(c.title)+' ('+esc(c.label)+')</em> 목표를 <em>달성</em>했습니다. 초과 '+exUsd(c.diff)+'.';
-  else if(D.elapsed<=1) lead='<em>'+esc(c.title)+' ('+esc(c.label)+')</em> 차수가 시작됐습니다. 남은 '+D.remain+'개월간 월평균 <em>'+exUsdM(D.needAvg)+'</em>이 필요합니다.';
-  else lead='목표까지 '+exUsdM(Math.abs(c.diff))+' 남았습니다. 남은 '+D.remain+'개월간 월평균 <em>'+exUsdM(D.needAvg)+'</em> 페이스가 필요합니다.';
   var prevAvg=D.prev?D.prev.tot/12:0;
   var vsPrev=prevAvg>0?((D.needAvg/prevAvg-1)*100):null;
-  var h='<div class="xb">';
-  h+='<div class="xb-top"><div class="xb-k"><span>EXECUTIVE BRIEFING · 수출의 탑</span><b>'+esc(D.updatedAt)+' 기준</b></div>'
-    +'<div class="xb-lead">'+lead+'</div>'
-    +'<div class="xb-sub">현재 실적 '+exUsd(c.tot)+' · 달성률 '+c.pct.toFixed(1)+'% · 경과 '+D.elapsed+'/12개월</div>'
-    +'<div class="xb-g"><div class="f" style="width:'+Math.max(Math.min(c.pct,100),0.5).toFixed(1)+'%"></div><div class="p" style="left:'+pace+'%"></div></div>'
-    +'<div class="xb-gx"><span>$0</span><span>'+exUsdM(c.target/2)+'</span><span>'+exUsdM(c.target)+'</span></div></div>';
-  h+='<div class="xb-stats">'
-    +'<div class="xb-st"><div class="l">현재 실적</div><div class="v">'+exUsd(c.tot)+'</div><div class="s">달성률 <b>'+c.pct.toFixed(1)+'%</b> · '+esc(c.period)+'</div></div>'
-    +'<div class="xb-st"><div class="l">목표까지</div><div class="v">'+exUsdM(Math.abs(c.diff))+'</div><div class="s">목표 '+exUsd(c.target)+' 중 잔여</div></div>'
-    +'<div class="xb-st"><div class="l">필요 페이스</div><div class="v">'+exUsdM(D.needAvg)+'<span style="font-size:13px;color:#8a97a8">/월</span></div><div class="s">'+(vsPrev!=null?('직전 차수 월평균 '+exUsdM(prevAvg)+' 대비 <b>'+(vsPrev>=0?'+':'')+vsPrev.toFixed(0)+'%</b>'):'남은 '+D.remain+'개월 기준')+'</div></div>'
+  var head, tone;
+  if(c.done){ head='목표 달성 — 초과 '+exUsdM(c.diff); tone='good'; }
+  else if(D.elapsed<=1){ head='1억불 탑, 남은 '+D.remain+'개월 · 월 '+exUsdM(D.needAvg); tone='start'; }
+  else if(c.pct>=pace){ head='페이스 정상 — 달성률 '+c.pct.toFixed(0)+'%'; tone='good'; }
+  else { head='페이스 미달 — 월 '+exUsdM(D.needAvg)+' 필요'; tone='warn'; }
+  var lead;
+  if(D.elapsed<=1) lead=esc(c.title)+' ('+esc(c.label)+') 차수가 시작됐습니다. 목표 '+exUsd(c.target)+' 달성을 위해 남은 '+D.remain+'개월간 월평균 '+exUsd(D.needAvg)+'의 수출 실적이 필요합니다.';
+  else if(c.done) lead=esc(c.title)+' ('+esc(c.label)+') 목표를 조기 달성했습니다. 현재 초과분은 '+exUsd(c.diff)+'입니다.';
+  else lead='현재 달성률 '+c.pct.toFixed(1)+'% ('+exUsd(c.tot)+'). 목표까지 '+exUsd(Math.abs(c.diff))+' 남았으며, 남은 '+D.remain+'개월간 월평균 '+exUsd(D.needAvg)+' 페이스가 요구됩니다.';
+  var h='<div class="xb2">';
+  h+='<div class="xb2-rule"><span>MEMORANDUM</span><span>수출의 탑 임원 브리핑 · '+esc(D.updatedAt)+' 기준</span></div>';
+  h+='<div class="xb2-head">'+esc(head)+'<i></i></div>';
+  h+='<p class="xb2-lead">'+lead+'</p>';
+  h+='<div class="xb2-facts">'
+    +'<div class="f"><span>현재 실적</span><b>'+exUsd(c.tot)+'</b><em>달성률 '+c.pct.toFixed(1)+'%</em></div>'
+    +'<div class="f"><span>목표까지</span><b>'+exUsdM(Math.abs(c.diff))+'</b><em>목표 '+exUsdM(c.target)+'</em></div>'
+    +'<div class="f"><span>필요 페이스</span><b>'+exUsdM(D.needAvg)+'<u>/월</u></b><em>'+(vsPrev!=null?('직전 차수 월평균 대비 '+(vsPrev>=0?'+':'')+vsPrev.toFixed(0)+'%'):('남은 '+D.remain+'개월'))+'</em></div>'
+    +'<div class="f"><span>시간 진도</span><b>'+D.elapsed+'/12<u>개월</u></b><em>'+Math.round(pace)+'% 경과</em></div>'
     +'</div>';
-  h+='<div class="xb-bottom"><div class="xb-hist"><div class="xb-ht">연도별 수출 실적<span>전년 7월~당해 6월 · KITA</span></div><div class="xb-steps">'+_exSteps(D.kitaExp,c.target,'xb')+'</div></div>'
-    +'<div class="xb-prev">'
-    +(D.prev?('<div class="xb-pv"><span>직전 차수 · '+esc(D.prev.title)+'</span><b class="ok">'+D.prev.pct.toFixed(0)+'% 달성</b></div>'
-      +'<div class="xb-pv"><span>직전 차수 실적</span><b>'+exUsd(D.prev.tot)+'</b></div>'
-      +'<div class="xb-pv"><span>초과 금액</span><b class="ok">+'+exUsd(D.prev.diff)+'</b></div>'):'')
-    +'<div class="xb-pv"><span>해외 실적(1~12월, 진행)</span><b>'+exUsd((D.kita.find(function(k){return k.live;})||{v:0}).v)+'</b></div>'
+  h+='<div class="xb2-cols"><div>'
+    +'<div class="xb2-st">연도별 수출 실적 <span>전년 7월~당해 6월 · KITA</span></div>'
+    +'<table class="xb2-t">'+D.kitaExp.map(function(r,i){
+      var pv=i>0?D.kitaExp[i-1].v:null; var g=pv?((r.v/pv-1)*100):null;
+      return '<tr><td>'+esc(r.y)+'년</td><td>'+exUsd(r.v)+'</td><td>'+(g!=null?('<i class="'+(g>=0?'up':'dn')+'">'+(g>=0?'▲':'▼')+Math.abs(g).toFixed(1)+'%</i>'):'')+'</td></tr>';
+    }).join('')
+    +'<tr class="goal"><td>목표('+esc(c.label)+')</td><td>'+exUsd(c.target)+'</td><td><i class="dn">필요 +'+((c.target/(D.kitaExp.length?D.kitaExp[D.kitaExp.length-1].v:1)-1)*100).toFixed(1)+'%</i></td></tr></table>'
+    +'</div><div>'
+    +'<div class="xb2-st">직전 차수 요약 <span>'+(D.prev?esc(D.prev.title):'')+'</span></div>'
+    +(D.prev?('<table class="xb2-t">'
+      +'<tr><td>달성률</td><td colspan="2"><b class="up">'+D.prev.pct.toFixed(1)+'% ✓</b></td></tr>'
+      +'<tr><td>총 실적</td><td colspan="2">'+exUsd(D.prev.tot)+'</td></tr>'
+      +'<tr><td>초과 금액</td><td colspan="2"><b class="up">+'+exUsd(D.prev.diff)+'</b></td></tr>'
+      +'<tr><td>월평균 / 최고월</td><td colspan="2">'+exUsdM(D.prev.tot/12)+' / '+exUsdM(Math.max.apply(null,D.prev.rows.map(function(r){return r.v;})))+'</td></tr>'
+      +'</table>'):'')
     +'</div></div>';
+  h+='<div class="xb2-foot">집계 기준 KITA 수출신고 · 수기 미입력 월은 회계 USD 자동 반영 · 미반영(선적 전) 물량은 실적 미포함</div>';
   return h+'</div>';
 }
 
-/* ══ ③ 모바일 ══ */
+/* ══ ③ 모바일 — 스타일 유지 + 내용 보강 ══ */
 function _exdMobile(D){
   var c=D.cur; if(!c) return '';
   var R=50, CIRC=2*Math.PI*R, off=CIRC*(1-Math.min(c.pct,100)/100);
   var pastRows=c.rows.filter(function(r){return !r.fut;});
+  var prevAvg=D.prev?D.prev.tot/12:0;
+  var vsPrev=prevAvg>0?((D.needAvg/prevAvg-1)*100):null;
   var h='<div class="xm">';
   h+='<div class="xm-hero"><div class="xm-ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="'+R+'" class="bg"/><circle cx="60" cy="60" r="'+R+'" class="fg" stroke-dasharray="'+CIRC.toFixed(1)+'" stroke-dashoffset="'+Math.min(off,CIRC-2).toFixed(1)+'"/></svg>'
     +'<div class="xm-ring-c"><b>'+c.pct.toFixed(1)+'<i>%</i></b><span>달성율</span></div></div>'
-    +'<div class="xm-hd"><div class="xm-t">'+esc(c.title)+'</div><div class="xm-l">'+esc(c.label)+' · 진행중</div>'
+    +'<div class="xm-hd"><div class="xm-t">'+esc(c.title)+'</div><div class="xm-l">'+esc(c.label)+' · 진행중 · '+D.elapsed+'/12개월</div>'
     +'<div class="xm-big">'+exUsd(c.tot)+'</div><div class="xm-sub">목표 '+exUsdM(c.target)+' · 잔여 '+exUsdM(Math.abs(c.diff))+'</div>'
     +'<div class="xm-gg"><i style="width:'+Math.max(Math.min(c.pct,100),0.8).toFixed(1)+'%"></i></div></div></div>';
   h+='<div class="xm-stats">'
     +'<div class="xm-st"><span>잔여</span><b>'+exUsdM(Math.abs(c.diff))+'</b></div>'
-    +'<div class="xm-st"><span>경과</span><b>'+D.elapsed+'/12개월</b></div>'
-    +'<div class="xm-st"><span>월평균 필요</span><b>'+exUsdM(D.needAvg)+'</b></div></div>';
-  h+='<div class="xm-sec">이번 차수 월별</div><div class="xm-list">';
-  pastRows.forEach(function(r){ h+='<div class="xm-row"><span>'+r.label+(r.prov?' <i>잠정</i>':'')+'</span><b>'+exUsd(r.v)+'</b></div>'; });
+    +'<div class="xm-st"><span>월평균 필요</span><b>'+exUsdM(D.needAvg)+'</b></div>'
+    +'<div class="xm-st"><span>직전차수 페이스比</span><b>'+(vsPrev!=null?((vsPrev>=0?'+':'')+vsPrev.toFixed(0)+'%'):'-')+'</b></div></div>';
+  if(vsPrev!=null) h+='<div class="xm-note">직전 차수 월평균 '+exUsdM(prevAvg)+' → 이번 차수는 매월 <b>'+exUsdM(D.needAvg)+'</b> 필요'+(vsPrev>0?' (강도 +'+vsPrev.toFixed(0)+'%)':'')+'</div>';
+  h+='<div class="xm-sec">이번 차수 월별 <span>전년동월(직전 차수) 대비</span></div><div class="xm-list">';
+  pastRows.forEach(function(r){
+    var yoy=(r.p!=null&&r.v>0)?('<em class="'+(r.d>=0?'up':'dn')+'">'+(r.d>=0?'▲':'▼')+Math.abs(r.p).toFixed(0)+'%</em>'):'';
+    h+='<div class="xm-row"><span>'+r.label+(r.prov?' <i>잠정</i>':'')+'</span><span class="r">'+yoy+'<b>'+exUsd(r.v)+'</b></span></div>';
+  });
   if(c.rows.length>pastRows.length) h+='<div class="xm-row mut"><span>이후 '+(c.rows.length-pastRows.length)+'개월</span><b>대기</b></div>';
   h+='</div>';
-  if(D.prev){ h+='<details class="xm-prev"><summary>'+esc(D.prev.title)+' ('+esc(D.prev.label)+') · '+D.prev.pct.toFixed(0)+'% 달성 ✓</summary><div class="xm-list">';
-    D.prev.rows.forEach(function(r){ h+='<div class="xm-row"><span>'+r.label+'</span><b>'+exUsd(r.v)+'</b></div>'; });
-    h+='<div class="xm-row tot"><span>총계</span><b>'+exUsd(D.prev.tot)+'</b></div></div></details>'; }
+  if(D.prev){
+    var pmax=Math.max.apply(null,D.prev.rows.map(function(r){return r.v;}));
+    h+='<details class="xm-prev"><summary>'+esc(D.prev.title)+' ('+esc(D.prev.label)+') · '+D.prev.pct.toFixed(0)+'% 달성 ✓</summary>'
+      +'<div class="xm-pvsum"><span>총 '+exUsd(D.prev.tot)+'</span><span>월평균 '+exUsdM(D.prev.tot/12)+'</span><span>최고월 '+exUsdM(pmax)+'</span></div><div class="xm-list">';
+    D.prev.rows.forEach(function(r){ h+='<div class="xm-row"><span>'+r.label+(r.v===pmax?' <i class="best">최고</i>':'')+'</span><b>'+exUsd(r.v)+'</b></div>'; });
+    h+='<div class="xm-row tot"><span>총계</span><b>'+exUsd(D.prev.tot)+'</b></div></div></details>';
+  }
   h+='<div class="xm-sec">최근 3개년</div><div class="xm-caps">';
-  h+='<div class="xm-cap"><div class="t">수출 실적 <span>전년 7월~당해 6월 · KITA</span></div>'+D.kitaExp.map(function(r){return '<div class="xm-row"><span>'+esc(r.y)+'</span><b>'+exUsd(r.v)+'</b></div>';}).join('')+'</div>';
-  h+='<div class="xm-cap"><div class="t">해외 실적 <span>1~12월 · KITA</span></div>'+D.kita.map(function(r){return '<div class="xm-row"><span>'+esc(r.y)+(r.live?' <i>진행</i>':'')+'</span><b>'+exUsd(r.v)+'</b></div>';}).join('')+'</div>';
+  function capRows(rows){ return rows.map(function(r,i){
+    var pv=i>0?rows[i-1].v:null; var g=pv?((r.v/pv-1)*100):null;
+    var yoy=(g!=null)?('<em class="'+(g>=0?'up':'dn')+'">'+(g>=0?'▲':'▼')+Math.abs(g).toFixed(0)+'%</em>'):'';
+    return '<div class="xm-row"><span>'+esc(r.y)+(r.live?' <i>진행</i>':'')+'</span><span class="r">'+yoy+'<b>'+exUsd(r.v)+'</b></span></div>'; }).join(''); }
+  h+='<div class="xm-cap"><div class="t">수출 실적 <span>전년 7월~당해 6월 · KITA</span></div>'+capRows(D.kitaExp)+'</div>';
+  h+='<div class="xm-cap"><div class="t">해외 실적 <span>1~12월 · KITA</span></div>'+capRows(D.kita)+'</div>';
   h+='</div></div>';
   return h;
 }
 
-/* ══ ④ 스코어카드 ══ */
+/* ══ ④ 스코어카드 — 아이보리·골드 ══ */
 function _exdScore(D){
   var c=D.cur; if(!c) return '';
-  var dots=''; c.rows.forEach(function(r){ dots+='<div class="xc-dot'+(r.fut?'':(r.prov?' pv':' on'))+'" title="'+r.label+'"></div>'; });
-  var h='<div class="xc">';
-  h+='<div class="xc-top"><div>'
-    +'<div class="xc-kick">'+esc(c.title).toUpperCase()+' · '+esc(c.label)+'</div>'
-    +'<div class="xc-rate">'+c.pct.toFixed(1)+'<i>%</i></div>'
-    +'<div class="xc-amt">실적 <b>'+exUsd(c.tot)+'</b> / 목표 <b>'+exUsd(c.target)+'</b></div>'
-    +'<div class="xc-dots">'+dots+'</div><div class="xc-dlbl">'+esc(c.period)+' · 12개월</div>'
-    +'</div><div class="xc-facts">'
-    +'<div class="xc-f"><span>'+(c.done?'초과':'잔여')+'</span><b'+(c.done?'':' class="neg"')+'>'+exUsd(Math.abs(c.diff))+'</b></div>'
-    +'<div class="xc-f"><span>경과</span><b>'+D.elapsed+' / 12개월</b></div>'
-    +'<div class="xc-f"><span>월평균 필요</span><b>'+exUsd(D.needAvg)+'</b></div>'
-    +(D.prev?'<div class="xc-f"><span>직전 차수('+esc(D.prev.label)+')</span><b>'+D.prev.pct.toFixed(0)+'% 달성</b></div>':'')
+  var dots=''; c.rows.forEach(function(r){ dots+='<div class="xc2-dot'+(r.fut?'':(r.prov?' pv':' on'))+'" title="'+r.label+'"></div>'; });
+  var h='<div class="xc2">';
+  h+='<div class="xc2-top"><div class="xc2-l">'
+    +'<div class="xc2-kick">EXPORT TOWER · '+esc(c.label)+'</div>'
+    +'<div class="xc2-rate">'+c.pct.toFixed(1)+'<i>%</i></div>'
+    +'<div class="xc2-amt">'+exUsd(c.tot)+' <span>/ '+exUsd(c.target)+'</span></div>'
+    +'<div class="xc2-dots">'+dots+'</div><div class="xc2-dlbl">'+esc(c.period)+'</div>'
+    +'</div>'
+    +'<div class="xc2-r">'
+    +'<div class="xc2-f"><span>'+(c.done?'초과':'잔여')+'</span><b>'+exUsd(Math.abs(c.diff))+'</b></div>'
+    +'<div class="xc2-f"><span>경과</span><b>'+D.elapsed+' / 12개월</b></div>'
+    +'<div class="xc2-f"><span>월평균 필요</span><b>'+exUsd(D.needAvg)+'</b></div>'
+    +(D.prev?'<div class="xc2-f"><span>직전 차수</span><b>'+D.prev.pct.toFixed(0)+'% 달성</b></div>':'')
     +'</div></div>';
-  h+='<div class="xc-bottom"><div><div class="xc-bt">이번 차수 월별</div>';
+  h+='<div class="xc2-bottom"><div><div class="xc2-bt">이번 차수 월별</div>';
   var futN=0;
-  c.rows.forEach(function(r){ if(r.fut){futN++;return;} h+='<div class="xc-li"><span>'+r.label+(r.prov?'<i>잠정</i>':'')+'</span><b>'+exUsd(r.v)+'</b></div>'; });
-  if(futN) h+='<div class="xc-li"><span style="color:#c3ccd8">이후 '+futN+'개월</span><b style="color:#c3ccd8;font-weight:600">예정</b></div>';
-  h+='</div><div><div class="xc-bt">최근 3개년 · KITA</div>';
-  D.kitaExp.forEach(function(r){ h+='<div class="xc-li"><span>'+esc(r.y)+' 수출 실적</span><b>'+exUsd(r.v)+'</b></div>'; });
-  D.kita.forEach(function(r){ h+='<div class="xc-li"><span>'+esc(r.y)+' 해외 실적'+(r.live?'<i>진행</i>':'')+'</span><b>'+exUsd(r.v)+'</b></div>'; });
+  c.rows.forEach(function(r){ if(r.fut){futN++;return;}
+    h+='<div class="xc2-li"><span>'+r.label+(r.prov?'<i>잠정</i>':'')+'</span><b>'+exUsd(r.v)+'</b></div>'; });
+  if(futN) h+='<div class="xc2-li mut"><span>이후 '+futN+'개월</span><b>예정</b></div>';
+  h+='</div><div><div class="xc2-bt">최근 3개년 · KITA</div>';
+  D.kitaExp.forEach(function(r){ h+='<div class="xc2-li"><span>'+esc(r.y)+' 수출 실적</span><b>'+exUsd(r.v)+'</b></div>'; });
+  D.kita.forEach(function(r){ h+='<div class="xc2-li"><span>'+esc(r.y)+' 해외 실적'+(r.live?'<i>진행</i>':'')+'</span><b>'+exUsd(r.v)+'</b></div>'; });
   h+='</div></div></div>';
   return h;
 }
 
-/* ══ ⑤ 플랜 보드 ══ */
+/* ══ ⑤ 플랜 보드 — 틸 실행보드(월별 수평바 + 필요 페이스 유령바) ══ */
 function _exdPlan(D){
   var c=D.cur; if(!c) return '';
-  var pctPos=Math.min(c.pct,100);
-  var h='<div class="xp">';
-  h+='<div class="xp-hd"><h2>'+esc(c.title)+' <b>'+esc(c.label)+'</b><em>진행중</em></h2><span>'+esc(c.period)+' · 기준일 '+esc(D.updatedAt)+'</span></div>';
-  h+='<div class="xp-track"><div class="f" style="width:'+Math.max(pctPos,1).toFixed(1)+'%"></div>'
-    +[0,25,50,75,100].map(function(m){return '<div class="ms" style="left:'+m+'%"><i></i><span>$'+m+'M</span></div>';}).join('')
-    +'<div class="now'+(pctPos<10?' edge':'')+'" style="left:'+pctPos.toFixed(1)+'%"><span class="tag">'+exUsd(c.tot)+' <i>'+c.pct.toFixed(1)+'%</i></span></div></div>';
-  h+='<div class="xp-months">';
-  c.rows.forEach(function(r){
-    h+='<div class="xp-m'+(r.fut?' fut':(r.v>0?' on':''))+'"><div class="ml">'+r.label.replace('년 ','.')+'</div><div class="mv">'+(r.fut?'예정':exUsdM(r.v)+(r.prov?' <i>잠정</i>':''))+'</div></div>';
+  var maxV=Math.max(D.needAvg,1); c.rows.forEach(function(r){ if(r.v>maxV)maxV=r.v; });
+  if(D.prev) D.prev.rows.forEach(function(r){ if(r.v>maxV)maxV=r.v; });
+  var h='<div class="xp2">';
+  h+='<div class="xp2-hd"><div><h2>'+esc(c.title)+' <b>'+esc(c.label)+'</b><em>진행중</em></h2><span>'+esc(c.period)+' · 기준일 '+esc(D.updatedAt)+'</span></div>'
+    +'<div class="xp2-kpis">'
+    +'<div class="k"><span>달성률</span><b>'+c.pct.toFixed(1)+'%</b></div>'
+    +'<div class="k"><span>실적</span><b>'+exUsdM(c.tot)+'</b></div>'
+    +'<div class="k"><span>잔여</span><b>'+exUsdM(Math.abs(c.diff))+'</b></div>'
+    +'<div class="k hl"><span>월 필요</span><b>'+exUsdM(D.needAvg)+'</b></div>'
+    +'</div></div>';
+  h+='<div class="xp2-g"><div class="f" style="width:'+Math.max(Math.min(c.pct,100),0.6).toFixed(1)+'%"></div><span class="lbl" style="left:'+Math.min(Math.max(c.pct,4),92).toFixed(1)+'%">'+exUsdM(c.tot)+'</span></div>';
+  h+='<div class="xp2-gx"><span>$0</span><span>'+exUsdM(c.target/4)+'</span><span>'+exUsdM(c.target/2)+'</span><span>'+exUsdM(c.target*3/4)+'</span><span>'+exUsdM(c.target)+'</span></div>';
+  h+='<div class="xp2-bt">월별 실행 현황 <span>막대 = 실적 · 점선 = 월 필요 페이스 '+exUsdM(D.needAvg)+' · 회색 = 직전 차수 동월</span></div>';
+  h+='<div class="xp2-rows">';
+  var needPct=D.needAvg/maxV*100;
+  c.rows.forEach(function(r,i){
+    var pv=D.prev?D.prev.rows[i].v:0;
+    h+='<div class="xp2-row'+(r.fut?' fut':'')+'"><span class="m">'+r.label+'</span>'
+      +'<div class="tr"><div class="pv" style="width:'+Math.max(pv/maxV*100,0.5).toFixed(1)+'%"></div>'
+      +(r.fut?'':'<div class="cu'+(r.prov?' pv2':'')+'" style="width:'+Math.max(r.v/maxV*100,r.v>0?1:0).toFixed(1)+'%"></div>')
+      +'<i class="need" style="left:'+needPct.toFixed(1)+'%"></i></div>'
+      +'<span class="v">'+(r.fut?'<u>목표 '+exUsdM(D.needAvg)+'</u>':exUsd(r.v)+(r.prov?' <i>잠정</i>':''))+'</span></div>';
   });
   h+='</div>';
-  h+='<div class="xp-two"><div><div class="xp-bt">연도별 수출 실적<span>전년 7월~당해 6월 · KITA</span></div><div class="xp-steps">'+_exSteps(D.kitaExp,c.target,'xp')+'</div></div>'
-    +'<div class="xp-note"><b>요약</b><br>'
-    +'남은 <b>'+D.remain+'개월</b>간 월평균 <span class="hl">'+exUsdM(D.needAvg)+'</span> 필요'
-    +(D.prev?('<br>직전 차수 월평균 '+exUsdM(D.prev.tot/12)+' · 최고월 '+exUsdM(Math.max.apply(null,D.prev.rows.map(function(r){return r.v;})))):'')
-    +'<br>미반영(선적 전) 물량은 실적 미포함</div></div>';
+  h+='<div class="xp2-foot"><div class="xp2-steps">'
+    +D.kitaExp.map(function(r){return '<div class="s"><span>'+esc(r.y)+'</span><b>'+exUsdM(r.v)+'</b></div>';}).join('<div class="a">→</div>')
+    +'<div class="a">→</div><div class="s goal"><span>목표</span><b>'+exUsdM(c.target)+'</b></div>'
+    +'</div><div class="xp2-note">남은 <b>'+D.remain+'개월</b> · 월평균 <b class="hl">'+exUsdM(D.needAvg)+'</b> 필요'+(D.prev?' · 직전 차수 최고월 '+exUsdM(Math.max.apply(null,D.prev.rows.map(function(r){return r.v;}))):'')+'</div></div>';
   return h+'</div>';
 }
 
