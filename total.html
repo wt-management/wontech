@@ -529,7 +529,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 .xr-doc h1 small{display:block;font-size:11px;font-weight:700;color:#8a97a8;letter-spacing:.16em;margin-bottom:6px}
 .xr-doc .meta{text-align:right;font-size:11px;color:#5b6b7f;line-height:1.7}
 .xr-doc .meta b{color:#182230}
-.xr-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr) 236px;gap:18px;align-items:start}
+.xr-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr) 308px;gap:18px;align-items:start}
 @media(max-width:1150px){.xr-grid{grid-template-columns:1fr 1fr}.xr-side{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:14px}}
 @media(max-width:760px){.xr-grid{grid-template-columns:1fr}.xr-side{grid-template-columns:1fr}}
 .xt{width:100%;border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-nums}
@@ -559,6 +559,22 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 .xst tr:last-child td{border-bottom:0}
 .xst td:last-child{text-align:right;font-weight:800;color:#182230}
 .xst i{font-style:normal;font-size:9px;color:#16324f;font-weight:800;background:#e3ebf4;padding:1px 6px;border-radius:8px;margin-left:4px}
+
+.xs-card{background:#fff;border:1px solid #e2e8f0;border-radius:11px;padding:13px 15px;margin-bottom:12px;box-shadow:0 1px 2px rgba(22,50,79,.04)}
+.xs-card:last-child{margin-bottom:0}
+.xs-ct{font-size:12px;font-weight:800;color:#16324f;padding-bottom:9px;margin-bottom:4px;border-bottom:2px solid #16324f}
+.xs-ct span{display:block;font-size:9.5px;font-weight:500;color:#8a97a8;margin-top:2px;letter-spacing:.02em}
+.xs-cr{display:flex;justify-content:space-between;align-items:baseline;padding:8px 1px;border-bottom:1px solid #f0f3f8;font-size:11.5px}
+.xs-cr:last-child{border-bottom:0}
+.xs-cr span{color:#5b6b7f;font-weight:600}
+.xs-cr b{font-weight:800;color:#182230;font-variant-numeric:tabular-nums;font-size:12.5px}
+.xs-cr i{font-style:normal;font-size:9px;color:#16324f;font-weight:800;background:#e3ebf4;padding:1px 6px;border-radius:8px;margin-left:5px}
+.ex-ybars.mini{height:104px;padding:16px 2px 0;gap:7px;border-bottom:1.5px solid #16324f;margin-top:6px}
+.ex-ybars.mini .v{font-size:9.5px;margin-bottom:4px}
+.ex-ybars.mini .bar{width:62%}
+.ex-yx.mini{margin-top:5px;gap:7px}
+.ex-yx.mini span{font-size:9.5px}
+
 .xr-charts{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:24px;padding-top:18px;border-top:1px solid #e5eaf1}
 @media(max-width:760px){.xr-charts{grid-template-columns:1fr}}
 .xr-cht{font-size:13px;font-weight:800;color:#182230;display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-left:11px;border-left:4px solid #16324f}
@@ -2955,6 +2971,7 @@ function _exData(){
     yearly:{labels:labels,acc:acc,exp:exp},updatedAt:(INTL&&INTL.updatedAt)||''};
 }
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
+/* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 function exUsdM(v){ v=Number(v)||0; var a=Math.abs(v);
   if(a>=1e6) return '$'+(a/1e6>=100?Math.round(v/1e6):(Math.round(v/1e5)/10))+'M';
   if(a>=1e3) return '$'+Math.round(v/1e3)+'K';
@@ -2980,6 +2997,11 @@ function _exSteps(rows,target,cls){
 }
 
 /* ══ ① 보고서(공식 문서형) ══ */
+function _exBarsMini(vals,labels,color){
+  var max=Math.max.apply(null,vals.concat([1]));
+  return '<div class="ex-ybars mini">'+vals.map(function(v){return '<div class="ex-ybar"><div class="v">'+Number(v).toLocaleString()+'</div><div class="bar" style="height:'+Math.max(v/max*100,1).toFixed(1)+'%;background:'+color+'"></div></div>';}).join('')
+    +'</div><div class="ex-yx mini">'+labels.map(function(l){return '<span>'+esc(String(l).replace('년',''))+'</span>';}).join('')+'</div>';
+}
 function _exdReport(D){
   function tbl(c,yoy){
     if(!c) return '';
@@ -2996,9 +3018,9 @@ function _exdReport(D){
     h+='<tr class="res"><td>달성율</td><td>'+c.pct.toFixed(1)+'%</td>'+blank+'</tr>';
     return h+'</tbody></table>';
   }
-  function side(t,sub,rows,label){
-    return '<div class="xs-box"><div class="xs-t">'+t+'<span>'+sub+'</span></div><table class="xst">'
-      +rows.map(function(r){return '<tr><td>'+esc(r.y)+'년 '+label+(r.live?'<i>진행</i>':'')+'</td><td>'+exUsd(r.v)+'</td></tr>';}).join('')+'</table></div>';
+  function card(t,sub,rows,label){
+    return '<div class="xs-card"><div class="xs-ct">'+t+'<span>'+sub+'</span></div>'
+      +rows.map(function(r){return '<div class="xs-cr"><span>'+esc(r.y)+'년 '+label+(r.live?'<i>진행</i>':'')+'</span><b>'+exUsd(r.v)+'</b></div>';}).join('')+'</div>';
   }
   return '<div class="xr">'
     +'<div class="xr-doc"><h1><small>WONTECH · EXPORT TOWER REPORT</small>원텍 주식회사 수출의 탑 현황</h1>'
@@ -3007,11 +3029,11 @@ function _exdReport(D){
     +'<div class="xr-col">'+tbl(D.prev,false)+'</div>'
     +'<div class="xr-col">'+tbl(D.cur,true)+'</div>'
     +'<div class="xr-side">'
-      +side('최근 3개년 수출 실적','전년 7월 ~ 당해 6월 집계',D.kitaExp,'무역실적')
-      +side('최근 3개년 해외 실적','1월 ~ 12월 집계',D.kita,'실적')
+      +card('최근 3개년 수출 실적','전년 7월 ~ 당해 6월 · KITA',D.kitaExp,'무역실적')
+      +card('최근 3개년 해외 실적','1월 ~ 12월 · KITA',D.kita,'실적')
+      +'<div class="xs-card"><div class="xs-ct">회계실적 추이<span>단위: 만 $ · 회계연도</span></div>'+_exBarsMini(D.yearly.acc,D.yearly.labels,'#c98a4b')+'</div>'
+      +'<div class="xs-card"><div class="xs-ct">수출실적 추이<span>단위: 만 $ · 전년 7월~당해 6월</span></div>'+_exBarsMini(D.yearly.exp,D.yearly.labels,'#16324f')+'</div>'
     +'</div></div>'
-    +'<div class="xr-charts"><div><div class="xr-cht">회계실적 기준<span>단위: 만 $ · 회계연도</span></div>'+_exBars(D.yearly.acc,D.yearly.labels,'#c98a4b')+'</div>'
-    +'<div><div class="xr-cht">수출실적 기준<span>단위: 만 $ · 전년 7월~당해 6월</span></div>'+_exBars(D.yearly.exp,D.yearly.labels,'#16324f')+'</div></div>'
     +'<div class="xr-foot"><span>· 수기 미입력 월은 회계 USD 자동 반영(잠정)</span><span>· 미반영(선적 전) 물량은 실적에 포함하지 않음</span></div>'
     +'</div>';
 }
