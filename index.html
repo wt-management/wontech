@@ -196,7 +196,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 }
 </style>
-<script>/* WT_ERRLOG_V1 — 공통 오류수집+요청함 (자동주입 스니펫, 개별 수정 금지) */
+<script>/* WT_ERRLOG_V1 rev2 — 공통 오류수집+요청함 (자동주입 스니펫, 개별 수정 금지) */
 (function(){
 var U='https://mhfacbsittfdkknwybhc.supabase.co/rest/v1/';
 var K='sb_publishable_aPMOOWAlyJlMcP1ZM_gpPA_jlrcvCRd';
@@ -214,11 +214,12 @@ b.style.cssText='position:fixed;right:18px;bottom:64px;z-index:99990;background:
 b.onmouseover=function(){b.style.opacity='1';};b.onmouseout=function(){b.style.opacity='.85';};
 var p=document.createElement('div');p.id='wt-fb-panel';
 p.style.cssText='display:none;position:fixed;right:18px;bottom:108px;z-index:99991;width:min(320px,90vw);background:#1e293b;border:1px solid #334155;border-radius:12px;padding:14px;box-shadow:0 12px 32px rgba(0,0,0,.5);font-family:inherit';
-p.innerHTML='<div style="font-size:13px;font-weight:700;color:#f1f5f9;margin-bottom:8px">\uC694\uCCAD \u00B7 \uBD88\uD3B8\uC2E0\uACE0</div><textarea id="wt-fb-msg" placeholder="\uBD88\uD3B8\uD55C \uC810\uC774\uB098 \uC694\uCCAD\uC0AC\uD56D\uC744 \uC801\uC5B4\uC8FC\uC138\uC694" style="width:100%;height:88px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:#fff;font-size:12px;padding:8px;resize:none;box-sizing:border-box"></textarea><div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end"><button id="wt-fb-cancel" style="background:none;border:1px solid #475569;color:#94a3b8;padding:5px 12px;border-radius:7px;font-size:12px;cursor:pointer">\uB2EB\uAE30</button><button id="wt-fb-send" style="background:#0d9488;border:none;color:#fff;padding:5px 14px;border-radius:7px;font-size:12px;cursor:pointer;font-weight:600">\uC804\uC1A1</button></div>';
+var needName=!wtEmail();
+p.innerHTML='<div style="font-size:13px;font-weight:700;color:#f1f5f9;margin-bottom:8px">\uC694\uCCAD \u00B7 \uBD88\uD3B8\uC2E0\uACE0</div>'+(needName?'<input id="wt-fb-name" placeholder="\uC774\uB984 \u00B7 \uBD80\uC11C (\uC608: \uD64D\uAE38\uB3D9 \uC601\uC5C5\uD300)" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:#fff;font-size:12px;padding:7px 8px;margin-bottom:6px;box-sizing:border-box">':'')+'<textarea id="wt-fb-msg" placeholder="\uBD88\uD3B8\uD55C \uC810\uC774\uB098 \uC694\uCCAD\uC0AC\uD56D\uC744 \uC801\uC5B4\uC8FC\uC138\uC694" style="width:100%;height:88px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:#fff;font-size:12px;padding:8px;resize:none;box-sizing:border-box"></textarea><div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end"><button id="wt-fb-cancel" style="background:none;border:1px solid #475569;color:#94a3b8;padding:5px 12px;border-radius:7px;font-size:12px;cursor:pointer">\uB2EB\uAE30</button><button id="wt-fb-send" style="background:#0d9488;border:none;color:#fff;padding:5px 14px;border-radius:7px;font-size:12px;cursor:pointer;font-weight:600">\uC804\uC1A1</button></div>';
 document.body.appendChild(b);document.body.appendChild(p);
 b.onclick=function(){p.style.display=p.style.display==='none'?'block':'none';if(p.style.display==='block'){var t=document.getElementById('wt-fb-msg');if(t)t.focus();}};
 document.getElementById('wt-fb-cancel').onclick=function(){p.style.display='none';};
-document.getElementById('wt-fb-send').onclick=function(){var t=document.getElementById('wt-fb-msg');var m=(t&&t.value||'').trim();if(!m)return;wtPost('site_feedback',{site:SITE,page:PAGE,message:m.slice(0,2000),reporter:wtEmail()||null});p.innerHTML='<div style="color:#5eead4;font-size:13px;text-align:center;padding:14px 4px">\uC811\uC218\uB418\uC5C8\uC2B5\uB2C8\uB2E4! \uAC10\uC0AC\uD569\uB2C8\uB2E4 \uD83D\uDE4F</div>';setTimeout(function(){p.style.display='none';p.remove();b.remove();wtFb();},1600);};
+document.getElementById('wt-fb-send').onclick=function(){var t=document.getElementById('wt-fb-msg');var m=(t&&t.value||'').trim();if(!m)return;var nmEl=document.getElementById('wt-fb-name');var nm=(nmEl&&nmEl.value||'').trim();wtPost('site_feedback',{site:SITE,page:PAGE,message:m.slice(0,2000),reporter:wtEmail()||(nm?nm.slice(0,100):null)});p.innerHTML='<div style="color:#5eead4;font-size:13px;text-align:center;padding:14px 4px">\uC811\uC218\uB418\uC5C8\uC2B5\uB2C8\uB2E4! \uAC10\uC0AC\uD569\uB2C8\uB2E4 \uD83D\uDE4F</div>';setTimeout(function(){p.style.display='none';p.remove();b.remove();wtFb();},1600);};
 }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',wtFb);}else{wtFb();}
 })();</script>
@@ -351,8 +352,14 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <label style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px;display:block">이메일</label>
       <input id="forgot-email" type="email" class="form-control" placeholder="이메일 입력">
     </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px;display:block">이름 <span style="font-weight:400;color:#9ca3af">(관리자 요청 시)</span></label>
+      <input id="forgot-name" type="text" class="form-control" placeholder="이름 · 부서 (예: 홍길동 영업1팀)">
+    </div>
     <div id="forgot-msg" style="font-size:12px;margin-bottom:12px;display:none"></div>
-    <button class="btn btn-primary w-100" onclick="doForgotPw()" style="font-weight:700;padding:10px">재설정 링크 발송</button>
+    <button class="btn btn-primary w-100" onclick="requestAdminReset()" style="font-weight:700;padding:10px">관리자에게 재설정 요청</button>
+    <button class="btn w-100" onclick="doForgotPw()" style="font-weight:600;padding:9px;margin-top:8px;background:#f3f4f6;color:#374151;border:1px solid #e5e7eb">이메일로 재설정 링크 받기</button>
+    <div style="font-size:11px;color:#9ca3af;margin-top:8px;text-align:center">이메일이 오지 않으면 스팸함을 확인하거나<br>위의 "관리자에게 재설정 요청"을 이용하세요</div>
     <div style="text-align:center;margin-top:14px">
       <a href="#" onclick="hideForgotPw(event)" style="font-size:12px;color:#6b7280;text-decoration:none">← 로그인으로 돌아가기</a>
     </div>
@@ -4031,9 +4038,34 @@ async function doForgotPw() {
   const msgEl = document.getElementById('forgot-msg');
   if(!email) { msgEl.style.display='block'; msgEl.style.color='#dc2626'; msgEl.textContent='이메일을 입력하세요.'; return; }
   const {error} = await _sb.auth.resetPasswordForEmail(email, {redirectTo: location.origin+location.pathname});
-  if(error) { msgEl.style.display='block'; msgEl.style.color='#dc2626'; msgEl.textContent='오류: '+error.message; return; }
+  if(error) {
+    msgEl.style.display='block'; msgEl.style.color='#dc2626';
+    msgEl.textContent = (error.status===429 || /rate limit/i.test(error.message||''))
+      ? '발송 한도 초과 — 잠시 후 다시 시도하거나 "관리자에게 재설정 요청"을 이용하세요.'
+      : '오류: '+error.message;
+    return;
+  }
   msgEl.style.display='block'; msgEl.style.color='#16a34a';
-  msgEl.textContent='재설정 링크를 발송했습니다. 이메일을 확인하세요.';
+  msgEl.textContent='재설정 링크를 발송했습니다. 메일이 안 보이면 스팸함도 확인하세요.';
+}
+async function requestAdminReset() {
+  const email = (document.getElementById('forgot-email').value||'').trim();
+  const name = (document.getElementById('forgot-name')?.value||'').trim();
+  const msgEl = document.getElementById('forgot-msg');
+  if(!email) { msgEl.style.display='block'; msgEl.style.color='#dc2626'; msgEl.textContent='이메일을 입력하세요.'; return; }
+  try {
+    const {error} = await _sb.from('site_feedback').insert({
+      site:'wontech', page:'password-reset',
+      message:'[비밀번호 재설정 요청] '+email+(name?' / '+name:''),
+      reporter: email
+    });
+    if(error) throw error;
+    msgEl.style.display='block'; msgEl.style.color='#16a34a';
+    msgEl.textContent='관리자에게 재설정 요청을 보냈습니다. 처리되면 새 임시비밀번호를 전달받게 됩니다.';
+  } catch(e) {
+    msgEl.style.display='block'; msgEl.style.color='#dc2626';
+    msgEl.textContent='요청 접수 실패: '+(e.message||e);
+  }
 }
 async function doResetPw() {
   const pw1 = document.getElementById('reset-pw-new').value;
@@ -9056,10 +9088,20 @@ async function renderAdminFeedback(){
   var shown=rows.filter(function(r){ return !siteF || r.site===siteF; });
   if(!shown.length){ box.innerHTML='<div style="padding:32px;text-align:center;color:#64748b;font-size:13px">\uD45C\uC2DC\uD560 \uD56D\uBAA9\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.</div>'; return; }
   var fmt=function(d){ return d?String(d).replace('T',' ').slice(0,16):''; };
+  // 작성자 이메일 → 이름·직급·부서 (crm_profiles 조인)
+  var pmap={};
+  try{ var pr=await _sb.from('crm_profiles').select('email,display_name,dept,position'); (pr.data||[]).forEach(function(p){ if(p.email) pmap[String(p.email).toLowerCase()]={n:p.display_name||'',d:p.dept||'',t:p.position||''}; }); }catch(e){}
+  var who=function(rep){
+    if(!rep) return '<span style="color:#64748b">익명</span>';
+    var p=pmap[String(rep).toLowerCase()];
+    if(!p || !p.n) return esc(rep);
+    var sub=[p.t,p.d].filter(Boolean).join(' · ');
+    return '<span style="font-weight:600">'+esc(p.n)+'</span>'+(sub?'<br><span style="color:#64748b;font-size:11px">'+esc(sub)+'</span>':'')+'<br><span style="color:#475569;font-size:10px">'+esc(rep)+'</span>';
+  };
   var h='<table style="width:100%;border-collapse:collapse;min-width:720px;font-size:12.5px">';
   if(_fbSub==='feedback'){
     h+='<thead><tr style="border-bottom:1px solid rgba(255,255,255,.08);color:#64748b;font-size:11px;text-align:left"><th style="padding:11px 14px">\uC77C\uC2DC</th><th>\uC791\uC131\uC790</th><th>\uC704\uCE58</th><th style="padding-left:14px">\uB0B4\uC6A9</th></tr></thead><tbody>';
-    shown.forEach(function(r){ h+='<tr style="border-bottom:1px solid rgba(255,255,255,.05);color:#e2e8f0"><td style="padding:10px 14px;white-space:nowrap;color:#94a3b8">'+fmt(r.created_at)+'</td><td style="white-space:nowrap">'+esc(r.reporter||'\uC775\uBA85')+'</td><td style="white-space:nowrap;color:#94a3b8">'+esc(r.site||'')+(r.page?'/'+esc(r.page):'')+'</td><td style="white-space:pre-wrap;padding:10px 14px 10px 14px">'+esc(r.message)+'</td></tr>'; });
+    shown.forEach(function(r){ h+='<tr style="border-bottom:1px solid rgba(255,255,255,.05);color:#e2e8f0"><td style="padding:10px 14px;white-space:nowrap;color:#94a3b8">'+fmt(r.created_at)+'</td><td style="white-space:nowrap;line-height:1.35">'+who(r.reporter)+'</td><td style="white-space:nowrap;color:#94a3b8">'+esc(r.site||'')+(r.page?'/'+esc(r.page):'')+'</td><td style="white-space:pre-wrap;padding:10px 14px 10px 14px">'+esc(r.message)+'</td></tr>'; });
   } else {
     h+='<thead><tr style="border-bottom:1px solid rgba(255,255,255,.08);color:#64748b;font-size:11px;text-align:left"><th style="padding:11px 14px">\uC77C\uC2DC</th><th>\uC704\uCE58</th><th style="padding-left:14px">\uC5D0\uB7EC</th><th>\uC0AC\uC6A9\uC790</th></tr></thead><tbody>';
     shown.forEach(function(r){ h+='<tr style="border-bottom:1px solid rgba(255,255,255,.05);color:#e2e8f0"><td style="padding:10px 14px;white-space:nowrap;color:#94a3b8">'+fmt(r.created_at)+'</td><td style="white-space:nowrap;color:#94a3b8">'+esc(r.site||'')+(r.page?'/'+esc(r.page):'')+'</td><td style="padding:10px 14px 10px 14px"><span style="color:#fca5a5">'+esc(r.message)+'</span>'+(r.line?'<span style="color:#64748b"> :'+esc(r.line)+'</span>':'')+'</td><td style="white-space:nowrap;color:#94a3b8">'+esc(r.user_email||'')+'</td></tr>'; });
