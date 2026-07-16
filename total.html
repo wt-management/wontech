@@ -529,9 +529,9 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 .xr-doc h1 small{display:block;font-size:11px;font-weight:700;color:#8a97a8;letter-spacing:.16em;margin-bottom:6px}
 .xr-doc .meta{text-align:right;font-size:11px;color:#5b6b7f;line-height:1.7}
 .xr-doc .meta b{color:#182230}
-.xr-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr) 300px;gap:16px;align-items:stretch}
-@media(max-width:1150px){.xr-grid{grid-template-columns:1fr 1fr}.xr-side{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:14px}}
-@media(max-width:760px){.xr-grid{grid-template-columns:1fr}.xr-side{grid-template-columns:1fr}}
+.xr-grid{display:grid;grid-template-columns:minmax(0,4.6fr) minmax(0,6.6fr) minmax(0,6.2fr);gap:14px;align-items:stretch}
+@media(max-width:1400px){.xr-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.35fr)}.xr-side{grid-column:1/-1}}
+@media(max-width:760px){.xr-grid{grid-template-columns:1fr}.xs-row{grid-template-columns:1fr!important}}
 /* 표 = 카드 */
 .xt-wrap{border:1px solid #dfe6ef;border-radius:13px;overflow:hidden;background:#fff;box-shadow:0 3px 10px rgba(22,50,79,.07);display:flex;flex-direction:column}
 .xt-wrap.cur{border-color:#c8d6e8;box-shadow:0 4px 14px rgba(22,50,79,.11)}
@@ -560,16 +560,18 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 .xt .ex-up{color:#c62828}.xt .ex-down{color:#1565c0}
 /* 우측: 카드 + 차트(잔여 높이 자동 분배 → 표 하단과 정렬) */
 .xr-side{display:flex;flex-direction:column;gap:12px}
-.xs-card{background:#fff;border:1px solid #dfe6ef;border-radius:13px;padding:12px 15px;margin:0;box-shadow:0 3px 10px rgba(22,50,79,.07)}
-.xs-card.chart{flex:1;display:flex;flex-direction:column;min-height:0}
+.xs-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+.xs-row.charts{flex:1;align-items:stretch;min-height:0}
+.xs-card{background:#fff;border:1px solid #dfe6ef;border-radius:13px;padding:12px 14px;margin:0;box-shadow:0 3px 10px rgba(22,50,79,.07);min-width:0}
+.xs-card.chart{display:flex;flex-direction:column;min-height:0}
 .xs-ct{font-size:12px;font-weight:800;color:#16324f;padding-bottom:9px;margin-bottom:4px;border-bottom:2px solid #16324f;flex-shrink:0}
 .xs-ct span{display:block;font-size:9.5px;font-weight:500;color:#8a97a8;margin-top:2px;letter-spacing:.02em}
-.xs-cr{display:flex;justify-content:space-between;align-items:baseline;padding:7px 1px;border-bottom:1px solid #f0f3f8;font-size:11.5px}
+.xs-cr{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:7.5px 1px;border-bottom:1px solid #f0f3f8;font-size:11.5px;white-space:nowrap}
 .xs-cr:last-child{border-bottom:0}
-.xs-cr span{color:#5b6b7f;font-weight:600}
-.xs-cr b{font-weight:800;color:#182230;font-variant-numeric:tabular-nums;font-size:12.5px}
-.xs-cr i{font-style:normal;font-size:9px;color:#16324f;font-weight:800;background:#e3ebf4;padding:1px 6px;border-radius:8px;margin-left:5px}
-.ex-ybars.mini{flex:1;height:auto;min-height:54px;padding:14px 2px 0;gap:7px;border-bottom:1.5px solid #16324f;margin-top:4px}
+.xs-cr span{color:#5b6b7f;font-weight:600;display:flex;align-items:center;gap:4px;flex-shrink:0}
+.xs-cr b{font-weight:800;color:#182230;font-variant-numeric:tabular-nums;font-size:12.5px;margin-left:auto}
+.xs-cr i{font-style:normal;font-size:8.5px;color:#16324f;font-weight:800;background:#e3ebf4;padding:1px 5px;border-radius:7px;margin-left:0;flex-shrink:0}
+.ex-ybars.mini{flex:1;height:auto;min-height:54px;padding:16px 2px 0;gap:6px;border-bottom:1.5px solid #16324f;margin-top:4px}
 .ex-ybars.mini .v{font-size:9.5px;margin-bottom:4px}
 .ex-ybars.mini .bar{width:60%}
 .ex-yx.mini{margin-top:5px;gap:7px;flex-shrink:0}
@@ -2971,6 +2973,7 @@ function _exData(){
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
+/* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 function exUsdM(v){ v=Number(v)||0; var a=Math.abs(v);
   if(a>=1e6) return '$'+(a/1e6>=100?Math.round(v/1e6):(Math.round(v/1e5)/10))+'M';
   if(a>=1e3) return '$'+Math.round(v/1e3)+'K';
@@ -3028,10 +3031,14 @@ function _exdReport(D){
     +'<div class="xr-col">'+tbl(D.prev,false)+'</div>'
     +'<div class="xr-col">'+tbl(D.cur,true)+'</div>'
     +'<div class="xr-side">'
-      +card('최근 3개년 수출 실적','전년 7월 ~ 당해 6월 · KITA',D.kitaExp,'무역실적')
-      +card('최근 3개년 해외 실적','1월 ~ 12월 · KITA',D.kita,'실적')
-      +'<div class="xs-card chart"><div class="xs-ct">회계실적 추이<span>단위: 만 $ · 회계연도</span></div>'+_exBarsMini(D.yearly.acc,D.yearly.labels,'#c98a4b')+'</div>'
-      +'<div class="xs-card chart"><div class="xs-ct">수출실적 추이<span>단위: 만 $ · 전년 7월~당해 6월</span></div>'+_exBarsMini(D.yearly.exp,D.yearly.labels,'#16324f')+'</div>'
+      +'<div class="xs-row">'
+        +card('최근 3개년 수출 실적','전년 7월 ~ 당해 6월 · KITA',D.kitaExp,'무역실적')
+        +card('최근 3개년 해외 실적','1월 ~ 12월 · KITA',D.kita,'실적')
+      +'</div>'
+      +'<div class="xs-row charts">'
+        +'<div class="xs-card chart"><div class="xs-ct">회계실적 추이<span>단위: 만 $ · 회계연도</span></div>'+_exBarsMini(D.yearly.acc,D.yearly.labels,'#c98a4b')+'</div>'
+        +'<div class="xs-card chart"><div class="xs-ct">수출실적 추이<span>단위: 만 $ · 전년 7월~당해 6월</span></div>'+_exBarsMini(D.yearly.exp,D.yearly.labels,'#16324f')+'</div>'
+      +'</div>'
     +'</div></div>'
     +'<div class="xr-foot"><span>· 수기 미입력 월은 회계 USD 자동 반영(잠정)</span><span>· 미반영(선적 전) 물량은 실적에 포함하지 않음</span></div>'
     +'</div>';
