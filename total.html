@@ -588,10 +588,10 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
 /* ── ② 임원 브리핑 — 두 차수 통합 비교표 ── */
 .xb4{background:#fff;border:1px solid #d8dde3;border-radius:8px;padding:32px 36px;color:#111;container-type:inline-size}
-.xb4-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,404px);gap:16px;align-items:stretch}
+.xb4-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,520px);gap:18px;align-items:stretch}
 .xb4-left{min-width:0}
 .xb4-right{min-width:0;display:flex}
-@container (max-width:920px){.xb4-two{grid-template-columns:1fr}.xb4-right{margin-top:8px}}
+@container (max-width:1000px){.xb4-two{grid-template-columns:1fr}.xb4-right{margin-top:8px}}
 @media(max-width:760px){.xb4{padding:20px 14px}}
 .xb4-hd{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;padding-bottom:14px;border-bottom:3px solid #111}
 .xb4-hd .t{font-size:22px;font-weight:800}
@@ -608,7 +608,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 .xb4-st{font-size:16px;font-weight:800;color:#111;padding-bottom:9px;border-bottom:2px solid #111;margin-bottom:0}
 .xb4-t{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums;table-layout:fixed}
 .xb4-t th{font-size:12.5px;font-weight:700;color:#555;text-align:right;padding:10px 6px;border-bottom:1px solid #d8dde3;background:#f7f9fa}
-.xb4-t th.m{text-align:left;width:96px;padding-left:10px}
+.xb4-t th.m{text-align:left;width:92px;padding-left:10px}
+.xb4-t th.yo,.xb4-t td.yo{width:128px}
 .xb4-t th.cur{background:#fff8e6;color:#7a3e0c}
 .xb4-t th em{font-style:normal;font-weight:800;color:#111;display:block;margin-top:2px}
 .xb4-t th.cur em{color:#a8500f}
@@ -633,6 +634,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 .xf3.side{display:flex;flex-direction:column;gap:12px;margin-top:0;padding-top:0;border-top:0;flex:1;min-width:0}
 .xf3-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;min-width:0}
 .xf3-row.charts{flex:1;min-height:176px}
+.xf3.side .xf3-row.charts{display:flex;flex-direction:column;gap:12px}
 .xf3.side .xf3-c.chart{height:auto;flex:1;min-height:0}
 @media(max-width:1000px){.xf3{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:620px){.xf3{grid-template-columns:1fr}}
@@ -3019,6 +3021,7 @@ function _exData(){
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
+/* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 function exUsdM(v){ v=Number(v)||0; var a=Math.abs(v);
   if(a>=1e6) return '$'+(a/1e6>=100?Math.round(v/1e6):(Math.round(v/1e5)/10))+'M';
   if(a>=1e3) return '$'+Math.round(v/1e3)+'K';
@@ -3138,7 +3141,7 @@ function _exdBrief(D){
   h+='<table class="xb4-t"><thead><tr><th class="m">월</th>'
     +'<th>'+(p?esc(p.title)+' <em>'+esc(p.label)+'</em>':'-')+'</th>'
     +'<th class="cur">'+esc(c.title)+' <em>'+esc(c.label)+'</em></th>'
-    +'<th>증감액</th><th>증감율</th></tr></thead><tbody>';
+    +'<th class="yo">전년동월 대비</th></tr></thead><tbody>';
   c.rows.forEach(function(r,i){
     var pv=p?p.rows[i]:null;
     var up=(r.d!=null&&r.v>0)?(r.d>=0):null;
@@ -3146,17 +3149,16 @@ function _exdBrief(D){
       +'<td class="m">'+_exMonth(r.label)+'</td>'
       +'<td>'+(pv?exUsd(pv.v):'-')+'</td>'
       +'<td class="cur">'+(r.fut?'<u>예정</u>':exUsd(r.v)+(r.prov?' <i>잠정</i>':''))+'</td>'
-      +'<td class="'+(up===null?'':(up?'up':'dn'))+'">'+(up===null?'':(up?'▲ ':'▼ ')+Math.abs(Math.round(r.d)).toLocaleString())+'</td>'
-      +'<td class="'+(up===null?'':(up?'up':'dn'))+'">'+(up===null||r.p==null?'':(up?'▲':'▼')+Math.abs(r.p).toFixed(0)+'%')+'</td></tr>';
-    if(i===5) h+='<tr class="sub"><td class="m">하반기 소계</td><td>'+(p?exUsd(p.h1):'-')+'</td><td class="cur">'+exUsd(c.h1)+'</td><td></td><td></td></tr>';
+      +'<td class="yo '+(up===null?'':(up?'up':'dn'))+'">'+(up===null?'':(up?'▲ ':'▼ ')+Math.abs(Math.round(r.d)).toLocaleString()+(r.p!=null?' ('+Math.abs(r.p).toFixed(0)+'%)':''))+'</td></tr>';
+    if(i===5) h+='<tr class="sub"><td class="m">하반기 소계</td><td>'+(p?exUsd(p.h1):'-')+'</td><td class="cur">'+exUsd(c.h1)+'</td><td></td></tr>';
   });
-  h+='<tr class="sub"><td class="m">상반기 소계</td><td>'+(p?exUsd(p.h2):'-')+'</td><td class="cur">'+exUsd(c.h2)+'</td><td></td><td></td></tr>';
-  h+='<tr class="tot"><td class="m">총계</td><td>'+(p?exUsd(p.tot):'-')+'</td><td class="cur">'+exUsd(c.tot)+'</td><td></td><td></td></tr>';
-  h+='<tr class="goal"><td class="m">목표</td><td>'+(p?exUsd(p.target):'-')+'</td><td class="cur">'+exUsd(c.target)+'</td><td></td><td></td></tr>';
+  h+='<tr class="sub"><td class="m">상반기 소계</td><td>'+(p?exUsd(p.h2):'-')+'</td><td class="cur">'+exUsd(c.h2)+'</td><td></td></tr>';
+  h+='<tr class="tot"><td class="m">총계</td><td>'+(p?exUsd(p.tot):'-')+'</td><td class="cur">'+exUsd(c.tot)+'</td><td></td></tr>';
+  h+='<tr class="goal"><td class="m">목표</td><td>'+(p?exUsd(p.target):'-')+'</td><td class="cur">'+exUsd(c.target)+'</td><td></td></tr>';
   h+='<tr class="res"><td class="m">'+(c.done?'초과분':'초과/부족분')+'</td>'
     +'<td class="'+(p&&p.done?'up':'dn')+'">'+(p?(p.done?'+'+exUsd(p.diff):'-'+exUsd(Math.abs(p.diff))):'-')+'</td>'
-    +'<td class="cur '+(c.done?'up':'dn')+'">'+(c.done?'+'+exUsd(c.diff):'-'+exUsd(Math.abs(c.diff)))+'</td><td></td><td></td></tr>';
-  h+='<tr class="res"><td class="m">달성율</td><td>'+(p?p.pct.toFixed(1)+'%':'-')+'</td><td class="cur">'+c.pct.toFixed(1)+'%</td><td></td><td></td></tr>';
+    +'<td class="cur '+(c.done?'up':'dn')+'">'+(c.done?'+'+exUsd(c.diff):'-'+exUsd(Math.abs(c.diff)))+'</td><td></td></tr>';
+  h+='<tr class="res"><td class="m">달성율</td><td>'+(p?p.pct.toFixed(1)+'%':'-')+'</td><td class="cur">'+c.pct.toFixed(1)+'%</td><td></td></tr>';
   h+='</tbody></table></div>';
   h+='<div class="xb4-right">'+_exFoot3(D,true)+'</div></div>';
   h+=_exNote();
