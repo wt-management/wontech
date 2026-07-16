@@ -2643,17 +2643,15 @@ function _exPendKRW(){ const cur=exCurKey(); let done=0,plan=0;
   return {done:done,plan:plan}; }
 function exPendUSD(){ const r=Number(EXPORT.rate)||0; return r>0?_exPendKRW().done/r:0; }
 function exPendPlanUSD(){ const r=Number(EXPORT.rate)||0; return r>0?_exPendKRW().plan/r:0; }
-function exMonVal(cyc,key){ const ov=cyc.months[key]; if(ov!=null&&ov!=='') return Number(ov); const acc=exAccUSD(key); let v=acc!=null?acc:0; if(key===exCurKey()) v+=exPendUSD(); return v; }
+// 실적 = 수기(무역팀 KITA 신고값) 우선 → 없으면 회계 USD.
+// ★미반영은 실적에 넣지 않는다: 아직 수출신고 전 물량이라 얹으면 당월이 과대(26.7 실측 $711K vs 보고 $153K, +364%)됐음.
+//   회계는 신고와 누적 오차 0.7% 수준이라 자동값으로 충분. 미반영은 캡션에 참고로만 표기(exPendUSD/exPendPlanUSD).
+function exMonVal(cyc,key){ const ov=cyc.months[key]; if(ov!=null&&ov!=='') return Number(ov); const acc=exAccUSD(key); return acc!=null?acc:0; }
 function exIsProv(cyc,key){ const ov=cyc.months[key]; return (ov==null||ov==='')&&key===exCurKey()&&exMonVal(cyc,key)>0; }
 function exCycleOwn(cyc){ return exCycleMonths(cyc.start).reduce((s,k)=>s+exMonVal(cyc,k),0); }
-// 수출의 탑은 누계 이어가기: '진행 중' 차수만 직전 차수 누계를 이월 베이스로 + 자기 월별.
-// (정렬상 마지막 기준이면 차기 차수를 미리 추가하는 순간 현 차수 이월이 통째로 사라진다)
-function exCarryBase(cyc){
-  if(cyc.id!==exCurCycleId()) return 0;
-  const s=EXPORT.cycles.slice().sort(function(a,b){return a.start<b.start?-1:1;});
-  for(var i=1;i<s.length;i++){ if(s[i].id===cyc.id) return exCycleOwn(s[i-1]); }
-  return 0;
-}
+// ★차수는 서로 독립(이월 없음). 수출의 탑은 해당 차수 기간(전년7월~당해6월) 안에서 목표액을 자체로 채워야 수상.
+//   구 '누계 이어가기'(직전 차수 총계를 이월)는 주간 공식보고와 어긋났음(1억불 차수 85% vs 보고 0.2%). 2026-07 제거.
+function exCarryBase(cyc){ return 0; }
 function exCycleTotal(cyc){ return exCarryBase(cyc)+exCycleOwn(cyc); }
 function exProvUSD(){ const c=EXPORT.cycles.find(x=>x.id===exCurCycleId()); return c?exMonVal(c,exCurKey()):0; }
 function exPct(v,p){ return p>0?(v/p-1)*100:null; }
@@ -2672,9 +2670,10 @@ function exUpdProv(){
   const c=EXPORT.cycles.find(x=>x.id===exCurCycleId());
   const ovv=c&&c.months[exCurKey()], ov=(ovv!=null&&ovv!=='');
   const lbl=document.getElementById('ex-prov-lbl'); if(lbl) lbl.textContent=ov?'확정':'잠정';
-  const acc=exAccUSD(exCurKey())||0, pend=exPendUSD(), plan=exPendPlanUSD();
-  document.getElementById('ex-prov-calc').textContent=ov?'(수기 확정값)'
-    :'(회계 '+exUsd(acc)+' + 선적완료 미반영 '+exUsd(pend)+(plan>0?' · 월내 출고예정 '+exUsd(plan)+' 별도':'')+')';
+  // 실적은 회계(또는 수기)만. 미반영은 아직 수출신고 전이라 합산하지 않고 '참고'로만 병기.
+  const pend=exPendUSD(), plan=exPendPlanUSD(), ref=pend+plan;
+  document.getElementById('ex-prov-calc').textContent=(ov?'(수기 신고실적)':'(회계 기준)')
+    +(ref>0?' · 미반영 '+exUsd(ref)+' 별도(실적 미포함)':'');
 }
 let _exRateTimer=null;
 function exOnRate(){ const v=Number(document.getElementById('ex-rate').value);
