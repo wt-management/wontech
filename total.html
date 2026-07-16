@@ -199,7 +199,7 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
   #site-dropdown,#page-subtitle{display:none!important}
   #page-export .ex-bar .btn,#pdf-fab,#ex-edit-modal,#ovDetailModal,#login-screen,#app-loading{display:none!important}
   #page-export .ex-bar input{border:none;background:transparent;padding:0;width:auto}
-  .card,.ex-kpi,#page-export .ex-etbl,#page-export .ex-insight,#page-export .ex-kita .k{break-inside:avoid}
+  .card,.ex-kpi,#page-export .ex-etbl,#page-export .ex-insight,#page-export .ex-kita .kr{break-inside:avoid}
   #page-export .row{display:flex!important}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 }
@@ -291,15 +291,15 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .ccl-row{display:flex;gap:10px;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:12.5px}
 @media(max-width:1100px){.u-kpis,.q-cards{grid-template-columns:1fr}.cust-cards{grid-template-columns:repeat(2,1fr)}#page-goals .g-twin{grid-template-columns:1fr}}
 /* ── 수출의 탑 : 개편(표 우선 레이아웃 + 진행차수 히어로) ── */
-#page-export .ex-main{display:grid;grid-template-columns:1fr 236px;gap:16px;align-items:start;margin-bottom:16px}
+#page-export .ex-main{display:grid;grid-template-columns:minmax(0,1fr) 268px;gap:16px;align-items:start;margin-bottom:16px}
 @media(max-width:1100px){#page-export .ex-main{grid-template-columns:1fr}}
 #page-export .ex-side{display:flex;flex-direction:column;gap:12px}
 #page-export .ex-sbox{background:#fff;border:1px solid #e8edf3;border-radius:12px;padding:12px 13px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
 #page-export .ex-sh{font-size:11.5px;font-weight:800;color:#0f172a;padding-bottom:8px;margin-bottom:6px;border-bottom:1px solid #eef2f7}
 #page-export .ex-sh span{display:block;font-size:10px;font-weight:500;color:#94a3b8;margin-top:2px}
-#page-export .ex-kita .kr{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:7px 2px;border-bottom:1px dashed #f1f5f9;font-size:11.5px}
+#page-export .ex-kita .kr{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:8px 2px;border-bottom:1px dashed #eef2f7;font-size:11.5px;white-space:nowrap}
 #page-export .ex-kita .kr:last-child{border-bottom:0}
-#page-export .ex-kita .kr span{color:#64748b}
+#page-export .ex-kita .kr span{color:#64748b;flex-shrink:0}
 #page-export .ex-kita .kr em{font-style:normal;font-size:9px;color:#0d9488;font-weight:700}
 #page-export .ex-kita .kr b{font-size:12.5px;font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums}
 /* 진행 차수 히어로 */
@@ -357,11 +357,7 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 #page-export .ex-etbl tr.res td{font-weight:800}
 #page-export .ex-etbl tr.res.short td{background:#fff36b}
 #page-export .ex-up{color:#dc2626}#page-export .ex-down{color:#2563eb}
-#page-export .ex-kita{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-#page-export .ex-kita .k{background:#f8fafc;border-radius:12px;padding:14px 16px;text-align:center;border:1px solid #eef2f7}
-#page-export .ex-kita .k .y{font-size:12px;color:#64748b;font-weight:700}
-#page-export .ex-kita .k .v{font-size:1.35rem;font-weight:800;margin-top:4px;color:#0f172a}
-#page-export .ex-kita .k .d{font-size:11.5px;margin-top:3px;font-weight:700}
+#page-export .ex-kita{display:block}
 #page-export .ex-ycard-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
 #page-export .ex-ytitle{font-size:15px;font-weight:800;color:#1e293b;display:flex;align-items:center;gap:8px}
 #page-export .ex-ytitle::before{content:'';width:5px;height:18px;background:#e2483d;border-radius:1px;display:inline-block}
@@ -384,7 +380,7 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 #ex-edit-modal .mi input{width:100%;box-sizing:border-box;font-size:12px;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;text-align:right;font-variant-numeric:tabular-nums}
 #ex-edit-modal .mi.ovr input{border-color:#0d9488;background:#f0fdfa}
 #ex-edit-modal .mi .hint{font-size:9px;color:#94a3b8;text-align:right;height:11px}
-@media(max-width:1100px){#page-export .ex-tbls{grid-template-columns:1fr}#page-export .ex-kpis,#page-export .ex-kita{grid-template-columns:1fr}#ex-edit-modal .ex-mgrid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:1100px){#page-export .ex-tbls{grid-template-columns:1fr}#page-export .ex-kpis{grid-template-columns:1fr}#ex-edit-modal .ex-mgrid{grid-template-columns:repeat(3,1fr)}}
 /* ═══════════ RESTYLE LAYER v1 (오버라이드 — 원본 규칙 무수정, 캐스케이드 우선) ═══════════ */
 body{font-family:var(--font);background:var(--bg);color:var(--ink-2);letter-spacing:-.01em;-webkit-font-smoothing:antialiased}
 .kpi-value,.kpi-side-value,.tm-v,.eh-v,.u-kv,.q-val,.cc-v,.sb-v,.g-hr,.g-mr,.rpt-hk .v{font-variant-numeric:tabular-nums;letter-spacing:-.02em}
