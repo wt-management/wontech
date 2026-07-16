@@ -638,10 +638,10 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 .xf3.side .xf3-c.chart{height:auto;flex:1;min-height:0}
 @media(max-width:1000px){.xf3{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:620px){.xf3{grid-template-columns:1fr}}
-.xf3-c{border:1px solid #e2e6ea;border-radius:6px;padding:13px 15px;min-width:0;overflow:hidden}
+.xf3-c{border:1px solid #e2e6ea;border-radius:6px;padding:5px 15px 13px;min-width:0;overflow:hidden}
 .xf3-c.chart{height:186px;display:flex;flex-direction:column}
-.xf3-t{font-size:14px;font-weight:800;color:#111;padding-bottom:8px;border-bottom:2px solid #111;flex-shrink:0}
-.xf3-t span{display:block;font-size:11.5px;font-weight:500;color:#777;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xf3-t{font-size:15px;font-weight:800;color:#111;line-height:1.4;padding-bottom:6px;border-bottom:2px solid #111;flex-shrink:0}
+.xf3-sub{font-size:11.5px;font-weight:500;color:#777;padding:7px 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0}
 .xf3-r{display:flex;justify-content:space-between;align-items:baseline;gap:5px;padding:9px 1px;border-bottom:1px solid #f0f3f6;font-size:13.5px;white-space:nowrap}
 .xf3-r:last-child{border-bottom:0}
 .xf3-r span{color:#555;font-weight:600;display:flex;align-items:center;gap:4px;flex-shrink:0}
@@ -3022,6 +3022,8 @@ function _exData(){
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
+/* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
+/* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 function exUsdM(v){ v=Number(v)||0; var a=Math.abs(v);
   if(a>=1e6) return '$'+(a/1e6>=100?Math.round(v/1e6):(Math.round(v/1e5)/10))+'M';
   if(a>=1e3) return '$'+Math.round(v/1e3)+'K';
@@ -3109,13 +3111,13 @@ function _exSentence(D){
 /* 3개년(수출·해외) + 추이 차트 2개 — 전 디자인 공통 하단 */
 function _exFoot3(D,side){
   function card(t,sub,rows){
-    return '<div class="xf3-c"><div class="xf3-t">'+t+'<span>'+sub+'</span></div>'
+    return '<div class="xf3-c"><div class="xf3-t">'+t+'</div><div class="xf3-sub">'+sub+'</div>'
       +rows.map(function(r){return '<div class="xf3-r"><span>'+esc(r.y)+'년'+(r.live?' <i>진행</i>':'')+'</span><b>'+exUsd(r.v)+'</b></div>';}).join('')+'</div>';
   }
   var cards=card('최근 3개년 수출 실적',side?'전년 7월~당해 6월 · KITA':'무역실적 · 전년 7월~당해 6월 · KITA',D.kitaExp)
     +card('최근 3개년 해외 실적',side?'1~12월 · KITA':'해외 실적 · 1~12월 · KITA',D.kita);
-  var charts='<div class="xf3-c chart"><div class="xf3-t">회계실적 추이<span>'+(side?'단위: 만 $':'단위: 만 $ · 회계연도')+'</span></div>'+_exBarsMini(D.yearly.acc,D.yearly.labels,'#c98a4b')+'</div>'
-    +'<div class="xf3-c chart"><div class="xf3-t">수출실적 추이<span>'+(side?'단위: 만 $':'단위: 만 $ · 전년 7월~당해 6월')+'</span></div>'+_exBarsMini(D.yearly.exp,D.yearly.labels,'#16324f')+'</div>';
+  var charts='<div class="xf3-c chart"><div class="xf3-t">회계실적 추이</div><div class="xf3-sub">'+(side?'단위: 만 $':'단위: 만 $ · 회계연도')+'</div>'+_exBarsMini(D.yearly.acc,D.yearly.labels,'#c98a4b')+'</div>'
+    +'<div class="xf3-c chart"><div class="xf3-t">수출실적 추이</div><div class="xf3-sub">'+(side?'단위: 만 $':'단위: 만 $ · 전년 7월~당해 6월')+'</div>'+_exBarsMini(D.yearly.exp,D.yearly.labels,'#16324f')+'</div>';
   if(side) return '<div class="xf3 side"><div class="xf3-row">'+cards+'</div><div class="xf3-row charts">'+charts+'</div></div>';
   return '<div class="xf3">'+cards+charts+'</div>';
 }
