@@ -763,11 +763,12 @@ tr.lb-clk:hover td,tr.qs-clk:hover td{background:var(--surface-2)}
 .xp4-t tr.res td{font-weight:800;border-bottom:1px solid #d8dde3}
 
 /* 모바일 컴팩트 표(만불) */
+.xb4-tmu{display:none;font-size:11px;color:#777;font-weight:600;margin:0 0 6px}
 .xb4-tm{display:none;width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums;table-layout:fixed}
 .xb4-tm th{font-size:11px;font-weight:700;color:#555;text-align:right;padding:9px 5px;border-bottom:2px solid #111;background:#f7f9fa}
 .xb4-tm th.m{text-align:left;width:60px}
-.xb4-tm th.yo,.xb4-tm td.yo{width:52px}
-.xb4-tm td.yo{font-size:11.5px;font-weight:800}
+.xb4-tm th.yo,.xb4-tm td.yo{width:82px}
+.xb4-tm td.yo{font-size:11px;font-weight:800;white-space:nowrap}
 .xb4-tm th.cur{color:#a8500f}
 .xb4-tm td{padding:8px 5px;border-bottom:1px solid #eef1f4;text-align:right;color:#111}
 .xb4-tm td.m{text-align:left;font-weight:700;color:#444;white-space:nowrap}
@@ -786,10 +787,12 @@ tr.lb-clk:hover td,tr.qs-clk:hover td{background:var(--surface-2)}
 @container (max-width:620px){
   .xb4-t{display:none}
   .xb4-tm{display:table}
+  .xb4-tmu{display:block}
+  .xr-col{display:none}
   .xb4-st.ph{display:none}
   .xf3-row{grid-template-columns:1fr}
   .xf3.side .xf3-row.charts{gap:12px}
-  .xf3-c.chart{height:200px}
+  .xf3-c.chart{height:250px}
   .xb4-two{gap:14px}
 }
 
@@ -801,6 +804,8 @@ tr.lb-clk:hover td,tr.qs-clk:hover td{background:var(--surface-2)}
 .exp-mobile .xb4{padding:20px 14px}
 .exp-mobile .xb4-t{display:none}
 .exp-mobile .xb4-tm{display:table}
+.exp-mobile .xb4-tmu{display:block}
+.exp-mobile .xr-col{display:none}
 .exp-mobile .xb4-st.ph{display:none}
 .exp-mobile .xb4-two{grid-template-columns:1fr;gap:14px}
 .exp-mobile .xb4-hd{flex-direction:column;align-items:flex-start;gap:4px}
@@ -808,8 +813,9 @@ tr.lb-clk:hover td,tr.qs-clk:hover td{background:var(--surface-2)}
 .exp-mobile .xr-grid{grid-template-columns:1fr;gap:14px}
 .exp-mobile .xr-side{grid-column:1/-1}
 .exp-mobile .xs-row{grid-template-columns:1fr}
+.exp-mobile .xs-card.chart{height:250px}
 .exp-mobile .xf3-row{grid-template-columns:1fr}
-.exp-mobile .xf3-c.chart{height:190px}
+.exp-mobile .xf3-c.chart{height:250px}
 .exp-mobile .xr-doc{flex-direction:column;align-items:flex-start;gap:6px}
 .exp-mobile .xr-doc .meta{text-align:left}
 /* ── 출력(PDF): 현재 디자인만 크게 ── */
@@ -3106,6 +3112,7 @@ function _exData(){
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
+/* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 function exUsdM(v){ v=Number(v)||0; var a=Math.abs(v);
   if(a>=1e6) return '$'+(a/1e6>=100?Math.round(v/1e6):(Math.round(v/1e5)/10))+'M';
   if(a>=1e3) return '$'+Math.round(v/1e3)+'K';
@@ -3159,6 +3166,7 @@ function _exdReport(D){
   return '<div class="xr">'
     +'<div class="xr-doc"><h1><small>WONTECH · EXPORT TOWER REPORT</small>원텍 주식회사 수출의 탑 현황</h1>'
     +'<div class="meta">기준일 <b>'+esc(D.updatedAt)+'</b><br>집계 기준 <b>KITA 수출신고</b></div></div>'
+    +_exMobileTable(D)
     +'<div class="xr-grid">'
     +'<div class="xr-col">'+tbl(D.prev,false)+'</div>'
     +'<div class="xr-col">'+tbl(D.cur,true)+'</div>'
@@ -3182,6 +3190,35 @@ function exMan(v){
   if(a>=1e8) return (Math.round(n/1e7)/10).toLocaleString()+'억불';
   if(a>=1e4) return Math.round(n/1e4).toLocaleString()+'만불';
   return Math.round(n).toLocaleString()+'불';
+}
+/* 만 단위 숫자(접미사 없음) — 표에서 단위는 1회만 표기 */
+function exManNum(v){ return Math.round((Number(v)||0)/1e4).toLocaleString(); }
+/* 모바일 통합 표: 월 | 지난차수 | 이번차수 | 증감(금액(율)) — 보고서·브리핑 공용 */
+function _exMobileTable(D){
+  var c=D.cur, p=D.prev; if(!c) return '';
+  var h='<div class="xb4-tmu">단위: 만불 · 증감은 전년동월 대비</div>';
+  h+='<table class="xb4-tm"><thead><tr><th class="m">월</th><th>'+(p?esc(p.label):'-')+'</th><th class="cur">'+esc(c.label)+'</th><th class="yo">증감</th></tr></thead><tbody>';
+  function yo(r){
+    if(r.d==null||!(r.v>0)) return '<td class="yo"></td>';
+    var up=r.d>=0;
+    return '<td class="yo '+(up?'up':'dn')+'">'+(up?'▲':'▼')+exManNum(Math.abs(r.d))+(r.p!=null?' ('+Math.abs(r.p).toFixed(0)+'%)':'')+'</td>';
+  }
+  c.rows.forEach(function(r,i){
+    var pv=p?p.rows[i]:null;
+    h+='<tr'+(r.prov?' class="prov"':(r.fut?' class="fut"':''))+'><td class="m">'+_exMonth(r.label)+'</td>'
+      +'<td>'+(pv?exManNum(pv.v):'-')+'</td>'
+      +'<td class="cur">'+(r.fut?'<u>예정</u>':exManNum(r.v)+(r.prov?'<i>*</i>':''))+'</td>'
+      +yo(r)+'</tr>';
+    if(i===5) h+='<tr class="sub"><td class="m">하반기</td><td>'+(p?exManNum(p.h1):'-')+'</td><td class="cur">'+exManNum(c.h1)+'</td><td class="yo"></td></tr>';
+  });
+  h+='<tr class="sub"><td class="m">상반기</td><td>'+(p?exManNum(p.h2):'-')+'</td><td class="cur">'+exManNum(c.h2)+'</td><td class="yo"></td></tr>';
+  h+='<tr class="tot"><td class="m">총계</td><td>'+(p?exManNum(p.tot):'-')+'</td><td class="cur">'+exManNum(c.tot)+'</td><td class="yo"></td></tr>';
+  h+='<tr class="goal"><td class="m">목표</td><td>'+(p?exManNum(p.target):'-')+'</td><td class="cur">'+exManNum(c.target)+'</td><td class="yo"></td></tr>';
+  h+='<tr class="res"><td class="m">과부족</td>'
+    +'<td class="'+(p&&p.done?'up':'dn')+'">'+(p?(p.done?'+'+exManNum(p.diff):'-'+exManNum(Math.abs(p.diff))):'-')+'</td>'
+    +'<td class="cur '+(c.done?'up':'dn')+'">'+(c.done?'+'+exManNum(c.diff):'-'+exManNum(Math.abs(c.diff)))+'</td><td class="yo"></td></tr>';
+  h+='<tr class="res"><td class="m">달성율</td><td>'+(p?p.pct.toFixed(0)+'%':'-')+'</td><td class="cur">'+c.pct.toFixed(1)+'%</td><td class="yo"></td></tr>';
+  return h+'</tbody></table>';
 }
 function _exSentence(D){
   var c=D.cur, pace=D.elapsed/12*100;
@@ -3237,25 +3274,7 @@ function _exdBrief(D){
     +'<td class="cur '+(c.done?'up':'dn')+'">'+(c.done?'+'+exUsd(c.diff):'-'+exUsd(Math.abs(c.diff)))+'</td><td></td></tr>';
   h+='<tr class="res"><td class="m">달성율</td><td>'+(p?p.pct.toFixed(1)+'%':'-')+'</td><td class="cur">'+c.pct.toFixed(1)+'%</td><td></td></tr>';
   h+='</tbody></table>';
-  // 모바일용 컴팩트 표(만불): 지난차수 왼쪽 · 이번차수 오른쪽 · 증감
-  h+='<table class="xb4-tm"><thead><tr><th class="m">월</th><th>'+(p?esc(p.label):'-')+'</th><th class="cur">'+esc(c.label)+'</th><th class="yo">증감</th></tr></thead><tbody>';
-  c.rows.forEach(function(r,i){
-    var pv=p?p.rows[i]:null;
-    var up=(r.d!=null&&r.v>0)?(r.d>=0):null;
-    h+='<tr'+(r.prov?' class="prov"':(r.fut?' class="fut"':''))+'><td class="m">'+_exMonth(r.label)+'</td>'
-      +'<td>'+(pv?exMan(pv.v):'-')+'</td>'
-      +'<td class="cur">'+(r.fut?'<u>예정</u>':exMan(r.v)+(r.prov?'<i>*</i>':''))+'</td>'
-      +'<td class="yo '+(up===null?'':(up?'up':'dn'))+'">'+(up===null||r.p==null?'':(up?'▲':'▼')+Math.abs(r.p).toFixed(0)+'%')+'</td></tr>';
-    if(i===5) h+='<tr class="sub"><td class="m">하반기</td><td>'+(p?exMan(p.h1):'-')+'</td><td class="cur">'+exMan(c.h1)+'</td><td class="yo"></td></tr>';
-  });
-  h+='<tr class="sub"><td class="m">상반기</td><td>'+(p?exMan(p.h2):'-')+'</td><td class="cur">'+exMan(c.h2)+'</td><td class="yo"></td></tr>';
-  h+='<tr class="tot"><td class="m">총계</td><td>'+(p?exMan(p.tot):'-')+'</td><td class="cur">'+exMan(c.tot)+'</td><td class="yo"></td></tr>';
-  h+='<tr class="goal"><td class="m">목표</td><td>'+(p?exMan(p.target):'-')+'</td><td class="cur">'+exMan(c.target)+'</td><td class="yo"></td></tr>';
-  h+='<tr class="res"><td class="m">'+(c.done?'초과':'과부족')+'</td>'
-    +'<td class="'+(p&&p.done?'up':'dn')+'">'+(p?(p.done?'+'+exMan(p.diff):'-'+exMan(Math.abs(p.diff))):'-')+'</td>'
-    +'<td class="cur '+(c.done?'up':'dn')+'">'+(c.done?'+'+exMan(c.diff):'-'+exMan(Math.abs(c.diff)))+'</td><td class="yo"></td></tr>';
-  h+='<tr class="res"><td class="m">달성율</td><td>'+(p?p.pct.toFixed(0)+'%':'-')+'</td><td class="cur">'+c.pct.toFixed(1)+'%</td><td class="yo"></td></tr>';
-  h+='</tbody></table>';
+  h+=_exMobileTable(D);
   h+='</div>';
   h+='<div class="xb4-right"><div class="xb4-st ph" aria-hidden="true">&nbsp;</div>'+_exFoot3(D,true)+'</div></div>';
   h+=_exNote();
@@ -3434,7 +3453,7 @@ function exPrintDesign(btn){
 /* ── 수출의 탑: 모바일 화면 구성으로 PNG 저장 ── */
 function exSaveImage(btn){
   var ob=btn?btn.innerHTML:''; _exBusy(btn,true);
-  _exCapture(390,'exp-mobile','#eef1f6',1.5).then(function(cv){
+  _exCapture(380,'exp-mobile','#eef1f6',1.25).then(function(cv){
     cv.toBlob(function(blob){
       if(!blob){ _exBusy(btn,false,ob); alert('이미지 생성에 실패했습니다.'); return; }
       var url=URL.createObjectURL(blob), a=document.createElement('a');
