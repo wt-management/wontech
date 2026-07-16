@@ -587,7 +587,11 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 .ex-yx span{flex:1;text-align:center;font-size:11px;color:#5b6b7f;font-weight:600}
 
 /* ── ② 임원 브리핑 — 두 차수 통합 비교표 ── */
-.xb4{background:#fff;border:1px solid #d8dde3;border-radius:8px;padding:32px 36px;color:#111}
+.xb4{background:#fff;border:1px solid #d8dde3;border-radius:8px;padding:32px 36px;color:#111;container-type:inline-size}
+.xb4-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,404px);gap:16px;align-items:stretch}
+.xb4-left{min-width:0}
+.xb4-right{min-width:0;display:flex}
+@container (max-width:920px){.xb4-two{grid-template-columns:1fr}.xb4-right{margin-top:8px}}
 @media(max-width:760px){.xb4{padding:20px 14px}}
 .xb4-hd{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;padding-bottom:14px;border-bottom:3px solid #111}
 .xb4-hd .t{font-size:22px;font-weight:800}
@@ -602,14 +606,14 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 .xb4-kpi .k b{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .xb4-kpi .k.hl b{color:#a8500f}
 .xb4-st{font-size:16px;font-weight:800;color:#111;padding-bottom:9px;border-bottom:2px solid #111;margin-bottom:0}
-.xb4-t{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
-.xb4-t th{font-size:13px;font-weight:700;color:#555;text-align:right;padding:11px 10px;border-bottom:1px solid #d8dde3;background:#f7f9fa}
-.xb4-t th.m{text-align:left;width:110px}
+.xb4-t{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums;table-layout:fixed}
+.xb4-t th{font-size:12.5px;font-weight:700;color:#555;text-align:right;padding:10px 6px;border-bottom:1px solid #d8dde3;background:#f7f9fa}
+.xb4-t th.m{text-align:left;width:96px;padding-left:10px}
 .xb4-t th.cur{background:#fff8e6;color:#7a3e0c}
 .xb4-t th em{font-style:normal;font-weight:800;color:#111;display:block;margin-top:2px}
 .xb4-t th.cur em{color:#a8500f}
-.xb4-t td{padding:9px 10px;border-bottom:1px solid #eef1f4;text-align:right;color:#111}
-.xb4-t td.m{text-align:left;color:#444;font-weight:700;white-space:nowrap}
+.xb4-t td{padding:8px 6px;border-bottom:1px solid #eef1f4;text-align:right;color:#111;letter-spacing:-.02em}
+.xb4-t td.m{text-align:left;color:#444;font-weight:700;white-space:nowrap;padding-left:10px}
 .xb4-t td.cur{background:#fffdf5;font-weight:700}
 .xb4-t td u{text-decoration:none;color:#aab2bb;font-weight:500}
 .xb4-t td i{font-style:normal;font-size:11px;color:#a8500f;font-weight:800}
@@ -626,17 +630,21 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 .xb4-t .dn{color:#1558a0}
 /* 공통 하단: 3개년 2종 + 추이 차트 2종 */
 .xf3{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:26px;padding-top:22px;border-top:1px solid #d8dde3}
+.xf3.side{display:flex;flex-direction:column;gap:12px;margin-top:0;padding-top:0;border-top:0;flex:1;min-width:0}
+.xf3-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;min-width:0}
+.xf3-row.charts{flex:1;min-height:176px}
+.xf3.side .xf3-c.chart{height:auto;flex:1;min-height:0}
 @media(max-width:1000px){.xf3{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:620px){.xf3{grid-template-columns:1fr}}
 .xf3-c{border:1px solid #e2e6ea;border-radius:6px;padding:13px 15px;min-width:0;overflow:hidden}
 .xf3-c.chart{height:186px;display:flex;flex-direction:column}
 .xf3-t{font-size:14px;font-weight:800;color:#111;padding-bottom:8px;border-bottom:2px solid #111;flex-shrink:0}
 .xf3-t span{display:block;font-size:11.5px;font-weight:500;color:#777;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.xf3-r{display:flex;justify-content:space-between;align-items:baseline;gap:6px;padding:9px 1px;border-bottom:1px solid #f0f3f6;font-size:14px;white-space:nowrap}
+.xf3-r{display:flex;justify-content:space-between;align-items:baseline;gap:5px;padding:9px 1px;border-bottom:1px solid #f0f3f6;font-size:13.5px;white-space:nowrap}
 .xf3-r:last-child{border-bottom:0}
 .xf3-r span{color:#555;font-weight:600;display:flex;align-items:center;gap:4px;flex-shrink:0}
-.xf3-r b{font-weight:800;color:#111;font-variant-numeric:tabular-nums;margin-left:auto;letter-spacing:-.02em}
-.xf3-r i{font-style:normal;font-size:10px;color:#a8500f;font-weight:800;background:#fff3d6;padding:1px 5px;border-radius:3px;flex-shrink:0}
+.xf3-r b{font-weight:800;color:#111;font-variant-numeric:tabular-nums;margin-left:auto;letter-spacing:-.03em;font-size:13.5px;min-width:0}
+.xf3-r i{font-style:normal;font-size:9px;color:#a8500f;font-weight:800;background:#fff3d6;padding:1px 4px;border-radius:3px;flex-shrink:0;letter-spacing:-.02em}
 .xn3{margin-top:18px;padding-top:12px;border-top:1px solid #e2e6ea;font-size:12.5px;color:#888;line-height:1.7}
 
 /* ── ③ 모바일 ── */
@@ -3009,6 +3017,8 @@ function _exData(){
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
+/* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
+/* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 function exUsdM(v){ v=Number(v)||0; var a=Math.abs(v);
   if(a>=1e6) return '$'+(a/1e6>=100?Math.round(v/1e6):(Math.round(v/1e5)/10))+'M';
   if(a>=1e3) return '$'+Math.round(v/1e3)+'K';
@@ -3094,17 +3104,17 @@ function _exSentence(D){
   return '속도를 높여야 합니다. 남은 '+D.remain+'개월 동안 매달 '+exMan(D.needAvg)+'씩 수출해야 목표를 달성합니다.';
 }
 /* 3개년(수출·해외) + 추이 차트 2개 — 전 디자인 공통 하단 */
-function _exFoot3(D){
+function _exFoot3(D,side){
   function card(t,sub,rows){
     return '<div class="xf3-c"><div class="xf3-t">'+t+'<span>'+sub+'</span></div>'
       +rows.map(function(r){return '<div class="xf3-r"><span>'+esc(r.y)+'년'+(r.live?' <i>진행</i>':'')+'</span><b>'+exUsd(r.v)+'</b></div>';}).join('')+'</div>';
   }
-  return '<div class="xf3">'
-    +card('최근 3개년 수출 실적','무역실적 · 전년 7월~당해 6월 · KITA',D.kitaExp)
-    +card('최근 3개년 해외 실적','해외 실적 · 1~12월 · KITA',D.kita)
-    +'<div class="xf3-c chart"><div class="xf3-t">회계실적 추이<span>단위: 만 $ · 회계연도</span></div>'+_exBarsMini(D.yearly.acc,D.yearly.labels,'#c98a4b')+'</div>'
-    +'<div class="xf3-c chart"><div class="xf3-t">수출실적 추이<span>단위: 만 $ · 전년 7월~당해 6월</span></div>'+_exBarsMini(D.yearly.exp,D.yearly.labels,'#16324f')+'</div>'
-    +'</div>';
+  var cards=card('최근 3개년 수출 실적',side?'전년 7월~당해 6월 · KITA':'무역실적 · 전년 7월~당해 6월 · KITA',D.kitaExp)
+    +card('최근 3개년 해외 실적',side?'1~12월 · KITA':'해외 실적 · 1~12월 · KITA',D.kita);
+  var charts='<div class="xf3-c chart"><div class="xf3-t">회계실적 추이<span>'+(side?'단위: 만 $':'단위: 만 $ · 회계연도')+'</span></div>'+_exBarsMini(D.yearly.acc,D.yearly.labels,'#c98a4b')+'</div>'
+    +'<div class="xf3-c chart"><div class="xf3-t">수출실적 추이<span>'+(side?'단위: 만 $':'단위: 만 $ · 전년 7월~당해 6월')+'</span></div>'+_exBarsMini(D.yearly.exp,D.yearly.labels,'#16324f')+'</div>';
+  if(side) return '<div class="xf3 side"><div class="xf3-row">'+cards+'</div><div class="xf3-row charts">'+charts+'</div></div>';
+  return '<div class="xf3">'+cards+charts+'</div>';
 }
 function _exNote(){
   return '<div class="xn3">· 집계 기준: KITA 수출신고 · 수기 미입력 월은 회계 USD 자동 반영(잠정) · 미반영(선적 전) 물량은 실적에 포함하지 않음</div>';
@@ -3123,6 +3133,7 @@ function _exdBrief(D){
     +'<div class="k hl"><span>매달 필요 ('+D.remain+'개월)</span><b>'+exMan(D.needAvg)+'</b></div>'
     +'</div>';
   // 두 차수 통합 월별 비교표
+  h+='<div class="xb4-two"><div class="xb4-left">';
   h+='<div class="xb4-st">차수별 월 실적 비교</div>';
   h+='<table class="xb4-t"><thead><tr><th class="m">월</th>'
     +'<th>'+(p?esc(p.title)+' <em>'+esc(p.label)+'</em>':'-')+'</th>'
@@ -3142,12 +3153,13 @@ function _exdBrief(D){
   h+='<tr class="sub"><td class="m">상반기 소계</td><td>'+(p?exUsd(p.h2):'-')+'</td><td class="cur">'+exUsd(c.h2)+'</td><td></td><td></td></tr>';
   h+='<tr class="tot"><td class="m">총계</td><td>'+(p?exUsd(p.tot):'-')+'</td><td class="cur">'+exUsd(c.tot)+'</td><td></td><td></td></tr>';
   h+='<tr class="goal"><td class="m">목표</td><td>'+(p?exUsd(p.target):'-')+'</td><td class="cur">'+exUsd(c.target)+'</td><td></td><td></td></tr>';
-  h+='<tr class="res"><td class="m">'+(c.done?'초과분':'초과 / 부족분')+'</td>'
+  h+='<tr class="res"><td class="m">'+(c.done?'초과분':'초과/부족분')+'</td>'
     +'<td class="'+(p&&p.done?'up':'dn')+'">'+(p?(p.done?'+'+exUsd(p.diff):'-'+exUsd(Math.abs(p.diff))):'-')+'</td>'
     +'<td class="cur '+(c.done?'up':'dn')+'">'+(c.done?'+'+exUsd(c.diff):'-'+exUsd(Math.abs(c.diff)))+'</td><td></td><td></td></tr>';
   h+='<tr class="res"><td class="m">달성율</td><td>'+(p?p.pct.toFixed(1)+'%':'-')+'</td><td class="cur">'+c.pct.toFixed(1)+'%</td><td></td><td></td></tr>';
-  h+='</tbody></table>';
-  h+=_exFoot3(D)+_exNote();
+  h+='</tbody></table></div>';
+  h+='<div class="xb4-right">'+_exFoot3(D,true)+'</div></div>';
+  h+=_exNote();
   return h+'</div>';
 }
 
