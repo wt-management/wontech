@@ -2175,6 +2175,21 @@ const BRANCH = 'main';
 const SUPABASE_URL = 'https://mhfacbsittfdkknwybhc.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_aPMOOWAlyJlMcP1ZM_gpPA_jlrcvCRd';
 const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// ── 비밀번호 재설정 링크 진입 안정화 ──
+// supabase-js(detectSessionInUrl)가 로드 시 URL 해시를 자동 소비하며 PASSWORD_RECOVERY 이벤트를 발생시킨다.
+// init()의 해시 직접 파싱(type=recovery)은 이 자동 처리와 타이밍 레이스가 있어, 해시가 먼저 지워지면
+// 재설정 패널이 안 뜨고 그대로 앱에 로그인되어 버린다. 표준 권장 방식인 이 이벤트 리스너로 확실히 처리한다.
+_sb.auth.onAuthStateChange((event)=>{
+  if(event !== 'PASSWORD_RECOVERY') return;
+  try{
+    const app=document.getElementById('main-content'); if(app) app.style.display='none';
+    const lc=document.getElementById('launcher-screen'); if(lc) lc.style.display='none';
+    const ls=document.getElementById('login-screen');
+    if(ls){ ls.style.display='flex'; ls.querySelectorAll(':scope > div').forEach(d=>d.style.display='none'); }
+    const box=document.getElementById('reset-pw-box'); if(box) box.style.display='block';
+    if(typeof _hideLoading==='function') _hideLoading();
+  }catch(e){}
+});
 const STAGES = ['상담중','견적발송','협의중','계약완료'];
 const SC = {'리드':'#adb5bd','상담중':'#4f8ef7','견적발송':'#fd7e14','협의중':'#6f42c1','계약완료':'#28a745'};
 
