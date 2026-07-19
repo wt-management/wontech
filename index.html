@@ -246,11 +246,11 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 @media(max-width:640px){
   #launcher-screen{padding:22px 12px!important;justify-content:flex-start!important}
   #launcher-main{padding:0 6px;width:100%}
-  #launcher-cards{max-width:100%!important;gap:10px!important}
-  #launcher-cards>div{width:calc(50% - 5px)!important}
-  #launcher-cards>div>div:nth-child(2){padding:15px 13px!important}
+  #launcher-cards{max-width:100%!important;gap:18px!important}
+  .lc-grp-row{gap:10px!important;justify-content:flex-start!important}
+  .lc-grp-row>div{width:100%!important}
+  .lc-grp-row>div>div:nth-child(2){padding:18px 16px!important}
 }
-@media(max-width:340px){#launcher-cards>div{width:100%!important}}
 </style>
 <div id="launcher-screen" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,#0f172a 0%,#1e2140 100%);z-index:9998;align-items:center;justify-content:center;flex-direction:column;overflow-y:auto">
   <!-- 런처 메인 -->
