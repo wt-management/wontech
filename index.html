@@ -146,6 +146,9 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
   .modal .btn{min-height:42px}
   .modal-footer{flex-wrap:wrap;gap:6px}
   .btn-group-sm>.btn{padding-top:7px;padding-bottom:7px}
+  /* 모바일 터치 타깃 확대: 표/행 액션 버튼(편집·삭제 등)이 20~22px로 너무 작던 문제 — 세로만 커져 가로 넘침 없음 */
+  .btn-sm,.btn-group-sm>.btn{min-height:32px}
+  td .btn,th .btn{min-height:32px;display:inline-flex;align-items:center;justify-content:center}
   /* 모달은 화면에 꽉 차게(스크롤 가능) */
   .modal-dialog{margin:8px auto;max-width:calc(100vw - 16px)}
   .modal-dialog-scrollable{max-height:calc(100vh - 16px)}
