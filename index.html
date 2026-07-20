@@ -6677,16 +6677,32 @@ function renderCDUWeekly(){
   var chip=(l,v,c)=>'<div style="flex:1;min-width:108px;background:#f8fafc;border-radius:10px;padding:10px 12px;text-align:center"><div style="font-size:10px;color:#94a3b8;font-weight:600">'+l+'</div><div style="font-size:16.5px;font-weight:800;color:'+(c||'#111827')+';margin-top:1px">'+v+'</div></div>';
   var WD=['일','월','화','수','목','금','토'];
   var _dash='<span style="color:#d1d5db">-</span>';
-  var rows=vs.map(function(v,i){ var d=String(v.date||'').slice(0,10); var rev=_cduRev((v.custName||'').trim()).y2026||0;
+  var rowHtml=function(v,i){ var d=String(v.date||'').slice(0,10); var rev=_cduRev((v.custName||'').trim()).y2026||0;
     return '<tr style="background:'+(i%2?'#fafbfc':'#fff')+'">'
       +'<td style="font-weight:700">'+_cduEsc(v.custName||'')+(v.churnRisk?' <span style="color:#dc2626;font-size:10px">⚠</span>':'')+'</td>'
       +'<td style="text-align:right;white-space:nowrap;line-height:1.35"><span style="color:#0891b2;font-weight:700">'+(rev?_cduWon(rev):'0')+'</span>'+(function(){ var pv=prevOf((v.custName||'').trim()); if(!pv&&!rev) return '<div style="font-size:9px;color:#d1d5db">이력 없음</div>'; if(!pv) return ''; var up=rev>=pv; return '<div style="font-size:9.5px;color:'+(up?'#16a34a':'#dc2626')+'">작년 '+_cduWon(pv)+' '+(up?'▲':'▼')+Math.abs(Math.round((rev/pv-1)*100))+'%</div>'; })()+'</td>'
       +'<td>'+(_cduEsc(v.mainProc||'')||_dash)+'</td>'
       +'<td style="text-align:center;font-weight:700;color:#7c3aed">'+(Number(v.price)>0?_cduEsc(v.price)+'천':_dash)+'</td>'
       +'<td style="font-size:10.5px;color:#dc2626;word-break:keep-all;overflow-wrap:break-word">'+(_cduEsc(String(v.competitor||'').replace(/\//g,' / '))||_dash)+'</td>'
-      +'<td style="color:#334155">'+(_cduEsc(String(v.feedback||'').slice(0,200))||_dash)+'</td>'
+      +'<td style="color:#334155">'+(function(){ var fb=_cduEsc(String(v.feedback||'').slice(0,200)); var rs=(v.noBuyReason||'').trim(); var ac=(v.action||'').trim();
+          var tag=(rs?'<span style="font-size:9.5px;font-weight:800;color:#7c3aed;background:#f5f3ff;border-radius:4px;padding:1px 6px;margin-right:4px">'+_cduEsc(rs)+'</span>':'')
+                 +(ac?'<span style="font-size:9.5px;font-weight:800;color:#0d9488;background:#f0fdfa;border-radius:4px;padding:1px 6px;margin-right:4px">→ '+_cduEsc(ac)+'</span>':'');
+          return (tag||fb)?tag+(fb||''):_dash; })()+'</td>'
       +'<td class="cduwk-np" style="text-align:center"><i class="bi bi-pencil-square" onclick="_cduWkEdit(\''+v.id+'\')" title="내용 수정" style="color:#2563eb;cursor:pointer;margin-right:7px"></i><i class="bi bi-x-circle" onclick="_cduWkExclAdd(\''+v.id+'\')" title="이번 보고서에서 제외" style="color:#dc2626;cursor:pointer"></i></td>'
-    +'</tr>'; }).join('');
+    +'</tr>'; };
+  // 병원 성격별 그룹핑: 휴면 → 급감 → 정상 → 이력없음
+  var byCls={dor:[],drop:[],ok:[],non:[]};
+  vs.forEach(function(v){ var n=(v.custName||'').trim();
+    var g=cls.dor.indexOf(n)>=0?'dor':cls.drop.indexOf(n)>=0?'drop':cls.ok.indexOf(n)>=0?'ok':'non';
+    byCls[g].push(v); });
+  var grpDef=[['dor','휴면 병원 — 올해 팁매출 0 · 집중 공략','#dc2626','#fef2f2'],
+              ['drop','구매 급감 — 작년比 60%↓ · 이탈 방어','#ea580c','#fff7ed'],
+              ['ok','정상 구매 중 — 유지 관리','#16a34a','#f0fdf4'],
+              ['non','매출 이력 없음 — 신규·잠재','#64748b','#f8fafc']];
+  var rows=grpDef.map(function(g){ var arr=byCls[g[0]]; if(!arr.length) return '';
+    var uh={}; arr.forEach(function(v){ uh[(v.custName||'').trim()]=1; });
+    return '<tr><td colspan="7" style="background:'+g[3]+';color:'+g[2]+';font-weight:800;font-size:11px;padding:7px 9px;border-bottom:1px solid #e5e7eb">'+g[1]+' <span style="font-weight:600;color:'+g[2]+'99">· '+Object.keys(uh).length+'개처 '+arr.length+'건</span></td></tr>'
+      +arr.map(rowHtml).join(''); }).join('');
   el.innerHTML=
     '<style>#cduwk-sheet td{padding:8px 7px;border-bottom:1px solid #f1f5f9;word-break:break-all;line-height:1.55}#cduwk-sheet th{padding:8px 7px!important;letter-spacing:.02em;text-align:center!important;vertical-align:middle}#cduwk-sheet table{font-size:11.5px}.cduwk-np{white-space:nowrap}</style>'
     +'<div style="height:5px;background:#ff4500;margin:-30px -38px 22px;border-radius:6px 6px 0 0"></div>'
