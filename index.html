@@ -3307,27 +3307,57 @@ function openOvMonth(month, year){
   _ovShowModal(year+'년 '+month+'월 매출 상세 <span style="font-size:12px;color:#6b7280">'+(CONS.updatedAt||'')+' 기준</span>', body);
 }
 // KPI(소모품/제품 YTD) 클릭 → 전체 제품 랭킹
+function _ovRankModal(rows, pr, opts){
+  // rows: [[name, amt]] sorted desc; pr: {name:amt}; opts:{accent,catLbl,showQty,q26,q25,catFn}
+  var accent=opts.accent, showQty=opts.showQty, q26=opts.q26||{}, q25=opts.q25||{}, catFn=opts.catFn;
+  var tot=rows.reduce(function(s,e){return s+e[1];},0);
+  var totPrev=Object.keys(pr).reduce(function(s,k){return s+(pr[k]||0);},0);
+  var totQty=showQty?rows.reduce(function(s,e){return s+(q26[e[0]]||0);},0):0;
+  var totQtyPrev=showQty?Object.keys(q25).reduce(function(s,k){return s+(q25[k]||0);},0):0;
+  var mx=rows.length?rows[0][1]:1;
+  var totChg=totPrev>0?((tot/totPrev-1)*100):null, qChg=totQtyPrev>0?((totQty/totQtyPrev-1)*100):null;
+  var chgTxt=function(c){ return c==null?'':' <b style="color:'+(c>=0?'#16a34a':'#dc2626')+'">'+(c>=0?'▲':'▼')+Math.abs(c).toFixed(0)+'%</b>'; };
+  var tile=function(l,v,sub){ return '<div style="flex:1;min-width:112px;background:#f8fafc;border-radius:11px;padding:11px 14px"><div style="font-size:10px;color:#94a3b8;font-weight:600">'+l+'</div><div style="font-size:19px;font-weight:800;color:#111827;line-height:1.2;margin-top:1px">'+v+'</div>'+(sub?'<div style="font-size:10px;color:#94a3b8;margin-top:1px">'+sub+'</div>':'')+'</div>'; };
+  var head='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'
+    +tile('총 매출',_ovFmt(tot),'전년 '+_ovFmt(totPrev)+chgTxt(totChg))
+    +(showQty?tile('총 판매',totQty.toLocaleString()+'대','전년 '+totQtyPrev.toLocaleString()+'대'+chgTxt(qChg)):'')
+    +tile('취급 품목',rows.length+'종','')
+    +(showQty&&totQty?tile('평균 단가',_ovFmt(Math.round(tot/totQty))+'/대',''):'')
+    +'</div>';
+  var th=function(t,al){ return '<th style="text-align:'+(al||'right')+';padding:7px 5px;font-weight:700;white-space:nowrap">'+t+'</th>'; };
+  head+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'
+    +'<thead><tr style="color:#94a3b8;font-size:10.5px;border-bottom:2px solid #e5e7eb">'
+    +th('#','left')+th('제품','left')+(showQty?th('대수'):'')+th('매출')+(showQty?th('평균단가'):'')+th('전년比')+'<th style="text-align:left;padding:7px 5px;width:88px">비중</th></tr></thead><tbody>';
+  head+=rows.map(function(e,i){ var p=e[0],v=e[1],pv=pr[p]||0,chg=pv>0?((v/pv-1)*100):null,qn=q26[p]||0,qp=q25[p]||0,pa=String(p).replace(/"/g,'&quot;');
+    var cat2=catFn?catFn(p):opts.cat;
+    var chgS=chg==null?'<span style="color:#cbd5e1;font-size:10px">신규</span>':'<span style="color:'+(chg>=0?'#16a34a':'#dc2626')+';font-weight:700">'+(chg>=0?'▲':'▼')+Math.abs(chg).toFixed(0)+'%</span>';
+    var pct=(v/tot*100);
+    return '<tr data-p="'+pa+'" data-c="'+cat2+'" onclick="openOvDetail(this.getAttribute(\'data-c\'),this.getAttribute(\'data-p\'))" style="cursor:pointer;border-bottom:1px solid #f3f4f6" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'">'
+      +'<td style="padding:8px 5px;color:#9ca3af">'+(i+1)+'</td>'
+      +'<td style="font-weight:600">'+_ovEsc(p)+(cat2?' <span style="font-size:9px;color:#94a3b8">'+(cat2==='cons'?'소모품':'제품')+'</span>':'')+' <i class="bi bi-search" style="font-size:8px;color:#cbd5e1"></i></td>'
+      +(showQty?'<td style="text-align:right;font-weight:700">'+(qn?qn.toLocaleString()+'대':'-')+(qp?'<div style="font-size:9px;color:#94a3b8;font-weight:400">전년 '+qp+'대</div>':'')+'</td>':'')
+      +'<td style="text-align:right;font-weight:700;color:'+accent+'">'+_ovFmt(v)+'<div style="font-size:9px;color:#94a3b8;font-weight:400">비중 '+pct.toFixed(1)+'%</div></td>'
+      +(showQty?'<td style="text-align:right;color:#64748b">'+(qn?_ovFmt(Math.round(v/qn)):'-')+'</td>':'')
+      +'<td style="text-align:right">'+chgS+(pv>0?'<div style="font-size:9px;color:#94a3b8">전년 '+_ovFmt(pv)+'</div>':'')+'</td>'
+      +'<td style="padding:8px 5px"><div style="background:#f3f4f6;border-radius:3px;height:6px"><div style="width:'+(v/mx*100).toFixed(1)+'%;height:100%;background:'+accent+';border-radius:3px"></div></div></td>'
+    +'</tr>';
+  }).join('')+'</tbody></table></div>';
+  return head;
+}
 function openOvCategory(cat){
   if(cat==='all'){
-    const merge=(o)=>o||{}; const cur={}, pr={};
-    ['dev','cons'].forEach(function(k){ const s=(k==='dev'?DEVICE:CONS); const c2=merge(s.products2026), p2=merge(s.products2025);
+    var cur={}, pr={};
+    ['dev','cons'].forEach(function(k){ var s=(k==='dev'?DEVICE:CONS), c2=s.products2026||{}, p2=s.products2025||{};
       Object.keys(c2).forEach(function(n){ cur[n]=(cur[n]||0)+c2[n]; }); Object.keys(p2).forEach(function(n){ pr[n]=(pr[n]||0)+p2[n]; }); });
-    const rows=Object.entries(cur).sort((a,b)=>b[1]-a[1]); const accent='#111827', catLbl='전체 매출 구성', mx=rows.length?rows[0][1]:1, tot=rows.reduce((s,[,v])=>s+v,0);
-    const body='<div style="font-size:12px;color:#6b7280;margin-bottom:10px">제품+소모품 전체 '+rows.length+'개 품목 · 합계 '+_ovFmt(tot)+' <span style="color:#cbd5e1">·</span> 품목 클릭 시 상세</div>'
-      +rows.map(function(e,i){ const p=e[0], v=e[1], pv=pr[p]||0, chg=pv>0?((v/pv-1)*100):null, pa=String(p).replace(/"/g,'&quot;'); const isCons2=(CONS.products2026||{})[p]!=null; const cat2=isCons2?'cons':'dev';
-        return '<div data-p="'+pa+'" data-c="'+cat2+'" onclick="openOvDetail(this.getAttribute(\'data-c\'),this.getAttribute(\'data-p\'))" title="클릭하면 상세" style="padding:6px 4px;border-bottom:1px solid #f3f4f6;cursor:pointer;border-radius:6px" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span style="font-size:12px;font-weight:600">'+(i+1)+'. '+_ovEsc(p)+' <span style="font-size:9px;color:#94a3b8">'+(isCons2?'소모품':'제품')+'</span></span><div style="display:flex;gap:6px;align-items:center"><span style="font-size:12px;font-weight:700;color:'+accent+'">'+_ovFmt(v)+'</span>'+(chg!==null?'<span style="font-size:10px;color:'+(chg>=0?'#16a34a':'#dc2626')+'">'+(chg>=0?'▲':'▼')+Math.abs(chg).toFixed(0)+'%</span>':'')+'</div></div><div style="background:#f3f4f6;border-radius:3px;height:4px"><div style="width:'+(v/mx*100).toFixed(1)+'%;height:100%;background:'+accent+';border-radius:3px"></div></div></div>';
-      }).join('');
-    _ovShowModal('전체 매출 구성 (제품+소모품)', body); return;
+    var rows=Object.entries(cur).sort(function(a,b){return b[1]-a[1];});
+    var body=_ovRankModal(rows, pr, {accent:'#111827', showQty:false, catFn:function(p){ return (CONS.products2026||{})[p]!=null?'cons':'dev'; }});
+    _ovShowModal('전체 매출 구성 <span style="font-size:11px;font-weight:400;color:#94a3b8">· 제품+소모품 · 품목 클릭 시 상세</span>', body); return;
   }
-  const isCons=cat==='cons', src=isCons?CONS:DEVICE, accent=isCons?'#2563eb':'#16a34a', catLbl=isCons?'소모품':'제품';
-  const cur=src.products2026||{}, pr=src.products2025||{};
-  const rows=Object.entries(cur).sort((a,b)=>b[1]-a[1]);
-  const mx=rows.length?rows[0][1]:1, tot=rows.reduce((s,[,v])=>s+v,0);
-  const body='<div style="font-size:12px;color:#6b7280;margin-bottom:10px">전체 '+rows.length+'개 품목 · 합계 '+_ovFmt(tot)+' <span style="color:#cbd5e1">·</span> 품목 클릭 시 상세</div>'
-    +rows.map(([p,v],i)=>{ const pv=pr[p]||0, chg=pv>0?((v/pv-1)*100):null; const pa=String(p).replace(/"/g,'&quot;');
-      return '<div data-p="'+pa+'" onclick="openOvDetail(\''+cat+'\',this.getAttribute(\'data-p\'))" title="클릭하면 상세" style="padding:6px 4px;border-bottom:1px solid #f3f4f6;cursor:pointer;border-radius:6px" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span style="font-size:12px;font-weight:600">'+(i+1)+'. '+_ovEsc(p)+'</span><div style="display:flex;gap:6px;align-items:center"><span style="font-size:12px;font-weight:700;color:'+accent+'">'+_ovFmt(v)+'</span>'+(chg!==null?'<span style="font-size:10px;color:'+(chg>=0?'#16a34a':'#dc2626')+'">'+(chg>=0?'▲':'▼')+Math.abs(chg).toFixed(0)+'%</span>':'')+'</div></div><div style="background:#f3f4f6;border-radius:3px;height:4px"><div style="width:'+(v/mx*100).toFixed(1)+'%;height:100%;background:'+accent+';border-radius:3px"></div></div></div>';
-    }).join('');
-  _ovShowModal(catLbl+' 제품별 전체 랭킹', body);
+  var isCons=cat==='cons', src=isCons?CONS:DEVICE, accent=isCons?'#2563eb':'#16a34a', catLbl=isCons?'소모품':'제품';
+  var cur=src.products2026||{}, pr=src.products2025||{};
+  var rows=Object.entries(cur).sort(function(a,b){return b[1]-a[1];});
+  var body=_ovRankModal(rows, pr, {accent:accent, cat:cat, showQty:!isCons, q26:(isCons?{}:(DEVICE.prodQty2026||{})), q25:(isCons?{}:(DEVICE.prodQty2025||{}))});
+  _ovShowModal(catLbl+'별 전체 랭킹 <span style="font-size:11px;font-weight:400;color:#94a3b8">· 매출·대수·전년비 · 품목 클릭 시 상세</span>', body);
 }
 
 // ── 예정분(회계 미반영 매출) ──────────────────────────────────────────
