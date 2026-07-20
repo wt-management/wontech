@@ -5950,6 +5950,7 @@ function _cduDrillBand(i){ var b=_CDU_BANDS[i]; if(!b)return; _cduDrill('시술 
 function _cduDrillEvent(){ _cduDrill('이벤트 진행 병원', _cduRepVs.filter(v=>String(v.event||'').toUpperCase()==='O')); }
 function _cduDrillReels(){ _cduDrill('릴스 촬영 병원', _cduRepVs.filter(v=>String(v.reels||'').toUpperCase()==='O')); }
 function _cduDrillAll(){ _cduDrill('전체 방문 병원', _cduRepVs.slice()); }
+function _cduDrillWeek(w){ _cduDrill(w+' 방문 상세', _cduRepVs.filter(function(v){ return _cduWeekLabel(v.date)===w; })); }
 function _cduDrillChurn(){ _cduDrill('선제 감지 · 집중 대응 병원', _cduRepVs.filter(v=>(v.churnRisk||'').trim())); }
 var _cduNewSet={};
 function _cduDrillNew(){ _cduDrill('신규 개척 방문 (기간 내 첫 방문)', _cduRepVs.filter(v=>_cduNewSet[(v.custName||'').trim()])); }
@@ -6154,13 +6155,14 @@ function renderCDUReport(vs){
       +(v.sales?'<span style="font-size:10px;color:#94a3b8;flex-shrink:0">'+_cduEsc(v.sales)+'</span>':'')+'</div>'; }).join('')
     : '<div class="text-muted" style="font-size:12px">감지된 이탈 리스크 없음 — 전 담당처 안정 관리 중 👍</div>';
   // 주차별 추이
-  var trendHtml = weeks.length? weeks.map(function(w){ var a=wk[w]; var ap=a.pn?Math.round(a.psum/a.pn):0; var isF=(w===focusW);
-      return '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;'+(isF?'background:#eff6ff;border-radius:6px;padding-left:6px;padding-right:6px':'')+'">'
+  var trendHtml = weeks.length? weeks.map(function(w){ var a=wk[w]; var ap=a.pn?Math.round(a.psum/a.pn):0; var isF=(w===focusW); var wq=_cduEsc(w).replace(/\x27/g,"\\x27");
+      return '<div onclick="_cduDrillWeek(\''+wq+'\')" title="클릭하면 이 주 방문 상세" style="display:flex;align-items:center;gap:10px;padding:6px;border-radius:6px;cursor:pointer;'+(isF?'background:#eff6ff':'')+'" onmouseover="this.style.background=\'#f1f5f9\'" onmouseout="this.style.background=\''+(isF?'#eff6ff':'')+'\'">'
         +'<span style="font-size:12px;min-width:70px;font-weight:'+(isF?'800':'600')+';color:'+(isF?'#1d4ed8':'#334155')+'">'+_cduEsc(w)+'</span>'
         +_cduBar(a.n/maxWkN*100,'#2563eb')
-        +'<span style="font-size:12px;font-weight:700;min-width:44px;text-align:right">'+a.n+'곳</span>'
+        +'<span style="font-size:12px;font-weight:700;min-width:44px;text-align:right">'+a.n+'개처</span>'
         +'<span style="font-size:11px;color:#0891b2;min-width:74px;text-align:right">수가 '+(ap||'-')+(ap?'천':'')+'</span>'
-        +'<span style="font-size:11px;color:#7c3aed;min-width:52px;text-align:right">이벤트 '+a.ev+'</span></div>'; }).join('')
+        +'<span style="font-size:11px;color:#7c3aed;min-width:52px;text-align:right">이벤트 '+a.ev+'</span>'
+        +'<i class="bi bi-chevron-right" style="font-size:10px;color:#cbd5e1"></i></div>'; }).join('')
     : '<div class="text-muted" style="font-size:12px">주차 데이터 없음</div>';
 
   // ── 한눈에 보는 통계 스트립(흰 카드) ──
