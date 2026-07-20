@@ -19,6 +19,10 @@ function maxKey(o){ var bk=null,bv=-Infinity; for(var k in o){ if(o[k]>bv){bv=o[
 function addInto(dst,src){ for(var k in src){ dst[k]=(dst[k]||0)+src[k]; } return dst; }
 
 var FOR=/^[가-힣A-Za-z]+\s*\//, SUB=/^\s*\[/, USD=/\$\s*([\d,]+)/;
+// ── 데이터 오분류 보정(회계 원본 라벨 오류) — 사이트 딜러뷰/파트 override와 동일 ──
+var INTL_COUNTRY_FIX={'더마케이':'러시아'};  // 국내법인 라벨이나 실제 러시아 수출(간접수출) → 러시아(region_map 러시아=유럽=유럽·중아파트)
+var INTL_EXCLUDE=['에스준의원'];             // 국내 병원이 해외로 오분류 → 국내로 되돌림(해외집계 제외)
+function _intlCtryFix(nm){ for(var k in INTL_COUNTRY_FIX){ if(nm.indexOf(k)>=0) return INTL_COUNTRY_FIX[k]; } return null; }
 
 // ───────── CATMAP (제품→소모품/제품군 역매핑, 기존 cons_cache 기준) ─────────
 function buildCatMap(main,device,intl){
@@ -53,6 +57,7 @@ function transformRaw(sheets, CM){
       var dept=String(row['사용부서']==null?'':row['사용부서']);
       // 국내/해외: 거래처명 "국가/" 접두사 OR 사용부서(해외법인영업·해외CS·수출·구매확인서) — 더마케이 등 간접수출 포착
       var region=(FOR.test(cust)||dept.indexOf('해외')>=0||dept.indexOf('수출')>=0||dept.indexOf('구매확인서')>=0)?'해외':'국내';
+      for(var _ex=0;_ex<INTL_EXCLUDE.length;_ex++){ if(cust.indexOf(INTL_EXCLUDE[_ex])>=0){ region='국내'; break; } }  // 국내 병원 오분류 보정(에스준의원)
       var dt=toDt(row['승인일자']); var mo=dt?dt.getMonth()+1:null;
       var um=USD.exec(jeok); var usd=um?parseFloat(um[1].replace(/,/g,'')):0;
       out.push({'월':mo,'금액':net,'국내외':region,'구분#2':cat,'구분#4':prod,'구분#1':prod,
@@ -158,7 +163,7 @@ function aggIntl2026(rows26){
     var usd=num(r['USD']); var qty=pint(r['수량']); qty=qty>0?qty:1;
     var m=moN(r['월']); var p=(r['구분#4']||'').trim(); var cat=(r['구분#2']||'').trim();
     var nm=(r['거래처명']||'').trim(); var sl=(r['담당자']||'').trim();
-    var co=(!nm)?'기타':(FOR.test(nm)?(nm.match(/^([가-힣a-zA-Z]+)\s*\//)[1]):'국내법인');
+    var co=(!nm)?'기타':(_intlCtryFix(nm)||(FOR.test(nm)?(nm.match(/^([가-힣a-zA-Z]+)\s*\//)[1]):'국내법인'));
     if(m){ mo[m]=(mo[m]||0)+amt; mu[m]=(mu[m]||0)+usd; mq[m]=(mq[m]||0)+qty;
       if(usd){ _muK[m]=(_muK[m]||0)+amt; _muU[m]=(_muU[m]||0)+usd; } else { _muMiss[m]=(_muMiss[m]||0)+amt; } }
     if(p){ pr[p]=(pr[p]||0)+amt; pq[p]=(pq[p]||0)+qty;
