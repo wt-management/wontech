@@ -1699,7 +1699,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 </div></div></div>
 
 <!-- CDU 주간 결과보고서 모달 -->
-<div class="modal fade" id="cduWkModal" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content">
+<div class="modal fade" id="cduWkModal" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable" style="max-width:1360px"><div class="modal-content">
   <div class="modal-header">
     <h5 class="modal-title"><i class="bi bi-file-earmark-text me-1" style="color:#7c3aed"></i>CDU 주간 결과보고 <span class="text-muted" style="font-size:11px;font-weight:400">· 완료 방문 기준</span></h5>
     <div class="d-flex align-items-center flex-wrap" style="gap:8px">
@@ -1710,7 +1710,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <button type="button" class="btn-close ms-1" data-bs-dismiss="modal"></button>
     </div>
   </div>
-  <div class="modal-body" style="background:#f1f5f9"><div id="cduwk-sheet" style="background:#fff;padding:22px 26px;box-shadow:0 2px 10px rgba(15,23,42,.1)"></div></div>
+  <div class="modal-body" style="background:#eef2f6;padding:18px"><div id="cduwk-sheet" style="background:#fff;padding:30px 38px;border-radius:6px;box-shadow:0 4px 18px rgba(15,23,42,.08)"></div></div>
 </div></div></div>
 
 <!-- 일정 정보(읽기전용) 팝업 -->
@@ -6635,20 +6635,20 @@ function renderCDUWeekly(){
   var li=(t)=>'<div style="padding:2px 0">'+t+'</div>';
   var nm3=a=>a.slice(0,3).map(_cduEsc).join(', ')+(a.length>3?' 외 '+(a.length-3):'');
   var anaBox='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px;margin-bottom:12px">'
-    +'<div style="border:1px solid #e5e7eb;border-radius:9px;padding:9px 12px;font-size:11.5px"><div style="font-weight:800;color:#334155;margin-bottom:3px">방문 병원 구성 — 타깃을 제대로 갔는가</div>'
+    +'<div style="background:#f8fafc;border-radius:10px;padding:12px 15px;font-size:11.5px;line-height:1.7"><div style="font-weight:800;color:#0f172a;margin-bottom:4px;font-size:12px"><i class="bi bi-bullseye me-1" style="color:#dc2626"></i>방문 병원 구성 — 타깃을 제대로 갔는가</div>'
       +li('<b style="color:#dc2626">휴면(올해 팁 0)</b> '+cls.dor.length+'개처'+(cls.dor.length?' · '+nm3(cls.dor):''))
       +li('<b style="color:#ea580c">급감(작년比 60%↓)</b> '+cls.drop.length+'개처'+(cls.drop.length?' · '+nm3(cls.drop):''))
       +li('<b style="color:#16a34a">정상 구매</b> '+cls.ok.length+'개처 · <b style="color:#94a3b8">매출이력 없음</b> '+cls.non.length+'개처')
       +li('방문처 팁매출 올해 <b>'+_cduWon(visitedRev)+'</b> · 작년 동기 '+_cduWon(prevTot)+(prevTot>0?' <b style="color:'+(visitedRev>=prevTot?'#16a34a':'#dc2626')+'">'+(visitedRev>=prevTot?'▲':'▼')+Math.abs(Math.round((visitedRev/prevTot-1)*100))+'%</b>':''))
     +'</div>'
-    +'<div style="border:1px solid #e5e7eb;border-radius:9px;padding:9px 12px;font-size:11.5px"><div style="font-weight:800;color:#334155;margin-bottom:3px">수집 정보 · 시사점</div>'
+    +'<div style="background:#f8fafc;border-radius:10px;padding:12px 15px;font-size:11.5px;line-height:1.7"><div style="font-weight:800;color:#0f172a;margin-bottom:4px;font-size:12px"><i class="bi bi-clipboard-data me-1" style="color:#7c3aed"></i>수집 정보 · 시사점</div>'
       +li('미구매 사유 '+rsnArr.reduce((s,x)=>s+x[1],0)+'건'+(rsnArr.length?' — '+rsnArr.map(x=>_cduEsc(x[0])+' '+x[1]).join(' · '):' <span style="color:#dc2626">(수집 필요)</span>'))
       +li('경쟁 노출'+(cmpArr.length?' — '+cmpArr.map(x=>_cduEsc(x[0])+' '+x[1]+'건').join(' · '):' 없음'))
       +li('수가 — 평균 '+(avg?avg+'천':'-')+(prices.length?' · 저가(350↓) '+lowW+'개처(인상 제안 여지)':''))
       +li('대응 예정 '+acts.length+'건'+(acts.length?' — '+_cduEsc(acts.slice(0,2).join(' / ')).slice(0,90)+(acts.length>2?' 외':''):''))
     +'</div>'
   +'</div>';
-  var chip=(l,v,c)=>'<div style="flex:1;min-width:96px;border:1px solid #e5e7eb;border-radius:9px;padding:7px 10px;text-align:center"><div style="font-size:9.5px;color:#94a3b8">'+l+'</div><div style="font-size:15px;font-weight:800;color:'+(c||'#111827')+'">'+v+'</div></div>';
+  var chip=(l,v,c)=>'<div style="flex:1;min-width:108px;background:#f8fafc;border-radius:10px;padding:10px 12px;text-align:center"><div style="font-size:10px;color:#94a3b8;font-weight:600">'+l+'</div><div style="font-size:16.5px;font-weight:800;color:'+(c||'#111827')+';margin-top:1px">'+v+'</div></div>';
   var WD=['일','월','화','수','목','금','토'];
   var _dash='<span style="color:#d1d5db">-</span>';
   var rows=vs.map(function(v,i){ var d=String(v.date||'').slice(0,10); var rev=_cduRev((v.custName||'').trim()).y2026||0;
@@ -6663,10 +6663,11 @@ function renderCDUWeekly(){
       +'<td style="color:#334155">'+(_cduEsc(String(v.feedback||'').slice(0,200))||_dash)+'</td>'
     +'</tr>'; }).join('');
   el.innerHTML=
-    '<style>#cduwk-sheet td{padding:7px 6px;border-bottom:1px solid #eef2f7;word-break:break-all;line-height:1.5}</style>'
-    +'<div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #111827;padding-bottom:8px">'
-      +'<div style="font-size:19px;font-weight:900">CDU 주간 결과보고</div>'
-      +'<div style="font-size:12px;color:#64748b">'+from+' ~ '+to+' · 담당 '+reps.join(', ')+'</div>'
+    '<style>#cduwk-sheet td{padding:8px 7px;border-bottom:1px solid #f1f5f9;word-break:break-all;line-height:1.55}#cduwk-sheet th{padding:8px 7px!important;letter-spacing:.02em}#cduwk-sheet table{font-size:11.5px}</style>'
+    +'<div style="height:5px;background:#ff4500;margin:-30px -38px 22px;border-radius:6px 6px 0 0"></div>'
+    +'<div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #111827;padding-bottom:10px">'
+      +'<div style="font-size:22px;font-weight:900;letter-spacing:-.01em">CDU 주간 결과보고</div>'
+      +'<div style="font-size:12.5px;color:#64748b">'+from+' ~ '+to+' · 담당 '+reps.join(', ')+'</div>'
     +'</div>'
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">'
       +chip('방문 병원',Object.keys(hs).length+'개처')+chip('방문 건수',vs.length+'건')
@@ -6682,8 +6683,8 @@ function renderCDUWeekly(){
       +'<th style="padding:6px 4px">일자</th><th style="padding:6px;text-align:left">병원명</th><th style="padding:6px">담당</th><th style="padding:6px;text-align:right">팁매출(작년 동기比)</th><th style="padding:6px;text-align:left">주력 시술</th><th style="padding:6px">수가</th><th style="padding:6px;text-align:left">경쟁사</th><th style="padding:6px;text-align:left">피드백·결과</th></tr></thead>'
       +'<tbody style="vertical-align:top">'+rows+'</tbody></table>'
       :'<div style="text-align:center;color:#9ca3af;padding:30px 0;font-size:13px">이 주에 완료된 방문이 없습니다.</div>')
-    +(churn.length?'<div style="margin-top:12px;border-left:3px solid #dc2626;padding:7px 12px;font-size:11.5px"><b style="color:#dc2626">리스크 감지</b> · '+churn.map(v=>_cduEsc((v.custName||'')+': '+v.churnRisk)).join(' / ')+'</div>':'')
-    +(note&&note.text?'<div style="margin-top:12px;border:1px solid #e5e7eb;border-radius:8px;padding:9px 12px;font-size:12px"><b style="color:#475569">담당자 종합의견</b><div style="white-space:pre-line;margin-top:4px;color:#334155">'+_cduEsc(note.text)+'</div></div>':'');
+    +(churn.length?'<div style="margin-top:14px;background:#fef2f2;border-radius:10px;padding:10px 14px;font-size:11.5px;line-height:1.7"><b style="color:#dc2626"><i class="bi bi-exclamation-triangle-fill me-1"></i>리스크 감지</b> · '+churn.map(v=>_cduEsc((v.custName||'')+': '+v.churnRisk)).join(' / ')+'</div>':'')
+    +(note&&note.text?'<div style="margin-top:14px;background:#f8fafc;border-radius:10px;padding:12px 15px;font-size:12px;line-height:1.7"><b style="color:#0f172a"><i class="bi bi-chat-left-text me-1" style="color:#0d9488"></i>담당자 종합의견</b><div style="white-space:pre-line;margin-top:5px;color:#334155">'+_cduEsc(note.text)+'</div></div>':'');
   var cells=vs.length;
 }
 function cduWkPDF(){
