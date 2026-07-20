@@ -1076,7 +1076,19 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
             <option>딜러 경유 구매</option>
             <option>기타(피드백에 기재)</option>
           </select></div>
-        <div class="col-12"><label class="form-label" style="font-size:12px;color:#7c3aed;font-weight:700">대응 방안 <span class="text-muted" style="font-weight:400">(어떻게 매출로 연결할지)</span></label><input id="cd-action" class="form-control form-control-sm" placeholder="예: 번들 견적 제안 · 시술 교육 지원 · 8월 초 재방문"></div>
+        <div class="col-12"><label class="form-label" style="font-size:12px;color:#7c3aed;font-weight:700">대응 방안 <span class="text-muted" style="font-weight:400">(어떻게 매출로 연결할지)</span></label><select id="cd-action" class="form-select form-select-sm">
+            <option value="">미정 · 다음 방문 때 결정</option>
+            <option>번들·패키지 견적 제안</option>
+            <option>시술 교육·데모 지원</option>
+            <option>정품 팁 전환 설득(경쟁품 대체)</option>
+            <option>수가·마진 개선 컨설팅</option>
+            <option>이벤트·릴스 마케팅 지원</option>
+            <option>재고 소진 시점 재방문 예약</option>
+            <option>Keyman(실장·팀장) 관계 구축</option>
+            <option>본사 프로모션·특가 연계</option>
+            <option>원장 미팅 재시도</option>
+            <option>기타(피드백에 기재)</option>
+          </select></div>
       </div>
     </div>
     <div class="modal-footer"><button class="btn btn-outline-danger btn-sm me-auto" id="cd-del-btn" style="display:none" onclick="delCDUVisit()"><i class="bi bi-trash me-1"></i>삭제</button><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button><button class="btn btn-primary btn-sm" onclick="saveCDUVisit()">저장</button></div>
@@ -6428,7 +6440,10 @@ function openCDUVisit(id, copy){
   sv('cd-sales', v?v.sales:(typeof currentUserName==='function'?currentUserName():''));
   document.getElementById('cd-event').value=(v&&!copy)?(v.event||''):''; document.getElementById('cd-reels').value=(v&&!copy)?(v.reels||''):'';
   sv('cd-price', v?v.price:''); sv('cd-pcount', copy?'':(v?v.procCount:'')); sv('cd-stock', v?v.stock:''); sv('cd-churn', copy?'':(v?v.churnRisk:''));
-  sv('cd-reason', copy?'':(v?(v.noBuyReason||''):'')); sv('cd-action', copy?'':(v?(v.action||''):''));
+  sv('cd-reason', copy?'':(v?(v.noBuyReason||''):''));
+  (function(){ var e=document.getElementById('cd-action'); if(!e) return; var val=copy?'':(v?(v.action||''):'');
+    if(val&&![].slice.call(e.options).some(function(o){return o.value===val;})){ var o=document.createElement('option'); o.value=val; o.textContent=val; e.appendChild(o); }
+    e.value=val; })();
   document.getElementById('cd-del-btn').style.display=isNew?'none':'inline-block';
   var dl=document.getElementById('cdu-hosp-list'); if(dl&&!dl.innerHTML&&CONS.hospitals){ dl.innerHTML=Object.keys(CONS.hospitals).slice(0,800).map(n=>'<option value="'+_cduEsc(n)+'">').join(''); }
   try{ _cduHospAuto(false); }catch(e){}
