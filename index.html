@@ -6627,6 +6627,22 @@ function _cduWkHosp(name){
   var m=document.getElementById('hospitalModal');
   if(m){ document.body.appendChild(m); setTimeout(function(){ m.style.setProperty('z-index','10004','important'); var bds=document.querySelectorAll('.modal-backdrop'); var bd=bds[bds.length-1]; if(bd) bd.style.setProperty('z-index','10003','important'); },0); }
 }
+function _cduWkAna(kind){
+  var vs=window._cduWkVs||[], c=window._cduWkClsSets||{};
+  var nm=v=>(v.custName||'').trim();
+  var arr, title;
+  if(kind==='dor'){ arr=vs.filter(v=>(c.dor||[]).indexOf(nm(v))>=0); title='휴면 병원 방문 — 올해 팁매출 0'; }
+  else if(kind==='drop'){ arr=vs.filter(v=>(c.drop||[]).indexOf(nm(v))>=0); title='구매 급감 병원 방문 — 작년比 60%↓'; }
+  else if(kind==='okno'){ arr=vs.filter(v=>(c.ok||[]).indexOf(nm(v))>=0||(c.non||[]).indexOf(nm(v))>=0); title='정상 구매·매출이력 없음 방문'; }
+  else if(kind==='reason'){ arr=vs.filter(v=>(v.noBuyReason||'').trim()); title='미구매 사유 기록 방문'; }
+  else if(kind==='comp'){ arr=vs.filter(v=>(v.competitor||'').trim()); title='경쟁 노출 방문'; }
+  else if(kind==='price'){ arr=vs.filter(v=>Number(v.price)>0); title='수가 파악 방문'; }
+  else if(kind==='action'){ arr=vs.filter(v=>(v.action||'').trim()); title='대응 계획 수립 방문'; }
+  else { arr=vs.slice(); title='방문 상세'; }
+  _cduDrill(title, arr);
+  var m=document.getElementById('cduDrillModal');
+  if(m){ document.body.appendChild(m); setTimeout(function(){ m.style.setProperty('z-index','10006','important'); var bds=document.querySelectorAll('.modal-backdrop'); var bd=bds[bds.length-1]; if(bd) bd.style.setProperty('z-index','10005','important'); },0); }
+}
 function _cduWkEdit(id){
   openCDUVisit(id);
   var m=document.getElementById('cduVisitModal');
@@ -6667,20 +6683,22 @@ function renderCDUWeekly(){
   var cmpC={}; vs.forEach(function(v){ (v.competitor||'').split(/[\/,·]/).map(s=>s.trim()).filter(Boolean).forEach(c=>cmpC[c]=(cmpC[c]||0)+1); });
   var cmpArr=Object.entries(cmpC).sort((a,b)=>b[1]-a[1]).slice(0,3);
   var lowW=prices.filter(p=>p<350).length;
+  window._cduWkVs=vs; window._cduWkClsSets={dor:cls.dor.slice(),drop:cls.drop.slice(),ok:cls.ok.slice(),non:cls.non.slice()};
   var li=(t)=>'<div style="padding:2px 0">'+t+'</div>';
+  var liK=(t,kind)=>'<div onclick="_cduWkAna(\''+kind+'\')" title="클릭하면 병원 상세" style="padding:3px 4px;margin:0 -4px;border-radius:6px;cursor:pointer" onmouseover="this.style.background=\'#eef2f6\'" onmouseout="this.style.background=\'\'">'+t+' <i class="bi bi-chevron-right cduwk-np" style="font-size:8px;color:#cbd5e1"></i></div>';
   var nm3=a=>a.slice(0,3).map(_cduEsc).join(', ')+(a.length>3?' 외 '+(a.length-3):'');
   var anaBox='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px;margin-bottom:12px">'
     +'<div style="background:#f8fafc;border-radius:10px;padding:12px 15px;font-size:11.5px;line-height:1.7"><div style="font-weight:800;color:#0f172a;margin-bottom:4px;font-size:12px"><i class="bi bi-bullseye me-1" style="color:#dc2626"></i>방문 병원 구성 — 타깃을 제대로 갔는가</div>'
-      +li('<b style="color:#dc2626">휴면(올해 팁 0)</b> '+cls.dor.length+'개처'+(cls.dor.length?' · '+nm3(cls.dor):''))
-      +li('<b style="color:#ea580c">급감(작년比 60%↓)</b> '+cls.drop.length+'개처'+(cls.drop.length?' · '+nm3(cls.drop):''))
-      +li('<b style="color:#16a34a">정상 구매</b> '+cls.ok.length+'개처 · <b style="color:#94a3b8">매출이력 없음</b> '+cls.non.length+'개처')
+      +(cls.dor.length?liK('<b style="color:#dc2626">휴면(올해 팁 0)</b> '+cls.dor.length+'개처 · '+nm3(cls.dor),'dor'):li('<b style="color:#dc2626">휴면(올해 팁 0)</b> 0개처'))
+      +(cls.drop.length?liK('<b style="color:#ea580c">급감(작년比 60%↓)</b> '+cls.drop.length+'개처 · '+nm3(cls.drop),'drop'):li('<b style="color:#ea580c">급감(작년比 60%↓)</b> 0개처'))
+      +(cls.ok.length||cls.non.length?liK('<b style="color:#16a34a">정상 구매</b> '+cls.ok.length+'개처 · <b style="color:#94a3b8">매출이력 없음</b> '+cls.non.length+'개처','okno'):li('<b style="color:#16a34a">정상 구매</b> 0개처'))
       +li('방문처 팁매출 올해 <b>'+_cduWon(visitedRev)+'</b>'+(prevTot>visitedRev?' · 작년 동기 '+_cduWon(prevTot)+' → <b style="color:#d97706">회복 여지 '+_cduWon(prevTot-visitedRev)+'</b>':(prevTot>0?' · 작년 동기 '+_cduWon(prevTot)+' <b style="color:#16a34a">▲'+Math.abs(Math.round((visitedRev/prevTot-1)*100))+'%</b>':'')))
     +'</div>'
     +'<div style="background:#f8fafc;border-radius:10px;padding:12px 15px;font-size:11.5px;line-height:1.7"><div style="font-weight:800;color:#0f172a;margin-bottom:4px;font-size:12px"><i class="bi bi-clipboard-data me-1" style="color:#7c3aed"></i>수집 정보 · 시사점</div>'
-      +(rsnArr.length?li('미구매 사유 '+rsnArr.reduce((s,x)=>s+x[1],0)+'건 — '+rsnArr.map(x=>_cduEsc(x[0])+' '+x[1]).join(' · ')):'')
-      +(cmpArr.length?li('경쟁 노출 — '+cmpArr.map(x=>_cduEsc(x[0])+' '+x[1]+'건').join(' · ')):'')
-      +(prices.length?li('수가 — 평균 '+avg+'천'+(lowW?' · 저가(350↓) '+lowW+'개처(인상 제안 여지)':'')):'')
-      +(acts.length?li('대응 계획 '+acts.length+'건 — '+_cduEsc(acts.slice(0,2).join(' / ')).slice(0,90)+(acts.length>2?' 외':'')):'')
+      +(rsnArr.length?liK('미구매 사유 '+rsnArr.reduce((s,x)=>s+x[1],0)+'건 — '+rsnArr.map(x=>_cduEsc(x[0])+' '+x[1]).join(' · '),'reason'):'')
+      +(cmpArr.length?liK('경쟁 노출 — '+cmpArr.map(x=>_cduEsc(x[0])+' '+x[1]+'건').join(' · '),'comp'):'')
+      +(prices.length?liK('수가 — 평균 '+avg+'천'+(lowW?' · 저가(350↓) '+lowW+'개처(인상 제안 여지)':''),'price'):'')
+      +(acts.length?liK('대응 계획 '+acts.length+'건 — '+_cduEsc(acts.slice(0,2).join(' / ')).slice(0,90)+(acts.length>2?' 외':''),'action'):'')
       +((rsnArr.length||cmpArr.length||prices.length||acts.length)?'':li('이번 주 수집 정보를 다음 방문에서 보강 예정'))
     +'</div>'
   +'</div>';
