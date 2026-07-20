@@ -514,36 +514,35 @@ tr.lb-clk:hover td,tr.qs-clk:hover td{background:var(--surface-2)}
 @container (max-width:620px){.xr-grid{grid-template-columns:1fr}.xs-row{grid-template-columns:1fr}}
 @supports not (container-type:inline-size){@media(max-width:1400px){.xr-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.35fr)}.xr-side{grid-column:1/-1}}}
 /* 표 = 카드 */
-.xt-wrap{border:1px solid #dfe6ef;border-radius:13px;overflow:hidden;background:#fff;box-shadow:0 3px 10px rgba(22,50,79,.07);display:flex;flex-direction:column}
-.xt-wrap.cur{border-color:#c8d6e8;box-shadow:0 4px 14px rgba(22,50,79,.11)}
-.xt-cap{height:46px;flex-shrink:0;display:flex;align-items:center;gap:7px;padding:0 16px;background:linear-gradient(180deg,#ffffff,#f6f9fc);border-bottom:1px solid #e5eaf1;font-size:13px;font-weight:800;color:#182230;white-space:nowrap}
+.xt-wrap{border:1px solid #e2e6ec;border-radius:11px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
+.xt-wrap.cur{border-color:#c2d0e0}
+.xt-cap{height:44px;flex-shrink:0;display:flex;align-items:center;gap:7px;padding:0 16px;background:#fafbfc;border-bottom:1px solid #eaedf1;font-size:13px;font-weight:800;color:#182230;white-space:nowrap}
 .xt-cap b{color:#c62828}
 .xt-cap em{font-style:normal;background:#16324f;color:#fff;font-size:9.5px;font-weight:700;padding:2px 9px;border-radius:9px;margin-left:2px}
 .xt-cap i.dn{font-style:normal;background:#eef2f7;color:#5b6b7f;font-size:9.5px;font-weight:700;padding:2px 9px;border-radius:9px;margin-left:2px}
 .xt{width:100%;border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-nums}
-.xt th{background:linear-gradient(180deg,#1d3c60,#122b47);border:0;color:#fff;font-weight:700;padding:0 10px;height:44px;vertical-align:middle;text-align:center;line-height:1.35;font-size:11px;letter-spacing:.02em}
-.xt th+th{box-shadow:inset 1px 0 rgba(255,255,255,.14)}
-.xt td{border:0;border-bottom:1px solid #eef2f7;padding:0 12px;height:31px;text-align:right;color:#26313f;background:#fff;font-size:11.5px}
-.xt td+td{box-shadow:inset 1px 0 #f2f5fa}
+.xt th{background:#16324f;border:0;color:#fff;font-weight:700;padding:0 10px;height:44px;vertical-align:middle;text-align:center;line-height:1.35;font-size:11px;letter-spacing:.02em}
+.xt td{border:0;border-bottom:1px solid #e9edf2;padding:0 12px;height:33px;text-align:right;color:#26313f;background:#fff;font-size:11.5px}
+
 .xt th:first-child,.xt td:first-child{width:106px;min-width:106px}
 .xt td:first-child{text-align:center;color:#5b6b7f}
-.xt tbody tr:nth-child(even) td{background:#fafcfe}
-.xt tbody tr:hover td{background:#f3f7fc}
-.xt tbody tr.sub td{background:#eaf1f8;font-weight:700;color:#16324f;border-bottom:1px solid #dbe5f0}
+
+.xt tbody tr:hover td{background:#f7f9fb}
+.xt tbody tr.sub td{background:#eef3f8;font-weight:700;color:#16324f}
 .xt tbody tr.tot td{background:#16324f;color:#fff;font-weight:800;font-size:12px;height:36px;border-bottom:0}
-.xt tbody tr.prov td{background:#fff3c4}
+.xt tbody tr.prov td{background:#fdf6e0}
 .xt tr.prov i{font-style:normal;font-size:9px;color:#9a6b00;font-weight:800;margin-left:3px}
 .xt tbody tr.fut td{color:#c9d2dd}
 .xt tbody tr.res td{font-weight:800;background:#fff}
 .xt tbody tr.res td:last-child{color:#c62828}
-.xt tbody tr.res.short td{background:#ffe45e;color:#5b4a00}
-.xt tbody tr.res.short td:last-child{color:#a03a00}
+.xt tbody tr.res.short td{background:#f6ecc7;color:#7a5b00}
+.xt tbody tr.res.short td:last-child{color:#b3450a}
 .xt .ex-up{color:#c62828}.xt .ex-down{color:#1565c0}
 /* 우측: 카드 + 차트(잔여 높이 자동 분배 → 표 하단과 정렬) */
 .xr-side{display:flex;flex-direction:column;gap:12px}
 .xs-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
 .xs-row.charts{flex:1;align-items:stretch;min-height:0}
-.xs-card{background:#fff;border:1px solid #dfe6ef;border-radius:13px;padding:12px 14px;margin:0;box-shadow:0 3px 10px rgba(22,50,79,.07);min-width:0;overflow:hidden}
+.xs-card{background:#fff;border:1px solid #e2e6ec;border-radius:11px;padding:13px 15px;margin:0;min-width:0;overflow:hidden}
 .xs-card.chart{display:flex;flex-direction:column;min-height:0}
 .xs-ct{font-size:12px;font-weight:800;color:#16324f;padding-bottom:9px;margin-bottom:4px;border-bottom:2px solid #16324f;flex-shrink:0}
 .xs-ct span{display:block;font-size:9.5px;font-weight:500;color:#8a97a8;margin-top:2px;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -3099,6 +3098,9 @@ function _exData(){
   return {cur:cur,prev:prev,elapsed:elapsed,remain:remain,needAvg:needAvg,kita:kita,kitaExp:kitaExp,
     yearly:{labels:labels,acc:acc,exp:exp,expLabels:expLabels,expVals:expVals},updatedAt:(INTL&&INTL.updatedAt)||''};
 }
+/* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
+/* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
+/* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
