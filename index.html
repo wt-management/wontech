@@ -3433,7 +3433,7 @@ function renderPending() {
     return '<tr style="'+dim+'"><td style="padding:8px 12px;white-space:nowrap">'+(p.expected_date||'')+'</td>'
       +'<td>'+catBadge+'</td>'
       +'<td>'+(p.product?esc(p.product):'<span class="text-muted">-</span>')+'</td>'
-      +'<td>'+(p.hospital?esc(p.hospital):'<span class="text-muted">-</span>')+'</td>'
+      +'<td>'+(p.hospital?'<span onclick="showHospitalDetail(\''+String(p.hospital).replace(/'/g,"\\'")+'\')" style="cursor:pointer;font-weight:600;color:#0f172a" title="병원 상세">'+esc(p.hospital)+'</span>':'<span class="text-muted">-</span>')+'</td>'
       +'<td style="text-align:right;font-weight:600;white-space:nowrap">'+_fmtPW(p.amount)+'</td>'
       +'<td style="text-align:center;color:#6b7280">'+(p.qty?Number(p.qty).toLocaleString():'-')+'</td>'
       +'<td style="text-align:center">'+statusBadge+'</td>'
@@ -3763,7 +3763,7 @@ function renderDashboard() {
   const _todayStr=_schTodayStr();
   const _todaySched=(DB.d.logs||[]).filter(l=>l.kind==='schedule'&&l.date===_todayStr).length;
   document.getElementById('dash-quick-badges').innerHTML=`
-    <div class="dash-badge"><i class="bi bi-kanban" style="color:#2563eb"></i>딜 ${activePipe.length}건 진행중</div>
+    <div class="dash-badge" onclick="showPage('sales')" style="cursor:pointer"><i class="bi bi-kanban" style="color:#2563eb"></i>딜 ${activePipe.length}건 진행중</div>
     <div class="dash-badge" style="cursor:pointer;border-color:#bfdbfe;color:#1d4ed8" onclick="showPage('schedule')" title="일정 페이지로 이동"><i class="bi bi-calendar-week" style="color:#2563eb"></i>오늘 일정 ${_todaySched}건</div>
     ${overdueActs.length?`<div class="dash-badge" style="cursor:pointer;border-color:#fecaca;color:#dc2626" onclick="_showOverdue()" title="지연된 후속조치 목록 보기"><i class="bi bi-exclamation-circle-fill" style="color:#dc2626"></i>지연 ${overdueActs.length}건</div>`:''}
   `;
@@ -3851,7 +3851,7 @@ function renderDashboard() {
   const stageAmts=STAGES.map(s=>({stage:s,amt:DB.d.pipeline.filter(d=>d.stage===s).reduce((t,d)=>t+Number(d.amount||0),0),cnt:DB.d.pipeline.filter(d=>d.stage===s).length}));
   const maxAmt2=Math.max(...stageAmts.map(s=>s.amt),1);
   funnelEl.innerHTML=stageAmts.map(s=>`
-    <div class="funnel-row">
+    <div class="funnel-row" onclick="showPage('sales');setTimeout(function(){try{setPipeChip('${s.stage}',document.querySelector('#pipe-stage-chips .pipe-chip'))}catch(e){}},60)" style="cursor:pointer" title="${s.stage} 딜 보기">
       <div class="funnel-label" style="font-size:11px">${s.stage}</div>
       <div class="funnel-bar-wrap">
         <div class="funnel-bar" style="width:${Math.max(s.amt/maxAmt2*100,s.cnt?2:0)}%;background:${SC[s.stage]||'#adb5bd'}">${s.cnt?s.cnt+'건':''}</div>
@@ -3903,11 +3903,14 @@ function renderDashboard() {
   document.getElementById('warranty-list').innerHTML=expiring.length?expiring.slice(0,8).map(e=>{
     const days=Math.ceil((new Date(e.warrantyEnd)-now)/864e5);
     const c=days<=7?'#dc2626':days<=14?'#ea580c':'#f59e0b';
-    return`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f3f4f6;font-size:12px">
+    return`<div onclick="showHospitalDetail('${String(e.custName||'').replace(/'/g,"\\'")}')" style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f3f4f6;font-size:12px;cursor:pointer" title="병원 상세" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
       <div><div style="font-weight:600">${e.custName||''}</div><div style="color:#6b7280;font-size:11px">${e.model||''} · ${e.serial||''}</div></div>
       <span style="color:${c};font-weight:700;font-size:11px;white-space:nowrap">${days}일 후</span>
     </div>`;
   }).join(''):'<div class="text-muted text-center py-3" style="font-size:13px">만료 임박 장비 없음</div>';
+
+  // KPI 카드 5종 클릭 → 수주관리(딜 상세)
+  ['kpi-confirmed','kpi-expected','kpi-total-forecast','kpi-winrate','kpi-pipe-balance'].forEach(function(id){ var el=document.getElementById(id); var card=el&&el.closest('.kpi-card'); if(card&&!card.getAttribute('onclick')){ card.setAttribute('onclick',"showPage('sales')"); card.setAttribute('title','클릭하면 수주관리로 이동'); } });
 
   // 리더보드 제거됨 — 요소 없으면 여기서 종료(현황판 렌더 끝)
   if(!document.getElementById('leaderboard')) return;
