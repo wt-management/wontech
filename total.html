@@ -3002,6 +3002,8 @@ function exPendPlanUSD(){ const r=Number(EXPORT.rate)||0; return r>0?_exPendKRW(
 // ★미반영은 실적에 넣지 않는다: 아직 수출신고 전 물량이라 얹으면 당월이 과대(26.7 실측 $711K vs 보고 $153K, +364%)됐음.
 //   회계는 신고와 누적 오차 0.7% 수준이라 자동값으로 충분. 미반영은 캡션에 참고로만 표기(exPendUSD/exPendPlanUSD).
 function exMonVal(cyc,key){ const ov=cyc.months[key]; if(ov!=null&&ov!=='') return Number(ov); const acc=exAccUSD(key); return acc!=null?acc:0; }
+// 특정 월(YYYY-MM)의 값: 어느 차수든 수기 확정값 우선 → 없으면(미확정) 회계. 해외 실적(달력연도) 합산용.
+function exMonthAny(key){ var cyc=EXPORT.cycles.find(function(c){return exCycleMonths(c.start).indexOf(key)>=0;}); if(cyc){ var ov=cyc.months[key]; if(ov!=null&&ov!=='') return Number(ov); } var acc=exAccUSD(key); return acc!=null?acc:0; }
 function exIsProv(cyc,key){ const ov=cyc.months[key]; return (ov==null||ov==='')&&key===exCurKey()&&exMonVal(cyc,key)>0; }
 function exCycleOwn(cyc){ return exCycleMonths(cyc.start).reduce((s,k)=>s+exMonVal(cyc,k),0); }
 // ★차수는 서로 독립(이월 없음). 수출의 탑은 해당 차수 기간(전년7월~당해6월) 안에서 목표액을 자체로 채워야 수상.
@@ -3073,7 +3075,7 @@ function _exData(){
   var needAvg=(cur&&remain>0)?Math.max(cur.target-cur.tot,0)/remain:0;
   var nowY=new Date().getFullYear();
   var kita=(EXPORT.kita||[]).map(function(k){ var v=Number(k.amount)||0, live=Number(k.year)===nowY;
-    if(live&&nowY===2026&&INTL.monthly_usd){ var t=0; for(var m=1;m<=12;m++) t+=Number(INTL.monthly_usd[m]||0); if(t>0) v=t; }
+    if(live&&nowY===2026){ var t=0; for(var m=1;m<=12;m++){ t+=exMonthAny('2026-'+(m<10?'0':'')+m); } if(t>0) v=t; }  // 확정월=수기 신고값, 미확정월=회계
     return {y:String(k.year),v:v,live:live}; });
   var doneCy=EXPORT.cycles.filter(function(c){return c.id!==curId;})
     .map(function(c){return {y:String(Number(c.start.split('-')[0])+1),v:exCycleOwn(c)};}).filter(function(r){return r.v>0;});
