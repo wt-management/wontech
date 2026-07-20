@@ -45,6 +45,10 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 .dash-hero-right{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
 .dash-badge{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--text-2)}
 .kpi-card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:20px 22px;height:100%;transition:box-shadow .15s,transform .15s}
+.kpi-card[onclick],.card[onclick]{cursor:pointer}
+.kpi-card[onclick]:hover,.card[onclick]:hover{box-shadow:0 6px 18px -4px rgba(37,99,235,.18);transform:translateY(-1px);border-color:#c7d2fe}
+.kpi-card[onclick]::after{content:"\F52A";font-family:"bootstrap-icons";position:absolute;top:9px;right:11px;font-size:10px;color:#cbd5e1}
+.kpi-card{position:relative}
 .kpi-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.08);transform:translateY(-1px)}
 .kpi-label{font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:10px;display:flex;align-items:center}
 .kpi-value{font-size:1.75rem;font-weight:800;color:var(--text);line-height:1;margin-bottom:6px}
@@ -3075,7 +3079,7 @@ function renderSalesOverview() {
     PV2={tot:{v:cI2+dI2,p:cP2+dP2,label:P2.label},dev:{v:dI2,p:dP2,label:P2.label},cons:{v:cI2,p:cP2,label:P2.label}};
   }
   const kpis = [
-    {dual:incPend, label:'합계 ('+periodLbl+')', icon:'bi-currency-won', col:'#111827', mainVal:fmtW(totalC), mainSub:'전년 '+fmtW(totalPrev)+' '+badge(yoy), rightVal:fmtW(totalI), pendStr:fmtW(totalPend), p2:PV2&&PV2.tot},
+    {dual:incPend, label:'합계 ('+periodLbl+')', icon:'bi-currency-won', col:'#111827', click:"openOvCategory('all')", mainVal:fmtW(totalC), mainSub:'전년 '+fmtW(totalPrev)+' '+badge(yoy), rightVal:fmtW(totalI), pendStr:fmtW(totalPend), p2:PV2&&PV2.tot},
     {dual:incPend, label:'제품', icon:'bi-box-seam', col:'#16a34a', click:"openOvCategory('dev')", mainVal:fmtW(devYtdC), mainSub:'전년 '+fmtW(devPrev)+' '+badge(devYoy), rightVal:fmtW(devYtdI), pendStr:fmtW(devPendYtd), p2:PV2&&PV2.dev},
     {dual:incPend, label:'소모품', icon:'bi-capsule', col:'#2563eb', click:"openOvCategory('cons')", mainVal:fmtW(consYtdC), mainSub:'전년 '+fmtW(consPrev)+' '+badge(consYoy), rightVal:fmtW(consYtdI), pendStr:fmtW(consPendYtd), p2:PV2&&PV2.cons},
   ];
@@ -3274,6 +3278,17 @@ function openOvMonth(month, year){
 }
 // KPI(소모품/제품 YTD) 클릭 → 전체 제품 랭킹
 function openOvCategory(cat){
+  if(cat==='all'){
+    const merge=(o)=>o||{}; const cur={}, pr={};
+    ['dev','cons'].forEach(function(k){ const s=(k==='dev'?DEVICE:CONS); const c2=merge(s.products2026), p2=merge(s.products2025);
+      Object.keys(c2).forEach(function(n){ cur[n]=(cur[n]||0)+c2[n]; }); Object.keys(p2).forEach(function(n){ pr[n]=(pr[n]||0)+p2[n]; }); });
+    const rows=Object.entries(cur).sort((a,b)=>b[1]-a[1]); const accent='#111827', catLbl='전체 매출 구성', mx=rows.length?rows[0][1]:1, tot=rows.reduce((s,[,v])=>s+v,0);
+    const body='<div style="font-size:12px;color:#6b7280;margin-bottom:10px">제품+소모품 전체 '+rows.length+'개 품목 · 합계 '+_ovFmt(tot)+' <span style="color:#cbd5e1">·</span> 품목 클릭 시 상세</div>'
+      +rows.map(function(e,i){ const p=e[0], v=e[1], pv=pr[p]||0, chg=pv>0?((v/pv-1)*100):null, pa=String(p).replace(/"/g,'&quot;'); const isCons2=(CONS.products2026||{})[p]!=null; const cat2=isCons2?'cons':'dev';
+        return '<div data-p="'+pa+'" data-c="'+cat2+'" onclick="openOvDetail(this.getAttribute(\'data-c\'),this.getAttribute(\'data-p\'))" title="클릭하면 상세" style="padding:6px 4px;border-bottom:1px solid #f3f4f6;cursor:pointer;border-radius:6px" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span style="font-size:12px;font-weight:600">'+(i+1)+'. '+_ovEsc(p)+' <span style="font-size:9px;color:#94a3b8">'+(isCons2?'소모품':'제품')+'</span></span><div style="display:flex;gap:6px;align-items:center"><span style="font-size:12px;font-weight:700;color:'+accent+'">'+_ovFmt(v)+'</span>'+(chg!==null?'<span style="font-size:10px;color:'+(chg>=0?'#16a34a':'#dc2626')+'">'+(chg>=0?'▲':'▼')+Math.abs(chg).toFixed(0)+'%</span>':'')+'</div></div><div style="background:#f3f4f6;border-radius:3px;height:4px"><div style="width:'+(v/mx*100).toFixed(1)+'%;height:100%;background:'+accent+';border-radius:3px"></div></div></div>';
+      }).join('');
+    _ovShowModal('전체 매출 구성 (제품+소모품)', body); return;
+  }
   const isCons=cat==='cons', src=isCons?CONS:DEVICE, accent=isCons?'#2563eb':'#16a34a', catLbl=isCons?'소모품':'제품';
   const cur=src.products2026||{}, pr=src.products2025||{};
   const rows=Object.entries(cur).sort((a,b)=>b[1]-a[1]);
@@ -9652,12 +9667,12 @@ function renderDeviceSales() {
   document.getElementById('dev-kpi').innerHTML = noData
     ? `<div class="col-12"><div class="card p-4 text-center text-muted"><i class="bi bi-cloud-upload me-2"></i>소모품 메뉴에서 Excel 업로드 후 데이터가 표시됩니다</div></div>`
     : [
-      {label:`누계 매출 (${P.label})`, val:fmtW(ytdCur), sub:(_prevFull?`전년 동기 ${fmtW(ytdPrev)}`:'연도경계 누적')+devSub2, chg:yoy, col:'#2563eb', icon:'bi-box-seam'},
+      {label:`누계 매출 (${P.label})`, val:fmtW(ytdCur), sub:(_prevFull?`전년 동기 ${fmtW(ytdPrev)}`:'연도경계 누적')+devSub2, chg:yoy, col:'#2563eb', icon:'bi-box-seam', click:"openOvCategory('dev')"},
       {label:'전년 동기', val:_prevFull?fmtW(ytdPrev):'—', sub:_prevFull?'동일 기간·전년':'전년 데이터 범위 밖', chg:null, col:'#6b7280', icon:'bi-calendar2'},
       {label:'YoY 성장률', val:yoy===null?'-':((yoy>=0?'▲':'▼')+Math.abs(yoy).toFixed(1)+'%'), sub:'전년 동기 대비', chg:null, col:yoy===null?'#6b7280':yoy>=0?'#16a34a':'#dc2626', icon:'bi-graph-up'},
-      {label:'취급 제품수', val:Object.keys(curProds).length+'종', sub:P.label, chg:null, col:'#7c3aed', icon:'bi-grid'},
-    ].map(c=>`<div class="col-6 col-md-3"><div class="kpi-card">
-      <div class="kpi-label"><i class="bi ${c.icon} me-1" style="color:${c.col}"></i>${c.label}</div>
+      {label:'취급 제품수', val:Object.keys(curProds).length+'종', sub:P.label+' · 클릭 랭킹', chg:null, col:'#7c3aed', icon:'bi-grid', click:"openOvCategory('dev')"},
+    ].map(c=>`<div class="col-6 col-md-3"><div class="kpi-card"${c.click?` onclick="${c.click}"`:''}>
+      <div class="kpi-label"><i class="bi ${c.icon} me-1" style="color:${c.col}"></i>${c.label}${c.click?' <i class="bi bi-search" style="font-size:9px;color:#cbd5e1"></i>':''}</div>
       <div class="kpi-value" style="color:${c.col};font-size:1.5rem">${c.val}</div>
       <div class="kpi-sub">${c.sub}</div>
     </div></div>`).join('');
