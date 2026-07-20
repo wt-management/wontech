@@ -531,7 +531,7 @@ tr.lb-clk:hover td,tr.qs-clk:hover td{background:var(--surface-2)}
 .xt tbody tr:hover td{background:#f3f7fc}
 .xt tbody tr.sub td{background:#eaf1f8;font-weight:700;color:#16324f;border-bottom:1px solid #dbe5f0}
 .xt tbody tr.tot td{background:#16324f;color:#fff;font-weight:800;font-size:12px;height:36px;border-bottom:0}
-.xt tbody tr.prov td,.xt tbody tr.last td{background:#fff3c4}
+.xt tbody tr.prov td{background:#fff3c4}
 .xt tr.prov i{font-style:normal;font-size:9px;color:#9a6b00;font-weight:800;margin-left:3px}
 .xt tbody tr.fut td{color:#c9d2dd}
 .xt tbody tr.res td{font-weight:800;background:#fff}
@@ -3089,9 +3089,14 @@ function _exData(){
     var cy2=EXPORT.cycles.find(function(c){return c.start===(yr-1)+'-07';});
     if(cy2){ var cs=exCycleOwn(cy2); if(cs>0) exp[li]=Math.round(cs/1e4); }
   }
+  // 수출실적 차트 전용 축: 회계축에서 첫 연도(2022) 제외 + 현재 진행 차수(2027) 추가
+  var expLabels=labels.slice(1), expVals=exp.slice(1);
+  var curC2=EXPORT.cycles.find(function(c){return c.id===curId;});
+  if(curC2){ var ct=exCycleOwn(curC2); expLabels.push((Number(curC2.start.split('-')[0])+1)+'년'); expVals.push(Math.round(ct/1e4)); }
   return {cur:cur,prev:prev,elapsed:elapsed,remain:remain,needAvg:needAvg,kita:kita,kitaExp:kitaExp,
-    yearly:{labels:labels,acc:acc,exp:exp},updatedAt:(INTL&&INTL.updatedAt)||''};
+    yearly:{labels:labels,acc:acc,exp:exp,expLabels:expLabels,expVals:expVals},updatedAt:(INTL&&INTL.updatedAt)||''};
 }
+/* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
 /* 수출의 탑 V2 렌더러 5종 — 임원보고. 의존: esc, exUsd, exUsdM, D(_exData 결과) */
@@ -3177,7 +3182,7 @@ function _exdReport(D){
       +'</div>'
       +'<div class="xs-row charts">'
         +'<div class="xs-card chart"><div class="xs-ct">회계실적 추이<span>단위: 만 $ · 회계연도</span></div>'+_exBarsMini(D.yearly.acc,D.yearly.labels,'#c98a4b')+'</div>'
-        +'<div class="xs-card chart"><div class="xs-ct">수출실적 추이<span>단위: 만 $ · 전년 7월~당해 6월</span></div>'+_exBarsMini(D.yearly.exp,D.yearly.labels,'#16324f')+'</div>'
+        +'<div class="xs-card chart"><div class="xs-ct">수출실적 추이<span>단위: 만 $ · 전년 7월~당해 6월</span></div>'+_exBarsMini(D.yearly.expVals,D.yearly.expLabels,'#16324f')+'</div>'
       +'</div>'
     +'</div></div>'
     +'<div class="xr-foot"><span>· 수기 미입력 월은 회계 USD 자동 반영(잠정)</span><span>· 미반영(선적 전) 물량은 실적에 포함하지 않음</span></div>'
@@ -3236,7 +3241,7 @@ function _exFoot3(D,side){
   var cards=card('최근 3개년 수출 실적',side?'전년 7월~당해 6월 · KITA':'무역실적 · 전년 7월~당해 6월 · KITA',D.kitaExp)
     +card('최근 3개년 해외 실적',side?'1~12월 · KITA':'해외 실적 · 1~12월 · KITA',D.kita);
   var charts='<div class="xf3-c chart"><div class="xf3-t">회계실적 추이<u>단위: 만 $</u></div>'+_exBarsMini(D.yearly.acc,D.yearly.labels,'#c98a4b')+'</div>'
-    +'<div class="xf3-c chart"><div class="xf3-t">수출실적 추이<u>단위: 만 $</u></div>'+_exBarsMini(D.yearly.exp,D.yearly.labels,'#16324f')+'</div>';
+    +'<div class="xf3-c chart"><div class="xf3-t">수출실적 추이<u>단위: 만 $</u></div>'+_exBarsMini(D.yearly.expVals,D.yearly.expLabels,'#16324f')+'</div>';
   if(side) return '<div class="xf3 side"><div class="xf3-row">'+cards+'</div><div class="xf3-row charts">'+charts+'</div></div>';
   return '<div class="xf3">'+cards+charts+'</div>';
 }
