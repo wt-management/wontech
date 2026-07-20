@@ -6680,11 +6680,18 @@ function renderCDUWeekly(){
       +'<div style="font-size:12.5px;color:#64748b">'+from+' ~ '+to+'</div>'
     +'</div>'
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">'
-      +chip('방문 병원',Object.keys(hs).length+'개처')+chip('방문 건수',vs.length+'건')
-      +chip('방문처 팁매출',_cduWon(visitedRev)+(prevTot>0?' <span style="font-size:10px;color:'+(visitedRev>=prevTot?'#16a34a':'#dc2626')+'">'+(visitedRev>=prevTot?'▲':'▼')+Math.abs(Math.round((visitedRev/prevTot-1)*100))+'%</span>':''),'#0891b2')
-      +chip('평균 수가',avg?avg+'천':'-','#7c3aed')+chip('수가 파악',prices.length+'개처','#7c3aed')
-      +chip('경쟁 수집',comp+'건','#dc2626')
-      +chip('리스크 감지',churn.length+'개처',churn.length?'#dc2626':'#9ca3af')
+      +(function(){
+        var hN=Object.keys(hs).length;
+        var rsnHosp={}; vs.forEach(function(v){ if((v.noBuyReason||'').trim()) rsnHosp[(v.custName||'').trim()]=1; });
+        var rsnHN=Object.keys(rsnHosp).length;
+        var tgtN=cls.dor.length+cls.drop.length;
+        return chip('방문 병원',hN+'개처'+(vs.length!==hN?' <span style="font-size:10px;color:#94a3b8">'+vs.length+'건</span>':''))
+          +chip('휴면·급감 공략',tgtN+'/'+hN+'개처',tgtN?'#dc2626':'#9ca3af')
+          +chip('방문처 팁매출',_cduWon(visitedRev)+(prevTot>0?' <span style="font-size:10px;color:'+(visitedRev>=prevTot?'#16a34a':'#dc2626')+'">'+(visitedRev>=prevTot?'▲':'▼')+Math.abs(Math.round((visitedRev/prevTot-1)*100))+'%</span>':''),'#0891b2')
+          +chip('미구매 사유 파악',rsnHN+'/'+hN+'개처',rsnHN?'#7c3aed':'#dc2626')
+          +chip('평균 수가',(avg?avg+'천':'-')+(lowW?' <span style="font-size:10px;color:#dc2626">저가 '+lowW+'</span>':''),'#0891b2')
+          +chip('경쟁 최다 노출',(cmpArr.length?_cduEsc(cmpArr[0][0])+' '+cmpArr[0][1]+'건':'없음'),(cmpArr.length?'#dc2626':'#9ca3af'));
+      })()
     +'</div>'
     +anaBox
     +(vs.length?'<table style="width:100%;border-collapse:collapse;font-size:11.5px;table-layout:fixed">'
