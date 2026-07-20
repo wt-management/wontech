@@ -269,7 +269,7 @@ async function handleMv(file){
     const dom=rows.filter(p=>p.region==='국내'), intl=rows.filter(p=>p.region==='해외');
     const done=rows.filter(p=>p.type==='완료'), plan=rows.filter(p=>p.type==='예정');
     const sum=a=>a.reduce((s,p)=>s+p.amount,0);
-    info.innerHTML='📎 '+file.name+' — 미반영 <b>'+rows.length+'건 '+e8(sum(rows))+'억</b> (완료·회계미반영 '+done.length+'건 '+e8(sum(done))+'억 · 예정 '+plan.length+'건 '+e8(sum(plan))+'억 / 국내 '+dom.length+'·해외 '+intl.length+'). 확정 시 ilbo_pending 교체.';
+    info.innerHTML='📎 '+String(file.name).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c];})+' — 미반영 <b>'+rows.length+'건 '+e8(sum(rows))+'억</b> (완료·회계미반영 '+done.length+'건 '+e8(sum(done))+'억 · 예정 '+plan.length+'건 '+e8(sum(plan))+'억 / 국내 '+dom.length+'·해외 '+intl.length+'). 확정 시 ilbo_pending 교체.';
     log('미반영치 파싱: 완료 '+done.length+'건 '+e8(sum(done))+'억, 예정 '+plan.length+'건 '+e8(sum(plan))+'억 (국내 '+dom.length+'/해외 '+intl.length+')');
     if(BUILT) renderPreview(BUILT.summary);
   }catch(err){ _pendFromFile=null; info.innerHTML='❌ '+err.message; log('미반영치 오류: '+err.message); }
@@ -396,8 +396,8 @@ async function doWrite(){
     if(!BUILT.sp) skipped.push('Sales Portfolio(sales_portfolio) — 포트폴리오 집계 실패로 미갱신 (이전 데이터 유지)');
     if(!BUILT.ilbo) skipped.push('일일보고(ilbo_acc) — 일보 집계 실패로 미갱신 (이전 데이터 유지)');
     for(const [k,data] of writes){
-      await _sb.from('cons_cache').delete().eq('key',k);
-      const {error}=await _sb.from('cons_cache').insert({key:k,data});
+      // upsert(원자적) — delete+insert는 insert 실패 시 해당 키가 빈 채로 남아 전 사이트 데이터 유실 위험
+      const {error}=await _sb.from('cons_cache').upsert({key:k,data},{onConflict:'key'});
       if(error) throw new Error(k+' 기록 실패: '+error.message);
       log(k+' 기록 OK');
     }

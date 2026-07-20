@@ -1989,12 +1989,12 @@ function renderQuery(){
   ].map(c=>'<div class="col-6 col-md-3"><div class="kpi-card acc-card" style="padding:13px 15px;border-left-color:'+c.c+'"><div class="kpi-label">'+c.l+'</div><div class="kpi-value" style="font-size:1.2rem;color:'+c.c+'">'+c.v+'</div></div></div>').join('');
   const maxAbs=Math.max(1,...G.map(x=>Math.abs(x.d)));
   const top=G.filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,5), bot=G.filter(x=>x.d<0).sort((a,b)=>a.d-b.d).slice(0,5);
-  const drow=x=>'<div class="dl-row"><span class="dl-dot" style="background:'+_yoyCol(x.y)+'"></span><span class="dl-name">'+x.name+'</span>'+divBar(x.d,maxAbs)+'<span class="dl-d" style="color:'+_yoyCol(x.y)+'">'+fmtD(x.d)+'</span><span class="dl-sub">'+(x.y===null?'신규':arrow(x.y))+'</span></div>';
+  const drow=x=>'<div class="dl-row"><span class="dl-dot" style="background:'+_yoyCol(x.y)+'"></span><span class="dl-name">'+esc(x.name)+'</span>'+divBar(x.d,maxAbs)+'<span class="dl-d" style="color:'+_yoyCol(x.y)+'">'+fmtD(x.d)+'</span><span class="dl-sub">'+(x.y===null?'신규':arrow(x.y))+'</span></div>';
   document.getElementById('q-dual').innerHTML=dualList(top,bot,drow);
   document.getElementById('q-rows').innerHTML=G.map((x,idx)=>{
     const contrib=x.d>0?Math.round(x.d/totGrowth*100):0;
     const row='<div class="drow" onclick="qToggle('+idx+')">'+
-      '<span><span class="dl-dot" style="display:inline-block;margin-right:6px;background:'+_yoyCol(x.y)+'"></span>'+x.name+(x.tag?' <span style="font-size:10px;color:#94a3b8">'+x.tag+'</span>':'')+
+      '<span><span class="dl-dot" style="display:inline-block;margin-right:6px;background:'+_yoyCol(x.y)+'"></span>'+esc(x.name)+(x.tag?' <span style="font-size:10px;color:#94a3b8">'+x.tag+'</span>':'')+
         '<div style="display:flex;align-items:center;gap:8px;margin-top:5px">'+divBar(x.d,maxAbs)+(x.d>0?'<span style="font-size:10px;color:#94a3b8">성장기여 '+contrib+'%</span>':'')+'</div></span>'+
       '<span style="text-align:right;font-weight:700">'+fmtW(x.val)+'</span>'+
       '<span style="text-align:right;color:#64748b">'+fmtW(x.prev||0)+'</span>'+
@@ -2139,6 +2139,7 @@ function _repAcc(reps,moRef,f,t){
 function _mergeProds(dst,src){ if(!src) return; for(const k in src) dst[k]=(dst[k]||0)+Number(src[k]||0); }
 
 function miniBar(label,v,max,col){
+  label=esc(label);
   return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:12px"><span style="width:90px;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+label+'">'+label+'</span><div style="flex:1;height:7px;background:#eef2f7;border-radius:4px;overflow:hidden"><div style="width:'+(max>0?v/max*100:0).toFixed(1)+'%;height:100%;background:'+col+'"></div></div><span style="width:62px;text-align:right;font-weight:600">'+fmtW(v)+'</span></div>';
 }
 
@@ -2169,8 +2170,8 @@ function execNarr(items,unit){
   const up=arr.slice().sort((a,b)=>b.d-a.d)[0], dn=arr.slice().sort((a,b)=>a.d-b.d)[0];
   const g=x=>x.p!=null?arrow(pct(x.v,x.p)):'';
   let h='';
-  if(up&&up.d>0) h+='<b class="up">'+up.n+' '+fmtD(up.d)+(g(up)?' '+g(up):'')+'</b> 견인';
-  if(dn&&dn.d<0) h+=(h?' · ':'')+'<b class="dn">'+dn.n+' '+fmtD(dn.d)+(g(dn)?' '+g(dn):'')+'</b> 부진';
+  if(up&&up.d>0) h+='<b class="up">'+esc(up.n)+' '+fmtD(up.d)+(g(up)?' '+g(up):'')+'</b> 견인';
+  if(dn&&dn.d<0) h+=(h?' · ':'')+'<b class="dn">'+esc(dn.n)+' '+fmtD(dn.d)+(g(dn)?' '+g(dn):'')+'</b> 부진';
   return h?('<div class="exec-narr">'+h+'</div>'):'';
 }
 const _num=v=>Math.round(Number(v)||0).toLocaleString();
@@ -2293,8 +2294,8 @@ function renderUnits(){
   const ub=models.slice().sort((a,b)=>b.d-a.d)[0], uw=models.slice().sort((a,b)=>a.d-b.d)[0];
   const posU=models.filter(x=>x.d>0).reduce((s,x)=>s+x.d,0)||1;
   let un='';
-  if(ub&&ub.d>0) un+='<b class="up">'+ub.n+' +'+_num(ub.d)+'대</b> 물량 견인';
-  if(uw&&uw.d<0) un+=(un?' · ':'')+'<b class="dn">'+uw.n+' '+_num(uw.d)+'대</b> 급감';
+  if(ub&&ub.d>0) un+='<b class="up">'+esc(ub.n)+' +'+_num(ub.d)+'대</b> 물량 견인';
+  if(uw&&uw.d<0) un+=(un?' · ':'')+'<b class="dn">'+esc(uw.n)+' '+_num(uw.d)+'대</b> 급감';
   document.getElementById('units-head').innerHTML='<div class="eh-l">장비 출고 <span style="font-weight:500;color:#94a3b8">· 1~'+t+'월 누적</span></div>'+
     '<div class="eh-v">'+_num(totU)+'대 <span style="font-size:1rem">'+(pct(totU,totU25)===null?'':badge(pct(totU,totU25)))+'</span></div>'+
     '<div class="eh-l" style="color:#94a3b8;font-weight:500">전년 '+_num(totU25)+'대 · ASP '+fmtW(asp)+' '+(aspY===null?'':badge(aspY))+'</div>'+
@@ -2419,8 +2420,8 @@ function renderCustomers(){
   const risk=rows.filter(x=>x.y25>0&&(x.y26<=0||x.d<0)).sort((a,b)=>a.d-b.d); riskN=risk.length;
   let intlActive=0; const cs=INTL.countries||{}; for(const c in cs) intlActive+=(cs[c].clients||0);
   let cn='';
-  if(names[0]) cn+='<b class="up">'+names[0].nm+' '+fmtW(names[0].v)+'</b> 최대 거래처';
-  if(risk[0]) cn+=(cn?' · ':'')+'<b class="dn">'+risk[0].nm+' '+fmtD(risk[0].d)+'</b> '+(risk[0].y26<=0?'올해 미구매':'둔화');
+  if(names[0]) cn+='<b class="up">'+esc(names[0].nm)+' '+fmtW(names[0].v)+'</b> 최대 거래처';
+  if(risk[0]) cn+=(cn?' · ':'')+'<b class="dn">'+esc(risk[0].nm)+' '+fmtD(risk[0].d)+'</b> '+(risk[0].y26<=0?'올해 미구매':'둔화');
   document.getElementById('cust-head').innerHTML='<div class="eh-l">국내 거래처 <span style="font-weight:500;color:#94a3b8">· 올해 누적(연환산) vs 전년 연간</span></div>'+
     '<div class="eh-v">'+active+'개사 <span style="font-size:1rem;color:#86efac">신규 +'+nw+'</span></div>'+
     '<div class="eh-l" style="color:#94a3b8;font-weight:500">유지 '+keep+'개 · 상위10 집중도 '+conc.toFixed(0)+'% · 재구매 필요 '+riskN+'개사</div>'+

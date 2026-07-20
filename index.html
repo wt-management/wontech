@@ -3916,12 +3916,12 @@ function renderDashboard() {
   document.getElementById('action-board').innerHTML=allActions.length?allActions.map(l=>{
     const isOverdue=l.date<todayStr,isToday=l.date===todayStr;
     const dotC=isOverdue?'#dc2626':isToday?'#ea580c':'#2563eb';
-    const click=l.kind==='deal'?`openDealDrawer('${l.dealId}')`:l.kind==='sched'?`showPage('schedule');_schShowOverdueOnly()`:`showHospitalDetail('${String(l.custName||'').replace(/'/g,"\\x27")}')`;
-    return`<div onclick="${click}" style="display:flex;align-items:flex-start;gap:10px;padding:10px 16px;border-bottom:1px solid #f3f4f6;cursor:pointer" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+    const click=l.kind==='deal'?`openDealDrawer('${l.dealId}')`:l.kind==='sched'?`showPage('schedule');_schShowOverdueOnly()`:`showHospitalDetail(this.dataset.cust)`;
+    return`<div onclick="${click}" data-cust="${_escH(String(l.custName||''))}" style="display:flex;align-items:flex-start;gap:10px;padding:10px 16px;border-bottom:1px solid #f3f4f6;cursor:pointer" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
       <div style="width:8px;height:8px;border-radius:50%;background:${dotC};margin-top:5px;flex-shrink:0"></div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:12px;font-weight:600">${l.custName||''} <span style="font-weight:400;color:#6b7280">${l.sales||''}</span></div>
-        <div style="font-size:12px;color:#374151;margin-top:2px">${l.action}</div>
+        <div style="font-size:12px;font-weight:600">${_escH(l.custName)} <span style="font-weight:400;color:#6b7280">${_escH(l.sales)}</span></div>
+        <div style="font-size:12px;color:#374151;margin-top:2px">${_escH(l.action)}</div>
         <div style="font-size:11px;color:${dotC};margin-top:2px;font-weight:600">${l.date}${isOverdue?' (지연)':isToday?' (오늘)':''}</div>
       </div>
     </div>`;
@@ -3933,8 +3933,8 @@ function renderDashboard() {
   document.getElementById('warranty-list').innerHTML=expiring.length?expiring.slice(0,8).map(e=>{
     const days=Math.ceil((new Date(e.warrantyEnd)-now)/864e5);
     const c=days<=7?'#dc2626':days<=14?'#ea580c':'#f59e0b';
-    return`<div onclick="showHospitalDetail('${String(e.custName||'').replace(/'/g,"\\'")}')" style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f3f4f6;font-size:12px;cursor:pointer" title="병원 상세" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
-      <div><div style="font-weight:600">${e.custName||''}</div><div style="color:#6b7280;font-size:11px">${e.model||''} · ${e.serial||''}</div></div>
+    return`<div onclick="showHospitalDetail(this.dataset.cust)" data-cust="${_escH(String(e.custName||''))}" style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f3f4f6;font-size:12px;cursor:pointer" title="병원 상세" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+      <div><div style="font-weight:600">${_escH(e.custName)}</div><div style="color:#6b7280;font-size:11px">${_escH(e.model)} · ${_escH(e.serial)}</div></div>
       <span style="color:${c};font-weight:700;font-size:11px;white-space:nowrap">${days}일 후</span>
     </div>`;
   }).join(''):'<div class="text-muted text-center py-3" style="font-size:13px">만료 임박 장비 없음</div>';
@@ -4058,9 +4058,9 @@ function renderActionBoard() {
             ${a._diff===0?'오늘':a._diff<0?`${Math.abs(a._diff)}일<br>지연`:`D-${a._diff}`}
           </div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:600;color:${g.color}">${a.custName||''}</div>
-            <div style="font-size:12px;color:#374151;margin-top:2px">${a.nextAction||''}</div>
-            <div style="font-size:11px;color:#9ca3af;margin-top:1px">${fmtDate(a.nextDate)} · ${a.sales||''}</div>
+            <div style="font-size:13px;font-weight:600;color:${g.color}">${_escH(a.custName)}</div>
+            <div style="font-size:12px;color:#374151;margin-top:2px">${_escH(a.nextAction)}</div>
+            <div style="font-size:11px;color:#9ca3af;margin-top:1px">${fmtDate(a.nextDate)} · ${_escH(a.sales)}</div>
           </div>
           <button class="btn btn-sm" style="background:${g.color};color:#fff;font-size:11px;padding:3px 10px;border-radius:6px;flex-shrink:0" onclick='editLog("${a.id}")'>확인</button>
         </div>`).join('')}
@@ -4866,7 +4866,7 @@ function showConsDrill(prodKeys, label, noScroll) {
           const yoyC = r.yoy===null?'#9ca3af':Number(r.yoy)>=0?'#16a34a':'#dc2626';
           const safeN = r.name.replace(/"/g,'&quot;');
           return `<tr>
-            <td><span style="font-size:10px;color:#9ca3af">${i+1}. </span><span style="cursor:pointer;color:#2563eb;font-weight:600;text-decoration:underline dotted" data-name="${safeN}" onclick="showHospitalDetail(this.dataset.name)">${r.name}</span></td>
+            <td><span style="font-size:10px;color:#9ca3af">${i+1}. </span><span style="cursor:pointer;color:#2563eb;font-weight:600;text-decoration:underline dotted" data-name="${safeN}" onclick="showHospitalDetail(this.dataset.name)">${_escH(r.name)}</span></td>
             <td class="text-end" style="color:#6b7280">${fmtA(r.v25)}</td>
             <td class="text-end fw-bold">${fmtA(r.v26)}</td>
             <td class="text-end fw-bold" style="color:${yoyC}">${r.yoy!==null?(Number(r.yoy)>=0?'▲':'▼')+Math.abs(r.yoy)+'%':'-'}</td>
@@ -5021,7 +5021,7 @@ function showGradeDrill(g) {
     return`<div style="display:grid;grid-template-columns:1.8fr 0.7fr 0.7fr 0.7fr 0.6fr 0.6fr 1.1fr;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f3f4f6;font-size:11px">
       <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
         <span style="font-size:10px;color:#9ca3af;margin-right:3px">${i+1}.</span>
-        <span style="cursor:pointer;color:#2563eb;font-weight:600;text-decoration:underline dotted" data-name="${safeN}" onclick="showHospitalDetail(this.dataset.name)">${name}</span>
+        <span style="cursor:pointer;color:#2563eb;font-weight:600;text-decoration:underline dotted" data-name="${safeN}" onclick="showHospitalDetail(this.dataset.name)">${_escH(name)}</span>
       </div>
       <div class="text-end" style="color:#9ca3af">${fmtA(full25)}</div>
       <div class="text-end" style="color:#6b7280">${fmtA(same25)}</div>
@@ -7577,7 +7577,7 @@ function showPerfDrill(type, label, filter) {
         <td>${l.sales||'-'}</td>
         <td style="color:#2563eb;font-weight:600">${l.type||'-'}</td>
         <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.content||'-'}</td>
-        <td style="color:#9ca3af;font-size:11px">${l.nextAction||'-'}</td>
+        <td style="color:#9ca3af;font-size:11px">${l.nextAction?_escH(l.nextAction):'-'}</td>
       </tr>`).join('')}</tbody>
     </table>`;
   }
@@ -7885,18 +7885,18 @@ function filterEquip(){
   const el=document.getElementById('equip-list');
   if(!result.length){el.innerHTML='<tr><td colspan="8" class="text-center text-muted py-4">검색 결과 없음</td></tr>';return;}
   el.innerHTML=result.slice(0,300).map(e=>e._auto?`<tr style="background:#fffbeb">
-    <td><span class="hospital-link" onclick="showHospitalDetail('${(e.custName||'').replace(/'/g,"\\'")}')">${e.custName||''}</span></td>
-    <td><strong>${e.model||''}</strong></td>
+    <td><span class="hospital-link" data-cust="${_escH(String(e.custName||''))}" onclick="showHospitalDetail(this.dataset.cust)">${_escH(e.custName)}</span></td>
+    <td><strong>${_escH(e.model)}</strong></td>
     <td><span style="font-size:10px;font-weight:700;color:#d97706;background:#fef3c7;border-radius:4px;padding:1px 6px">회계기반 추정</span></td>
     <td>${fmtDate(e.delivDate)}</td>
     <td>${fmtDate(e.warrantyEnd)}<span style="font-size:9px;color:#cbd5e1"> (자동)</span></td>
     <td>${statusBadge(e.status)}</td>
     <td style="color:#6b7280">${_eqSalesDisp(e.sales)}</td>
-    <td style="white-space:nowrap"><button class="btn btn-outline-primary btn-sm" style="font-size:11px;padding:2px 8px" onclick="_autoEqRegister('${(e.custName||'').replace(/'/g,"\\'")}','${(e.model||'').replace(/'/g,"\\'")}','${e.delivDate||''}')" title="시리얼 등 채워 실물 장비로 등록">실물 등록</button></td>
+    <td style="white-space:nowrap"><button class="btn btn-outline-primary btn-sm" style="font-size:11px;padding:2px 8px" data-cust="${_escH(String(e.custName||''))}" data-model="${_escH(String(e.model||''))}" data-date="${_escH(String(e.delivDate||''))}" onclick="_autoEqRegister(this.dataset.cust,this.dataset.model,this.dataset.date)" title="시리얼 등 채워 실물 장비로 등록">실물 등록</button></td>
   </tr>`:`<tr>
-    <td><span class="hospital-link" onclick="showHospitalDetail('${(e.custName||'').replace(/'/g,"\\'")}')">${e.custName||''}</span></td>
-    <td><strong>${e.model||''}</strong></td>
-    <td><span style="font-size:11px;color:#6b7280;font-family:monospace">${e.serial||''}</span></td>
+    <td><span class="hospital-link" data-cust="${_escH(String(e.custName||''))}" onclick="showHospitalDetail(this.dataset.cust)">${_escH(e.custName)}</span></td>
+    <td><strong>${_escH(e.model)}</strong></td>
+    <td><span style="font-size:11px;color:#6b7280;font-family:monospace">${_escH(e.serial)}</span></td>
     <td>${fmtDate(e.delivDate)}</td>
     <td>${fmtDate(e.warrantyEnd)}</td>
     <td>${statusBadge(e.status)}</td>
@@ -7993,8 +7993,8 @@ function showHospitalDetail(name){
     const days=e.warrantyEnd?Math.ceil((new Date(e.warrantyEnd)-now)/(864e5)):null;
     const wStyle=days!==null&&days<=30?'color:#dc2626;font-weight:600':days!==null&&days<=60?'color:#ea580c':'';
     return`<tr>
-      <td><strong>${e.model||''}</strong></td>
-      <td><span style="font-size:11px;color:#6b7280;font-family:monospace">${e.serial||''}</span></td>
+      <td><strong>${_escH(e.model)}</strong></td>
+      <td><span style="font-size:11px;color:#6b7280;font-family:monospace">${_escH(e.serial)}</span></td>
       <td>${fmtDate(e.delivDate)}</td>
       <td style="${wStyle}">${fmtDate(e.warrantyEnd)}${days!==null&&days<=60?`<span style="font-size:10px;margin-left:4px">(${days<=0?'만료':days+'일 후'})</span>`:''}</td>
       <td><select class="form-select form-select-sm" data-serial="${_escH(e.serial||'')}" onchange="_hospEquipStatus(this)" style="width:auto;min-width:86px;font-size:12px;display:inline-block;${e.status==='철수'?'color:#6b7280;background:#f3f4f6':e.status==='폐기'?'color:#dc2626':e.status==='점검중'?'color:#b45309':'color:#15803d'}">
@@ -8361,7 +8361,7 @@ function handleEquipExcel(input) {
         <div style="font-size:12px;color:#6b7280;margin-bottom:6px">신규 추가 항목 미리보기 (최대 20건)</div>
         <table class="table table-sm" style="font-size:12px">
           <thead class="table-light"><tr><th>병원명</th><th>모델명</th><th>시리얼</th><th>납품일</th><th>보증만료</th><th>담당</th></tr></thead>
-          <tbody>${preview.map(r=>`<tr><td>${r.custName}</td><td><strong>${r.model}</strong></td><td style="font-family:monospace;font-size:11px">${r.serial}</td><td>${fmtDate(r.delivDate)}</td><td>${fmtDate(r.warrantyEnd)}</td><td>${r.sales}</td></tr>`).join('')}</tbody>
+          <tbody>${preview.map(r=>`<tr><td>${_escH(r.custName)}</td><td><strong>${_escH(r.model)}</strong></td><td style="font-family:monospace;font-size:11px">${_escH(r.serial)}</td><td>${fmtDate(r.delivDate)}</td><td>${fmtDate(r.warrantyEnd)}</td><td>${_escH(r.sales)}</td></tr>`).join('')}</tbody>
         </table>` : '<div class="text-muted text-center py-3">신규 추가할 항목이 없습니다 (전부 중복)</div>';
 
       document.getElementById('excel-confirm-btn').disabled = newItems.length === 0;
