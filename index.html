@@ -1731,37 +1731,6 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   <div class="modal-body" style="background:#eef2f6;padding:18px"><div id="cduwk-sheet" style="background:#fff;padding:30px 38px;border-radius:6px;box-shadow:0 4px 18px rgba(15,23,42,.08)"></div></div>
 </div></div></div>
 
-<<<<<<< Updated upstream
-<!-- 프로모션 자동 작성/발송 모달 -->
-<div class="modal fade" id="promoModal" tabindex="-1"><div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
-  <div class="modal-header"><h5 class="modal-title"><i class="bi bi-megaphone me-1" style="color:#d97706"></i>프로모션 발송 <span class="text-muted" style="font-size:11px;font-weight:400">· 템플릿 저장 → 병원 선택 → 자동 완성 → 카톡 공유</span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-  <div class="modal-body" style="font-size:13px">
-    <div class="d-flex align-items-center flex-wrap mb-2" style="gap:6px">
-      <span style="font-size:12px;color:#64748b;font-weight:700">템플릿</span>
-      <select id="promo-tpl" class="form-select form-select-sm" style="max-width:230px" onchange="_promoPick()"><option value="">— 새로 작성 —</option></select>
-      <input id="promo-name" class="form-control form-control-sm" style="max-width:160px" placeholder="템플릿 이름">
-      <button class="btn btn-outline-primary btn-sm" onclick="_promoSave()"><i class="bi bi-save me-1"></i>저장</button>
-      <button class="btn btn-outline-danger btn-sm" onclick="_promoDel()"><i class="bi bi-trash"></i></button>
-    </div>
-    <div style="font-size:10.5px;color:#94a3b8;margin-bottom:4px">치환 태그: <b>{병원명} {원장명} {담당} {지역} {오늘}</b> 는 병원 선택 시 자동 · 그 외 <b>{내용}</b> 같은 태그는 아래에 입력칸이 생깁니다</div>
-    <textarea id="promo-body" class="form-control form-control-sm" rows="7" placeholder="예) {원장명} 원장님 안녕하세요, {병원명} 담당 {담당}입니다.&#10;7월 한정 {제품} {할인율}% 특별 프로모션 안내드립니다." oninput="_promoPreview()" style="font-size:13px"></textarea>
-    <hr style="margin:12px 0">
-    <div class="row g-2 align-items-end">
-      <div class="col-md-6"><label class="form-label" style="font-size:12px;font-weight:700">보낼 병원</label><input id="promo-hosp" class="form-control form-control-sm" list="promo-hosp-list" placeholder="병원명 입력·선택" oninput="_promoPreview()"><datalist id="promo-hosp-list"></datalist></div>
-      <div class="col-md-6"><div id="promo-hospinfo" style="font-size:11px;color:#0891b2"></div></div>
-    </div>
-    <div id="promo-customs" class="row g-2 mt-1"></div>
-    <div style="margin-top:12px"><div style="font-size:11px;color:#64748b;font-weight:700;margin-bottom:4px">미리보기</div>
-      <div id="promo-preview" style="white-space:pre-wrap;background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;min-height:80px;font-size:13px;line-height:1.6;color:#1f2937"></div></div>
-  </div>
-  <div class="modal-footer py-2">
-    <span id="promo-warn" style="font-size:11px;color:#dc2626;margin-right:auto"></span>
-    <button class="btn btn-outline-secondary btn-sm" onclick="_promoCopy()"><i class="bi bi-clipboard me-1"></i>복사</button>
-    <button class="btn btn-success btn-sm" onclick="_promoShare()"><i class="bi bi-share me-1"></i>카톡·문자 공유</button>
-  </div>
-</div></div></div>
-
-=======
 <!-- 프로모션 자동 작성/발송 모달 -->
 <div class="modal fade" id="promoModal" tabindex="-1"><div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
   <div class="modal-header"><h5 class="modal-title"><i class="bi bi-megaphone me-1" style="color:#d97706"></i>프로모션 발송 <span class="text-muted" style="font-size:11px;font-weight:400">· 템플릿 저장 → 병원 선택 → 자동 완성 → 카톡 공유</span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -1791,7 +1760,6 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   </div>
 </div></div></div>
 
->>>>>>> Stashed changes
 <!-- 일정 정보(읽기전용) 팝업 -->
 <div class="modal fade" id="schInfoModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
   <div class="modal-header"><h5 class="modal-title"><i class="bi bi-calendar-event me-1" style="color:#2563eb"></i><span id="schinfo-title"></span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -5958,6 +5926,8 @@ function renderCDUTarget(){
       +'<button class="btn btn-outline-primary btn-sm" style="font-size:10px;padding:1px 8px;flex-shrink:0;white-space:nowrap" onclick="openCDUVisitFor(\''+q+'\')">방문 등록</button></div>';
   };
   var more=function(arr){ return arr.length>LIM?'<div style="font-size:11px;color:#9ca3af;margin-top:6px">외 '+(arr.length-LIM)+'곳 (상위 '+LIM+'곳 표시)</div>':''; };
+  window._cduPromoDue=due.slice(0,LIM).map(function(d){return d.n;}); window._cduPromoDrop=drop.slice(0,LIM).map(function(d){return d.n;}); window._cduPromoDor=dormant.slice(0,LIM).map(function(d){return d.n;});
+  var _promoBar=function(v){ return '<div style="margin-bottom:6px"><button class="btn btn-outline-warning btn-sm" style="font-size:11px;padding:2px 10px" onclick="openPromoBulk(window.'+v+'||[])"><i class="bi bi-megaphone me-1"></i>이 목록 전체 프로모션</button></div>'; };
   var dueHtml=due.slice(0,LIM).map(d=>row(d.n,d.mgr,'주기 <b>'+d.gap+'일</b> · 마지막 <b style="color:#dc2626">'+d.since+'일 전</b>','회당 '+_cduWon(d.amt))).join('')||'<div class="text-muted" style="font-size:12px;padding:8px 0">재구매 도래 병원이 없습니다.</div>';
   var reasonMid=function(n){ var r=_cduReasonOf(n);
     if(!r) return '<b style="color:#dc2626">사유 미파악</b> · 방문 필요';
@@ -5970,11 +5940,11 @@ function renderCDUTarget(){
   el.innerHTML=
     '<div style="font-size:12px;color:#64748b;margin-bottom:10px"><i class="bi bi-lightbulb me-1" style="color:#d97706"></i>실제 구매 데이터가 찍어주는 <b>다음 방문 우선순위</b>입니다. 병원명 클릭 = 병원 상세(구매이력·장비·상담) · [방문 등록] = 바로 일정 잡기</div>'
     +'<div class="row g-3 mb-3">'
-      +'<div class="col-lg-6">'+card('구매 급감 병원','bi-graph-down-arrow','#ea580c',drop.length+'곳 · 작년 팁매출 '+_cduWon(drpSum),drpHtml,'작년 대비 올해 팁 구매 60%↓(연환산) — 이탈 전 방어 방문 필요')+'</div>'
-      +'<div class="col-lg-6">'+card('재구매 도래','bi-arrow-repeat','#2563eb',due.length+'곳 · 회당 합계 '+_cduWon(dueSum),dueHtml,'평균 구매 주기가 지났는데 아직 재구매하지 않은 병원(회당 평균 구매액 순)')+'</div>'
+      +'<div class="col-lg-6">'+card('구매 급감 병원','bi-graph-down-arrow','#ea580c',drop.length+'곳 · 작년 팁매출 '+_cduWon(drpSum),(drop.length?_promoBar('_cduPromoDrop'):'')+drpHtml,'작년 대비 올해 팁 구매 60%↓(연환산) — 이탈 전 방어 방문 필요')+'</div>'
+      +'<div class="col-lg-6">'+card('재구매 도래','bi-arrow-repeat','#2563eb',due.length+'곳 · 회당 합계 '+_cduWon(dueSum),(due.length?_promoBar('_cduPromoDue'):'')+dueHtml,'평균 구매 주기가 지났는데 아직 재구매하지 않은 병원(회당 평균 구매액 순)')+'</div>'
     +'</div>'
     +card('휴면 장비 병원','bi-battery','#dc2626',dormant.length+'곳 · 사유 파악 '+dormant.filter(d=>_cduReasonOf(d.n)).length+'/'+dormant.length+' · 작년 '+_cduWon(dorSum),
-      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(440px,1fr));column-gap:28px">'+dorHtml+'</div>',
+      (dormant.length?_promoBar('_cduPromoDor'):'')+'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(440px,1fr));column-gap:28px">'+dorHtml+'</div>',
       'Oligio·Tightan 보유인데 올해 팁 매출 0 — 장비 방치 또는 경쟁 소모품 사용 의심(작년 매출 순)');
 }
 function _cduTab(t){ _cduView=t;
@@ -7334,69 +7304,6 @@ function copyQuoteLink(id){
   const url=`${location.origin}${location.pathname}?q=${id}`;
   navigator.clipboard.writeText(url).then(()=>showToast('링크 복사됨!',true)).catch(()=>{prompt('아래 링크를 복사하세요:',url);});
 }
-<<<<<<< Updated upstream
-// ── 프로모션 자동 작성/발송 ──
-function _promoTpls(){ return (DB.d.logs||[]).filter(function(l){return l.kind==='promo';}).sort(function(a,b){return String(b.updatedAt||'').localeCompare(String(a.updatedAt||''));}); }
-function openPromo(){
-  var dl=document.getElementById('promo-hosp-list'); if(dl&&!dl.dataset.f){ var ns=[].concat(Object.keys((window.CONS&&CONS.hospitals)||{}),Object.keys((window.DEVICE&&DEVICE.hospitals)||{})); ns=[...new Set(ns)].sort(function(a,b){return a.localeCompare(b,'ko');}); dl.innerHTML=ns.slice(0,2500).map(function(n){return '<option value="'+n.replace(/"/g,'&quot;')+'">';}).join(''); dl.dataset.f='1'; }
-  _promoFillSel();
-  _promoPreview();
-  new bootstrap.Modal(document.getElementById('promoModal')).show();
-}
-function _promoFillSel(){ var sel=document.getElementById('promo-tpl'); if(!sel) return; var cur=sel.value; var ts=_promoTpls(); sel.innerHTML='<option value="">— 새로 작성 —</option>'+ts.map(function(t){return '<option value="'+t.id+'">'+_escH(t.name||'(이름없음)')+'</option>';}).join(''); if([...sel.options].some(function(o){return o.value===cur;})) sel.value=cur; }
-function _promoPick(){ var id=(document.getElementById('promo-tpl')||{}).value; var t=_promoTpls().find(function(x){return x.id===id;}); document.getElementById('promo-name').value=t?(t.name||''):''; document.getElementById('promo-body').value=t?(t.body||''):''; _promoPreview(); }
-function _promoResolve(hosp){
-  var hi=(typeof HOSP_INFO!=='undefined'&&HOSP_INFO[hosp])||{};
-  var doctor=(hi.doctor||'').trim()||(((hi.contacts||[]).find(function(c){return c&&/원장/.test(c.role||'');})||{}).name||'').trim();
-  var rep=(typeof _repOf==='function'?_repOf(hosp):'')||'';
-  var region=(hi.region&&hi.region[0])||'';
-  return {병원명:hosp||'', 원장명:doctor||'원장', 담당:rep, 지역:region};
-}
-function _promoCustomTokens(body){ var known={'병원명':1,'원장명':1,'담당':1,'지역':1,'오늘':1}; var set={},m,re=/\{([^}]{1,20})\}/g; while((m=re.exec(body))){ var k=m[1].trim(); if(!known[k]) set[k]=1; } return Object.keys(set); }
-function _promoCustomVals(){ var o={}; document.querySelectorAll('#promo-customs [data-tok]').forEach(function(i){ o[i.getAttribute('data-tok')]=i.value; }); return o; }
-function _promoRender(){
-  var body=(document.getElementById('promo-body')||{}).value||'';
-  var hosp=((document.getElementById('promo-hosp')||{}).value||'').trim();
-  var r=_promoResolve(hosp);
-  var d=new Date(); r['오늘']=d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0');
-  var cv=_promoCustomVals();
-  var out=body.replace(/\{([^}]{1,20})\}/g,function(mm,k){ k=k.trim(); if(r[k]!=null&&r[k]!=='') return r[k]; if(cv[k]!=null&&cv[k]!=='') return cv[k]; return mm; });
-  return {text:out, hosp:hosp, r:r};
-}
-function _promoPreview(){
-  var body=(document.getElementById('promo-body')||{}).value||'';
-  // 커스텀 토큰 입력칸 동기화
-  var toks=_promoCustomTokens(body); var wrap=document.getElementById('promo-customs'); var prev=_promoCustomVals();
-  wrap.innerHTML=toks.map(function(k){ return '<div class="col-md-6"><label class="form-label" style="font-size:11px;color:#7c3aed;font-weight:700">{'+_escH(k)+'}</label><input class="form-control form-control-sm" data-tok="'+_escH(k)+'" value="'+_escH(prev[k]||'')+'" oninput="_promoPreview()" placeholder="'+_escH(k)+' 입력"></div>'; }).join('');
-  var hosp=((document.getElementById('promo-hosp')||{}).value||'').trim();
-  var info=document.getElementById('promo-hospinfo');
-  if(info){ if(hosp){ var r=_promoResolve(hosp); info.innerHTML='자동: 원장 <b>'+_escH(r.원장명)+'</b> · 담당 <b>'+_escH(r.담당||'-')+'</b> · 지역 <b>'+_escH(r.지역||'-')+'</b>'; } else info.textContent=''; }
-  var res=_promoRender();
-  var left=(res.text.match(/\{[^}]{1,20}\}/g)||[]);
-  document.getElementById('promo-preview').textContent=res.text;
-  document.getElementById('promo-warn').textContent=left.length?('미채움 태그: '+left.join(' ')):'';
-}
-function _promoShare(){ var res=_promoRender(); if(!res.text.trim()){ alert('내용을 입력하세요.'); return; } wtShare('프로모션 안내', res.text, ''); }
-function _promoCopy(){ var res=_promoRender(); navigator.clipboard.writeText(res.text).then(function(){ showToast('복사됨 — 카톡에 붙여넣기 하세요', true); }).catch(function(){ prompt('복사해서 사용하세요:', res.text); }); }
-function _promoSave(){
-  var name=((document.getElementById('promo-name')||{}).value||'').trim(); var body=((document.getElementById('promo-body')||{}).value||'').trim();
-  if(!name){ alert('템플릿 이름을 입력하세요.'); return; } if(!body){ alert('내용을 입력하세요.'); return; }
-  var sel=document.getElementById('promo-tpl'); var id=sel.value; var by=(typeof currentUserName==='function'?currentUserName():'');
-  var now=new Date().toISOString();
-  if(id){ var t=(DB.d.logs||[]).find(function(l){return l.id===id;}); if(t){ if(t.by&&t.by!==by&&!(typeof _isMgr!=='undefined'&&_isMgr)){ if(!confirm('다른 사람이 만든 템플릿입니다. 덮어쓸까요?')) return; } t.name=name; t.body=body; t.updatedAt=now; } }
-  else { id='promo_'+uid(); DB.d.logs.push({id:id, kind:'promo', name:name, body:body, by:by, date:now.slice(0,10), updatedAt:now}); }
-  DB.save('logs').then(function(){ _promoFillSel(); document.getElementById('promo-tpl').value=id; showToast('템플릿 저장됨', true); });
-}
-function _promoDel(){
-  var sel=document.getElementById('promo-tpl'); var id=sel.value; if(!id){ alert('삭제할 저장 템플릿을 선택하세요.'); return; }
-  var t=(DB.d.logs||[]).find(function(l){return l.id===id;}); if(!t) return;
-  var by=(typeof currentUserName==='function'?currentUserName():'');
-  if(t.by&&t.by!==by&&!(typeof _isMgr!=='undefined'&&_isMgr)){ alert('본인이 만든 템플릿만 삭제할 수 있습니다.'); return; }
-  if(!confirm('이 템플릿을 삭제할까요?')) return;
-  DB.d.logs=DB.d.logs.filter(function(l){return l.id!==id;});
-  DB.del('logs',id).then(function(){ _promoFillSel(); document.getElementById('promo-tpl').value=''; _promoPick(); showToast('삭제됨', true); });
-}
-=======
 // ── 프로모션 자동 작성/발송 ──
 function _promoTpls(){ return (DB.d.logs||[]).filter(function(l){return l.kind==='promo';}).sort(function(a,b){return String(b.updatedAt||'').localeCompare(String(a.updatedAt||''));}); }
 var _promoHosps=[];
@@ -7464,7 +7371,6 @@ function _promoDel(){
   DB.d.logs=DB.d.logs.filter(function(l){return l.id!==id;});
   DB.del('logs',id).then(function(){ _promoFillSel(); document.getElementById('promo-tpl').value=''; _promoPick(); showToast('삭제됨', true); });
 }
->>>>>>> Stashed changes
 // 공용 공유: 기기 공유시트(카톡·문자·메일…) → 미지원 시 링크 복사 폴백
 async function wtShare(title, text, url){
   var payload={}; if(title)payload.title=title; if(text)payload.text=text; if(url)payload.url=url;
