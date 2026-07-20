@@ -6449,7 +6449,8 @@ function saveCDUVisit(){
   var idx=(DB.d.logs||[]).findIndex(l=>l.id===id);
   if(idx>=0) DB.d.logs[idx]=rec; else DB.d.logs.push(rec);
   try{ bootstrap.Modal.getInstance(document.getElementById('cduVisitModal')).hide(); }catch(e){}
-  renderCDU(); DB.save('logs').then(()=>showToast('방문 기록 저장 완료', true));
+  renderCDU(); try{ renderCDUWeekly(); }catch(e){}
+  DB.save('logs').then(()=>showToast('방문 기록 저장 완료', true));
 }
 function delCDUVisit(){
   var id=(document.getElementById('cd-id')||{}).value; if(!id) return;
@@ -6600,15 +6601,25 @@ function openCDUHosp(name){
 }
 // ── CDU CSV 내보내기 ──
 // ── CDU 주간 결과보고서: 한 주 완료 방문·결과 한 장 요약 ──
-var _cduWkRef=null;
+var _cduWkRef=null, _cduWkExcl={};
+function _cduWkExclAdd(id){ _cduWkExcl[id]=1; renderCDUWeekly(); }
+function _cduWkExclReset(){ _cduWkExcl={}; renderCDUWeekly(); }
+function _cduWkEdit(id){
+  openCDUVisit(id);
+  var m=document.getElementById('cduVisitModal');
+  if(m){ document.body.appendChild(m); setTimeout(function(){ m.style.setProperty('z-index','10004','important'); var bds=document.querySelectorAll('.modal-backdrop'); var bd=bds[bds.length-1]; if(bd) bd.style.setProperty('z-index','10003','important'); },0); }
+}
 function _cduWkNav(d){ var p=(_cduWkRef||_cduTodayStr()).split('-').map(Number); var dt=new Date(p[0],p[1]-1,p[2]); dt.setDate(dt.getDate()+d*7); _cduWkRef=_cduFmtD(dt); renderCDUWeekly(); }
 function openCDUWeekly(){ _cduWkRef=null; renderCDUWeekly(); new bootstrap.Modal(document.getElementById('cduWkModal')).show(); }
 function _cduWkRange(){ var p=(_cduWkRef||_cduTodayStr()).split('-').map(Number); var dt=new Date(p[0],p[1]-1,p[2]); var dow=(dt.getDay()+6)%7; var mon=new Date(dt); mon.setDate(dt.getDate()-dow); var sun=new Date(mon); sun.setDate(mon.getDate()+6); return [_cduFmtD(mon),_cduFmtD(sun)]; }
 function renderCDUWeekly(){
   var el=document.getElementById('cduwk-sheet'); if(!el) return;
   var r=_cduWkRange(), from=r[0], to=r[1];
-  var vs=_cduVisits().filter(v=>{ var d=String(v.date||'').slice(0,10); return v.status!=='planned'&&d>=from&&d<=to; })
-    .sort((a,b)=>String(a.date).localeCompare(String(b.date))||String(a.sales||'').localeCompare(String(b.sales||''),'ko'));
+  var _hasFb=v=>((v.feedback||'').trim()||(v.noBuyReason||'').trim()||(v.action||'').trim())?0:1;
+  var vsAll=_cduVisits().filter(v=>{ var d=String(v.date||'').slice(0,10); return v.status!=='planned'&&d>=from&&d<=to; });
+  var exclN=vsAll.filter(v=>_cduWkExcl[v.id]).length;
+  var vs=vsAll.filter(v=>!_cduWkExcl[v.id])
+    .sort((a,b)=>_hasFb(a)-_hasFb(b)||String(a.date).localeCompare(String(b.date))||String(a.sales||'').localeCompare(String(b.sales||''),'ko'));
   var mmW=Math.max(1,(typeof _dataMaxMonth==='function'?_dataMaxMonth():6));
   var prevOf=function(n){ var m=(_cduRev(n).m2025)||{}, s=0; for(var i=1;i<=mmW;i++) s+=Number(m[i]||0); return s; };
   var hs={}; vs.forEach(v=>{ var n=(v.custName||'').trim(); if(n)hs[n]=1; });
@@ -6653,17 +6664,17 @@ function renderCDUWeekly(){
   var _dash='<span style="color:#d1d5db">-</span>';
   var rows=vs.map(function(v,i){ var d=String(v.date||'').slice(0,10); var rev=_cduRev((v.custName||'').trim()).y2026||0;
     return '<tr style="background:'+(i%2?'#fafbfc':'#fff')+'">'
-      +'<td style="text-align:center;color:#64748b;white-space:nowrap">'+d.slice(5).replace('-','/')+'('+WD[new Date(d+'T00:00').getDay()]+')</td>'
-      +'<td style="font-weight:700">'+_cduEsc(v.custName||'')+(v.churnRisk?' <span style="color:#dc2626;font-size:10px">⚠</span>':'')+'</td>'
+      +'<td style="font-weight:700">'+_cduEsc(v.custName||'')+(v.churnRisk?' <span style="color:#dc2626;font-size:10px">⚠</span>':'')+' <span style="font-size:9.5px;color:#94a3b8;font-weight:400;white-space:nowrap">'+d.slice(5).replace('-','/')+'('+WD[new Date(d+'T00:00').getDay()]+')</span></td>'
       +'<td style="text-align:center;color:#475569">'+(_cduEsc(v.sales||'')||_dash)+'</td>'
       +'<td style="text-align:right;white-space:nowrap;line-height:1.35"><span style="color:#0891b2;font-weight:700">'+(rev?_cduWon(rev):'0')+'</span>'+(function(){ var pv=prevOf((v.custName||'').trim()); if(!pv&&!rev) return '<div style="font-size:9px;color:#d1d5db">이력 없음</div>'; if(!pv) return ''; var up=rev>=pv; return '<div style="font-size:9.5px;color:'+(up?'#16a34a':'#dc2626')+'">작년 '+_cduWon(pv)+' '+(up?'▲':'▼')+Math.abs(Math.round((rev/pv-1)*100))+'%</div>'; })()+'</td>'
       +'<td>'+(_cduEsc(v.mainProc||'')||_dash)+'</td>'
       +'<td style="text-align:center;font-weight:700;color:#7c3aed">'+(Number(v.price)>0?_cduEsc(v.price)+'천':_dash)+'</td>'
-      +'<td style="font-size:10.5px;color:#dc2626">'+(_cduEsc(v.competitor||'')||_dash)+'</td>'
+      +'<td style="font-size:10.5px;color:#dc2626;word-break:keep-all;overflow-wrap:break-word">'+(_cduEsc(String(v.competitor||'').replace(/\//g,' / '))||_dash)+'</td>'
       +'<td style="color:#334155">'+(_cduEsc(String(v.feedback||'').slice(0,200))||_dash)+'</td>'
+      +'<td class="cduwk-np" style="text-align:center"><i class="bi bi-pencil-square" onclick="_cduWkEdit(\''+v.id+'\')" title="내용 수정" style="color:#2563eb;cursor:pointer;margin-right:7px"></i><i class="bi bi-x-circle" onclick="_cduWkExclAdd(\''+v.id+'\')" title="이번 보고서에서 제외" style="color:#dc2626;cursor:pointer"></i></td>'
     +'</tr>'; }).join('');
   el.innerHTML=
-    '<style>#cduwk-sheet td{padding:8px 7px;border-bottom:1px solid #f1f5f9;word-break:break-all;line-height:1.55}#cduwk-sheet th{padding:8px 7px!important;letter-spacing:.02em}#cduwk-sheet table{font-size:11.5px}</style>'
+    '<style>#cduwk-sheet td{padding:8px 7px;border-bottom:1px solid #f1f5f9;word-break:break-all;line-height:1.55}#cduwk-sheet th{padding:8px 7px!important;letter-spacing:.02em;text-align:center!important;vertical-align:middle}#cduwk-sheet table{font-size:11.5px}.cduwk-np{white-space:nowrap}</style>'
     +'<div style="height:5px;background:#ff4500;margin:-30px -38px 22px;border-radius:6px 6px 0 0"></div>'
     +'<div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #111827;padding-bottom:10px">'
       +'<div style="font-size:22px;font-weight:900;letter-spacing:-.01em">CDU 주간 결과보고</div>'
@@ -6678,11 +6689,12 @@ function renderCDUWeekly(){
     +'</div>'
     +anaBox
     +(vs.length?'<table style="width:100%;border-collapse:collapse;font-size:11.5px;table-layout:fixed">'
-      +'<colgroup><col style="width:60px"><col style="width:146px"><col style="width:48px"><col style="width:92px"><col style="width:90px"><col style="width:48px"><col style="width:88px"><col></colgroup>'
+      +'<colgroup><col style="width:172px"><col style="width:48px"><col style="width:94px"><col style="width:88px"><col style="width:46px"><col style="width:118px"><col><col style="width:52px"></colgroup>'
       +'<thead><tr style="background:#f8fafc;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;color:#475569;font-size:10.5px">'
-      +'<th style="padding:6px 4px">일자</th><th style="padding:6px;text-align:left">병원명</th><th style="padding:6px">담당</th><th style="padding:6px;text-align:right">팁매출(작년 동기比)</th><th style="padding:6px;text-align:left">주력 시술</th><th style="padding:6px">수가</th><th style="padding:6px;text-align:left">경쟁사</th><th style="padding:6px;text-align:left">피드백·결과</th></tr></thead>'
+      +'<th style="padding:6px">병원명</th><th style="padding:6px">담당</th><th style="padding:6px">팁매출<br>(작년 동기比)</th><th style="padding:6px">주력 시술</th><th style="padding:6px">수가</th><th style="padding:6px">경쟁사</th><th style="padding:6px">피드백·결과</th><th class="cduwk-np" style="padding:6px">수정</th></tr></thead>'
       +'<tbody style="vertical-align:top">'+rows+'</tbody></table>'
       :'<div style="text-align:center;color:#9ca3af;padding:30px 0;font-size:13px">이 주에 완료된 방문이 없습니다.</div>')
+    +(exclN?'<div class="cduwk-np" style="margin-top:8px;font-size:11px;color:#94a3b8">보고서에서 제외된 방문 '+exclN+'건 · <span onclick="_cduWkExclReset()" style="color:#2563eb;cursor:pointer;font-weight:600">모두 되돌리기</span></div>':'')
     +(churn.length?'<div style="margin-top:14px;background:#fef2f2;border-radius:10px;padding:10px 14px;font-size:11.5px;line-height:1.7"><b style="color:#dc2626"><i class="bi bi-exclamation-triangle-fill me-1"></i>리스크 감지</b> · '+churn.map(v=>_cduEsc((v.custName||'')+': '+v.churnRisk)).join(' / ')+'</div>':'')
     +(note&&note.text?'<div style="margin-top:14px;background:#f8fafc;border-radius:10px;padding:12px 15px;font-size:12px;line-height:1.7"><b style="color:#0f172a"><i class="bi bi-chat-left-text me-1" style="color:#0d9488"></i>담당자 종합의견</b><div style="white-space:pre-line;margin-top:5px;color:#334155">'+_cduEsc(note.text)+'</div></div>':'');
   var cells=vs.length;
@@ -6691,7 +6703,7 @@ function cduWkPDF(){
   var sheet=document.getElementById('cduwk-sheet'); if(!sheet||!sheet.innerHTML) return;
   var r=_cduWkRange();
   var w=window.open('','_blank'); if(!w){ alert('팝업 차단을 해제해주세요.'); return; }
-  w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>CDU 주간 결과보고 '+r[0]+'</title><style>@page{size:A4 landscape;margin:0}body{margin:0;padding:10mm 12mm;font-family:"Malgun Gothic",sans-serif;background:#fff}table{page-break-inside:auto}tr{page-break-inside:avoid}td,th{border-bottom:1px solid #eef2f7}</style></head><body>'+sheet.innerHTML+'<script>window.onload=function(){setTimeout(function(){window.print();},250);};<\/script></body></html>');
+  w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>CDU 주간 결과보고 '+r[0]+'</title><style>@page{size:A4 landscape;margin:0}body{margin:0;padding:10mm 12mm;font-family:"Malgun Gothic",sans-serif;background:#fff}table{page-break-inside:auto}tr{page-break-inside:avoid}td,th{border-bottom:1px solid #eef2f7}.cduwk-np{display:none}</style></head><body>'+sheet.innerHTML+'<script>window.onload=function(){setTimeout(function(){window.print();},250);};<\/script></body></html>');
   w.document.close();
 }
 function cduExportCSV(){
