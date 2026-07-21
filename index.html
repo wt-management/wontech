@@ -209,7 +209,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 /* 문서형 페이지 헤더(전 페이지 공통) */
 .page-header{border-bottom:1px solid #e4e8ef;padding-bottom:13px}
 .page-header h5{font-size:19px;font-weight:800;color:#182230;letter-spacing:-.01em}
-.page-header h5 i{color:#16324f}
+.page-header h5 i{color:#2563eb}
 /* KPI 숫자 문서 톤 */
 .kpi-value{letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .stat-num{letter-spacing:-.02em;font-variant-numeric:tabular-nums}
@@ -228,7 +228,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 .wt-band{display:flex;align-items:stretch;background:#fff;border:1px solid #e4e8ef;border-radius:12px;padding:16px 20px;margin-bottom:16px}
 .wt-hero{flex:1.5;padding-right:22px;display:flex;flex-direction:column;justify-content:center;min-width:0}
 .wt-hero .l{font-size:11.5px;font-weight:700;color:#64748b}
-.wt-hero b{font-size:32px;font-weight:800;color:#182230;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.wt-hero b{font-size:32px;font-weight:800;color:#2563eb;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
 .wt-hero .s{font-size:12px;color:#64748b;margin-top:3px}
 .wt-fact{flex:1;padding:2px 18px;border-left:1px solid #e4e8ef;display:flex;flex-direction:column;justify-content:center;min-width:0;cursor:pointer}
 .wt-fact .l{font-size:11px;font-weight:700;color:#64748b;white-space:nowrap}
@@ -532,7 +532,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <div class="page-header" style="border-bottom:2px solid #16324f;padding-bottom:14px;align-items:flex-end">
       <div>
         <div style="font-size:11px;font-weight:800;letter-spacing:.14em;color:#94a3b8">WONTECH · SALES OVERVIEW</div>
-        <h5 style="margin-top:4px;font-size:22px;font-weight:800;letter-spacing:-.01em"><i class="bi bi-bar-chart-line me-2" style="color:#16324f"></i>소모품·제품 종합 매출현황</h5>
+        <h5 style="margin-top:4px;font-size:22px;font-weight:800;letter-spacing:-.01em"><i class="bi bi-bar-chart-line me-2" style="color:#2563eb"></i>소모품·제품 종합 매출현황</h5>
       </div>
       <div style="font-size:12px;color:#64748b;text-align:right" id="overview-updated"></div>
     </div>
@@ -694,11 +694,11 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
     <!-- KPI 5개 한 행 (문서형 히어로+팩트밴드) -->
     <div class="wt-band">
-      <div class="wt-hero" style="cursor:pointer"><span class="l"><i class="bi bi-check-circle-fill me-1" style="color:#16324f"></i>확정 매출</span><b id="kpi-confirmed">-</b><span class="s" id="kpi-confirmed-sub"></span></div>
-      <div class="wt-fact" style="cursor:pointer"><span class="l"><i class="bi bi-hourglass-split me-1" style="color:#16324f"></i>예상 추가</span><b id="kpi-expected">-</b><span class="s" id="kpi-expected-sub"></span></div>
-      <div class="wt-fact" style="cursor:pointer"><span class="l"><i class="bi bi-bullseye me-1" style="color:#16324f"></i>총 전망</span><b id="kpi-total-forecast">-</b><span class="s" id="kpi-total-forecast-sub"></span></div>
-      <div class="wt-fact" style="cursor:pointer"><span class="l"><i class="bi bi-percent me-1" style="color:#16324f"></i>Win Rate</span><b id="kpi-winrate">-</b><span class="s" id="kpi-winrate-sub"></span></div>
-      <div class="wt-fact" style="cursor:pointer"><span class="l"><i class="bi bi-layers-fill me-1" style="color:#16324f"></i>파이프라인 잔고</span><b id="kpi-pipe-balance">-</b><span class="s" id="kpi-pipe-balance-sub"></span></div>
+      <div class="wt-hero" style="cursor:pointer"><span class="l"><i class="bi bi-check-circle-fill me-1" style="color:#2563eb"></i>확정 매출</span><b id="kpi-confirmed">-</b><span class="s" id="kpi-confirmed-sub"></span></div>
+      <div class="wt-fact" style="cursor:pointer"><span class="l"><i class="bi bi-hourglass-split me-1" style="color:#2563eb"></i>예상 추가</span><b id="kpi-expected">-</b><span class="s" id="kpi-expected-sub"></span></div>
+      <div class="wt-fact" style="cursor:pointer"><span class="l"><i class="bi bi-bullseye me-1" style="color:#2563eb"></i>총 전망</span><b id="kpi-total-forecast">-</b><span class="s" id="kpi-total-forecast-sub"></span></div>
+      <div class="wt-fact" style="cursor:pointer"><span class="l"><i class="bi bi-percent me-1" style="color:#2563eb"></i>Win Rate</span><b id="kpi-winrate">-</b><span class="s" id="kpi-winrate-sub"></span></div>
+      <div class="wt-fact" style="cursor:pointer"><span class="l"><i class="bi bi-layers-fill me-1" style="color:#2563eb"></i>파이프라인 잔고</span><b id="kpi-pipe-balance">-</b><span class="s" id="kpi-pipe-balance-sub"></span></div>
     </div>
 
     <!-- 매출 전망 바 -->
@@ -706,7 +706,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <div class="card p-3">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <span style="font-size:13px;font-weight:700">매출 전망 <span id="dash-revenue-label" style="font-size:11px;font-weight:400;color:#64748b"></span></span>
-          <span id="dash-forecast-total" style="font-size:13px;font-weight:800;color:#16324f"></span>
+          <span id="dash-forecast-total" style="font-size:13px;font-weight:800;color:#2563eb"></span>
         </div>
         <div style="display:flex;height:16px;border-radius:8px;overflow:hidden;background:#f3f4f6">
           <div id="dash-bar-confirmed" style="height:100%;background:#16a34a;transition:width .5s"></div>
@@ -817,7 +817,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         </div>
         <div class="col-md-5">
           <div class="card p-3 h-100">
-            <div class="fw-bold mb-2" style="font-size:14px"><i class="bi bi-funnel-fill me-1" style="color:#16324f"></i>Win Rate 퍼널</div>
+            <div class="fw-bold mb-2" style="font-size:14px"><i class="bi bi-funnel-fill me-1" style="color:#2563eb"></i>Win Rate 퍼널</div>
             <div id="winrate-funnel"></div>
           </div>
         </div>
@@ -1495,7 +1495,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         </div>
         <div class="col-md-6">
           <div class="card p-3" style="border-left:4px solid #16324f">
-            <div class="fw-bold mb-1" style="font-size:13px;color:#16324f"><i class="bi bi-star-fill me-1"></i>신규 거래처 — 2026년 첫 거래</div>
+            <div class="fw-bold mb-1" style="font-size:13px;color:#2563eb"><i class="bi bi-star-fill me-1"></i>신규 거래처 — 2026년 첫 거래</div>
             <div style="font-size:11px;color:#64748b;margin-bottom:8px">2025년 이전 거래 없는 신규 병원</div>
             <div id="hosp-new-list" style="max-height:calc(100vh - 300px);overflow-y:auto"></div>
           </div>
@@ -7671,7 +7671,7 @@ function renderPerformance(){
         const barW=Math.round(f.count/maxCount*100);
         return`<div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-            <span style="font-size:12px;font-weight:600;color:#16324f">${f.stage}</span>
+            <span style="font-size:12px;font-weight:600;color:#2563eb">${f.stage}</span>
             <div style="display:flex;gap:8px;font-size:11px;color:#6b7280">
               ${i>0?`<span style="color:${conv>=70?'#16a34a':conv>=40?'#ea580c':'#dc2626'};font-weight:700">↓${conv}%</span>`:'<span style="font-size:10px">시작</span>'}
               <span style="cursor:pointer;color:#2563eb;font-weight:600;text-decoration:underline dotted" onclick="showPerfDrill('deals','${f.stage} 단계 딜',d=>d.stage==='${f.stage}')">${f.count}건</span><span style="font-weight:600">${fmtAmt(f.amt)}</span>
