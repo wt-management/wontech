@@ -6464,14 +6464,14 @@ function _cduMiniCard(v){
   var planned=(v.status==='planned');
   var c=planned?'#2563eb':((v.churnRisk||'').trim()?'#ea580c':'#16a34a');
   var rc=(typeof _schRepColor==='function')?_schRepColor((v.sales||'').trim()):'#64748b';
-  return '<div onclick="event.stopPropagation();openCDUVisit(\''+v.id+'\')" style="background:'+c+'14;border-left:3px solid '+c+';border-radius:5px;padding:4px 6px;margin-bottom:4px;cursor:pointer" title="'+_cduEsc((v.custName||'')+(v.competitor?' · '+v.competitor:'')+(v.price?' · 수가'+v.price+'천':''))+'">'
+  return '<div onclick="event.stopPropagation();openCDUVisit(\''+v.id+'\')" style="background:'+c+'14;border-left:3px solid '+c+';border-radius:5px;padding:4px 6px;margin-bottom:4px;cursor:pointer;line-height:1.35" title="'+_cduEsc((v.custName||'')+(v.competitor?' · '+v.competitor:'')+(v.price?' · 수가'+v.price+'천':''))+'">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;gap:3px">'
       +'<span style="font-size:9.5px;font-weight:800;color:'+c+';white-space:nowrap">'+(planned?'방문 예정':'완료 ✓')+'</span>'
       +((v.sales||'').trim()?'<span style="font-size:8.5px;color:'+rc+';background:'+rc+'22;font-weight:800;border-radius:7px;padding:0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+_cduEsc(v.sales)+'</span>':'')
     +'</div>'
     +'<div style="font-size:10.5px;font-weight:700;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_cduEsc(v.custName||'')+'</div>'
-    +(planned?'<div style="font-size:9px;color:#2563eb;font-weight:700"><i class="bi bi-pencil-square"></i> 결과 입력</div>'
-      :((v.price?'<span style="font-size:9px;color:#0891b2">수가 '+_cduEsc(v.price)+'천</span> ':'')+(v.competitor?'<span style="font-size:9px;color:#dc2626">'+_cduEsc(v.competitor)+'</span>':'')))
+    +(planned?'<div style="font-size:9px;color:#2563eb;font-weight:700;margin-top:1px"><i class="bi bi-pencil-square"></i> 결과 입력</div>'
+      :((v.price||v.competitor)?'<div style="font-size:9px;line-height:1.4;margin-top:1px">'+(v.price?'<span style="color:#475569">수가 '+_cduEsc(v.price)+'천</span>'+(v.competitor?' · ':''):'')+(v.competitor?'<span style="color:#dc2626">'+_cduEsc(v.competitor)+'</span>':'')+'</div>':''))
   +'</div>';
 }
 function _cduInputCal(){
