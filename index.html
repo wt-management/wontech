@@ -6765,17 +6765,17 @@ function renderCDUWeekly(){
   var cmpArr=Object.entries(cmpC).sort((a,b)=>b[1]-a[1]).slice(0,3);
   var lowW=prices.filter(p=>p<350).length;
   window._cduWkVs=vs; window._cduWkClsSets={dor:cls.dor.slice(),drop:cls.drop.slice(),ok:cls.ok.slice(),non:cls.non.slice()};
-  var li=(t)=>'<div style="padding:2px 0">'+t+'</div>';
-  var liK=(t,kind)=>'<div onclick="_cduWkAna(\''+kind+'\')" title="클릭하면 병원 상세" style="padding:3px 4px;margin:0 -4px;border-radius:6px;cursor:pointer" onmouseover="this.style.background=\'#eef2f6\'" onmouseout="this.style.background=\'\'">'+t+' <i class="bi bi-chevron-right cduwk-np" style="font-size:8px;color:#cbd5e1"></i></div>';
   var nm3=a=>a.slice(0,3).map(_cduEsc).join(', ')+(a.length>3?' 외 '+(a.length-3):'');
-  var anaBox='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px;margin-bottom:12px">'
-    +'<div style="background:#f8fafc;border-radius:10px;padding:12px 15px;font-size:12px;line-height:1.7"><div style="font-weight:800;color:#0f172a;margin-bottom:4px;font-size:12px"><i class="bi bi-bullseye me-1" style="color:#dc2626"></i>방문 병원 구성 — 타깃을 제대로 갔는가</div>'
-      +(cls.dor.length?liK('<b style="color:#dc2626">휴면(올해 팁 0)</b> '+cls.dor.length+'개처 · '+nm3(cls.dor),'dor'):li('<b style="color:#dc2626">휴면(올해 팁 0)</b> 0개처'))
-      +(cls.drop.length?liK('<b style="color:#ea580c">급감(작년比 60%↓)</b> '+cls.drop.length+'개처 · '+nm3(cls.drop),'drop'):li('<b style="color:#ea580c">급감(작년比 60%↓)</b> 0개처'))
-      +(cls.ok.length||cls.non.length?liK('<b style="color:#16a34a">정상 구매</b> '+cls.ok.length+'개처 · <b style="color:#94a3b8">매출이력 없음</b> '+cls.non.length+'개처','okno'):li('<b style="color:#16a34a">정상 구매</b> 0개처'))
-      +li('방문처 팁매출 올해 <b>'+_cduWon(visitedRev)+'</b>'+(prevTot>visitedRev?' · 작년 동기 '+_cduWon(prevTot)+' → <b style="color:#d97706">회복 여지 '+_cduWon(prevTot-visitedRev)+'</b>':(prevTot>0?' · 작년 동기 '+_cduWon(prevTot)+' <b style="color:#16a34a">▲'+Math.abs(Math.round((visitedRev/prevTot-1)*100))+'%</b>':'')))
+  var li=(t)=>'<div class="wkr-r">'+t+'</div>';
+  var liK=(t,kind)=>'<div class="wkr-r wkr-k" onclick="_cduWkAna(\''+kind+'\')" title="클릭하면 병원 상세">'+t+' <i class="bi bi-chevron-right cduwk-np wkr-ch"></i></div>';
+  var anaBox='<div class="wkr-two">'
+    +'<div><div class="wkr-st">방문 병원 구성 <u>· 타깃을 제대로 갔는가</u></div>'
+      +(cls.dor.length?liK('<b class="c-rd">휴면(올해 팁 0)</b> '+cls.dor.length+'개처 · '+nm3(cls.dor),'dor'):li('<b class="c-rd">휴면(올해 팁 0)</b> 0개처'))
+      +(cls.drop.length?liK('<b class="c-am">급감(작년比 60%↓)</b> '+cls.drop.length+'개처 · '+nm3(cls.drop),'drop'):li('<b class="c-am">급감(작년比 60%↓)</b> 0개처'))
+      +(cls.ok.length||cls.non.length?liK('<b class="c-gr">정상 구매</b> '+cls.ok.length+'개처 · <b class="c-mu">매출이력 없음</b> '+cls.non.length+'개처','okno'):li('<b class="c-gr">정상 구매</b> 0개처'))
+      +li('방문처 팁매출 올해 <b>'+_cduWon(visitedRev)+'</b>'+(prevTot>visitedRev?' · 작년 동기 '+_cduWon(prevTot)+' → <b class="c-rd">회복 여지 '+_cduWon(prevTot-visitedRev)+'</b>':(prevTot>0?' · 작년 동기 '+_cduWon(prevTot)+' <b class="c-gr">▲'+Math.abs(Math.round((visitedRev/prevTot-1)*100))+'%</b>':'')))
     +'</div>'
-    +'<div style="background:#f8fafc;border-radius:10px;padding:12px 15px;font-size:12px;line-height:1.7"><div style="font-weight:800;color:#0f172a;margin-bottom:4px;font-size:12px"><i class="bi bi-clipboard-data me-1" style="color:#7c3aed"></i>수집 정보 · 시사점</div>'
+    +'<div><div class="wkr-st">수집 정보 · 시사점</div>'
       +(rsnArr.length?liK('미구매 사유 '+rsnArr.reduce((s,x)=>s+x[1],0)+'건 — '+rsnArr.map(x=>_cduEsc(x[0])+' '+x[1]).join(' · '),'reason'):'')
       +(cmpArr.length?liK('경쟁 노출 — '+cmpArr.map(x=>_cduEsc(x[0])+' '+x[1]+'건').join(' · '),'comp'):'')
       +(prices.length?liK('수가 — 평균 '+avg+'천'+(lowW?' · 저가(350↓) '+lowW+'개처(인상 제안 여지)':''),'price'):'')
@@ -6783,72 +6783,103 @@ function renderCDUWeekly(){
       +((rsnArr.length||cmpArr.length||prices.length||acts.length)?'':li('이번 주 수집 정보를 다음 방문에서 보강 예정'))
     +'</div>'
   +'</div>';
-  var chip=(l,v,c)=>'<div style="flex:1;min-width:108px;background:#f8fafc;border-radius:10px;padding:10px 12px;text-align:center"><div style="font-size:10.5px;color:#64748b;font-weight:600">'+l+'</div><div style="font-size:16.5px;font-weight:800;color:'+(c||'#111827')+';margin-top:1px">'+v+'</div></div>';
-  var WD=['일','월','화','수','목','금','토'];
-  var _dash='';
-  var rowHtml=function(v,i){ var d=String(v.date||'').slice(0,10); var rev=_cduRev((v.custName||'').trim()).y2026||0;
+  var hN=Object.keys(hs).length;
+  var tgtN=cls.dor.length+cls.drop.length;
+  var rsnHosp={}; vs.forEach(function(v){ if((v.noBuyReason||'').trim()) rsnHosp[(v.custName||'').trim()]=1; });
+  var rsnHN=Object.keys(rsnHosp).length;
+  var fact=(l,v,s,cl)=>'<div class="wkr-fact"><span>'+l+'</span><b'+(cl?' class="'+cl+'"':'')+'>'+v+'</b><i>'+(s||'&nbsp;')+'</i></div>';
+  var heroSub=prevTot>visitedRev?('작년 동기 '+_cduWon(prevTot)+' → <em>회복 여지 '+_cduWon(prevTot-visitedRev)+'</em>')
+    :(prevTot>0?('작년 동기 '+_cduWon(prevTot)+' · <em style="color:#15803d">▲'+Math.abs(Math.round((visitedRev/prevTot-1)*100))+'%</em>'):'작년 동기 매출 이력 없음');
+  var kpis='<div class="wkr-kpis">'
+    +'<div class="wkr-hero"><span class="l">방문처 팁매출 · 올해</span><b>'+_cduWon(visitedRev)+'</b><span class="s">'+heroSub+'</span></div>'
+    +fact('방문 병원',hN+'개처',(vs.length!==hN?'방문 '+vs.length+'건':''))
+    +(tgtN?fact('휴면·급감 공략',tgtN+'개처','타깃 방문','rd'):'')
+    +(rsnHN?fact('미구매 사유 파악',rsnHN+'개처',''):'')
+    +(avg?fact('평균 수가',avg+'천',(lowW?'인상 여지 '+lowW+'개처':'')):'')
+    +(cmpArr.length?fact('경쟁 정보 수집',Object.keys(cmpC).length+'종',_cduEsc(cmpArr[0][0])+' 외'):'')
+  +'</div>';
+  var _dash='<span style="color:#c3ccd6">—</span>';
+  var rowHtml=function(v){ var rev=_cduRev((v.custName||'').trim()).y2026||0;
     return '<tr>'
-      +'<td style="font-weight:700"><span onclick="_cduWkHosp(this.textContent)" style="cursor:pointer" title="병원 상세(구매이력·장비·상담)">'+_cduEsc(v.custName||'')+'</span>'+(v.churnRisk?' <span style="color:#dc2626;font-size:11px">⚠</span>':'')+' <i class="bi bi-search cduwk-np" style="font-size:8.5px;color:#cbd5e1"></i></td>'
-      +'<td style="text-align:right;white-space:nowrap;line-height:1.35"><span style="color:#0f172a;font-weight:700">'+(rev?_cduWon(rev):'0')+'</span>'+(function(){ var pv=prevOf((v.custName||'').trim()); if(!pv&&!rev) return '<div style="font-size:10.5px;color:#94a3b8">이력 없음</div>'; if(!pv) return ''; var up=rev>=pv; return '<div style="font-size:10.5px;color:'+(up?'#16a34a':'#dc2626')+'">작년 '+_cduWon(pv)+' '+(up?'▲':'▼')+Math.abs(Math.round((rev/pv-1)*100))+'%</div>'; })()+'</td>'
+      +'<td style="font-weight:700;color:#182230"><span onclick="_cduWkHosp(this.textContent)" style="cursor:pointer" title="병원 상세(구매이력·장비·상담)">'+_cduEsc(v.custName||'')+'</span>'+(v.churnRisk?' <span style="color:#dc2626;font-size:11px">⚠</span>':'')+' <i class="bi bi-search cduwk-np" style="font-size:8.5px;color:#cbd5e1"></i></td>'
+      +'<td class="wkr-money">'+(rev?_cduWon(rev):'0')+(function(){ var pv=prevOf((v.custName||'').trim()); if(!pv&&!rev) return '<span class="yo no">이력 없음</span>'; if(!pv) return ''; var up=rev>=pv; return '<span class="yo '+(up?'up':'dn')+'">작년 '+_cduWon(pv)+' '+(up?'▲':'▼')+Math.abs(Math.round((rev/pv-1)*100))+'%</span>'; })()+'</td>'
       +'<td>'+(_cduEsc(v.mainProc||'')||_dash)+'</td>'
-      +'<td style="text-align:center;font-weight:700;color:#0f172a;white-space:nowrap">'+(Number(v.price)>0?_cduEsc(v.price)+'천':_dash)+'</td>'
-      +'<td style="font-size:11px;color:#dc2626;word-break:keep-all;overflow-wrap:break-word">'+(_cduEsc(String(v.competitor||'').replace(/\//g,' / '))||_dash)+'</td>'
+      +'<td style="text-align:center;font-weight:700;white-space:nowrap">'+(Number(v.price)>0?_cduEsc(v.price)+'천':_dash)+'</td>'
+      +'<td style="color:#475569;font-size:11px">'+(_cduEsc(String(v.competitor||'').replace(/\//g,' / '))||_dash)+'</td>'
       +'<td style="color:#334155">'+(function(){ var fb=_cduEsc(String(v.feedback||'').slice(0,200)); var rs=(v.noBuyReason||'').trim(); var ac=(v.action||'').trim();
           var tag=(rs?'<span style="font-size:10.5px;font-weight:800;color:#475569;background:#f1f5f9;border-radius:4px;padding:1px 6px;margin-right:4px">'+_cduEsc(rs)+'</span>':'')
                  +(ac?'<span style="font-size:10.5px;font-weight:800;color:#1d4ed8;background:#eff6ff;border-radius:4px;padding:1px 6px;margin-right:4px">→ '+_cduEsc(ac)+'</span>':'');
           return (tag||fb)?tag+(fb||''):_dash; })()+'</td>'
       +'<td class="cduwk-np" style="text-align:center"><i class="bi bi-pencil-square" onclick="_cduWkEdit(\''+v.id+'\')" title="내용 수정" style="color:#2563eb;cursor:pointer;margin-right:7px"></i><i class="bi bi-x-circle" onclick="_cduWkExclAdd(\''+v.id+'\')" title="이번 보고서에서 제외" style="color:#dc2626;cursor:pointer"></i></td>'
     +'</tr>'; };
-  // 병원 성격별 그룹핑: 휴면 → 급감 → 정상 → 이력없음
+  // 병원 성격별 그룹핑: 휴면 → 급감 → 정상 → 이력없음 (배경띠 대신 텍스트 계층)
   var byCls={dor:[],drop:[],ok:[],non:[]};
   vs.forEach(function(v){ var n=(v.custName||'').trim();
     var g=cls.dor.indexOf(n)>=0?'dor':cls.drop.indexOf(n)>=0?'drop':cls.ok.indexOf(n)>=0?'ok':'non';
     byCls[g].push(v); });
-  var grpDef=[['dor','휴면 병원 — 올해 팁매출 0 · 집중 공략','#dc2626','#fef2f2'],
-              ['drop','구매 급감 — 작년比 60%↓ · 이탈 방어','#ea580c','#fff7ed'],
-              ['ok','정상 구매 중 — 유지 관리','#16a34a','#f0fdf4'],
-              ['non','매출 이력 없음 — 신규·잠재','#64748b','#f8fafc']];
+  var grpDef=[['dor','휴면 병원 — 올해 팁매출 0 · 집중 공략','c-rd'],
+              ['drop','구매 급감 — 작년比 60%↓ · 이탈 방어','c-am'],
+              ['ok','정상 구매 중 — 유지 관리','c-gr'],
+              ['non','매출 이력 없음 — 신규·잠재','c-mu2']];
   var rows=grpDef.map(function(g){ var arr=byCls[g[0]]; if(!arr.length) return '';
     var uh={}; arr.forEach(function(v){ uh[(v.custName||'').trim()]=1; });
-    return '<tr><td colspan="7" style="background:'+g[3]+';color:'+g[2]+';font-weight:800;font-size:11px;padding:7px 9px;border-bottom:1px solid #e5e7eb">'+g[1]+' <span style="font-weight:600;color:'+g[2]+'99">· '+Object.keys(uh).length+'개처 '+arr.length+'건</span></td></tr>'
+    return '<tr class="grp"><td colspan="7"><span class="'+g[2]+'">'+g[1]+'</span><u>'+Object.keys(uh).length+'개처 '+arr.length+'건</u></td></tr>'
       +arr.map(rowHtml).join(''); }).join('');
   el.innerHTML=
-    '<style>#cduwk-sheet td{padding:8px 7px;border-bottom:1px solid #f1f5f9;word-break:break-all;line-height:1.55}#cduwk-sheet th{padding:8px 7px!important;letter-spacing:.02em;text-align:center!important;vertical-align:middle}#cduwk-sheet table{font-size:12px}.cduwk-np{white-space:nowrap}</style>'
-    +'<div style="height:5px;background:#ff4500;margin:-30px -38px 22px;border-radius:6px 6px 0 0"></div>'
-    +'<div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #111827;padding-bottom:10px">'
-      +'<div style="font-size:22px;font-weight:900;letter-spacing:-.01em">CDU 주간 결과보고</div>'
-      +'<div style="font-size:12.5px;color:#64748b">'+from+' ~ '+to+'</div>'
-    +'</div>'
-    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">'
-      +(function(){
-        var hN=Object.keys(hs).length;
-        var rsnHosp={}; vs.forEach(function(v){ if((v.noBuyReason||'').trim()) rsnHosp[(v.custName||'').trim()]=1; });
-        var rsnHN=Object.keys(rsnHosp).length;
-        var tgtN=cls.dor.length+cls.drop.length;
-        return chip('방문 병원',hN+'개처'+(vs.length!==hN?' <span style="font-size:10.5px;color:#94a3b8">'+vs.length+'건</span>':''))
-          +(tgtN?chip('휴면·급감 공략',tgtN+'개처','#dc2626'):'')
-          +chip('방문처 팁매출',_cduWon(visitedRev)+(prevTot>visitedRev?' <span style="font-size:10.5px;color:#d97706">회복 대상 '+_cduWon(prevTot)+'</span>':(prevTot>0?' <span style="font-size:10.5px;color:#16a34a">▲'+Math.abs(Math.round((visitedRev/prevTot-1)*100))+'%</span>':'')),'#0f172a')
-          +(rsnHN?chip('미구매 사유 파악',rsnHN+'개처','#0f172a'):'')
-          +(acts.length?chip('대응 계획 수립',acts.length+'건','#0f172a'):'')
-          +(avg?chip('평균 수가',avg+'천'+(lowW?' <span style="font-size:10.5px;color:#d97706">인상 여지 '+lowW+'</span>':''),'#0f172a'):'')
-          +(cmpArr.length?chip('경쟁 정보 수집',_cduEsc(cmpArr[0][0])+' 외 '+Math.max(0,Object.keys(cmpC).length-1)+'종','#0f172a'):'');
-      })()
-    +'</div>'
+    '<style>'
+    +'#cduwk-sheet{--ink:#182230;--mut:#64748b;--line:#e4e8ef;--navy:#16324f;--rd:#dc2626;--amb:#b45309;--grn:#15803d;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
+    +'#cduwk-sheet .wkr-hd{display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:12px;border-bottom:3px double var(--navy)}'
+    +'#cduwk-sheet .wkr-kick{font-size:10.5px;font-weight:700;color:#8a97a8;letter-spacing:.09em;margin-bottom:5px}'
+    +'#cduwk-sheet .wkr-t{font-size:22px;font-weight:800;color:var(--ink);letter-spacing:-.01em;line-height:1.2}'
+    +'#cduwk-sheet .wkr-meta{text-align:right;font-size:11.5px;color:var(--mut);line-height:1.7}'
+    +'#cduwk-sheet .wkr-meta b{color:var(--ink)}'
+    +'#cduwk-sheet .wkr-kpis{display:flex;align-items:stretch;padding:16px 0 14px;border-bottom:1px solid var(--line);margin-bottom:16px}'
+    +'#cduwk-sheet .wkr-hero{flex:1.5;min-width:0;padding-right:22px}'
+    +'#cduwk-sheet .wkr-hero .l{display:block;font-size:11.5px;font-weight:700;color:var(--mut)}'
+    +'#cduwk-sheet .wkr-hero b{display:block;font-size:34px;font-weight:800;color:var(--ink);line-height:1.15;letter-spacing:-.02em;font-variant-numeric:tabular-nums}'
+    +'#cduwk-sheet .wkr-hero .s{display:block;font-size:12px;color:var(--mut);margin-top:3px}'
+    +'#cduwk-sheet .wkr-hero .s em{font-style:normal;font-weight:800;color:var(--rd)}'
+    +'#cduwk-sheet .wkr-fact{flex:1;min-width:0;padding:2px 18px;border-left:1px solid var(--line)}'
+    +'#cduwk-sheet .wkr-fact span{display:block;font-size:11px;font-weight:700;color:var(--mut);white-space:nowrap}'
+    +'#cduwk-sheet .wkr-fact b{display:block;font-size:21px;font-weight:800;color:var(--ink);line-height:1.25;margin-top:2px;font-variant-numeric:tabular-nums;white-space:nowrap}'
+    +'#cduwk-sheet .wkr-fact b.rd{color:var(--rd)}'
+    +'#cduwk-sheet .wkr-fact i{display:block;font-style:normal;font-size:10.5px;color:#94a3b8;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+    +'#cduwk-sheet .wkr-two{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-bottom:18px}'
+    +'#cduwk-sheet .wkr-st{font-size:13px;font-weight:800;color:var(--ink);padding-bottom:7px;border-bottom:2px solid var(--navy);margin-bottom:6px}'
+    +'#cduwk-sheet .wkr-st u{text-decoration:none;font-size:11px;font-weight:600;color:var(--mut);margin-left:4px}'
+    +'#cduwk-sheet .wkr-r{padding:5px 0;font-size:12px;color:#334155;line-height:1.55;border-bottom:1px solid #f1f5f9}'
+    +'#cduwk-sheet .wkr-r:last-child{border-bottom:0}'
+    +'#cduwk-sheet .wkr-k{cursor:pointer;margin:0 -6px;padding-left:6px;padding-right:6px;border-radius:6px}'
+    +'#cduwk-sheet .wkr-k:hover{background:#f4f7fa}'
+    +'#cduwk-sheet .wkr-ch{font-size:9px;color:#cbd5e1}'
+    +'#cduwk-sheet .c-rd{color:var(--rd)}#cduwk-sheet .c-am{color:var(--amb)}#cduwk-sheet .c-gr{color:var(--grn)}#cduwk-sheet .c-mu{color:#94a3b8}#cduwk-sheet .c-mu2{color:#64748b}'
+    +'#cduwk-sheet table.wkr-tb{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;font-variant-numeric:tabular-nums}'
+    +'#cduwk-sheet .wkr-tb th{border-top:2px solid var(--navy);border-bottom:1px solid var(--line);background:#fafbfc;color:#475569;font-size:11px;font-weight:700;padding:8px 7px;text-align:center;vertical-align:middle;letter-spacing:.02em}'
+    +'#cduwk-sheet .wkr-tb td{padding:9px 7px;border-bottom:1px solid #eef1f5;word-break:break-all;line-height:1.55;vertical-align:top}'
+    +'#cduwk-sheet .wkr-tb tr.grp td{border-top:2px solid #dfe5ec;border-bottom:1px solid var(--line);padding:9px 7px 7px;font-size:12px;font-weight:800;background:#fff}'
+    +'#cduwk-sheet .wkr-tb tr.grp td u{text-decoration:none;font-weight:600;color:var(--mut);font-size:11px;margin-left:6px}'
+    +'#cduwk-sheet .wkr-money{text-align:right;white-space:nowrap;font-weight:700;color:var(--ink)}'
+    +'#cduwk-sheet .wkr-money .yo{display:block;font-size:10.5px;font-weight:600;margin-top:1px}'
+    +'#cduwk-sheet .wkr-money .yo.up{color:var(--grn)}#cduwk-sheet .wkr-money .yo.dn{color:var(--rd)}#cduwk-sheet .wkr-money .yo.no{color:#b6bfca}'
+    +'.cduwk-np{white-space:nowrap}'
+    +'</style>'
+    +'<div class="wkr-hd"><div><div class="wkr-kick">WONTECH · CDU WEEKLY REPORT</div><div class="wkr-t">CDU 주간 결과보고</div></div>'
+    +'<div class="wkr-meta">집계 기간 <b>'+from+' ~ '+to+'</b><br>완료 방문 기준 · 소모품파트</div></div>'
+    +kpis
     +anaBox
-    +(vs.length?'<table style="width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed">'
-      +'<colgroup><col style="width:176px"><col style="width:96px"><col style="width:92px"><col style="width:58px"><col style="width:120px"><col><col style="width:52px"></colgroup>'
-      +'<thead><tr style="background:#f8fafc;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;color:#475569;font-size:11px">'
-      +'<th style="padding:6px">병원명</th><th style="padding:6px">팁매출<br>(작년 동기比)</th><th style="padding:6px">주력 시술</th><th style="padding:6px">수가</th><th style="padding:6px">경쟁사</th><th style="padding:6px">피드백·결과</th><th class="cduwk-np" style="padding:6px">수정</th></tr></thead>'
-      +'<tbody style="vertical-align:top">'+rows+'</tbody></table>'
-      :'<div style="text-align:center;color:#9ca3af;padding:30px 0;font-size:13px">이 주에 완료된 방문이 없습니다.</div>')
+    +(vs.length?'<table class="wkr-tb">'
+      +'<colgroup><col style="width:176px"><col style="width:104px"><col style="width:92px"><col style="width:58px"><col style="width:120px"><col><col style="width:52px"></colgroup>'
+      +'<thead><tr><th>병원명</th><th>팁매출<br>(작년 동기比)</th><th>주력 시술</th><th>수가</th><th>경쟁사</th><th>피드백·결과</th><th class="cduwk-np">수정</th></tr></thead>'
+      +'<tbody>'+rows+'</tbody></table>'
+      :'<div style="text-align:center;color:#94a3b8;padding:30px 0;font-size:13px">이 주에 완료된 방문이 없습니다.</div>')
     +(exclN?'<div class="cduwk-np" style="margin-top:10px;font-size:11px;color:#94a3b8">'
       +'<span onclick="_cduWkExclOpen=!_cduWkExclOpen;renderCDUWeekly()" style="cursor:pointer;color:#2563eb;font-weight:700"><i class="bi bi-arrow-counterclockwise me-1"></i>제외된 방문 '+exclN+'건 — 복구'+(_cduWkExclOpen?' 접기':'')+'</span>'
       +(_cduWkExclOpen?'<div style="margin-top:6px;background:#f8fafc;border-radius:8px;padding:8px 10px">'
         +exclList.map(function(v){ return '<span onclick="_cduWkRestore(\''+v.id+'\')" title="클릭하면 보고서에 다시 반영" style="display:inline-block;background:#fff;border:1px solid #cbd5e1;border-radius:14px;padding:2px 10px;margin:2px 3px;cursor:pointer;font-size:11px;color:#334155">'+_cduEsc(v.custName||'')+' <b style="color:#16a34a">↩</b></span>'; }).join('')
         +' <span onclick="_cduWkExclReset()" style="color:#dc2626;cursor:pointer;font-weight:700;margin-left:6px;font-size:11px">모두 되돌리기</span></div>':'')
       +'</div>':'')
-    +(churn.length?'<div style="margin-top:14px;background:#fef2f2;border-radius:10px;padding:10px 14px;font-size:12px;line-height:1.7"><b style="color:#dc2626"><i class="bi bi-exclamation-triangle-fill me-1"></i>리스크 감지</b> · '+churn.map(v=>_cduEsc((v.custName||'')+': '+v.churnRisk)).join(' / ')+'</div>':'')
-    +(note&&note.text?'<div style="margin-top:14px;background:#f8fafc;border-radius:10px;padding:12px 15px;font-size:12px;line-height:1.7"><b style="color:#0f172a"><i class="bi bi-chat-left-text me-1" style="color:#64748b"></i>담당자 종합의견</b><div style="white-space:pre-line;margin-top:5px;color:#334155">'+_cduEsc(note.text)+'</div></div>':'');
+    +(churn.length?'<div style="margin-top:16px;border-left:3px solid #dc2626;padding:9px 14px;background:#fdf7f7;font-size:12px;line-height:1.7"><b style="color:#dc2626"><i class="bi bi-exclamation-triangle-fill me-1"></i>리스크 감지</b> · '+churn.map(v=>_cduEsc((v.custName||'')+': '+v.churnRisk)).join(' / ')+'</div>':'')
+    +(note&&note.text?'<div style="margin-top:12px;border-left:3px solid #16324f;padding:9px 14px;background:#f8fafc;font-size:12px;line-height:1.7"><b style="color:#182230"><i class="bi bi-chat-left-text me-1" style="color:#64748b"></i>담당자 종합의견</b><div style="white-space:pre-line;margin-top:4px;color:#334155">'+_cduEsc(note.text)+'</div></div>':'');
   var cells=vs.length;
 }
 function cduWkPDF(){
