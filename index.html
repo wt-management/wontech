@@ -6134,12 +6134,12 @@ function _cduEnsureCss(){ if(document.getElementById('cdud-css')) return;
   st.textContent=''
     +'.cdud{--ink:#182230;--mut:#64748b;--line:#e4e8ef;--navy:#16324f;--rd:#dc2626;--grn:#15803d;background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px 26px 24px}'
     +'.cdud .cdud-kpis{display:flex;align-items:stretch;padding:4px 0 16px;border-bottom:1px solid var(--line)}'
-    +'.cdud .cdud-hero{flex:1.4;min-width:0;padding-right:22px;cursor:pointer}'
+    +'.cdud .cdud-hero{flex:1.4;min-width:0;padding-right:22px;cursor:pointer;display:flex;flex-direction:column;justify-content:center}'
     +'.cdud .cdud-hero .l{display:block;font-size:11.5px;font-weight:700;color:var(--mut)}'
     +'.cdud .cdud-hero b{display:block;font-size:32px;font-weight:800;color:var(--ink);line-height:1.15;letter-spacing:-.02em;font-variant-numeric:tabular-nums}'
     +'.cdud .cdud-hero .s{display:block;font-size:12px;color:var(--mut);margin-top:3px}'
     +'.cdud .cdud-hero .s em{font-style:normal;font-weight:800;color:var(--rd)}'
-    +'.cdud .cdud-fact{flex:1;min-width:0;padding:2px 18px;border-left:1px solid var(--line)}'
+    +'.cdud .cdud-fact{flex:1;min-width:0;padding:2px 18px;border-left:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}'
     +'.cdud .cdud-fact.clk{cursor:pointer}'
     +'.cdud .cdud-fact span{display:block;font-size:11px;font-weight:700;color:var(--mut);white-space:nowrap}'
     +'.cdud .cdud-fact b{display:block;font-size:20px;font-weight:800;color:var(--ink);line-height:1.3;margin-top:2px;font-variant-numeric:tabular-nums;white-space:nowrap}'
@@ -6281,7 +6281,7 @@ function renderCDUReport(vs){
 
   // ── 문서형 재조립: 히어로 KPI 밴드 + 집중관리 밴드 + 플랫 섹션 (Madia 원칙) ──
 
-  var fact=(l,v,s,cl,click)=>'<div class="cdud-fact'+(click?' clk" onclick="'+click+'"':'"')+'><span>'+l+'</span><b'+(cl?' class="'+cl+'"':'')+'>'+v+'</b><i>'+(s||'&nbsp;')+'</i></div>';
+  var fact=(l,v,s,cl,click)=>'<div class="cdud-fact'+(click?' clk" onclick="'+click+'"':'"')+'><span>'+l+'</span><b'+(cl?' class="'+cl+'"':'')+'>'+v+'</b>'+(s?'<i>'+s+'</i>':'')+'</div>';
   var heroSub=(visitedRevPrev>0&&visitedRevPrev>visitedRev)
     ?('작년 동기 '+_cduWon(visitedRevPrev)+' → <em>▼'+Math.abs(Math.round((visitedRev/visitedRevPrev-1)*100))+'% · 회복 여지 '+_cduWon(visitedRevPrev-visitedRev)+'</em>')
     :(visitedRevPrev>0?('작년 동기 '+_cduWon(visitedRevPrev)+' · <em style="color:#15803d">▲'+Math.abs(Math.round((visitedRev/visitedRevPrev-1)*100))+'%</em>'):'작년 동기 매출 이력 없음');
@@ -6397,10 +6397,25 @@ function renderCDUInput(vs){
     +'<span style="font-size:11px;color:#94a3b8">방문 추가는 간단히(병원·날짜·담당) → 방문 후 카드의 <b>[결과 입력]</b></span></div>';
   var pendHtml=pend.length?'<div style="margin-bottom:12px;border-left:3px solid #dc2626;background:#fdf7f7;padding:8px 12px;font-size:12px;color:#b91c1c"><i class="bi bi-exclamation-triangle-fill me-1"></i><b>결과 미입력 '+pend.length+'건</b> — 방문일은 지났는데 결과가 없어요. 눌러서 입력해 주세요: '
     +pend.slice(0,6).map(v=>'<span onclick="openCDUVisit(\''+v.id+'\')" style="display:inline-block;font-size:11.5px;font-weight:700;color:#b91c1c;background:#fff;border:1px solid #fecaca;border-radius:12px;padding:2px 9px;margin:2px 3px;cursor:pointer">'+_cduEsc(v.custName||'')+' '+_cduEsc(String(v.date||'').slice(5,10))+'</span>').join('')+(pend.length>6?' 외 '+(pend.length-6)+'건':'')+'</div>':'';
-  var stat=(lbl,n,cl,fst)=>'<div class="cdud-fact"'+(fst?' style="border-left:0;padding-left:0"':'')+'><span>'+lbl+'</span><b'+(cl?' class="'+cl+'"':'')+'>'+n+'</b><i>&nbsp;</i></div>';
-  var statsBar='<div class="cdud-kpis" style="padding:2px 0 12px">'
-    +stat('오늘 방문',cToday,'',1)+stat('이번주',cWeek,'')+stat('결과 미입력',pend.length,(pend.length?'rd':''))+stat('예정',cPlan,'')+stat('완료',cDone,'gr')+'</div>';
-  var lg=(col,lb)=>'<span style="font-size:10.5px;color:'+col+';font-weight:600"><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:'+col+';margin-right:4px;vertical-align:middle"></span>'+lb+'</span>';
+  var lwMon=new Date(mon); lwMon.setDate(mon.getDate()-7); var lwSun=new Date(mon); lwSun.setDate(mon.getDate()-1);
+  var lwS=_cduFmtD(lwMon), lwE=_cduFmtD(lwSun);
+  var cLastWeek=base.filter(function(v){var d=dOf(v); return d>=lwS&&d<=lwE;}).length;
+  var wow=cWeek-cLastWeek;
+  var todayDone=base.filter(function(v){return dOf(v)===todayS&&v.status!=='planned';}).length, todayPlan=cToday-todayDone;
+  var nextPlan=base.filter(function(v){return v.status==='planned'&&dOf(v)>=todayS;}).map(dOf).sort()[0]||'';
+  var pendOldest=pend.map(dOf).sort()[0]||'';
+  var pendDays=pendOldest?Math.max(1,Math.round((new Date(todayS+'T00:00:00')-new Date(pendOldest+'T00:00:00'))/864e5)):0;
+  var doneHosp={}; base.forEach(function(v){ if(v.status!=='planned'){ var n=(v.custName||'').trim(); if(n) doneHosp[n]=1; } });
+  var stat=(lbl,n,s,cl)=>'<div class="cdud-fact"><span>'+lbl+'</span><b'+(cl?' class="'+cl+'"':'')+'>'+n+'</b>'+(s?'<i>'+s+'</i>':'')+'</div>';
+  var wowTxt=(cLastWeek===0&&cWeek===0)?'':(wow===0?' · 변동 없음':' · <em style="color:'+(wow>0?'#15803d':'#dc2626')+'">'+(wow>0?'▲':'▼')+Math.abs(wow)+'건</em>');
+  var statsBar='<div class="cdud-kpis" style="padding:2px 0 14px">'
+    +'<div class="cdud-hero" style="cursor:default"><span class="l">이번주 방문</span><b>'+cWeek+'건</b><span class="s">지난주 '+cLastWeek+'건'+wowTxt+'</span></div>'
+    +stat('오늘 방문',cToday+'건',(cToday?('완료 '+todayDone+' · 예정 '+todayPlan):'오늘 등록된 방문 없음'))
+    +stat('결과 미입력',pend.length+'건',(pend.length?('최장 '+pendDays+'일 경과 — 입력 필요'):'밀린 입력 없음'),(pend.length?'rd':''))
+    +stat('예정',cPlan+'건',(nextPlan?('가장 가까운 '+nextPlan.slice(5).replace('-','/')):'등록된 예정 없음'))
+    +stat('완료',cDone+'건',Object.keys(doneHosp).length+'개처 방문 · 기간 내','gr')
+  +'</div>';
+  var lg=(col,lb)=>'<span style="font-size:10.5px;color:#64748b;font-weight:600"><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:'+col+';margin-right:4px;vertical-align:middle"></span>'+lb+'</span>';
   var legend='<div style="display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin-bottom:12px"><span style="font-size:10.5px;color:#64748b;font-weight:700">상태</span>'
     +lg('#2563eb','방문 예정')+lg('#16a34a','완료')+lg('#ea580c','이탈위험 감지')+'</div>';
   var body;
@@ -6818,7 +6833,7 @@ function renderCDUWeekly(){
   var tgtN=cls.dor.length+cls.drop.length;
   var rsnHosp={}; vs.forEach(function(v){ if((v.noBuyReason||'').trim()) rsnHosp[(v.custName||'').trim()]=1; });
   var rsnHN=Object.keys(rsnHosp).length;
-  var fact=(l,v,s,cl)=>'<div class="wkr-fact"><span>'+l+'</span><b'+(cl?' class="'+cl+'"':'')+'>'+v+'</b><i>'+(s||'&nbsp;')+'</i></div>';
+  var fact=(l,v,s,cl)=>'<div class="wkr-fact"><span>'+l+'</span><b'+(cl?' class="'+cl+'"':'')+'>'+v+'</b>'+(s?'<i>'+s+'</i>':'')+'</div>';
   var heroSub=prevTot>visitedRev?('작년 동기 '+_cduWon(prevTot)+' → <em>회복 여지 '+_cduWon(prevTot-visitedRev)+'</em>')
     :(prevTot>0?('작년 동기 '+_cduWon(prevTot)+' · <em style="color:#15803d">▲'+Math.abs(Math.round((visitedRev/prevTot-1)*100))+'%</em>'):'작년 동기 매출 이력 없음');
   var kpis='<div class="wkr-kpis">'
@@ -6865,12 +6880,12 @@ function renderCDUWeekly(){
     +'#cduwk-sheet .wkr-meta{text-align:right;font-size:11.5px;color:var(--mut);line-height:1.7}'
     +'#cduwk-sheet .wkr-meta b{color:var(--ink)}'
     +'#cduwk-sheet .wkr-kpis{display:flex;align-items:stretch;padding:16px 0 14px;border-bottom:1px solid var(--line);margin-bottom:16px}'
-    +'#cduwk-sheet .wkr-hero{flex:1.5;min-width:0;padding-right:22px}'
+    +'#cduwk-sheet .wkr-hero{flex:1.5;min-width:0;padding-right:22px;display:flex;flex-direction:column;justify-content:center}'
     +'#cduwk-sheet .wkr-hero .l{display:block;font-size:11.5px;font-weight:700;color:var(--mut)}'
     +'#cduwk-sheet .wkr-hero b{display:block;font-size:34px;font-weight:800;color:var(--ink);line-height:1.15;letter-spacing:-.02em;font-variant-numeric:tabular-nums}'
     +'#cduwk-sheet .wkr-hero .s{display:block;font-size:12px;color:var(--mut);margin-top:3px}'
     +'#cduwk-sheet .wkr-hero .s em{font-style:normal;font-weight:800;color:var(--rd)}'
-    +'#cduwk-sheet .wkr-fact{flex:1;min-width:0;padding:2px 18px;border-left:1px solid var(--line)}'
+    +'#cduwk-sheet .wkr-fact{flex:1;min-width:0;padding:2px 18px;border-left:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}'
     +'#cduwk-sheet .wkr-fact span{display:block;font-size:11px;font-weight:700;color:var(--mut);white-space:nowrap}'
     +'#cduwk-sheet .wkr-fact b{display:block;font-size:21px;font-weight:800;color:var(--ink);line-height:1.25;margin-top:2px;font-variant-numeric:tabular-nums;white-space:nowrap}'
     +'#cduwk-sheet .wkr-fact b.rd{color:var(--rd)}'
