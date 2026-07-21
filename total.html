@@ -1417,9 +1417,11 @@ function toggleNav(force){
   if(bd) bd.classList.toggle('open', open);
 }
 function showPage(name,el,push){
+  var _pg=document.getElementById('page-'+name);
+  if(!_pg){ name='sales-overview'; _pg=document.getElementById('page-'+name); if(!_pg)return; }   // 없는 페이지(카테고리 인자 등)에 널가드 — 크래시 방지
   try{ sessionStorage.setItem('total_page', name); }catch(_){}   // 렌더 전에 저장 — 렌더 중 이탈해도 머문 페이지 유지
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
-  document.getElementById('page-'+name).classList.add('on');
+  _pg.classList.add('on');
   document.querySelectorAll('.nav-link').forEach(n=>n.classList.remove('active'));
   if(el) el.classList.add('active');
   const _titles={query:'전사 상세 조회',report:'글로벌영업 매출현황',export:'수출의 탑 진행현황',corps:'법인별 상세현황',goals:'목표 달성률 종합',quarters:'분기·반기 요약',units:'장비 출고 대수 현황',leaderboard:'담당자·팀 실적 리더보드',customers:'거래처 신규·이탈 분석'};
