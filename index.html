@@ -13,24 +13,24 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
-:root{--blue:#2563eb;--blue-light:#eff6ff;--sidebar-bg:#0f172a;--sidebar-hover:rgba(255,255,255,.06);--sidebar-active:rgba(255,255,255,.1);--text:#111827;--text-2:#6b7280;--border:#e5e7eb;--bg:#f3f4f6;--white:#ffffff;--green:#16a34a;--orange:#ea580c;--purple:#7c3aed;--red:#dc2626}
+:root{--blue:#2563eb;--blue-light:#eff6ff;--sidebar-bg:#f1f5f9;--sidebar-hover:#eef2f7;--sidebar-active:#eaf1fd;--text:#111827;--text-2:#6b7280;--border:#e5e7eb;--bg:#f3f4f6;--white:#ffffff;--green:#16a34a;--orange:#ea580c;--purple:#7c3aed;--red:#dc2626}
 *{box-sizing:border-box}
 html{color-scheme:light}
 body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans KR',sans-serif;margin:0;color:var(--text);font-size:14px}
-.sidebar{width:220px;background:var(--sidebar-bg);min-height:100vh;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;display:flex;flex-direction:column}
+.sidebar{width:220px;background:var(--sidebar-bg);min-height:100vh;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;display:flex;flex-direction:column;border-right:1px solid #d8e0ea;box-shadow:3px 0 16px rgba(16,42,67,.06)}
 .main{flex:1;margin-left:220px;padding:28px 32px 104px;overflow-y:auto;min-height:100vh}
-.sidebar-brand{padding:22px 20px 16px;color:#fff;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.07)}
+.sidebar-brand{padding:22px 20px 16px;color:#1c2534;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e4e8ef}
 .brand-icon{width:32px;height:32px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
 .brand-name{font-size:15px;font-weight:700;letter-spacing:-.3px}
 .brand-sub{font-size:10px;color:#94a3b8;margin-top:1px}
 .nav-section{padding:12px 0}
 .nav-label{padding:6px 20px;font-size:10px;font-weight:600;letter-spacing:.08em;color:#475569;text-transform:uppercase}
-.sidebar .nav-link{color:#94a3b8;padding:8px 18px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:9px;cursor:pointer;border-radius:0;transition:all .15s;margin:1px 8px;border-radius:6px}
+.sidebar .nav-link{color:#475569;padding:8px 18px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:9px;cursor:pointer;border-radius:0;transition:all .15s;margin:1px 8px;border-radius:6px}
 .sidebar .nav-link i{font-size:15px;width:18px;text-align:center;flex-shrink:0}
-.sidebar .nav-link:hover{color:#e2e8f0;background:var(--sidebar-hover)}
-.sidebar .nav-link.active{color:#fff;background:var(--sidebar-active);font-weight:600}
+.sidebar .nav-link:hover{color:#1c2534;background:var(--sidebar-hover)}
+.sidebar .nav-link.active{color:#2563eb;background:var(--sidebar-active);font-weight:600}
 .sidebar .nav-link.active i{color:var(--blue)}
-.sidebar-footer{margin-top:auto;padding:12px 8px;border-top:1px solid rgba(255,255,255,.06)}
+.sidebar-footer{margin-top:auto;padding:12px 8px;border-top:1px solid #e4e8ef}
 .page{display:none}.page.active{display:block}
 .card{border:1px solid var(--border);border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.04);background:var(--white)}
 .stat-card{border-radius:14px;padding:20px 22px;background:var(--white);border:1px solid var(--border);display:flex;align-items:center;gap:16px}
@@ -470,35 +470,35 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     </ul>
   </div>
   <div class="sidebar-footer">
-    <div id="sidebar-user" style="display:none;background:#1e293b;border-radius:8px;padding:8px 10px;margin-bottom:8px">
+    <div id="sidebar-user" style="display:none;background:#fff;border:1px solid #e4e8ef;border-radius:8px;padding:8px 10px;margin-bottom:8px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:#ff4500;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0" id="sidebar-user-avatar">?</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:12px;font-weight:700;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="sidebar-user-name">-</div>
+          <div style="font-size:12px;font-weight:700;color:#1c2534;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="sidebar-user-name">-</div>
           <div style="font-size:10px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="sidebar-user-id">-</div>
           <div style="font-size:10px;color:#475569;margin-top:1px" id="sidebar-user-dept"></div>
         </div>
       </div>
       <div style="display:flex;gap:4px">
-        <button onclick="openChangePwModal()" style="flex:1;background:rgba(255,255,255,.06);border:1px solid #334155;border-radius:6px;padding:5px 0;color:#94a3b8;font-size:11px;cursor:pointer">
+        <button onclick="openChangePwModal()" style="flex:1;background:#f8fafc;border:1px solid #d5dde8;border-radius:6px;padding:5px 0;color:#475569;font-size:11px;cursor:pointer">
           <i class="bi bi-key"></i> 비밀번호</button>
-        <button onclick="doLogout()" style="flex:1;background:rgba(255,255,255,.06);border:1px solid #334155;border-radius:6px;padding:5px 0;color:#94a3b8;font-size:11px;cursor:pointer">
+        <button onclick="doLogout()" style="flex:1;background:#f8fafc;border:1px solid #d5dde8;border-radius:6px;padding:5px 0;color:#475569;font-size:11px;cursor:pointer">
           <i class="bi bi-box-arrow-right"></i> 로그아웃</button>
       </div>
     </div>
     <!-- 사이트 전환 드롭다운 -->
     <div id="site-switcher" style="display:none;position:relative;padding:0 8px 8px">
       <button id="site-switcher-btn" onclick="(function(){var d=document.getElementById('site-dropdown');d.style.display=d.style.display==='block'?'none':'block'})()"
-        style="width:100%;background:rgba(255,255,255,.05);border:1px solid #334155;border-radius:8px;padding:7px 10px;color:#94a3b8;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;text-align:left">
+        style="width:100%;background:#fff;border:1px solid #d5dde8;border-radius:8px;padding:7px 10px;color:#475569;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;text-align:left">
         <i class="bi bi-grid-3x3-gap" style="font-size:13px"></i><span style="flex:1;font-weight:600">사이트 이동</span><i class="bi bi-chevron-up" style="font-size:10px"></i>
       </button>
-      <div id="site-dropdown" style="display:none;position:absolute;bottom:110%;left:0;right:0;background:#1e293b;border:1px solid #334155;border-radius:10px;overflow:hidden;box-shadow:0 -8px 24px rgba(0,0,0,.5);z-index:200">
+      <div id="site-dropdown" style="display:none;position:absolute;bottom:110%;left:0;right:0;background:#fff;border:1px solid #e4e8ef;border-radius:10px;overflow:hidden;box-shadow:0 -8px 24px rgba(16,42,67,.16);z-index:200">
         <div style="padding:6px">
           <div style="border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:#0891b2;font-size:12px;font-weight:700;background:rgba(8,145,178,.12)"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#0891b2;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">KR</span><span style="flex:1">한국 영업</span><i class="bi bi-check2" style="font-size:12px"></i></div>
           <div id="site-dropdown-dynamic"></div>
           <div id="switcher-admin-item" onclick="document.getElementById('site-dropdown').style.display='none';sessionStorage.setItem('wt_app','admin');document.getElementById('main-content').style.display='none';showAdminPanel();document.getElementById('launcher-screen').style.display='flex';"
-            style="display:none;margin-top:2px;border-radius:6px;padding:8px 12px;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
-            onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#6b7280;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">ADM</span><span style="flex:1">관리자 페이지</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i>
+            style="display:none;margin-top:2px;border-radius:6px;padding:8px 12px;align-items:center;gap:8px;color:#475569;font-size:12px;cursor:pointer;transition:background .15s"
+            onmouseover="this.style.background='#eef2f7'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:#6b7280;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">ADM</span><span style="flex:1">관리자 페이지</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i>
           </div>
         </div>
       </div>
@@ -2779,8 +2779,8 @@ async function _bootApp(access) {
       ? `(async()=>{const {data:{session:sess}}=await _sb.auth.getSession();let u='${s.url}';if(sess)u+='#at='+encodeURIComponent(sess.access_token)+'&rt='+encodeURIComponent(sess.refresh_token);location.href=u;})()`
       : `location.href='${s.url}'`;
     return `<div onclick="${onclick.replace(/"/g,'&quot;')}"
-      style="margin-top:2px;border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s"
-      onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:${s.grad_from};color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">${s.badge}</span><span style="flex:1">${s.title}</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i>
+      style="margin-top:2px;border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:#475569;font-size:12px;cursor:pointer;transition:background .15s"
+      onmouseover="this.style.background='#eef2f7'" onmouseout="this.style.background=''"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;background:${s.grad_from};color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0">${s.badge}</span><span style="flex:1">${s.title}</span><i class="bi bi-arrow-right" style="font-size:11px;opacity:.5"></i>
     </div>`;
   }).join('');
   const _showSw=(id,ok)=>{ const el=document.getElementById(id); if(el) el.style.display=ok?'flex':'none'; };
