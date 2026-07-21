@@ -3125,12 +3125,20 @@ function renderSalesOverview() {
     const cP2=_spanS(CONS,pv2), dP2=_spanS(DEVICE,pv2);
     PV2={tot:{v:cI2+dI2,p:cP2+dP2,label:P2.label},dev:{v:dI2,p:dP2,label:P2.label},cons:{v:cI2,p:cP2,label:P2.label}};
   }
-  const kpis = [
-    {dual:incPend, label:'합계 ('+periodLbl+')', icon:'bi-currency-won', col:'#111827', click:"openOvCategory('all')", mainVal:fmtW(totalC), mainSub:'전년 '+fmtW(totalPrev)+' '+badge(yoy), rightVal:fmtW(totalI), pendStr:fmtW(totalPend), p2:PV2&&PV2.tot},
-    {dual:incPend, label:'제품', icon:'bi-box-seam', col:'#16a34a', click:"openOvCategory('dev')", mainVal:fmtW(devYtdC), mainSub:'전년 '+fmtW(devPrev)+' '+badge(devYoy), rightVal:fmtW(devYtdI), pendStr:fmtW(devPendYtd), p2:PV2&&PV2.dev},
-    {dual:incPend, label:'소모품', icon:'bi-capsule', col:'#2563eb', click:"openOvCategory('cons')", mainVal:fmtW(consYtdC), mainSub:'전년 '+fmtW(consPrev)+' '+badge(consYoy), rightVal:fmtW(consYtdI), pendStr:fmtW(consPendYtd), p2:PV2&&PV2.cons},
-  ];
-  document.getElementById('ov-kpi').innerHTML = kpis.map(c=>_kpiDual(c)).join('');
+  // 문서형 재조립: 합계 히어로 + 제품/소모품 팩트밴드 (Madia 스터디, cdud 공용 CSS 재사용)
+  _cduEnsureCss();
+  const _ovHeroVal = incPend?fmtW(totalI):fmtW(totalC);
+  const _ovHeroSub = '회계반영 '+fmtW(totalC)+(incPend&&totalPend>0?' · 미반영 +'+fmtW(totalPend):'')+' · 전년 '+fmtW(totalPrev)+' '+badge(yoy);
+  const _ovFact=(lab,repV,accV,prevV,yo,click)=>'<div class="cdud-fact clk" onclick="'+click+'"><span>'+lab+'</span><b>'+repV+'</b><i>회계 '+accV+' · 전년 '+prevV+' '+badge(yo)+'</i></div>';
+  const _ovKpiHtml='<div class="cdud" style="padding:16px 20px;margin:0">'
+    +'<div class="cdud-kpis" style="border-bottom:0;padding:2px 0 4px">'
+      +'<div class="cdud-hero" style="flex:1.6;cursor:pointer" onclick="openOvCategory(\'all\')"><span class="l">합계 · '+periodLbl+'</span><b>'+_ovHeroVal+'</b><span class="s">'+_ovHeroSub+'</span></div>'
+      +_ovFact('제품', incPend?fmtW(devYtdI):fmtW(devYtdC), fmtW(devYtdC), fmtW(devPrev), devYoy, "openOvCategory('dev')")
+      +_ovFact('소모품', incPend?fmtW(consYtdI):fmtW(consYtdC), fmtW(consYtdC), fmtW(consPrev), consYoy, "openOvCategory('cons')")
+    +'</div>'
+    +(PV2?'<div style="font-size:11px;color:#64748b;padding-top:8px;border-top:1px solid #e4e8ef;margin-top:6px">전월까지 기준 · 합계 <b style="color:#182230">'+fmtW(PV2.tot.v)+'</b> (전년 '+fmtW(PV2.tot.p)+' '+badge(PV2.tot.p>0?(PV2.tot.v/PV2.tot.p-1)*100:null)+') · 제품 '+fmtW(PV2.dev.v)+' · 소모품 '+fmtW(PV2.cons.v)+'</div>':'')
+  +'</div>';
+  const _ovKpiEl=document.getElementById('ov-kpi'); if(_ovKpiEl){ _ovKpiEl.className='mb-3'; _ovKpiEl.innerHTML=_ovKpiHtml; }
 
   const months12 = Array.from({length:12},(_,i)=>i+1);
   const _eok = v => Math.round((v||0)/1e6)/100;   // 억(소수 2자리)
@@ -8974,9 +8982,11 @@ function _schMine(){ const sel=document.getElementById('sch-sales-filter'); if(!
 // ── 일일보고 자동 생성((양식1) 일일보고(한국영업팀).docx 그대로) ──
 // ── 활동 알림함(벨): 최근 4일 입력 피드 ──
 function _bellCut(){ const d=new Date(); d.setDate(d.getDate()-3); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function _bellTs(ts,date){ var s=String(ts||date||''); return s.length<=10?(s+'T00:00:00'):s; }  // 날짜형/датetime형 통일(비교·정렬 일관)
 function _bellFeed(){
-  const cut=_bellCut(), out=[];
-  const push=(date,ts,who,badge,col,text)=>{ if(date&&date>=cut) out.push({date:date,ts:ts||date,who:who||'',badge:badge,col:col,text:text}); };
+  const cut=_bellCut(), today=_schTodayStr(), out=[];
+  // date>=cut(최근4일) && date<=today(미래 '예정'은 활동 아님 → 제외). ts는 정규화해 저장
+  const push=(date,ts,who,badge,col,text)=>{ if(date&&date>=cut&&date<=today) out.push({date:date,ts:_bellTs(ts,date),who:who||'',badge:badge,col:col,text:text}); };
   const auto=id=>String(id||'').indexOf('schdone_')===0||String(id||'').indexOf('sdrdone_')===0;
   (DB.d.logs||[]).forEach(l=>{
     const nm=l.custName||'';
