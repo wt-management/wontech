@@ -3307,6 +3307,7 @@ function openOvMonth(month, year){
   _ovShowModal(year+'년 '+month+'월 매출 상세 <span style="font-size:12px;color:#6b7280">'+(CONS.updatedAt||'')+' 기준</span>', body);
 }
 // KPI(소모품/제품 YTD) 클릭 → 전체 제품 랭킹
+function _ovMoSum(mo){ var o={}; mo=mo||{}; Object.keys(mo).forEach(function(p){ var s=0, mm=mo[p]||{}; Object.keys(mm).forEach(function(m){ s+=Number(mm[m])||0; }); if(s) o[p]=s; }); return o; }
 function _ovRankModal(rows, pr, opts){
   // rows: [[name, amt]] sorted desc; pr: {name:amt}; opts:{accent,catLbl,showQty,q26,q25,catFn}
   var accent=opts.accent, showQty=opts.showQty, q26=opts.q26||{}, q25=opts.q25||{}, catFn=opts.catFn;
@@ -3347,16 +3348,17 @@ function _ovRankModal(rows, pr, opts){
 function openOvCategory(cat){
   if(cat==='all'){
     var cur={}, pr={};
-    ['dev','cons'].forEach(function(k){ var s=(k==='dev'?DEVICE:CONS), c2=s.products2026||{}, p2=s.products2025||{};
-      Object.keys(c2).forEach(function(n){ cur[n]=(cur[n]||0)+c2[n]; }); Object.keys(p2).forEach(function(n){ pr[n]=(pr[n]||0)+p2[n]; }); });
+    var dm=_ovMoSum(DEVICE.prodMo2026), dp=_ovMoSum(DEVICE.prodMo2025);
+    Object.keys(dm).forEach(function(n){ cur[n]=(cur[n]||0)+dm[n]; }); Object.keys(dp).forEach(function(n){ pr[n]=(pr[n]||0)+dp[n]; });
+    Object.keys(CONS.products2026||{}).forEach(function(n){ cur[n]=(cur[n]||0)+CONS.products2026[n]; }); Object.keys(CONS.products2025||{}).forEach(function(n){ pr[n]=(pr[n]||0)+CONS.products2025[n]; });
     var rows=Object.entries(cur).sort(function(a,b){return b[1]-a[1];});
     var body=_ovRankModal(rows, pr, {accent:'#111827', showQty:false, catFn:function(p){ return (CONS.products2026||{})[p]!=null?'cons':'dev'; }});
     _ovShowModal('전체 매출 구성 <span style="font-size:11px;font-weight:400;color:#94a3b8">· 제품+소모품 · 품목 클릭 시 상세</span>', body); return;
   }
-  var isCons=cat==='cons', src=isCons?CONS:DEVICE, accent=isCons?'#2563eb':'#16a34a', catLbl=isCons?'소모품':'제품';
-  var cur=src.products2026||{}, pr=src.products2025||{};
+  var isCons=cat==='cons', accent=isCons?'#2563eb':'#16a34a', catLbl=isCons?'소모품':'제품';
+  var cur=isCons?(CONS.products2026||{}):_ovMoSum(DEVICE.prodMo2026), pr=isCons?(CONS.products2025||{}):_ovMoSum(DEVICE.prodMo2025);
   var rows=Object.entries(cur).sort(function(a,b){return b[1]-a[1];});
-  var body=_ovRankModal(rows, pr, {accent:accent, cat:cat, showQty:!isCons, q26:(isCons?{}:(DEVICE.prodQty2026||{})), q25:(isCons?{}:(DEVICE.prodQty2025||{}))});
+  var body=_ovRankModal(rows, pr, {accent:accent, cat:cat, showQty:!isCons, q26:(isCons?{}:_ovMoSum(DEVICE.prodMoQty2026)), q25:(isCons?{}:_ovMoSum(DEVICE.prodMoQty2025))});
   _ovShowModal(catLbl+'별 전체 랭킹 <span style="font-size:11px;font-weight:400;color:#94a3b8">· 매출·대수·전년비 · 품목 클릭 시 상세</span>', body);
 }
 

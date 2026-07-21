@@ -153,7 +153,11 @@ function aggDevice2026(rows26){
     }
   });
   Object.keys(devHosp).forEach(function(n){ var dh=devHosp[n]; dh.txns2026.sort(function(a,b){return a[1]<b[1]?-1:1;}); });
-  return {monthly2026:monthly,monthlyQty2026:monthlyQty,products2026:topN(products,12),prodQty2026:topN(prodQty,12),
+  // 랭킹(products/prodQty)을 월별 상세(prodMo/prodMoQty) 합과 일치시켜 자기모순 제거 + 전 품목 유지(상한 제거)
+  var _pAll={},_qAll={};
+  Object.keys(prodMo).forEach(function(p){ var s=0,mm=prodMo[p]; Object.keys(mm).forEach(function(m){s+=mm[m];}); _pAll[p]=s; });
+  Object.keys(prodMoQty).forEach(function(p){ var s=0,mm=prodMoQty[p]; Object.keys(mm).forEach(function(m){s+=mm[m];}); _qAll[p]=s; });
+  return {monthly2026:monthly,monthlyQty2026:monthlyQty,products2026:_pAll,prodQty2026:_qAll,
     prodMo2026:prodMo,prodMoQty2026:prodMoQty,hospitals2026:devHosp,reps2026:devReps};
 }
 
