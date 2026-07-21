@@ -6182,7 +6182,7 @@ function _cduEnsureCss(){ if(document.getElementById('cdud-css')) return;
     +'.cdud .cdud-tgl{display:block;width:100%;margin-top:22px;padding:9px 0;background:none;border:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);color:var(--mut);font-size:12px;font-weight:700;cursor:pointer;text-align:center}'
     +'.cdud .cdud-tgl:hover{color:var(--ink)}'
     +'.cdud .cdud-tgl u{text-decoration:none;font-weight:400;color:#94a3b8;margin-left:6px}'
-    +'@media(max-width:900px){.cdud{padding:16px 14px}.cdud .cdud-kpis{flex-wrap:wrap;gap:10px 0}.cdud .cdud-hero{flex:1 1 100%;padding-bottom:8px;padding-right:0}.cdud .cdud-kpis .cdud-fact:first-of-type{border-left:0;padding-left:0}.cdud .cdud-band{grid-template-columns:repeat(2,1fr);gap:10px 0}.cdud .cdud-band .cdud-fact{padding:2px 12px}.cdud .cdud-band .cdud-fact:nth-child(odd){border-left:0;padding-left:0}.cdud .cdud-two,.cdud .cdud-grid2{grid-template-columns:1fr}}'
+    +'@media(max-width:720px){.cdud{padding:16px 14px}.cdud .cdud-kpis{display:grid!important;grid-template-columns:1fr 1fr;gap:14px 12px;border-bottom:0!important;align-items:start}.cdud .cdud-hero{grid-column:1/-1;padding-right:0!important;padding-bottom:12px;border-bottom:1px solid var(--line)}.cdud .cdud-hero b{font-size:27px}.cdud .cdud-kpis .cdud-fact,.cdud .cdud-band .cdud-fact{border-left:0!important;padding:0!important}.cdud .cdud-band{grid-template-columns:1fr 1fr;gap:14px 12px}.cdud .cdud-fact b{font-size:18px}.cdud .cdud-fact i{white-space:normal}.cdud .cdud-two,.cdud .cdud-grid2{grid-template-columns:1fr}.cdud .cdud-tx{display:none}.cdud .cdud-trend-row{flex-wrap:wrap}}'
     ;
   document.head.appendChild(st); }
 function renderCDUReport(vs){
@@ -6299,8 +6299,8 @@ function renderCDUReport(vs){
         +'<span style="font-size:12px;min-width:70px;font-weight:'+(isF?'800':'600')+';color:'+(isF?'#1d4ed8':'#334155')+'">'+_cduEsc(w)+'</span>'
         +_cduBar(a.n/maxWkN*100,'#2563eb')
         +'<span style="font-size:12px;font-weight:700;min-width:44px;text-align:right">'+a.n+'개처</span>'
-        +'<span style="font-size:11px;color:#64748b;min-width:74px;text-align:right">수가 '+(ap||'-')+(ap?'천':'')+'</span>'
-        +'<span style="font-size:11px;color:#64748b;min-width:52px;text-align:right">이벤트 '+a.ev+'</span>'
+        +'<span class="cdud-tx" style="font-size:11px;color:#64748b;min-width:74px;text-align:right">수가 '+(ap||'-')+(ap?'천':'')+'</span>'
+        +'<span class="cdud-tx" style="font-size:11px;color:#64748b;min-width:52px;text-align:right">이벤트 '+a.ev+'</span>'
         +'<i class="bi bi-chevron-right" style="font-size:10px;color:#cbd5e1"></i></div>'; }).join('')
     : '<div class="text-muted" style="font-size:12px">주차 데이터 없음</div>';
 
