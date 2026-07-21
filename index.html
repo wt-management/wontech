@@ -15,9 +15,15 @@
 <style>
 :root{--blue:#2563eb;--blue-light:#eff6ff;--sidebar-bg:#f1f5f9;--sidebar-hover:#eef2f7;--sidebar-active:#eaf1fd;--text:#111827;--text-2:#6b7280;--border:#e5e7eb;--bg:#f3f4f6;--white:#ffffff;--green:#16a34a;--orange:#ea580c;--purple:#7c3aed;--red:#dc2626}
 *{box-sizing:border-box}
+<<<<<<< Updated upstream
 html{color-scheme:light}
 body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans KR',sans-serif;margin:0;color:var(--text);font-size:14px}
 .sidebar{width:220px;background:var(--sidebar-bg);min-height:100vh;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;display:flex;flex-direction:column;border-right:1px solid #d8e0ea;box-shadow:3px 0 16px rgba(16,42,67,.06)}
+=======
+html{color-scheme:only light}
+body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans KR',sans-serif;margin:0;color:var(--text);font-size:14px;color-scheme:only light}
+.sidebar{width:220px;background:var(--sidebar-bg);min-height:100vh;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;display:flex;flex-direction:column}
+>>>>>>> Stashed changes
 .main{flex:1;margin-left:220px;padding:28px 32px 104px;overflow-y:auto;min-height:100vh}
 .sidebar-brand{padding:22px 20px 16px;color:#1c2534;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e4e8ef}
 .brand-icon{width:32px;height:32px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
@@ -135,8 +141,9 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
   .stat-card{flex-direction:column;align-items:flex-start;gap:8px}
   .page-header{flex-direction:column;align-items:flex-start;gap:10px}
   .table-responsive{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  /* ── 래퍼 없는 표(44개)도 페이지를 밀거나 잘리지 않고 표 안에서 가로 스크롤 ── */
-  .main table{display:block;width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  /* ── 래퍼 없는 표(44개)도 페이지를 밀거나 잘리지 않고 표 안에서 가로 스크롤. nowrap으로 셀이 세로로 쪼개지지 않고 자연폭 유지 ── */
+  .main table{display:block;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
+  .main table td,.main table th{white-space:nowrap}
   /* ── 데스크톱용 다열 그리드 → 모바일 1열 ── */
   .roi-split,.qed-parties{grid-template-columns:1fr!important;gap:16px!important}
   [style*="minmax(440px"]{grid-template-columns:1fr!important}
@@ -163,6 +170,29 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
   .modal-dialog-scrollable{max-height:calc(100vh - 16px)}
   /* 화면 밖 가로 스크롤 방지 */
   body{overflow-x:hidden}
+}
+/* ══ 모바일 종합 검수 반영(전 페이지·전 팝업 5영역 감사) ══ */
+@media(max-width:768px){
+  /* 모달 안 넓은 표: .main 밖이라 전역 표 규칙 미적용 → 개별 가로 스크롤(셀 nowrap으로 자연폭 유지) */
+  #excelPreviewModal #excel-preview-table,#teamMgrModal .modal-body,#schDailyModal .modal-body,#print-content{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  #teamMgrModal table,#excelPreviewModal table,#hospitalModal .modal-body table{white-space:nowrap}
+  #hospitalModal .modal-body table{display:block;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  #sdr-sheet{min-width:720px}
+  /* 일정 월간 달력: 7열 압착 방지 → 부모(.card-body) 안에서 가로 스크롤 */
+  #sch-body [style*="repeat(7,1fr)"]{min-width:600px}
+  /* 모달/카드 헤더 컨트롤 줄바꿈 허용 */
+  #daySumModal .modal-header,#hospitalModal .modal-header{flex-wrap:wrap;gap:6px}
+  #page-device-reps .card .d-flex.align-items-center{flex-wrap:wrap}
+  /* 병원분석 등급별 7열 드릴: 세로 스크롤만 있던 것 → 가로 스크롤로 열폭 확보 */
+  #grade-drill-content{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  #grade-drill-content>div{min-width:560px}
+}
+@media(max-width:576px){
+  /* 브레이크포인트 없는 Bootstrap col 폼 → 모바일에서 재배치(뭉개짐 해소) */
+  #hi-contacts [class*="col-"]{flex:0 0 100%;max-width:100%}
+  #logModal .col-4{flex:0 0 50%;max-width:50%}
+  #productModal .col-3{flex:0 0 50%;max-width:50%}
+  #custModal .col-2{flex:0 0 100%;max-width:100%}
 }
 /* 페이지 전환 애니메이션 */
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -6481,7 +6511,7 @@ function _cduInputMonth(){
   var head=['일','월','화','수','목','금','토'].map(function(w,i){return '<div style="text-align:center;font-size:11px;padding:4px;color:'+(i===0?'#dc2626':i===6?'#2563eb':'#6b7280')+'">'+w+'</div>';}).join('');
   var nav='<div class="d-flex align-items-center mb-2"><span style="font-size:14px;font-weight:800;color:#374151">'+y+'년 '+m+'월</span><span style="font-size:11px;color:#94a3b8;margin-left:6px">· '+cnt+'건</span>'
     +'<span class="ms-auto"><button class="btn btn-sm btn-outline-secondary" onclick="_cduMonthNav(-1)"><i class="bi bi-chevron-left"></i></button> <button class="btn btn-sm btn-outline-secondary" onclick="_cduCalMonth=null;renderCDU()">이번달</button> <button class="btn btn-sm btn-outline-secondary" onclick="_cduMonthNav(1)"><i class="bi bi-chevron-right"></i></button></span></div>';
-  return nav+'<div style="border:1px solid #e4e8ef;border-radius:10px;padding:6px"><div style="display:grid;grid-template-columns:repeat(7,1fr)">'+head+cells+'</div></div>';
+  return nav+'<div style="border:1px solid #e4e8ef;border-radius:10px;padding:6px;overflow-x:auto;-webkit-overflow-scrolling:touch"><div style="display:grid;grid-template-columns:repeat(7,1fr);min-width:600px">'+head+cells+'</div></div>';
 }
 // 재방문 추천(담당자 참고용) — 방문기록 탭에만, 접힌 상태 기본
 function _cduRevisitBox(){
