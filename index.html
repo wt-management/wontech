@@ -34,6 +34,15 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 .sidebar .nav-link.active i{color:var(--blue)}
 .sidebar-footer{margin-top:auto;padding:12px 8px;border-top:1px solid #e4e8ef}
 .page{display:none}.page.active{display:block}
+/* ── 버튼 톤업(전역): 부트스트랩 기본 회색 → 부드러운 테두리·블루 호버 ── */
+.btn-outline-secondary{border-color:#dbe3ec;color:#475569;background:#fff;border-radius:8px;font-weight:600;transition:all .15s}
+.btn-outline-secondary:hover,.btn-outline-secondary:focus{background:#eff4fb;border-color:#a9c4e8;color:#2563eb}
+.btn-outline-secondary:active{background:#2563eb!important;border-color:#2563eb!important;color:#fff!important}
+.wt-tab{display:inline-flex;align-items:center;gap:6px;font-family:inherit;font-size:12.5px;font-weight:600;color:#475569;background:#fff;border:1px solid #dbe3ec;border-radius:9px;padding:7px 15px;cursor:pointer;transition:all .15s;line-height:1;white-space:nowrap}
+.wt-tab:hover{background:#eff4fb;border-color:#a9c4e8;color:#2563eb}
+.wt-tab i{font-size:13px;color:#2563eb}
+.wt-tab.on{background:#2563eb;border-color:#2563eb;color:#fff;box-shadow:0 2px 6px rgba(37,99,235,.22)}
+.wt-tab.on i{color:#fff}
 .card{border:1px solid var(--border);border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.04);background:var(--white)}
 .stat-card{border-radius:14px;padding:20px 22px;background:var(--white);border:1px solid var(--border);display:flex;align-items:center;gap:16px}
 .stat-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
