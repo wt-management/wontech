@@ -127,10 +127,12 @@ function aggDevice2026(rows26){
   var devHosp={},devReps={};
   rows26.forEach(function(r){
     var amt=num(r['금액']); if(amt===0) return;     // 음수(차감) 유지=net
-    var qty=pint(r['수량']); if(amt>0&&qty<=0) qty=1;   // 양수 무수량→1대 / 음수(보상=0·취소)는 원수량(대수 뻥튀기 방지)
+    var qtyRaw=pint(r['수량']);
+    var qtyForExcl=qtyRaw>0?qtyRaw:1;               // 저단가 제외 판정용(빈칸=1로 가정해 판정만)
+    var qty=qtyRaw>0?qtyRaw:0;                      // 실제 대수: 빈 수량은 0(세지 않음, 재무 원본 기준) — 금액은 아래서 그대로 반영
     var mo=monthNum(r['월']); var prod=(r['구분#4']||'').trim();
     if(/hair|헤어/i.test(prod)) prod='Hair Beam';
-    else if(amt>0 && amt/qty<1000000) return;       // 양수 저단가(팁/소모품) 제외
+    else if(amt>0 && amt/qtyForExcl<1000000) return;       // 양수 저단가(팁/소모품) 제외
     var name=(r['거래처명']||'').trim(), sales=(r['담당자']||'').trim();
     var ds=dsOf(r['날짜'])||'';
     if(mo){ monthly[mo]=(monthly[mo]||0)+amt; monthlyQty[mo]=(monthlyQty[mo]||0)+qty; }
