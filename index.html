@@ -15,6 +15,8 @@
 <style>
 :root{--blue:#2563eb;--blue-light:#eff6ff;--sidebar-bg:#f1f5f9;--sidebar-hover:#eef2f7;--sidebar-active:#eaf1fd;--text:#111827;--text-2:#6b7280;--border:#e5e7eb;--bg:#f3f4f6;--white:#ffffff;--green:#16a34a;--orange:#ea580c;--purple:#7c3aed;--red:#dc2626}
 *{box-sizing:border-box}
+/* 전 페이지 표 공통: 숫자 자릿수 정렬 고정(정렬 어긋남·촌스러움 해소) */
+.main table{font-variant-numeric:tabular-nums}
 html{color-scheme:only light}
 body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans KR',sans-serif;margin:0;color:var(--text);font-size:14px;color-scheme:only light}
 .sidebar{width:220px;background:var(--sidebar-bg);min-height:100vh;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;display:flex;flex-direction:column;border-right:1px solid #d8e0ea;box-shadow:3px 0 16px rgba(16,42,67,.06)}
@@ -753,10 +755,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <div class="card p-3 h-100">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="fw-bold" style="font-size:14px">월별 매출 현황</div>
-            <div style="display:flex;gap:8px;font-size:10px;color:#64748b">
-              <span><span style="display:inline-block;width:8px;height:8px;background:#2563eb;border-radius:2px;margin-right:3px"></span>확정</span>
-              <span><span style="display:inline-block;width:8px;height:8px;background:#93c5fd;border-radius:2px;margin-right:3px"></span>예상</span>
-            </div>
+            
           </div>
           <div style="position:relative;height:200px"><canvas id="chart-monthly"></canvas></div>
         </div>
@@ -1341,7 +1340,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
             <div class="fw-bold" style="font-size:14px"><i class="bi bi-graph-up-arrow me-1" style="color:#374151"></i>Oligio Tip 종합 <span style="font-size:11px;font-weight:400;color:#64748b">전체 합산 · 점선=2025 실선=2026</span></div>
           </div>
           <div style="position:relative;height:160px"><canvas id="cons-chart-total"></canvas></div>
-          <div id="cons-trend-badge" style="font-size:12px;margin-top:8px"></div>
+          
         </div>
       </div>
       <div class="col-md-6">
@@ -1533,7 +1532,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
     <!-- 등급별 추이 패널 -->
     <div id="hosp-panel-grade" style="display:none">
-      <div class="row g-3 mb-3" id="grade-kpi-row"></div>
+      
       <!-- 등급별 4개 차트 -->
       <div class="row g-3 mb-3" id="grade-charts-row">
         <div class="col-md-6"><div class="card p-3"><div class="fw-bold mb-2" style="font-size:12px;color:#9333ea"><span style="background:#f3e8ff;border-radius:4px;padding:1px 7px;margin-right:6px">S</span>S등급 월별 추이</div><canvas id="chart-grade-S" height="140"></canvas></div></div>
@@ -4839,7 +4838,7 @@ function renderConsumables() {
   const ogYtd26=spanMs.reduce((s,x)=>{const M=oligMoY(x.y);return s+(M['Oligio']?.[x.m]||0)+(M['Oligio X/XM']?.[x.m]||0);},0);
   const ogYtd25=prevMs.reduce((s,x)=>{const M=oligMoY(x.y);return s+(M['Oligio']?.[x.m]||0)+(M['Oligio X/XM']?.[x.m]||0);},0);
   const ogYoy=ogYtd25>0?(ogYtd26/ogYtd25-1)*100:0;
-  document.getElementById('cons-trend-badge').innerHTML =
+  var _ctb=document.getElementById('cons-trend-badge'); if(_ctb) _ctb.innerHTML =
     `<span style="display:inline-block;background:${ogYoy>=0?'#f0fdf4':'#fef2f2'};color:${ogYoy>=0?'#16a34a':'#dc2626'};font-weight:700;padding:4px 12px;border-radius:20px;font-size:12px">Oligio 전체 YoY ${ogYoy>=0?'+':''}${ogYoy.toFixed(1)}% (${P.label} 기준)</span>`;
 
   // 트랜잭션 기반 제품별 기간합계
@@ -5001,7 +5000,7 @@ function renderGradeTrend() {
   const labels=ytdMonths.map(m=>m+'월');
 
   // KPI 카드
-  document.getElementById('grade-kpi-row').innerHTML=GRADES.map(gr=>{
+  var _gkr=document.getElementById('grade-kpi-row'); if(_gkr) _gkr.innerHTML=GRADES.map(gr=>{
     const list=hosps.filter(([,h])=>h.y2026>=gr.min&&h.y2026<gr.max);
     const tot26=list.reduce((s,[,h])=>s+h.y2026,0);
     const tot25=list.reduce((s,[,h])=>s+ytd25(h),0);
@@ -7041,7 +7040,7 @@ function renderQuotes() {
     <td style="font-size:12px;color:#0891b2;font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(function(){const its=(q.items||[]).slice().sort((a,b)=>Number(b.amount||0)-Number(a.amount||0)); const main=its.filter(i=>Number(i.amount||0)>0); const src=main.length?main:its; return src.length?_escH(src[0].name)+(src.length>1&&main.length>1?' 외':''):'-';})()}</td>
     <td style="font-size:12px">${fmtDate(q.quoteDate)}</td>
     <td style="font-size:12px">${_escH(q.sales)}</td>
-    <td style="font-weight:700">${fmtAmt(Number(q.total||0))}</td>
+    <td style="font-weight:700;text-align:right">${fmtAmt(Number(q.total||0))}</td>
     <td style="white-space:nowrap">
       <button class="btn btn-outline-dark btn-sm me-1" style="font-size:11px;padding:1px 6px" onclick="openQuoteEditor('${q.id}')"><i class="bi bi-pencil"></i>편집</button>
       <button class="btn btn-outline-primary btn-sm me-1" style="font-size:11px;padding:1px 6px" onclick="viewQuote('${q.id}')">보기</button>
@@ -7848,7 +7847,7 @@ function _custRegionView(list){
 function _custGradeView(list){
   const G=[{g:'S',d:'3천만↑'},{g:'A',d:'1천만~3천만'},{g:'B',d:'300만~1천만'},{g:'C',d:'50만~300만'},{g:'·',d:'50만 미만'}];
   const act=list.filter(h=>h.y2026>0);
-  return '<div class="alert alert-light border" style="font-size:12px;padding:8px 12px"><i class="bi bi-info-circle me-1"></i>등급 = <b>2026년 누적매출(소모품+장비) 규모</b> — S:3천만↑ / A:1천만↑ / B:300만↑ / C:50만↑</div>'+
+  return '<div class="alert alert-light border" style="font-size:12px;padding:8px 12px"><i class="bi bi-info-circle me-1"></i>등급 = <b>2026년 누적매출(소모품+장비) 규모</b></div>'+
   G.map(function(gr){ const hs=act.filter(h=>h.grade===gr.g).sort((a,b)=>b.y2026-a.y2026); if(!hs.length) return '';
     return '<div class="card mb-2"><div class="card-body p-0"><div style="padding:9px 14px;border-bottom:1px solid #eef2f7;font-weight:700;font-size:13px;display:flex;justify-content:space-between"><span>'+_gpill(gr.g)+' <span style="color:#64748b;font-weight:400;font-size:12px">'+gr.d+' · '+hs.length+'개</span></span><span style="color:#374151">'+_custFmt(hs.reduce((s,h)=>s+h.y2026,0))+'</span></div><table class="table table-hover mb-0"><tbody>'+hs.map(h=>_custRow(h,null)).join('')+'</tbody></table></div></div>'; }).join('');
 }
@@ -10021,8 +10020,8 @@ function renderDeviceSales() {
     ? `<div class="card p-4 text-center text-muted mb-3"><i class="bi bi-cloud-upload me-2"></i>소모품 메뉴에서 Excel 업로드 후 데이터가 표시됩니다</div>`
     : '<div class="wt-band">'
       +'<div class="wt-hero" style="cursor:pointer" onclick="openOvCategory(\'dev\')"><span class="l">누계 매출 · '+P.label+'</span><b>'+fmtW(ytdCur)+'</b><span class="s">'+(_prevFull?'전년 동기 '+fmtW(ytdPrev)+' '+chgBadge(yoy):'연도경계 누적')+'</span>'+devSub2+'</div>'
-      +'<div class="wt-fact" style="cursor:default"><span class="l">전년 동기</span><b>'+(_prevFull?fmtW(ytdPrev):'—')+'</b><span class="s">'+(_prevFull?'동일 기간·전년':'전년 데이터 범위 밖')+'</span></div>'
-      +'<div class="wt-fact" style="cursor:default"><span class="l">YoY 성장률</span><b'+(yoy===null?'':(yoy>=0?' class="gr"':' class="rd"'))+'>'+(yoy===null?'-':((yoy>=0?'▲':'▼')+Math.abs(yoy).toFixed(1)+'%'))+'</b><span class="s">전년 동기 대비</span></div>'
+      
+      
       +'<div class="wt-fact" onclick="openOvCategory(\'dev\')"><span class="l">취급 제품수 <i class="bi bi-search" style="font-size:9px;color:#cbd5e1"></i></span><b>'+Object.keys(curProds).length+'종</b><span class="s">'+P.label+' · 클릭 랭킹</span></div>'
       +'</div>';
 
