@@ -204,6 +204,13 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 .table{font-variant-numeric:tabular-nums}
 .table thead th{background:#fafbfc;color:#475569;font-size:12px;font-weight:700;border-top:2px solid #16324f;border-bottom:1px solid #e4e8ef}
 .table tbody td{border-color:#eef1f5}
+/* 문서형 페이지 헤더(전 페이지 공통) */
+.page-header{border-bottom:1px solid #e4e8ef;padding-bottom:13px}
+.page-header h5{font-size:19px;font-weight:800;color:#182230;letter-spacing:-.01em}
+.page-header h5 i{color:#16324f}
+/* KPI 숫자 문서 톤 */
+.kpi-value{letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stat-num{letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 @media print{
   @page{size:A4 landscape;margin:9mm}
   body{background:#fff!important}
