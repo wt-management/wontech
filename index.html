@@ -221,6 +221,22 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
   .card,table{break-inside:avoid}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 }
+/* 문서형 마스트헤드 + 히어로/팩트밴드 (전 페이지 공통 구조) */
+.wt-mast{padding-bottom:13px;border-bottom:2px solid #16324f;margin-bottom:18px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px}
+.wt-mast .kick{font-size:11px;font-weight:800;letter-spacing:.14em;color:#94a3b8;text-transform:uppercase}
+.wt-mast .t{font-size:22px;font-weight:800;color:#182230;letter-spacing:-.01em;margin-top:4px}
+.wt-band{display:flex;align-items:stretch;background:#fff;border:1px solid #e4e8ef;border-radius:12px;padding:16px 20px;margin-bottom:16px}
+.wt-hero{flex:1.5;padding-right:22px;display:flex;flex-direction:column;justify-content:center;min-width:0}
+.wt-hero .l{font-size:11.5px;font-weight:700;color:#64748b}
+.wt-hero b{font-size:32px;font-weight:800;color:#182230;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.wt-hero .s{font-size:12px;color:#64748b;margin-top:3px}
+.wt-fact{flex:1;padding:2px 18px;border-left:1px solid #e4e8ef;display:flex;flex-direction:column;justify-content:center;min-width:0;cursor:pointer}
+.wt-fact .l{font-size:11px;font-weight:700;color:#64748b;white-space:nowrap}
+.wt-fact b{font-size:20px;font-weight:800;color:#182230;font-variant-numeric:tabular-nums;white-space:nowrap;margin-top:2px}
+.wt-fact .s{font-size:10.5px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wt-fact b.rd{color:#dc2626}.wt-fact b.gr{color:#15803d}
+.wt-st{font-size:14px;font-weight:800;color:#182230;padding-bottom:8px;border-bottom:2px solid #16324f;margin-bottom:12px}
+@media(max-width:720px){.wt-band{display:grid;grid-template-columns:1fr 1fr;gap:14px}.wt-hero{grid-column:1/-1;padding-right:0;border-bottom:1px solid #e4e8ef;padding-bottom:12px}.wt-fact{border-left:0!important;padding:0}}
 </style>
 <script>/* WT_ERRLOG_V1 rev2 — 공통 오류수집+요청함 (자동주입 스니펫, 개별 수정 금지) */
 (function(){
@@ -556,8 +572,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
   <!-- 예정분 관리 (회계 미반영 매출) -->
   <div id="page-pending" class="page">
-    <div class="page-header">
-      <h5><i class="bi bi-hourglass-split me-2"></i>회계 미반영 매출 <span style="font-size:12px;font-weight:400;color:#64748b">일매출일보 기준</span></h5>
+    <div class="wt-mast">
+      <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-hourglass-split me-2"></i>회계 미반영 매출 <span style="font-size:12px;font-weight:400;color:#64748b">일매출일보 기준</span></div></div>
     </div>
     <!-- ilbo pending view -->
     <div class="card p-0 mt-3" style="overflow-x:auto">
@@ -614,8 +630,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
   <!-- 지역별 분석 -->
   <div id="page-region" class="page">
-    <div class="page-header">
-      <h5><i class="bi bi-geo-alt me-2"></i>지역별 매출 분석 <span style="font-size:12px;font-weight:400;color:#64748b">시도 · 구군</span></h5>
+    <div class="wt-mast">
+      <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-geo-alt me-2"></i>지역별 매출 분석 <span style="font-size:12px;font-weight:400;color:#64748b">시도 · 구군</span></div></div>
       <div class="btn-group btn-group-sm" role="group">
         <button id="regv-table" type="button" class="btn btn-outline-primary active" onclick="_regView('table',this)"><i class="bi bi-table me-1"></i>표</button>
         <button id="regv-map" type="button" class="btn btn-outline-primary" onclick="_regView('map',this)"><i class="bi bi-map me-1"></i>지도</button>
@@ -631,7 +647,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <span id="reg-period-host"></span>
       <span id="reg-info" style="margin-left:auto;font-size:11px;color:#64748b;white-space:nowrap"></span>
     </div>
-    <div class="row g-3 mb-3" id="reg-kpi"></div>
+    <div id="reg-kpi"></div>
     <div class="row g-3 mb-3" id="reg-insight"></div>
     <!-- 장비 판매 지도 -->
     <div id="reg-map-card" class="card p-3 mb-3" style="display:none">
@@ -676,43 +692,13 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <span id="dash-period-desc" style="font-size:12px;color:#64748b;font-weight:600"></span>
     </div>
 
-    <!-- KPI 5개 한 행 -->
-    <div class="row g-2 mb-3">
-      <div class="col-6 col-md">
-        <div class="kpi-card" style="border-top:3px solid #16324f">
-          <div class="kpi-label"><i class="bi bi-check-circle-fill me-1" style="color:#16324f"></i>확정 매출</div>
-          <div class="kpi-value" id="kpi-confirmed">-</div>
-          <div class="kpi-sub" id="kpi-confirmed-sub"></div>
-        </div>
-      </div>
-      <div class="col-6 col-md">
-        <div class="kpi-card" style="border-top:3px solid #16324f">
-          <div class="kpi-label"><i class="bi bi-hourglass-split me-1" style="color:#16324f"></i>예상 추가</div>
-          <div class="kpi-value" id="kpi-expected">-</div>
-          <div class="kpi-sub" id="kpi-expected-sub"></div>
-        </div>
-      </div>
-      <div class="col-6 col-md">
-        <div class="kpi-card" style="border-top:3px solid #16324f">
-          <div class="kpi-label"><i class="bi bi-bullseye me-1" style="color:#16324f"></i>총 전망</div>
-          <div class="kpi-value" id="kpi-total-forecast">-</div>
-          <div class="kpi-sub" id="kpi-total-forecast-sub"></div>
-        </div>
-      </div>
-      <div class="col-6 col-md">
-        <div class="kpi-card" style="border-top:3px solid #16324f">
-          <div class="kpi-label"><i class="bi bi-percent me-1" style="color:#16324f"></i>Win Rate</div>
-          <div class="kpi-value" id="kpi-winrate">-</div>
-          <div class="kpi-sub" id="kpi-winrate-sub"></div>
-        </div>
-      </div>
-      <div class="col-6 col-md">
-        <div class="kpi-card" style="border-top:3px solid #16324f">
-          <div class="kpi-label"><i class="bi bi-layers-fill me-1" style="color:#16324f"></i>파이프라인 잔고</div>
-          <div class="kpi-value" id="kpi-pipe-balance">-</div>
-          <div class="kpi-sub" id="kpi-pipe-balance-sub"></div>
-        </div>
-      </div>
+    <!-- KPI 5개 한 행 (문서형 히어로+팩트밴드) -->
+    <div class="wt-band">
+      <div class="wt-hero" style="cursor:pointer"><span class="l"><i class="bi bi-check-circle-fill me-1" style="color:#16324f"></i>확정 매출</span><b id="kpi-confirmed">-</b><span class="s" id="kpi-confirmed-sub"></span></div>
+      <div class="wt-fact" style="cursor:pointer"><span class="l"><i class="bi bi-hourglass-split me-1" style="color:#16324f"></i>예상 추가</span><b id="kpi-expected">-</b><span class="s" id="kpi-expected-sub"></span></div>
+      <div class="wt-fact" style="cursor:pointer"><span class="l"><i class="bi bi-bullseye me-1" style="color:#16324f"></i>총 전망</span><b id="kpi-total-forecast">-</b><span class="s" id="kpi-total-forecast-sub"></span></div>
+      <div class="wt-fact" style="cursor:pointer"><span class="l"><i class="bi bi-percent me-1" style="color:#16324f"></i>Win Rate</span><b id="kpi-winrate">-</b><span class="s" id="kpi-winrate-sub"></span></div>
+      <div class="wt-fact" style="cursor:pointer"><span class="l"><i class="bi bi-layers-fill me-1" style="color:#16324f"></i>파이프라인 잔고</span><b id="kpi-pipe-balance">-</b><span class="s" id="kpi-pipe-balance-sub"></span></div>
     </div>
 
     <!-- 매출 전망 바 -->
@@ -785,8 +771,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   <!-- 파이프라인 -->
   <div id="page-sales" class="page">
     <!-- 헤더 -->
-    <div class="page-header">
-      <h5><i class="bi bi-kanban me-2"></i>영업관리</h5>
+    <div class="wt-mast">
+      <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-kanban me-2"></i>영업관리</div></div>
       <div class="d-flex gap-2 align-items-center">
         <div class="d-flex gap-1" id="sales-period-btns">
           <button class="dash-period-btn on" id="pp-month"   onclick="setPerfPeriod('month',this)">이번달</button>
@@ -1194,7 +1180,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
   <!-- 견적서 -->
   <div id="page-quotes" class="page">
-    <div class="page-header"><h5><i class="bi bi-file-earmark-text me-2"></i>견적서</h5><div class="d-flex align-items-center" style="gap:8px"><div class="btn-group btn-group-sm"><button class="btn btn-primary" type="button">견적서</button><button class="btn btn-outline-primary" type="button" onclick="showPage('roi')"><i class="bi bi-calculator me-1"></i>ROI 계산기</button></div><button class="btn btn-primary btn-sm" onclick="openModal('quote')"><i class="bi bi-plus-lg me-1"></i>견적서 작성</button></div></div>
+    <div class="wt-mast"><div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-file-earmark-text me-2"></i>견적서</div></div><div class="d-flex align-items-center" style="gap:8px"><div class="btn-group btn-group-sm"><button class="btn btn-primary" type="button">견적서</button><button class="btn btn-outline-primary" type="button" onclick="showPage('roi')"><i class="bi bi-calculator me-1"></i>ROI 계산기</button></div><button class="btn btn-primary btn-sm" onclick="openModal('quote')"><i class="bi bi-plus-lg me-1"></i>견적서 작성</button></div></div>
     <div class="card"><div class="card-body p-0"><table class="table table-hover mb-0">
       <thead class="table-light"><tr><th>견적번호</th><th>병원명</th><th>장비명</th><th>견적일</th><th>담당</th><th>합계</th><th></th></tr></thead>
       <tbody id="quote-list"></tbody>
@@ -1204,7 +1190,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
   <!-- 고객사 (실제 거래 데이터 기반) -->
   <div id="page-customers" class="page">
-    <div class="page-header"><h5>고객사</h5><span class="text-muted" style="font-size:12px"><i class="bi bi-info-circle me-1"></i>실제 매출 데이터 기반 · 병원 클릭 → 상세·정보수정</span></div>
+    <div class="wt-mast"><div><div class="kick">WONTECH SALES</div><div class="t">고객사</div></div><span class="text-muted" style="font-size:12px"><i class="bi bi-info-circle me-1"></i>실제 매출 데이터 기반 · 병원 클릭 → 상세·정보수정</span></div>
     <!-- 보기 선택 카드 -->
     <div class="row g-2 mb-3" id="cust-view-cards"></div>
     <div class="d-flex gap-2 mb-2 flex-wrap align-items-center">
@@ -1218,8 +1204,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
   <!-- 장비 -->
   <div id="page-equipments" class="page">
-    <div class="page-header">
-      <h5>장비 관리</h5>
+    <div class="wt-mast">
+      <div><div class="kick">WONTECH SALES</div><div class="t">장비 관리</div></div>
       <div class="d-flex gap-2 align-items-center">
         <span id="equip-load-status" class="text-muted" style="font-size:12px"></span>
         <input type="file" id="equip-excel-input" accept=".xlsx,.xls" style="display:none" onchange="handleEquipExcel(this)">
@@ -1253,7 +1239,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
   <!-- 제품 -->
   <div id="page-products" class="page">
-    <div class="page-header"><h5>제품 목록</h5><button class="btn btn-primary btn-sm" onclick="openModal('product')"><i class="bi bi-plus-lg me-1"></i>제품 추가</button></div>
+    <div class="wt-mast"><div><div class="kick">WONTECH SALES</div><div class="t">제품 목록</div></div><button class="btn btn-primary btn-sm" onclick="openModal('product')"><i class="bi bi-plus-lg me-1"></i>제품 추가</button></div>
     <div class="card"><div class="card-body p-0"><table class="table table-hover mb-0">
       <thead class="table-light"><tr><th>제품코드</th><th>제품명</th><th>카테고리</th><th>정가</th><th>보증기간</th><th></th></tr></thead>
       <tbody id="product-list"></tbody>
@@ -1263,8 +1249,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
   <!-- 소모품 매출 -->
   <div id="page-consumables" class="page">
-    <div class="page-header">
-      <h5><i class="bi bi-capsule me-2"></i>국내 소모품 매출현황</h5>
+    <div class="wt-mast">
+      <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-capsule me-2"></i>국내 소모품 매출현황</div></div>
       <div class="d-flex gap-2 align-items-center">
         <small class="text-muted" id="cons-updated"></small>
         <button class="btn btn-outline-secondary btn-sm" id="cons-lock-btn" onclick="consUnlock()" title="데이터 업로드">
@@ -1317,7 +1303,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     </div></div></div>
 
     <!-- ① 핵심 KPI 카드 -->
-    <div class="row g-3 mb-3" id="cons-kpi"></div>
+    <div id="cons-kpi"></div>
 
     <!-- ② Oligio Tip 월별 트렌드 — 3패널 -->
     <div class="row g-3 mb-3">
@@ -1376,8 +1362,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
   <!-- 제품 매출현황 -->
   <div id="page-device-sales" class="page">
-    <div class="page-header">
-      <h5><i class="bi bi-box-seam me-2"></i>국내 제품 매출현황</h5>
+    <div class="wt-mast">
+      <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-box-seam me-2"></i>국내 제품 매출현황</div></div>
       <div class="d-flex gap-2 align-items-center">
         <small class="text-muted" id="dev-updated"></small>
         <small class="text-muted" style="font-size:11px;color:#64748b">* 소모품 업로드 시 함께 갱신됩니다</small>
@@ -1404,7 +1390,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     </div>
 
     <!-- KPI 카드 -->
-    <div class="row g-3 mb-3" id="dev-kpi"></div>
+    <div id="dev-kpi"></div>
 
     <!-- 월별 트렌드 차트 -->
     <div class="row g-3 mb-3">
@@ -1435,8 +1421,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
   <!-- 병원별 분석 (통합) -->
   <div id="page-cons-hospitals" class="page">
-    <div class="page-header">
-      <h5><i class="bi bi-building-check me-2"></i>병원별 영업 인텔리전스</h5>
+    <div class="wt-mast">
+      <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-building-check me-2"></i>병원별 영업 인텔리전스</div></div>
       <div class="d-flex gap-2 align-items-center">
         <input type="text" id="hosp-search" class="form-control form-control-sm" placeholder="병원명 검색..." oninput="renderConsHospitals()" style="max-width:160px">
         <select id="hosp-sales-filter" class="form-select form-select-sm" style="max-width:110px" onchange="renderConsHospitals()"><option value="">전체 담당자</option></select>
@@ -1583,8 +1569,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
   <!-- 담당자별 제품 분석 -->
   <div id="page-device-reps" class="page">
-    <div class="page-header">
-      <h5><i class="bi bi-person-badge me-2"></i>담당자별 매출 현황</h5>
+    <div class="wt-mast">
+      <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-person-badge me-2"></i>담당자별 매출 현황</div></div>
       <div class="d-flex gap-2 align-items-center">
         <button class="btn btn-outline-success btn-sm" onclick="devRepExport()"><i class="bi bi-file-earmark-excel me-1"></i>내보내기</button>
       </div>
@@ -3770,12 +3756,13 @@ function renderRegion(){
   const grand=entries.reduce((a,[,o])=>a+o.v26,0)||1;
   const nHosp=Object.values(byName).filter(o=>o.v26>0).length;
   const un=sido['미분류']; const unCnt=un?Object.values(un.hosps).filter(o=>o.v26>0).length:0; const unAmt=un?un.v26:0;
-  document.getElementById('reg-kpi').innerHTML=[
-    {l:'총 매출('+P.label+')',v:_ovFmt(grand),c:'#111827',sub:''},
-    {l:'거래처 수',v:nHosp.toLocaleString()+'곳',c:'#2563eb',sub:''},
-    {l:'지역(시도) 수',v:named.length+'개',c:'#16a34a',sub:''},
-    {l:'미분류',v:unCnt.toLocaleString()+'곳',c:unCnt?'#d97706':'#64748b',sub:_ovFmt(unAmt)+' ('+(unAmt/grand*100).toFixed(0)+'%)',click:unCnt?"openRegionDetail('미분류')":''},
-  ].map(c=>'<div class="col-6 col-md-3"><div class="kpi-card"'+(c.click?' onclick="'+c.click+'" style="cursor:pointer"':'')+'><div class="kpi-label">'+c.l+(c.click?' <i class="bi bi-chevron-right" style="font-size:9px;color:#cbd5e1"></i>':'')+'</div><div class="kpi-value" style="color:'+c.c+';font-size:1.4rem">'+c.v+'</div>'+(c.sub?'<div class="kpi-sub">'+c.sub+'</div>':'')+'</div></div>').join('');
+  document.getElementById('reg-kpi').innerHTML=
+    '<div class="wt-band">'
+    +'<div class="wt-hero"><span class="l">총 매출 · '+P.label+'</span><b>'+_ovFmt(grand)+'</b><span class="s">'+nHosp.toLocaleString()+'개 거래처 · '+named.length+'개 시도</span></div>'
+    +'<div class="wt-fact" style="cursor:default"><span class="l">거래처 수</span><b>'+nHosp.toLocaleString()+'곳</b><span class="s">매출 발생 병원</span></div>'
+    +'<div class="wt-fact" style="cursor:default"><span class="l">지역(시도) 수</span><b>'+named.length+'개</b><span class="s">분류된 시도</span></div>'
+    +'<div class="wt-fact"'+(unCnt?' onclick="openRegionDetail(\'미분류\')"':' style="cursor:default"')+'><span class="l">미분류'+(unCnt?' <i class="bi bi-chevron-right" style="font-size:9px;color:#cbd5e1"></i>':'')+'</span><b'+(unCnt?' class="rd"':'')+'>'+unCnt.toLocaleString()+'곳</b><span class="s">'+_ovFmt(unAmt)+' ('+(unAmt/grand*100).toFixed(0)+'%)</span></div>'
+    +'</div>';
   // 인사이트: 성장/하락 TOP3 (전년 1억↑)
   const grow=named.filter(([,o])=>o.v25>=1e8).map(([x,o])=>({x,p:(o.v26/o.v25-1)*100,v:o.v26}));
   const up=grow.slice().sort((a,b)=>b.p-a.p).slice(0,3), down=grow.slice().sort((a,b)=>a.p-b.p).slice(0,3);
@@ -4013,7 +4000,7 @@ function renderDashboard() {
   }).join(''):'<div class="text-muted text-center py-3" style="font-size:13px">만료 임박 장비 없음</div>';
 
   // KPI 카드 5종 클릭 → 수주관리(딜 상세)
-  ['kpi-confirmed','kpi-expected','kpi-total-forecast','kpi-winrate','kpi-pipe-balance'].forEach(function(id){ var el=document.getElementById(id); var card=el&&el.closest('.kpi-card'); if(card&&!card.getAttribute('onclick')){ card.setAttribute('onclick',"showPage('sales')"); card.setAttribute('title','클릭하면 수주관리로 이동'); } });
+  ['kpi-confirmed','kpi-expected','kpi-total-forecast','kpi-winrate','kpi-pipe-balance'].forEach(function(id){ var el=document.getElementById(id); var card=el&&el.closest('.wt-hero,.wt-fact,.kpi-card'); if(card&&!card.getAttribute('onclick')){ card.setAttribute('onclick',"showPage('sales')"); card.setAttribute('title','클릭하면 수주관리로 이동'); } });
 
   // 리더보드 제거됨 — 요소 없으면 여기서 종료(현황판 렌더 끝)
   if(!document.getElementById('leaderboard')) return;
@@ -4739,21 +4726,19 @@ function renderConsumables() {
     const ty2=spanMonthlySum(pv2);
     const cartP2=totFull25>0?Math.round(cartV25full*ty2/totFull25):0;
     const sub2=(v,p,hero)=>{ const g=p>0?(v/p-1)*100:null; return '<div style="margin-top:5px;font-size:10px;color:'+(hero?'rgba(255,255,255,.65)':'#64748b')+'">'+P2c.label+' 기준 <b>'+fmtB(v)+'</b> · 전년 '+fmtB(p)+(g===null?'':' <span style="color:'+(g>=0?'#16a34a':(hero?'#f87171':'#dc2626'))+';font-weight:700">'+(g>=0?'▲':'▼')+Math.abs(g).toFixed(1)+'%</span>')+'</div>'; };
-    kpiData[0].sub2=sub2(spanMonthlySum(s2),spanMonthlySum(pv2),true);   // 전 품목 월계 — 종합 페이지와 동일 기준
+    kpiData[0].sub2=sub2(spanMonthlySum(s2),spanMonthlySum(pv2),false);   // 전 품목 월계 — 종합 페이지와 동일 기준(문서형 히어로=밝은 배경)
     kpiData[1].sub2=sub2(t2,t2p);
     kpiData[2].sub2=sub2(fe2,fe2p);
     kpiData[3].sub2=sub2(xm2,xm2p);
   }
-  document.getElementById('cons-kpi').innerHTML = kpiData.map((k,i)=>`
-    <div class="col-6 col-lg">
-      <div class="card p-3" style="${k.hero?'background:#111827;border:0;box-shadow:0 6px 18px -6px rgba(17,24,39,.4);':'border-top:2px solid #16324f;'}cursor:pointer;height:100%" onclick="_consKpiDrill(${i})">
-        <div style="font-size:11px;font-weight:600;color:${k.hero?'rgba(255,255,255,.72)':'#6b7280'};margin-bottom:6px"><i class="bi ${k.icon} me-1" style="color:${k.hero?'#fff':k.color}"></i>${k.label}</div>
-        <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:${k.hero?'#fff':'#2563eb'};text-decoration:underline dotted">${k.value}</div>
-        <div style="font-size:11px;color:${k.hero?'rgba(255,255,255,.6)':'#64748b'}">${k.sub}</div>
-        ${k.chg!==null?`<div style="margin-top:5px">${chgBadge(k.chg,false)}</div>`:''}
-        ${k.sub2||''}
-      </div>
-    </div>`).join('');
+  const _stripP = s => s.replace(' ('+ytdLabel+')','');
+  document.getElementById('cons-kpi').innerHTML = '<div class="wt-band">'+kpiData.map((k,i)=>{
+    const badge = (k.chg!==null && k.chg!==undefined) ? ' '+chgBadge(k.chg,false) : '';
+    if(k.hero){
+      return '<div class="wt-hero" style="cursor:pointer" onclick="_consKpiDrill('+i+')"><span class="l"><i class="bi '+k.icon+' me-1"></i>소모품 합계 · '+P.label+'</span><b>'+k.value+'</b><span class="s">'+k.sub+badge+'</span>'+(k.sub2||'')+'</div>';
+    }
+    return '<div class="wt-fact" onclick="_consKpiDrill('+i+')"><span class="l">'+_stripP(k.label)+'</span><b>'+k.value+'</b><span class="s">'+k.sub+badge+'</span>'+(k.sub2||'')+'</div>';
+  }).join('')+'</div>';
   window._consKpiDrills = kpiData.map(k=>k.drill);
   window._consKpiDrill = i => _consKpiDrills[i]&&_consKpiDrills[i]();
 
@@ -9984,17 +9969,13 @@ function renderDeviceSales() {
   // KPI 카드
   const noData = Object.keys(DEVICE.monthly2026||{}).length === 0 && Object.keys(DEVICE.monthly2025||{}).length === 0;
   document.getElementById('dev-kpi').innerHTML = noData
-    ? `<div class="col-12"><div class="card p-4 text-center text-muted"><i class="bi bi-cloud-upload me-2"></i>소모품 메뉴에서 Excel 업로드 후 데이터가 표시됩니다</div></div>`
-    : [
-      {label:`누계 매출 (${P.label})`, val:fmtW(ytdCur), sub:(_prevFull?`전년 동기 ${fmtW(ytdPrev)}`:'연도경계 누적')+devSub2, chg:yoy, col:'#2563eb', icon:'bi-box-seam', click:"openOvCategory('dev')"},
-      {label:'전년 동기', val:_prevFull?fmtW(ytdPrev):'—', sub:_prevFull?'동일 기간·전년':'전년 데이터 범위 밖', chg:null, col:'#6b7280', icon:'bi-calendar2'},
-      {label:'YoY 성장률', val:yoy===null?'-':((yoy>=0?'▲':'▼')+Math.abs(yoy).toFixed(1)+'%'), sub:'전년 동기 대비', chg:null, col:yoy===null?'#6b7280':yoy>=0?'#16a34a':'#dc2626', icon:'bi-graph-up'},
-      {label:'취급 제품수', val:Object.keys(curProds).length+'종', sub:P.label+' · 클릭 랭킹', chg:null, col:'#2563eb', icon:'bi-grid', click:"openOvCategory('dev')"},
-    ].map(c=>`<div class="col-6 col-md-3"><div class="kpi-card"${c.click?` onclick="${c.click}"`:''}>
-      <div class="kpi-label"><i class="bi ${c.icon} me-1" style="color:${c.col}"></i>${c.label}${c.click?' <i class="bi bi-search" style="font-size:9px;color:#cbd5e1"></i>':''}</div>
-      <div class="kpi-value" style="color:${c.col};font-size:1.5rem">${c.val}</div>
-      <div class="kpi-sub">${c.sub}</div>
-    </div></div>`).join('');
+    ? `<div class="card p-4 text-center text-muted mb-3"><i class="bi bi-cloud-upload me-2"></i>소모품 메뉴에서 Excel 업로드 후 데이터가 표시됩니다</div>`
+    : '<div class="wt-band">'
+      +'<div class="wt-hero" style="cursor:pointer" onclick="openOvCategory(\'dev\')"><span class="l">누계 매출 · '+P.label+'</span><b>'+fmtW(ytdCur)+'</b><span class="s">'+(_prevFull?'전년 동기 '+fmtW(ytdPrev)+' '+chgBadge(yoy):'연도경계 누적')+'</span>'+devSub2+'</div>'
+      +'<div class="wt-fact" style="cursor:default"><span class="l">전년 동기</span><b>'+(_prevFull?fmtW(ytdPrev):'—')+'</b><span class="s">'+(_prevFull?'동일 기간·전년':'전년 데이터 범위 밖')+'</span></div>'
+      +'<div class="wt-fact" style="cursor:default"><span class="l">YoY 성장률</span><b'+(yoy===null?'':(yoy>=0?' class="gr"':' class="rd"'))+'>'+(yoy===null?'-':((yoy>=0?'▲':'▼')+Math.abs(yoy).toFixed(1)+'%'))+'</b><span class="s">전년 동기 대비</span></div>'
+      +'<div class="wt-fact" onclick="openOvCategory(\'dev\')"><span class="l">취급 제품수 <i class="bi bi-search" style="font-size:9px;color:#cbd5e1"></i></span><b>'+Object.keys(curProds).length+'종</b><span class="s">'+P.label+' · 클릭 랭킹</span></div>'
+      +'</div>';
 
   if (noData) return;
 
