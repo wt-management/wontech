@@ -4694,8 +4694,8 @@ function renderConsumables() {
   const OLIG = [
     {key:'Oligio Tip [F-4.0]',  label:'F-4.0',  grp:'Oligio',      col:'#2563eb'},
     {key:'Oligio Tip [E-0.25]', label:'E-0.25',  grp:'Oligio',      col:'#60a5fa'},
-    {key:'Oligio Tip [XF-4.0]', label:'XF-4.0', grp:'Oligio X/XM', col:'#7c3aed'},
-    {key:'Oligio Tip [XE-0.25]',label:'XE-0.25', grp:'Oligio X/XM', col:'#a78bfa'},
+    {key:'Oligio Tip [XF-4.0]', label:'XF-4.0', grp:'Oligio X/XM', col:'#16324f'},
+    {key:'Oligio Tip [XE-0.25]',label:'XE-0.25', grp:'Oligio X/XM', col:'#64748b'},
   ];
 
   // 그룹별 YTD 합계 — 트랜잭션(txns) 기준으로 계산 (oligioMo/products 캐시가 비어도 정확, 아래 당월/누계와 동일 소스)
@@ -4724,9 +4724,9 @@ function renderConsumables() {
      drill:()=>showConsDrill(['Oligio Tip [F-4.0]','Oligio Tip [E-0.25]','Oligio Tip [XF-4.0]','Oligio Tip [XE-0.25]'],'Oligio Tip 전체 구매 병원')},
     {color:'#2563eb',icon:'bi-graph-up-arrow', label:`Oligio F·E (${ytdLabel})`,      value:fmtB(oligFe26),    sub:`전년 동기 ${fmtB(oligFe25)}`,    chg:oligFe25>0?(oligFe26/oligFe25-1)*100:null,
      drill:()=>showConsDrill(['Oligio Tip [F-4.0]','Oligio Tip [E-0.25]'],'Oligio F·E 구매 병원')},
-    {color:'#7c3aed',icon:'bi-bar-chart',      label:`Oligio X/XM (${ytdLabel})`,     value:fmtB(oligXm26),    sub:`전년 동기 ${fmtB(oligXm25)}`,    chg:oligXm25>0?(oligXm26/oligXm25-1)*100:null,
+    {color:'#16324f',icon:'bi-bar-chart',      label:`Oligio X/XM (${ytdLabel})`,     value:fmtB(oligXm26),    sub:`전년 동기 ${fmtB(oligXm25)}`,    chg:oligXm25>0?(oligXm26/oligXm25-1)*100:null,
      drill:()=>showConsDrill(['Oligio Tip [XF-4.0]','Oligio Tip [XE-0.25]'],'Oligio X/XM 구매 병원')},
-    {color:'#0891b2',icon:'bi-cpu',            label:`Cartridge (${ytdLabel})`,        value:fmtB(cartV26),     sub:`전년 동기 추정 ${fmtB(cartV25)}`, chg:cartV25>0?(cartV26/cartV25-1)*100:null,
+    {color:'#16324f',icon:'bi-cpu',            label:`Cartridge (${ytdLabel})`,        value:fmtB(cartV26),     sub:`전년 동기 추정 ${fmtB(cartV25)}`, chg:cartV25>0?(cartV26/cartV25-1)*100:null,
      drill:()=>showConsDrill(['Cartridge'],'Cartridge 구매 병원')},
   ];
   // '전월까지' 기준 병기(기간 끝 = 진행 중인 달일 때)
@@ -4746,7 +4746,7 @@ function renderConsumables() {
   }
   document.getElementById('cons-kpi').innerHTML = kpiData.map((k,i)=>`
     <div class="col-6 col-lg">
-      <div class="card p-3" style="${k.hero?'background:#111827;border:0;box-shadow:0 6px 18px -6px rgba(17,24,39,.4);':'border-top:3px solid '+k.color+';'}cursor:pointer;height:100%" onclick="_consKpiDrill(${i})">
+      <div class="card p-3" style="${k.hero?'background:#111827;border:0;box-shadow:0 6px 18px -6px rgba(17,24,39,.4);':'border-top:2px solid #16324f;'}cursor:pointer;height:100%" onclick="_consKpiDrill(${i})">
         <div style="font-size:11px;font-weight:600;color:${k.hero?'rgba(255,255,255,.72)':'#6b7280'};margin-bottom:6px"><i class="bi ${k.icon} me-1" style="color:${k.hero?'#fff':k.color}"></i>${k.label}</div>
         <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:${k.hero?'#fff':'#2563eb'};text-decoration:underline dotted">${k.value}</div>
         <div style="font-size:11px;color:${k.hero?'rgba(255,255,255,.6)':'#64748b'}">${k.sub}</div>
