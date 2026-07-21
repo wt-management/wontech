@@ -3244,11 +3244,11 @@ function renderSalesOverview() {
       const chgHtml = chg!==null ? '<span style="color:'+(chg>=0?'#137a44':'#d5342b')+';font-weight:700">'+(chg>=0?'▲':'▼')+Math.abs(chg).toFixed(0)+'%</span>' : '<span style="color:#96a1b0">신규</span>';
       return '<tr data-p="'+pa+'" onclick="openOvDetail(\''+cat+'\',this.getAttribute(\'data-p\'))" style="cursor:pointer" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'" title="클릭하면 상세 내역 조회">'
         +'<td style="'+TD+';text-align:center;color:#96a1b0;font-weight:800;width:20px;padding-left:0">'+(i+1)+'</td>'
-        +'<td style="'+TD+';font-weight:700;color:#141b26;max-width:0;overflow:hidden;text-overflow:ellipsis">'+p+' <i class="bi bi-search" style="font-size:8px;color:#cbd5e1"></i></td>'
+        +'<td style="'+TD+';font-weight:700;color:#141b26">'+p+' <i class="bi bi-search" style="font-size:8px;color:#cbd5e1"></i></td>'
         +'<td style="'+TD+';text-align:right;font-weight:800">'+fmtW(v)+'</td>'
         +'<td style="'+TD+';text-align:right;color:#96a1b0">'+(pv>0?fmtW(pv):'–')+'</td>'
         +'<td style="'+TD+';text-align:right">'+chgHtml+'</td>'
-        +'<td style="'+TD+';width:118px"><div style="display:flex;align-items:center;gap:7px"><div style="flex:1;height:7px;background:#eef1f5;border-radius:4px;overflow:hidden"><div style="width:'+w+'%;height:100%;background:'+col+';border-radius:4px"></div></div><span style="width:28px;text-align:right;font-size:11px;color:#96a1b0">'+sh+'%</span></div></td>'
+        +'<td style="'+TD+';width:96px"><div style="display:flex;align-items:center;gap:6px"><div style="flex:1;height:7px;background:#eef1f5;border-radius:4px;overflow:hidden"><div style="width:'+w+'%;height:100%;background:'+col+';border-radius:4px"></div></div><span style="width:28px;text-align:right;font-size:11px;color:#96a1b0">'+sh+'%</span></div></td>'
       +'</tr>';
     }).join('');
     return '<table style="width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums">'
@@ -8643,20 +8643,19 @@ function _schStatsBar(all){
   const done=doneWk.length, resN=doneWk.filter(_hasRes).length;
   const noResAll=all.filter(i=>i.kind==='sched'&&i.done&&!_hasRes(i)).length;   // 전체 기간, 완료했지만 결과 미기재
   const byType={}; all.forEach(i=>byType[i.type]=(byType[i.type]||0)+1);
-  const stat=(lbl,n,col,sub,click,hot)=>'<div'+(click?' onclick="'+click+'"':'')+' style="flex:1;min-width:150px;background:'+(hot?'#fef2f2':'#fff')+';border:1px solid '+(hot?'#fecaca':'#eef2f7')+';border-left:3px solid '+col+';border-radius:11px;padding:8px 12px;box-shadow:0 1px 2px rgba(15,23,42,.03)'+(click?';cursor:pointer':'')+'">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;color:'+(hot?'#b91c1c':'#64748b')+';font-weight:700">'+lbl+'</span>'+(click?'<i class="bi bi-chevron-right" style="font-size:9px;color:#cbd5e1"></i>':'')+'</div>'
-    +'<div style="display:flex;align-items:baseline;gap:8px;margin-top:1px"><span style="font-size:20px;font-weight:800;color:'+col+';line-height:1.1">'+n+'</span>'+(sub?'<span style="font-size:10.5px;color:'+(hot?'#dc2626':'#94a3b8')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+sub+'</span>':'')+'</div>'
-    +'</div>';
-  const legend=Object.keys(_SCH_COL).filter(x=>x!=='후속').map(x=>'<span style="font-size:10.5px;color:'+_SCH_COL[x]+';font-weight:600"><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:'+_SCH_COL[x]+';margin-right:4px;vertical-align:middle"></span>'+x+(byType[x]?' <span style="color:#94a3b8">'+byType[x]+'</span>':'')+'</span>').join('&nbsp;&nbsp;&nbsp;');
-  return '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">'
-      +stat('오늘',t,'#2563eb','방문 '+tVisit+' · 완료 '+tDone,"setSchView('today',document.getElementById('sch-v-today'))")
-      +stat('이번주',w,'#0891b2','방문 '+wVisit+' · 완료 '+wDone+'/'+w,"setSchView('week',document.getElementById('sch-v-week'))")
-      +stat('놓친 일정',overdue,'#dc2626',overdue?'눌러서 결과 입력':'없음 👍',overdue?'_schShowOverdueOnly()':'',overdue>0)
-      +stat('예정',pend,'#ea580c',nextUp?'다음 '+nextUp.slice(5).replace('-','/'):'오늘 이후',"setSchView('week',document.getElementById('sch-v-week'))")
-      +stat('완료',done,'#16a34a','이번주 · 눌러서 결과 보기'+(noResAll?' · <b style="color:#dc2626">결과누락 '+noResAll+'</b>':''),'_schShowDoneOnly()')
+  if(typeof _cduEnsureCss==='function') _cduEnsureCss();
+  const legend=Object.keys(_SCH_COL).filter(x=>x!=='후속').map(x=>'<span style="font-size:10.5px;color:#64748b;font-weight:600"><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:'+_SCH_COL[x]+';margin-right:4px;vertical-align:middle"></span>'+x+(byType[x]?' <span style="color:#94a3b8">'+byType[x]+'</span>':'')+'</span>').join('');
+  const sf=(lbl,n,sub,cl,click)=>'<div class="cdud-fact'+(click?' clk" onclick="'+click+'"':'"')+'><span>'+lbl+'</span><b'+(cl?' class="'+cl+'"':'')+'>'+n+'</b>'+(sub?'<i>'+sub+'</i>':'')+'</div>';
+  return '<div class="cdud" style="padding:16px 20px;margin:0 0 12px">'
+    +'<div class="cdud-kpis" style="border-bottom:0;padding:2px 0 4px">'
+      +'<div class="cdud-hero" style="flex:1.4;cursor:pointer" onclick="setSchView(\'week\',document.getElementById(\'sch-v-week\'))"><span class="l">이번주 일정</span><b>'+w+'건</b><span class="s">방문 '+wVisit+' · 완료 '+wDone+'/'+w+(nextUp?' · 다음 예정 '+nextUp.slice(5).replace('-','/'):'')+'</span></div>'
+      +sf('오늘',t+'건','방문 '+tVisit+' · 완료 '+tDone,'',"setSchView('today',document.getElementById('sch-v-today'))")
+      +sf('놓친 일정',overdue+'건',(overdue?'눌러서 결과 입력':'없음 👍'),(overdue?'rd':''),overdue?'_schShowOverdueOnly()':'')
+      +sf('예정',pend+'건',(nextUp?'다음 '+nextUp.slice(5).replace('-','/'):'오늘 이후'),'',"setSchView('week',document.getElementById('sch-v-week'))")
+      +sf('완료',done+'건','이번주'+(noResAll?' · 결과누락 '+noResAll:''),(noResAll?'':'gr'),'_schShowDoneOnly()')
     +'</div>'
-    +'<div style="display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin-bottom:14px;padding:8px 12px;background:#f8fafc;border-radius:9px">'
-      +'<span style="font-size:10.5px;color:#94a3b8;font-weight:700">유형</span>'+legend+'</div>';
+    +'<div style="display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;padding-top:10px;margin-top:6px;border-top:1px solid #e4e8ef"><span style="font-size:10.5px;color:#64748b;font-weight:700">유형</span>'+legend+'</div>'
+  +'</div>';
 }
 // 이번주 7일 그리드용 미니 카드
 var _schInfoCache={};
