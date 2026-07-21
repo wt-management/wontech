@@ -3165,7 +3165,7 @@ function _exdReport(D){
   function tbl(c,yoy){
     if(!c) return '';
     var h='<div class="xt-wrap'+(c.isCur?' cur':'')+'"><div class="xt-cap">'+esc(c.title)+' 실적현황 <b>'+esc(c.label)+'</b>'+(c.isCur?'<em>진행중</em>':'<i class="dn">완료</i>')+'</div>';
-    h+='<table class="xt"><thead><tr><th>년/월</th><th>금액</th>'+(yoy?'<th>전년동월<br>증감액</th><th>전년동월<br>증감율</th>':'')+'</tr></thead><tbody>';
+    h+='<table class="xt"><thead><tr><th>년/월</th><th>금액</th>'+(yoy?'<th>전년동월<br>증감액</th><th>전년동월<br>증감률</th>':'')+'</tr></thead><tbody>';
     var blank=yoy?'<td></td><td></td>':'';
     c.rows.forEach(function(r,i){
       h+='<tr class="'+(r.prov?'prov':'')+(r.fut?' fut':'')+((!c.isCur&&i===c.rows.length-1)?' last':'')+'"><td>'+r.label+(r.prov?' <i>잠정</i>':'')+'</td><td>'+(r.fut?'':exUsd(r.v))+'</td>'+(yoy?_exYoyTd(r):'')+'</tr>';
@@ -3174,7 +3174,7 @@ function _exdReport(D){
     h+='<tr class="sub"><td>'+c.subH2+'</td><td>'+exUsd(c.h2)+'</td>'+blank+'</tr>';
     h+='<tr class="tot"><td>총계</td><td>'+exUsd(c.tot)+'</td>'+blank+'</tr>';
     h+='<tr class="res'+(c.done?'':' short')+'"><td>'+(c.done?'초과분':'부족분')+'</td><td>'+(c.done?exUsd(c.diff):'-'+exUsd(Math.abs(c.diff)))+'</td>'+blank+'</tr>';
-    h+='<tr class="res"><td>달성율</td><td>'+c.pct.toFixed(1)+'%</td>'+blank+'</tr>';
+    h+='<tr class="res"><td>달성률</td><td>'+c.pct.toFixed(1)+'%</td>'+blank+'</tr>';
     return h+'</tbody></table></div>';
   }
   function card(t,sub,rows){
@@ -3235,7 +3235,7 @@ function _exMobileTable(D){
   h+='<tr class="res"><td class="m">과부족</td>'
     +'<td class="'+(p&&p.done?'up':'dn')+'">'+(p?(p.done?'+'+exManNum(p.diff):'-'+exManNum(Math.abs(p.diff))):'-')+'</td>'
     +'<td class="cur '+(c.done?'up':'dn')+'">'+(c.done?'+'+exManNum(c.diff):'-'+exManNum(Math.abs(c.diff)))+'</td><td class="yo"></td></tr>';
-  h+='<tr class="res"><td class="m">달성율</td><td>'+(p?p.pct.toFixed(0)+'%':'-')+'</td><td class="cur">'+c.pct.toFixed(1)+'%</td><td class="yo"></td></tr>';
+  h+='<tr class="res"><td class="m">달성률</td><td>'+(p?p.pct.toFixed(0)+'%':'-')+'</td><td class="cur">'+c.pct.toFixed(1)+'%</td><td class="yo"></td></tr>';
   return h+'</tbody></table>';
 }
 function _exSentence(D){
@@ -3290,7 +3290,7 @@ function _exdBrief(D){
   h+='<tr class="res"><td class="m">'+(c.done?'초과분':'초과/부족분')+'</td>'
     +'<td class="'+(p&&p.done?'up':'dn')+'">'+(p?(p.done?'+'+exUsd(p.diff):'-'+exUsd(Math.abs(p.diff))):'-')+'</td>'
     +'<td class="cur '+(c.done?'up':'dn')+'">'+(c.done?'+'+exUsd(c.diff):'-'+exUsd(Math.abs(c.diff)))+'</td><td></td></tr>';
-  h+='<tr class="res"><td class="m">달성율</td><td>'+(p?p.pct.toFixed(1)+'%':'-')+'</td><td class="cur">'+c.pct.toFixed(1)+'%</td><td></td></tr>';
+  h+='<tr class="res"><td class="m">달성률</td><td>'+(p?p.pct.toFixed(1)+'%':'-')+'</td><td class="cur">'+c.pct.toFixed(1)+'%</td><td></td></tr>';
   h+='</tbody></table>';
   h+=_exMobileTable(D);
   h+='</div>';
@@ -3308,7 +3308,7 @@ function _exdMobile(D){
   var vsPrev=prevAvg>0?((D.needAvg/prevAvg-1)*100):null;
   var h='<div class="xm">';
   h+='<div class="xm-hero"><div class="xm-ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="'+R+'" class="bg"/><circle cx="60" cy="60" r="'+R+'" class="fg" stroke-dasharray="'+CIRC.toFixed(1)+'" stroke-dashoffset="'+Math.min(off,CIRC-2).toFixed(1)+'"/></svg>'
-    +'<div class="xm-ring-c"><b>'+c.pct.toFixed(1)+'<i>%</i></b><span>달성율</span></div></div>'
+    +'<div class="xm-ring-c"><b>'+c.pct.toFixed(1)+'<i>%</i></b><span>달성률</span></div></div>'
     +'<div class="xm-hd"><div class="xm-t">'+esc(c.title)+'</div><div class="xm-l">'+esc(c.label)+' · 진행중 · '+D.elapsed+'/12개월</div>'
     +'<div class="xm-big">'+exUsd(c.tot)+'</div><div class="xm-sub">목표 '+exUsdM(c.target)+' · 잔여 '+exUsdM(Math.abs(c.diff))+'</div>'
     +'<div class="xm-gg"><i style="width:'+Math.max(Math.min(c.pct,100),0.8).toFixed(1)+'%"></i></div></div></div>';
@@ -3365,7 +3365,7 @@ function _exdScore(D){
       +'<div class="i"><span>총계</span><b>'+exUsd(cyc.tot)+'</b></div>'
       +'<div class="i"><span>목표</span><b>'+exUsd(cyc.target)+'</b></div>'
       +'<div class="i"><span>'+(cyc.done?'초과분':'부족분')+'</span><b class="'+(cyc.done?'up':'dn')+'">'+(cyc.done?'+'+exUsd(cyc.diff):'-'+exUsd(Math.abs(cyc.diff)))+'</b></div>'
-      +'<div class="i"><span>달성율</span><b>'+cyc.pct.toFixed(1)+'%</b></div>'
+      +'<div class="i"><span>달성률</span><b>'+cyc.pct.toFixed(1)+'%</b></div>'
       +'</div>';
   }
   var h='<div class="xc4">';
@@ -3414,7 +3414,7 @@ function _exdPlan(D){
   h+='<tr class="goal"><td class="m">목표</td><td class="v">'+exUsd(c.target)+'</td><td class="a"></td><td class="p">'+(p?exUsd(p.target):'-')+'</td><td class="p"></td><td class="g"></td></tr>';
   h+='<tr class="res"><td class="m">'+(c.done?'초과분':'부족분')+'</td><td class="v '+(c.done?'up':'dn')+'">'+(c.done?'+'+exUsd(c.diff):'-'+exUsd(Math.abs(c.diff)))+'</td><td class="a"></td>'
     +'<td class="p '+(p&&p.done?'up':'dn')+'">'+(p?(p.done?'+'+exUsd(p.diff):'-'+exUsd(Math.abs(p.diff))):'-')+'</td><td class="p"></td><td class="g"></td></tr>';
-  h+='<tr class="res"><td class="m">달성율</td><td class="v">'+c.pct.toFixed(1)+'%</td><td class="a"></td><td class="p">'+(p?p.pct.toFixed(1)+'%':'-')+'</td><td class="p"></td><td class="g"></td></tr>';
+  h+='<tr class="res"><td class="m">달성률</td><td class="v">'+c.pct.toFixed(1)+'%</td><td class="a"></td><td class="p">'+(p?p.pct.toFixed(1)+'%':'-')+'</td><td class="p"></td><td class="g"></td></tr>';
   h+='</tbody></table>';
   h+=_exFoot3(D)+_exNote();
   return h+'</div>';
