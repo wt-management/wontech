@@ -3471,8 +3471,11 @@ function exPrintDesign(btn){
 /* ── 수출의 탑: 모바일 화면 구성으로 PNG 저장 ── */
 function exSaveImage(btn){
   var ob=btn?btn.innerHTML:''; _exBusy(btn,true);
-  _exCapture(360,'exp-mobile','#eef1f6',2).then(function(cv){
-    cv.toBlob(function(blob){
+  _exCapture(360,'exp-mobile','#eef1f6',3).then(function(cv){
+    // 폰 화면 폭에 맞는 최종 출력폭(360). 고해상(3배 1080px)으로 그린 뒤 360px로 고품질 축소 → 크기는 폰에 맞고 글자·선은 선명(슈퍼샘플링)
+    var TW=360, out=cv;
+    if(cv.width>TW){ var c2=document.createElement('canvas'); c2.width=TW; c2.height=Math.round(cv.height*TW/cv.width); var cx=c2.getContext('2d'); cx.imageSmoothingEnabled=true; cx.imageSmoothingQuality='high'; cx.drawImage(cv,0,0,c2.width,c2.height); out=c2; }
+    out.toBlob(function(blob){
       if(!blob){ _exBusy(btn,false,ob); alert('이미지 생성에 실패했습니다.'); return; }
       var url=URL.createObjectURL(blob), a=document.createElement('a');
       a.href=url; a.download=_exDocName()+'_모바일.png';
