@@ -3471,7 +3471,7 @@ function exPrintDesign(btn){
 /* ── 수출의 탑: 모바일 화면 구성으로 PNG 저장 ── */
 function exSaveImage(btn){
   var ob=btn?btn.innerHTML:''; _exBusy(btn,true);
-  _exCapture(320,'exp-mobile','#eef1f6',2).then(function(cv){
+  _exCapture(360,'exp-mobile','#eef1f6',1).then(function(cv){
     cv.toBlob(function(blob){
       if(!blob){ _exBusy(btn,false,ob); alert('이미지 생성에 실패했습니다.'); return; }
       var url=URL.createObjectURL(blob), a=document.createElement('a');
