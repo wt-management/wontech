@@ -6791,7 +6791,7 @@ function renderCDUWeekly(){
       +'<td style="font-weight:700"><span onclick="_cduWkHosp(this.textContent)" style="cursor:pointer" title="병원 상세(구매이력·장비·상담)">'+_cduEsc(v.custName||'')+'</span>'+(v.churnRisk?' <span style="color:#dc2626;font-size:11px">⚠</span>':'')+' <i class="bi bi-search cduwk-np" style="font-size:8.5px;color:#cbd5e1"></i></td>'
       +'<td style="text-align:right;white-space:nowrap;line-height:1.35"><span style="color:#0f172a;font-weight:700">'+(rev?_cduWon(rev):'0')+'</span>'+(function(){ var pv=prevOf((v.custName||'').trim()); if(!pv&&!rev) return '<div style="font-size:10.5px;color:#94a3b8">이력 없음</div>'; if(!pv) return ''; var up=rev>=pv; return '<div style="font-size:10.5px;color:'+(up?'#16a34a':'#dc2626')+'">작년 '+_cduWon(pv)+' '+(up?'▲':'▼')+Math.abs(Math.round((rev/pv-1)*100))+'%</div>'; })()+'</td>'
       +'<td>'+(_cduEsc(v.mainProc||'')||_dash)+'</td>'
-      +'<td style="text-align:center;font-weight:700;color:#0f172a">'+(Number(v.price)>0?_cduEsc(v.price)+'천':_dash)+'</td>'
+      +'<td style="text-align:center;font-weight:700;color:#0f172a;white-space:nowrap">'+(Number(v.price)>0?_cduEsc(v.price)+'천':_dash)+'</td>'
       +'<td style="font-size:11px;color:#dc2626;word-break:keep-all;overflow-wrap:break-word">'+(_cduEsc(String(v.competitor||'').replace(/\//g,' / '))||_dash)+'</td>'
       +'<td style="color:#334155">'+(function(){ var fb=_cduEsc(String(v.feedback||'').slice(0,200)); var rs=(v.noBuyReason||'').trim(); var ac=(v.action||'').trim();
           var tag=(rs?'<span style="font-size:10.5px;font-weight:800;color:#475569;background:#f1f5f9;border-radius:4px;padding:1px 6px;margin-right:4px">'+_cduEsc(rs)+'</span>':'')
@@ -6836,7 +6836,7 @@ function renderCDUWeekly(){
     +'</div>'
     +anaBox
     +(vs.length?'<table style="width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed">'
-      +'<colgroup><col style="width:176px"><col style="width:96px"><col style="width:92px"><col style="width:46px"><col style="width:120px"><col><col style="width:52px"></colgroup>'
+      +'<colgroup><col style="width:176px"><col style="width:96px"><col style="width:92px"><col style="width:58px"><col style="width:120px"><col><col style="width:52px"></colgroup>'
       +'<thead><tr style="background:#f8fafc;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;color:#475569;font-size:11px">'
       +'<th style="padding:6px">병원명</th><th style="padding:6px">팁매출<br>(작년 동기比)</th><th style="padding:6px">주력 시술</th><th style="padding:6px">수가</th><th style="padding:6px">경쟁사</th><th style="padding:6px">피드백·결과</th><th class="cduwk-np" style="padding:6px">수정</th></tr></thead>'
       +'<tbody style="vertical-align:top">'+rows+'</tbody></table>'
