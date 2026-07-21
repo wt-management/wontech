@@ -3045,6 +3045,7 @@ function renderExport(){
     if(_exDesign==='report'||_exDesign==='brief'){
       _chips+='<span class="exd-sep"></span>'
         +'<button class="exd-exp" onclick="exPrintDesign(this)" title="현재 화면을 PDF로 추출">📄 PDF 추출</button>'
+        +'<button class="exd-exp" onclick="exCopyImage(this)" title="화면폭 360 고정+2배 해상도로 클립보드 복사 → 메일에 Ctrl+V (선명·매번 동일)">📋 붙여넣기 복사</button>'
         +'<button class="exd-exp" onclick="exSaveImage(this)" title="휴대폰 화면 구성으로 이미지(PNG) 저장">🖼 모바일 캡처</button>';
     }
     dsg.innerHTML=_chips; }
@@ -3497,6 +3498,21 @@ function exSaveImage(btn){
       _exBusy(btn,false,ob);
       }).catch(function(){ var url=URL.createObjectURL(blob), a=document.createElement('a'); a.href=url; a.download=_exDocName()+'_모바일.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(url); },1000); _exBusy(btn,false,ob); });
     },'image/png');
+  }).catch(function(e){ _exBusy(btn,false,ob); alert('이미지 생성 실패: '+(e&&e.message?e.message:e)); });
+}
+/* 붙여넣기용 복사: 화면폭 360 고정 + 속픽셀 720(레티나) HTML을 클립보드에 복사 → 메일 편집창에 Ctrl+V 하면 매번 360 크기로 선명 */
+function exCopyImage(btn){
+  if(!(navigator.clipboard&&window.ClipboardItem)){ alert('이 브라우저는 붙여넣기 복사를 지원하지 않습니다. Chrome/Edge에서 사용해 주세요.'); return; }
+  var ob=btn?btn.innerHTML:''; _exBusy(btn,true);
+  _exCapture(360,'exp-mobile','#eef1f6',2).then(function(cv){
+    // 720px 캔버스 → data URL, 화면 표시폭은 360으로 고정한 <img>를 HTML로 복사
+    var durl=cv.toDataURL('image/png');
+    var html='<img src="'+durl+'" width="360" style="width:360px;height:auto;display:block" alt="수출의탑">';
+    var htmlBlob=new Blob([html],{type:'text/html'});
+    navigator.clipboard.write([new ClipboardItem({'text/html':htmlBlob})]).then(function(){
+      _exBusy(btn,false,ob);
+      alert('복사 완료! 메일 본문에서 Ctrl+V(붙여넣기) 하세요.\n화면엔 360 크기로, 속은 2배 해상도로 들어가 선명합니다.');
+    }).catch(function(e){ _exBusy(btn,false,ob); alert('복사 실패: '+(e&&e.message?e.message:e)+'\n(주소창이 https인지 확인해 주세요)'); });
   }).catch(function(e){ _exBusy(btn,false,ob); alert('이미지 생성 실패: '+(e&&e.message?e.message:e)); });
 }
 function exOpenEdit(){
