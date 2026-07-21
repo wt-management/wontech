@@ -3045,7 +3045,6 @@ function renderExport(){
     if(_exDesign==='report'||_exDesign==='brief'){
       _chips+='<span class="exd-sep"></span>'
         +'<button class="exd-exp" onclick="exPrintDesign(this)" title="현재 화면을 PDF로 추출">📄 PDF 추출</button>'
-        +'<button class="exd-exp" onclick="exCopyImage(this)" title="화면폭 360 고정+2배 해상도로 클립보드 복사 → 메일에 Ctrl+V (선명·매번 동일)">📋 붙여넣기 복사</button>'
         +'<button class="exd-exp" onclick="exSaveImage(this)" title="휴대폰 화면 구성으로 이미지(PNG) 저장">🖼 모바일 캡처</button>';
     }
     dsg.innerHTML=_chips; }
@@ -3485,12 +3484,14 @@ function _pngSetDpi(buf,dpi){ try{
 }catch(e){ return new Uint8Array(buf); } }
 function exSaveImage(btn){
   var ob=btn?btn.innerHTML:''; _exBusy(btn,true);
-  _exCapture(360,'exp-mobile','#eef1f6',2).then(function(cv){
-    // 360 디자인을 2배(720px)로 고정 출력 → 매번 동일 크기(리사이즈 불필요) + 모바일 레티나 해상도(받는 폰에서 자동 축소되며 선명)
-    cv.toBlob(function(blob){
+  _exCapture(360,'exp-mobile','#eef1f6',3).then(function(cv){
+    // 360px 고정 출력(3배 렌더→고품질 축소=슈퍼샘플링) — 편집기가 픽셀=화면크기로 넣으므로 크기 맞는 360으로. 넣고 크기 건드리지 말 것
+    var TW=360, out=cv;
+    if(cv.width>TW){ var c2=document.createElement('canvas'); c2.width=TW; c2.height=Math.round(cv.height*TW/cv.width); var cx=c2.getContext('2d'); cx.imageSmoothingEnabled=true; cx.imageSmoothingQuality='high'; cx.drawImage(cv,0,0,c2.width,c2.height); out=c2; }
+    out.toBlob(function(blob){
       if(!blob){ _exBusy(btn,false,ob); alert('이미지 생성에 실패했습니다.'); return; }
       blob.arrayBuffer().then(function(ab){
-      var hi=_pngSetDpi(ab,192); var blob2=new Blob([hi],{type:'image/png'});
+      var hi=_pngSetDpi(ab,96); var blob2=new Blob([hi],{type:'image/png'});
       var url=URL.createObjectURL(blob2), a=document.createElement('a');
       a.href=url; a.download=_exDocName()+'_모바일.png';
       document.body.appendChild(a); a.click(); a.remove();
@@ -3498,21 +3499,6 @@ function exSaveImage(btn){
       _exBusy(btn,false,ob);
       }).catch(function(){ var url=URL.createObjectURL(blob), a=document.createElement('a'); a.href=url; a.download=_exDocName()+'_모바일.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(url); },1000); _exBusy(btn,false,ob); });
     },'image/png');
-  }).catch(function(e){ _exBusy(btn,false,ob); alert('이미지 생성 실패: '+(e&&e.message?e.message:e)); });
-}
-/* 붙여넣기용 복사: 화면폭 360 고정 + 속픽셀 720(레티나) HTML을 클립보드에 복사 → 메일 편집창에 Ctrl+V 하면 매번 360 크기로 선명 */
-function exCopyImage(btn){
-  if(!(navigator.clipboard&&window.ClipboardItem)){ alert('이 브라우저는 붙여넣기 복사를 지원하지 않습니다. Chrome/Edge에서 사용해 주세요.'); return; }
-  var ob=btn?btn.innerHTML:''; _exBusy(btn,true);
-  _exCapture(360,'exp-mobile','#eef1f6',2).then(function(cv){
-    // 720px 캔버스 → data URL, 화면 표시폭은 360으로 고정한 <img>를 HTML로 복사
-    var durl=cv.toDataURL('image/png');
-    var html='<img src="'+durl+'" width="360" style="width:360px;height:auto;display:block" alt="수출의탑">';
-    var htmlBlob=new Blob([html],{type:'text/html'});
-    navigator.clipboard.write([new ClipboardItem({'text/html':htmlBlob})]).then(function(){
-      _exBusy(btn,false,ob);
-      alert('복사 완료! 메일 본문에서 Ctrl+V(붙여넣기) 하세요.\n화면엔 360 크기로, 속은 2배 해상도로 들어가 선명합니다.');
-    }).catch(function(e){ _exBusy(btn,false,ob); alert('복사 실패: '+(e&&e.message?e.message:e)+'\n(주소창이 https인지 확인해 주세요)'); });
   }).catch(function(e){ _exBusy(btn,false,ob); alert('이미지 생성 실패: '+(e&&e.message?e.message:e)); });
 }
 function exOpenEdit(){
