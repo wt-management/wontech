@@ -3081,7 +3081,7 @@ function _exData(){
   var needAvg=(cur&&remain>0)?Math.max(cur.target-cur.tot,0)/remain:0;
   var nowY=new Date().getFullYear();
   var kita=(EXPORT.kita||[]).map(function(k){ var v=Number(k.amount)||0, live=Number(k.year)===nowY;
-    if(live&&nowY===2026&&INTL.monthly_usd){ var t=0; for(var m=1;m<=12;m++) t+=Number(INTL.monthly_usd[m]||0); if(t>0) v=t; }  // 회계 기준(달력 1~12월)
+    if(live&&prev&&cur){ var t=(Number(prev.h2)||0)+(Number(cur.h1)||0); if(t>0) v=t; }  // 회계 기준(달력 1~12월) = 상반기 소계(전차수 H2, 당해 1~6월)+하반기(현차수 H1, 당해 7~12월 잠정 포함)
     return {y:String(k.year),v:v,live:live}; });
   var doneCy=EXPORT.cycles.filter(function(c){return c.id!==curId;})
     .map(function(c){return {y:String(Number(c.start.split('-')[0])+1),v:exCycleOwn(c)};}).filter(function(r){return r.v>0;});
@@ -3093,8 +3093,8 @@ function _exData(){
   var y=EXPORT.yearly||{}, labels=(y.labels||[]).slice(), acc=(y.acc||[]).slice(), exp=(y.exp||[]).slice();
   var li=labels.length-1, yr=parseInt(String(labels[li]||''),10);
   if(li>=0&&yr){
-    var muS=(yr===2026)?INTL.monthly_usd:(yr===2025?(INTL.data2025&&INTL.data2025.monthly_usd):null);
-    if(muS){ var t2=0; for(var m2=1;m2<=12;m2++) t2+=Number(muS[m2]||0); if(t2>0) acc[li]=Math.round(t2/1e4); }
+    if(yr===nowY&&prev&&cur){ var t2=(Number(prev.h2)||0)+(Number(cur.h1)||0); if(t2>0) acc[li]=Math.round(t2/1e4); }  // 라이브 연도: 회계 실적 카드와 동일(상반기 소계+하반기 잠정)
+    else { var muS=(yr===2025?(INTL.data2025&&INTL.data2025.monthly_usd):null); if(muS){ var t2=0; for(var m2=1;m2<=12;m2++) t2+=Number(muS[m2]||0); if(t2>0) acc[li]=Math.round(t2/1e4); } }
     var cy2=EXPORT.cycles.find(function(c){return c.start===(yr-1)+'-07';});
     if(cy2){ var cs=exCycleOwn(cy2); if(cs>0) exp[li]=Math.round(cs/1e4); }
   }
