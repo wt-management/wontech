@@ -9608,7 +9608,7 @@ async function applyDeptToAll(dept){
   const dp=_deptPerms[dept];
   if(!dp || (!dp.access && !dp.upload)){ alert('먼저 이 부서의 기본권한을 설정하세요.'); return; }
   const members=_allProfiles.filter(p=>((p.dept||'').trim()||'(부서 미지정)')===dept);
-  if(!confirm('['+dept+'] '+members.length+'명 전원에게 기본권한을 적용할까요?\n(각자 개별 설정이 덮어쓰여집니다)')) return;
+  if(!confirm('['+dept+'] '+members.length+'명 전원에게 기본권한을 적용할까요?\n(각자 개별 설정을 덮어씁니다)')) return;
   for(const p of members){
     await _sb.from('crm_profiles').update({access:dp.access, upload:dp.upload}).eq('id',p.id);
     p.access=dp.access; p.upload=dp.upload;
@@ -10804,26 +10804,26 @@ window.addEventListener('pageshow', function(e){
       {label:'원리',wontech:'Monopolar RF',rival:'Monopolar RF'},{label:'가격',wontech:'약 5,500만원',rival:'1.5억 이상'},{label:'A/S',wontech:'국내 즉시 대응',rival:'수입 지연'},{label:'소모품',wontech:'저렴',rival:'고가'}]},speech:[
       {text:'OLIGIO는 **한국 최초 모노폴라 RF 장비**로, 진피 콜라겐에 열에너지를 직접 전달해 콜라겐 수축과 섬유아세포 자극을 통해 신생 콜라겐을 생성합니다.'},
       {text:'**4중 안전장치와 GAS Cooling 시스템**이 시술 중 실시간으로 작동하여 열 손상 위험을 최소화하면서도 충분한 치료 심도를 확보합니다.'},
-      {text:'싱글·듀얼·오토 모드와 자유로운 쿨링 조절 기능으로 시술자의 임상 판단에 따른 맞춤 프로토콜이 가능하며, 울세라·써마지 대비 **합리적인 도입 비용과 우수한 국내 A/S 체계**를 갖추고 있습니다.'},
+      {text:'싱글·듀얼·오토 모드와 자유로운 쿨링 조절 기능으로 시술자의 임상 판단에 따른 맞춤 프로토콜이 가능하며, 울쎄라·써마지 대비 **합리적인 도입 비용과 우수한 국내 A/S 체계**를 갖추고 있습니다.'},
       {closing:true,text:'써마지와 동일한 모노폴라 RF, 동등한 최대출력 400W — 도입 비용은 5분의 1 이하에 국내 즉시 A/S까지. 효과는 같고 운영 효율은 훨씬 높습니다.'}]},
     {id:'oligio-xm',name:'OLIGIO XM',color:'#f97316',tagline:'RF + HIFU 복합 전층 리프팅 — 두 장비가 하나로',competitors:['써마지 FLX','울쎄라','볼뉴머'],table:{competitor:'써마지 FLX',rows:[
       {label:'RF',wontech:'O',rival:'O'},{label:'HIFU',wontech:'O',rival:'X'},{label:'복합시술',wontech:'O',rival:'X'},{label:'쿨링',wontech:'강화',rival:'기본'}]},speech:[
       {text:'OLIGIO XM은 **HIFU와 RF를 하나의 플랫폼에 통합한 세계 최초 복합 리프팅 장비**입니다.'},
       {text:'HIFU로 SMAS층부터 끌어올리고, RF G모드로 진피 상부를 부드럽게 가열하고, RF X모드로 심부까지 강력하게 히팅하는 **3에너지 교차 시술**이 가능합니다.'},
-      {text:'울세라는 HIFU만, 써마지는 RF만 제공하는 데 반해, **OLIGIO XM은 두 장비의 적응증을 단일 플랫폼으로 커버**합니다. XM Pack 소모품 패키지로 1인 1팩 프리미엄 시술 구조를 설계할 수 있습니다.'},
-      {closing:true,text:'울세라와 써마지를 따로 살 이유가 없습니다. OLIGIO XM 하나로 HIFU+RF 전층 리프팅을 완성하고, XM Pack으로 반복 매출 구조까지 만드세요.'}]},
+      {text:'울쎄라는 HIFU만, 써마지는 RF만 제공하는 데 반해, **OLIGIO XM은 두 장비의 적응증을 단일 플랫폼으로 커버**합니다. XM Pack 소모품 패키지로 1인 1팩 프리미엄 시술 구조를 설계할 수 있습니다.'},
+      {closing:true,text:'울쎄라와 써마지를 따로 살 이유가 없습니다. OLIGIO XM 하나로 HIFU+RF 전층 리프팅을 완성하고, XM Pack으로 반복 매출 구조까지 만드세요.'}]},
     {id:'tightan',name:'TIGHTAN',color:'#22c55e',tagline:'HIFU 시장 진입용 — 최고의 투자 효율',competitors:['울쎄라','울트라포머 MPT','슈링크 유니버스'],table:{competitor:'울쎄라',rows:[
       {label:'가격',wontech:'1천만원대',rival:'1억 이상'},{label:'시술속도',wontech:'300샷 6분',rival:'상대적 느림'},{label:'도입부담',wontech:'매우 낮음',rival:'높음'},{label:'A/S',wontech:'국내',rival:'수입'}]},speech:[
       {text:'TIGHTAN은 HIFU 기반 비침습 리프팅 장비로, 타깃층에만 에너지를 정밀 집속해 **주변 조직 손상 없이 즉각적인 리프팅 효과**를 제공합니다.'},
       {text:'**1회 시술로 6개월~1년까지 효과가 지속**되며, 300샷을 6분 이내에 완료하는 빠른 시술 속도로 회전율 높은 시술 환경에 최적화되어 있습니다.'},
       {text:'합리적인 도입 가격으로 **HIFU 시술 메뉴를 처음 추가하려는 클리닉에도 진입 장벽이 낮고**, 얼굴 부위별 카트리지 선택으로 개인화 시술이 가능합니다.'},
-      {closing:true,text:'울세라 대비 10분의 1 가격에 HIFU 리프팅 메뉴 추가, 300샷을 6분에 완료. 시술 단가는 유지하면서 도입 부담은 최소화됩니다.'}]},
+      {closing:true,text:'울쎄라 대비 10분의 1 가격에 HIFU 리프팅 메뉴 추가, 300샷을 6분에 완료. 시술 단가는 유지하면서 도입 부담은 최소화됩니다.'}]},
     {id:'avvio',name:'AVVIO',color:'#14b8a6',tagline:'CO2 대비 짧은 다운타임 — 같은 효과, 더 빠른 회복',competitors:['액션2','루트로닉 eCO2','CO2 레이저'],table:{competitor:'CO2 레이저',rows:[
       {label:'열손상',wontech:'적음',rival:'많음'},{label:'회복속도',wontech:'빠름',rival:'느림'},{label:'PIH',wontech:'적음',rival:'상대적 높음'},{label:'A/S',wontech:'국내',rival:'수입'}]},speech:[
       {text:'AVVIO는 **수분 흡수율이 CO2 레이저보다 16배 높은 Er:YAG 2940nm 레이저**로, 표피 손상과 열 확산이 최소화되어 회복 기간이 훨씬 짧습니다.'},
       {text:'다운타임에 민감한 환자가 늘어나는 추세에서, AVVIO는 **CO2 대비 환자 만족도를 높이면서 동등한 치료 효과**를 제공합니다.'},
       {text:'Short/Long 모드 선택으로 Ablation과 Coagulation 효과를 병변에 따라 적용하고, **Fractional 핸드피스로 적응증 범위를 더욱 확장**할 수 있습니다.'},
-      {closing:true,text:'CO2보다 16배 높은 수분 흡수율로 열 확산과 피부 손상을 최소화 — 다운타임이 짧아 CO2를 꺼려하던 환자도 설득되는 더 안전한 선택입니다.'}]},
+      {closing:true,text:'CO2보다 16배 높은 수분 흡수율로 열 확산과 피부 손상을 최소화 — 다운타임이 짧아 CO2를 꺼리던 환자도 설득되는 더 안전한 선택입니다.'}]},
     {id:'lavieen',name:'LAVIEEN',color:'#a855f7',tagline:'BB레이저로 알려진 패키지 매출 창출 장비',competitors:['모자이크','Halo','Fraxel Dual'],table:{competitor:'프락셀',rows:[
       {label:'다운타임',wontech:'짧음',rival:'상대적 김'},{label:'소모품',wontech:'없음',rival:'있음'},{label:'드럭딜리버리',wontech:'강점',rival:'보통'},{label:'환자인지도',wontech:'BB레이저',rival:'프락셀'}]},speech:[
       {text:'LAVIEEN은 **1927nm Thulium 파장이 수분에 선택적으로 반응하는 BB레이저**입니다. 각질층을 보존한 채로 표피와 진피 상부에만 열에너지를 전달하기 때문에 CO2 대비 다운타임이 짧고 피부 장벽 손상이 최소화됩니다.'},
