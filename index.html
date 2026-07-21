@@ -8280,8 +8280,7 @@ function showHospitalDetail(name){
         const diffHtml = diff!==null
           ? `<span style="font-size:10px;font-weight:700;color:${Number(diff)>=0?'#16a34a':'#dc2626'}">${Number(diff)>=0?'▲':'▼'}${Math.abs(diff)}%</span>`
           : '';
-        const colors=['#2563eb','#7c3aed','#d97706','#16a34a'];
-        const c=colors[i]||'#64748b';
+        const c='#2563eb';  // 단일색(무지개 제거)
         const barMax=Math.max(...[...allProds].map(pp=>Math.max((hospCons.prods2026||{})[pp]||0,(hospCons.prods2025||{})[pp]||0)));
         const pct26 = barMax>0?Math.round(v26/barMax*100):0;
         const pct25 = barMax>0?Math.round(v25/barMax*100):0;
@@ -10044,7 +10043,7 @@ function renderDeviceSales() {
       qty25: sp(p,yrng,prodMoQtyY),
     })).filter(p=>p.v26>0||p.v25>0).sort((a,b)=>b.v26-a.v26);
     const maxV = Math.max(...data.map(p=>p.v26))||1;
-    const COLS = ['#2563eb','#7c3aed','#0891b2','#16a34a','#ea580c','#dc2626','#64748b'];
+    const COLS = ['#16a34a'];  // 장비 단일색(무지개 제거)
     const rngStr = rng.map(x=>x.y+'.'+x.m).join(',');
     return data.map((p,i)=>{
       const chg = p.v25>0?(p.v26/p.v25-1)*100:null;
@@ -10302,7 +10301,7 @@ function showDevRepDetail(repName) {
 
   const prods = yr===2026?rep.prods2026:rep.prods2025||{};
   const maxP  = Math.max(...Object.values(prods))||1;
-  const COLS  = ['#2563eb','#7c3aed','#0891b2','#16a34a','#ea580c','#dc2626','#64748b'];
+  const COLS  = ['#16a34a'];  // 장비 단일색(무지개 제거)
   const prodsHtml = Object.entries(prods).sort((a,b)=>b[1]-a[1]).map(([p,v],i)=>`
     <div style="padding:6px 0;border-bottom:1px solid #f3f4f6">
       <div style="display:flex;justify-content:space-between;margin-bottom:3px">
