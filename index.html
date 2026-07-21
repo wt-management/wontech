@@ -679,36 +679,36 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <!-- KPI 5개 한 행 -->
     <div class="row g-2 mb-3">
       <div class="col-6 col-md">
-        <div class="kpi-card" style="border-top:3px solid #16a34a">
-          <div class="kpi-label"><i class="bi bi-check-circle-fill me-1" style="color:#16a34a"></i>확정 매출</div>
+        <div class="kpi-card" style="border-top:3px solid #16324f">
+          <div class="kpi-label"><i class="bi bi-check-circle-fill me-1" style="color:#16324f"></i>확정 매출</div>
           <div class="kpi-value" id="kpi-confirmed">-</div>
           <div class="kpi-sub" id="kpi-confirmed-sub"></div>
         </div>
       </div>
       <div class="col-6 col-md">
-        <div class="kpi-card" style="border-top:3px solid #60a5fa">
-          <div class="kpi-label"><i class="bi bi-hourglass-split me-1" style="color:#2563eb"></i>예상 추가</div>
+        <div class="kpi-card" style="border-top:3px solid #16324f">
+          <div class="kpi-label"><i class="bi bi-hourglass-split me-1" style="color:#16324f"></i>예상 추가</div>
           <div class="kpi-value" id="kpi-expected">-</div>
           <div class="kpi-sub" id="kpi-expected-sub"></div>
         </div>
       </div>
       <div class="col-6 col-md">
-        <div class="kpi-card" style="border-top:3px solid #7c3aed">
-          <div class="kpi-label"><i class="bi bi-bullseye me-1" style="color:#7c3aed"></i>총 전망</div>
+        <div class="kpi-card" style="border-top:3px solid #16324f">
+          <div class="kpi-label"><i class="bi bi-bullseye me-1" style="color:#16324f"></i>총 전망</div>
           <div class="kpi-value" id="kpi-total-forecast">-</div>
           <div class="kpi-sub" id="kpi-total-forecast-sub"></div>
         </div>
       </div>
       <div class="col-6 col-md">
-        <div class="kpi-card" style="border-top:3px solid #16a34a">
-          <div class="kpi-label"><i class="bi bi-percent me-1" style="color:#16a34a"></i>Win Rate</div>
+        <div class="kpi-card" style="border-top:3px solid #16324f">
+          <div class="kpi-label"><i class="bi bi-percent me-1" style="color:#16324f"></i>Win Rate</div>
           <div class="kpi-value" id="kpi-winrate">-</div>
           <div class="kpi-sub" id="kpi-winrate-sub"></div>
         </div>
       </div>
       <div class="col-6 col-md">
-        <div class="kpi-card" style="border-top:3px solid #7c3aed">
-          <div class="kpi-label"><i class="bi bi-layers-fill me-1" style="color:#7c3aed"></i>파이프라인 잔고</div>
+        <div class="kpi-card" style="border-top:3px solid #16324f">
+          <div class="kpi-label"><i class="bi bi-layers-fill me-1" style="color:#16324f"></i>파이프라인 잔고</div>
           <div class="kpi-value" id="kpi-pipe-balance">-</div>
           <div class="kpi-sub" id="kpi-pipe-balance-sub"></div>
         </div>
@@ -720,7 +720,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <div class="card p-3">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <span style="font-size:13px;font-weight:700">매출 전망 <span id="dash-revenue-label" style="font-size:11px;font-weight:400;color:#64748b"></span></span>
-          <span id="dash-forecast-total" style="font-size:13px;font-weight:800;color:#7c3aed"></span>
+          <span id="dash-forecast-total" style="font-size:13px;font-weight:800;color:#16324f"></span>
         </div>
         <div style="display:flex;height:16px;border-radius:8px;overflow:hidden;background:#f3f4f6">
           <div id="dash-bar-confirmed" style="height:100%;background:#16a34a;transition:width .5s"></div>
@@ -831,7 +831,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         </div>
         <div class="col-md-5">
           <div class="card p-3 h-100">
-            <div class="fw-bold mb-2" style="font-size:14px"><i class="bi bi-funnel-fill me-1" style="color:#7c3aed"></i>Win Rate 퍼널</div>
+            <div class="fw-bold mb-2" style="font-size:14px"><i class="bi bi-funnel-fill me-1" style="color:#16324f"></i>Win Rate 퍼널</div>
             <div id="winrate-funnel"></div>
           </div>
         </div>
@@ -1338,7 +1338,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       </div>
       <div class="col-md-6">
         <div class="card p-3">
-          <div class="fw-bold mb-1" style="font-size:13px"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#7c3aed;margin-right:6px;vertical-align:middle"></span>Oligio X/XM (XF-4.0 · XE-0.25)</div>
+          <div class="fw-bold mb-1" style="font-size:13px"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#16324f;margin-right:6px;vertical-align:middle"></span>Oligio X/XM (XF-4.0 · XE-0.25)</div>
           <div style="position:relative;height:150px"><canvas id="cons-chart-xm"></canvas></div>
         </div>
       </div>
@@ -1462,9 +1462,9 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <!-- 탭 -->
     <div class="d-flex gap-1 mb-3" id="hosp-tab-bar">
       <button class="pipe-chip on" onclick="setHospTab('risk',this)"><i class="bi bi-exclamation-triangle-fill me-1" style="color:#dc2626"></i>이탈위험 <span id="hosp-risk-cnt" class="ms-1" style="font-size:10px"></span></button>
-      <button class="pipe-chip" onclick="setHospTab('perf',this)"><i class="bi bi-bar-chart-fill me-1" style="color:#2563eb"></i>성과 분석</button>
-      <button class="pipe-chip" onclick="setHospTab('grade',this)"><i class="bi bi-layers-fill me-1" style="color:#9333ea"></i>등급별 추이</button>
-      <button class="pipe-chip" onclick="setHospTab('rank',this)"><i class="bi bi-trophy-fill me-1" style="color:#f59e0b"></i>전체 순위</button>
+      <button class="pipe-chip" onclick="setHospTab('perf',this)"><i class="bi bi-bar-chart-fill me-1" style="color:#64748b"></i>성과 분석</button>
+      <button class="pipe-chip" onclick="setHospTab('grade',this)"><i class="bi bi-layers-fill me-1" style="color:#64748b"></i>등급별 추이</button>
+      <button class="pipe-chip" onclick="setHospTab('rank',this)"><i class="bi bi-trophy-fill me-1" style="color:#64748b"></i>전체 순위</button>
     </div>
 
     <!-- 이탈위험 패널 -->
@@ -1508,8 +1508,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
           </div>
         </div>
         <div class="col-md-6">
-          <div class="card p-3" style="border-left:4px solid #7c3aed">
-            <div class="fw-bold mb-1" style="font-size:13px;color:#7c3aed"><i class="bi bi-star-fill me-1"></i>신규 거래처 — 2026년 첫 거래</div>
+          <div class="card p-3" style="border-left:4px solid #16324f">
+            <div class="fw-bold mb-1" style="font-size:13px;color:#16324f"><i class="bi bi-star-fill me-1"></i>신규 거래처 — 2026년 첫 거래</div>
             <div style="font-size:11px;color:#64748b;margin-bottom:8px">2025년 이전 거래 없는 신규 병원</div>
             <div id="hosp-new-list" style="max-height:calc(100vh - 300px);overflow-y:auto"></div>
           </div>
@@ -3957,7 +3957,7 @@ function renderDashboard() {
     <div class="funnel-row" onclick="showPage('sales');setTimeout(function(){try{setPipeChip('${s.stage}',document.querySelector('#pipe-stage-chips .pipe-chip'))}catch(e){}},60)" style="cursor:pointer" title="${s.stage} 딜 보기">
       <div class="funnel-label" style="font-size:11px">${s.stage}</div>
       <div class="funnel-bar-wrap">
-        <div class="funnel-bar" style="width:${Math.max(s.amt/maxAmt2*100,s.cnt?2:0)}%;background:${SC[s.stage]||'#adb5bd'}">${s.cnt?s.cnt+'건':''}</div>
+        <div class="funnel-bar" style="width:${Math.max(s.amt/maxAmt2*100,s.cnt?2:0)}%;background:#16324f">${s.cnt?s.cnt+'건':''}</div>
       </div>
       <div class="funnel-amt" style="font-size:11px">${fmtAmt(s.amt)}</div>
     </div>`).join('');
@@ -4720,9 +4720,9 @@ function renderConsumables() {
   const kpiData = [
     {hero:true,color:'#111827',icon:'bi-capsule', label:`소모품 합계 (${ytdLabel})`, value:fmtB(total2026ytd), sub:`전 품목(의료기기·A/S 포함) — 종합 페이지와 동일 기준 · 전년 동기 ${fmtB(total2025ytd)} · 팁+카트리지 ${fmtB(sumTot26)}`, chg:total2025ytd>0?(total2026ytd/total2025ytd-1)*100:null,
      drill:()=>showConsDrill(['Oligio Tip [F-4.0]','Oligio Tip [E-0.25]','Oligio Tip [XF-4.0]','Oligio Tip [XE-0.25]','Cartridge'],'소모품 합계(팁+카트리지) 구매 병원')},
-    {color:'#ff4500',icon:'bi-star-fill',      label:`Oligio Tip 전체 (${ytdLabel})`, value:fmtB(oligTotal26), sub:`전년 동기 ${fmtB(oligTotal25)}`, chg:oligTotal25>0?(oligTotal26/oligTotal25-1)*100:null,
+    {color:'#16324f',icon:'bi-star-fill',      label:`Oligio Tip 전체 (${ytdLabel})`, value:fmtB(oligTotal26), sub:`전년 동기 ${fmtB(oligTotal25)}`, chg:oligTotal25>0?(oligTotal26/oligTotal25-1)*100:null,
      drill:()=>showConsDrill(['Oligio Tip [F-4.0]','Oligio Tip [E-0.25]','Oligio Tip [XF-4.0]','Oligio Tip [XE-0.25]'],'Oligio Tip 전체 구매 병원')},
-    {color:'#2563eb',icon:'bi-graph-up-arrow', label:`Oligio F·E (${ytdLabel})`,      value:fmtB(oligFe26),    sub:`전년 동기 ${fmtB(oligFe25)}`,    chg:oligFe25>0?(oligFe26/oligFe25-1)*100:null,
+    {color:'#16324f',icon:'bi-graph-up-arrow', label:`Oligio F·E (${ytdLabel})`,      value:fmtB(oligFe26),    sub:`전년 동기 ${fmtB(oligFe25)}`,    chg:oligFe25>0?(oligFe26/oligFe25-1)*100:null,
      drill:()=>showConsDrill(['Oligio Tip [F-4.0]','Oligio Tip [E-0.25]'],'Oligio F·E 구매 병원')},
     {color:'#16324f',icon:'bi-bar-chart',      label:`Oligio X/XM (${ytdLabel})`,     value:fmtB(oligXm26),    sub:`전년 동기 ${fmtB(oligXm25)}`,    chg:oligXm25>0?(oligXm26/oligXm25-1)*100:null,
      drill:()=>showConsDrill(['Oligio Tip [XF-4.0]','Oligio Tip [XE-0.25]'],'Oligio X/XM 구매 병원')},
@@ -4814,8 +4814,8 @@ function renderConsumables() {
 
   // Oligio X/XM (XF+XE) 차트
   consChartXm = makeLineChart('cons-chart-xm',[
-    {label:'Oligio X/XM 2025', data:d_xm25, borderColor:'rgba(124,58,237,0.35)', borderWidth:1.5, borderDash:[5,3], pointRadius:2, tension:0.3, fill:false},
-    {label:'Oligio X/XM 2026', data:d_xm26, borderColor:'#7c3aed', backgroundColor:'rgba(124,58,237,0.06)', borderWidth:3, pointRadius:4, pointBackgroundColor:'#7c3aed', tension:0.3, fill:true, spanGaps:false},
+    {label:'Oligio X/XM 2025', data:d_xm25, borderColor:'rgba(22,50,79,0.35)', borderWidth:1.5, borderDash:[5,3], pointRadius:2, tension:0.3, fill:false},
+    {label:'Oligio X/XM 2026', data:d_xm26, borderColor:'#16324f', backgroundColor:'rgba(22,50,79,0.06)', borderWidth:3, pointRadius:4, pointBackgroundColor:'#16324f', tension:0.3, fill:true, spanGaps:false},
   ], consChartXm);
 
   const oligMoY=y=>y===2026?mo26:(y===2025?mo25:{});
@@ -4841,7 +4841,7 @@ function renderConsumables() {
     const maxV=Math.max(...data.map(p=>p.v26))||1;
     const groups=[
       {name:'Oligio',      col:'#2563eb', items:data.filter(p=>p.grp==='Oligio')},
-      {name:'Oligio X/XM', col:'#7c3aed', items:data.filter(p=>p.grp==='Oligio X/XM')},
+      {name:'Oligio X/XM', col:'#16324f', items:data.filter(p=>p.grp==='Oligio X/XM')},
     ];
     return groups.map(g=>{
       const gv26=g.items.reduce((s,p)=>s+p.v26,0);
@@ -6499,7 +6499,7 @@ function _cduRevisitBox(){
   var arr=Object.entries(lastByHosp).map(function(p){ return {hosp:p[0],date:p[1].date,days:dAgo(p[1].date),sales:p[1].sales}; }).sort(function(a,b){ return a.date<b.date?-1:1; }).slice(0,8);
   if(!arr.length) return '';
   var rows=arr.map(function(r){ return '<div onclick="openCDUHosp(\''+_cduEsc(r.hosp).replace(/\x27/g,"\\x27")+'\')" style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f1f5f9;cursor:pointer;font-size:12px"><span style="font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_cduEsc(r.hosp)+'</span>'+(r.sales?'<span style="font-size:10px;color:#94a3b8;flex-shrink:0">'+_cduEsc(r.sales)+'</span>':'')+'<span style="font-size:11px;color:#64748b;min-width:56px;text-align:right;flex-shrink:0">'+r.days+'일 전</span></div>'; }).join('');
-  return '<details style="margin:0 0 12px;border-top:1px solid #e4e8ef;border-bottom:1px solid #e4e8ef;padding:8px 4px"><summary style="cursor:pointer;font-size:12px;font-weight:700;color:#475569"><i class="bi bi-arrow-repeat me-1" style="color:#ea580c"></i>재방문 추천 '+arr.length+'곳 <span style="font-weight:400;color:#94a3b8">· 담당자 참고용 · 오래 안 간 순 · 클릭하면 이력</span></summary><div class="mt-1" style="padding:0 6px">'+rows+'</div></details>';
+  return '<details style="margin:0 0 12px;border-top:1px solid #e4e8ef;border-bottom:1px solid #e4e8ef;padding:8px 4px"><summary style="cursor:pointer;font-size:12px;font-weight:700;color:#475569"><i class="bi bi-arrow-repeat me-1" style="color:#64748b"></i>재방문 추천 '+arr.length+'곳 <span style="font-weight:400;color:#94a3b8">· 담당자 참고용 · 오래 안 간 순 · 클릭하면 이력</span></summary><div class="mt-1" style="padding:0 6px">'+rows+'</div></details>';
 }
 function _cduMiniCard(v){
   var planned=(v.status==='planned');
@@ -7573,7 +7573,7 @@ function renderPerformance(){
       labels:months.map(m=>m.split('-')[1]+'월'),
       datasets:[
         {label:'계약금액',data:months.map(m=>monthlyA[m]||0),backgroundColor:months.map(m=>yms.includes(m)?'rgba(37,99,235,0.7)':'rgba(37,99,235,0.15)'),borderColor:'#2563eb',borderWidth:1.5,borderRadius:5,yAxisID:'y'},
-        {label:'상담건수',data:months.map(m=>monthlyL[m]||0),type:'line',borderColor:'#f59e0b',borderWidth:2,pointRadius:3,fill:false,tension:0.3,yAxisID:'y2'}
+        {label:'상담건수',data:months.map(m=>monthlyL[m]||0),type:'line',borderColor:'#64748b',borderWidth:2,pointRadius:3,fill:false,tension:0.3,yAxisID:'y2'}
       ]
     },
     options:{
@@ -7686,14 +7686,14 @@ function renderPerformance(){
         const barW=Math.round(f.count/maxCount*100);
         return`<div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-            <span style="font-size:12px;font-weight:600;color:${SC[f.stage]}">${f.stage}</span>
+            <span style="font-size:12px;font-weight:600;color:#16324f">${f.stage}</span>
             <div style="display:flex;gap:8px;font-size:11px;color:#6b7280">
               ${i>0?`<span style="color:${conv>=70?'#16a34a':conv>=40?'#ea580c':'#dc2626'};font-weight:700">↓${conv}%</span>`:'<span style="font-size:10px">시작</span>'}
               <span style="cursor:pointer;color:#2563eb;font-weight:600;text-decoration:underline dotted" onclick="showPerfDrill('deals','${f.stage} 단계 딜',d=>d.stage==='${f.stage}')">${f.count}건</span><span style="font-weight:600">${fmtAmt(f.amt)}</span>
             </div>
           </div>
           <div style="background:#f3f4f6;border-radius:5px;height:22px;position:relative;overflow:hidden">
-            <div style="background:${SC[f.stage]};width:${barW}%;height:100%;border-radius:5px;opacity:.8"></div>
+            <div style="background:#16324f;width:${barW}%;height:100%;border-radius:5px;opacity:.8"></div>
           </div>
         </div>`;
       }).join('')}
@@ -9989,7 +9989,7 @@ function renderDeviceSales() {
       {label:`누계 매출 (${P.label})`, val:fmtW(ytdCur), sub:(_prevFull?`전년 동기 ${fmtW(ytdPrev)}`:'연도경계 누적')+devSub2, chg:yoy, col:'#2563eb', icon:'bi-box-seam', click:"openOvCategory('dev')"},
       {label:'전년 동기', val:_prevFull?fmtW(ytdPrev):'—', sub:_prevFull?'동일 기간·전년':'전년 데이터 범위 밖', chg:null, col:'#6b7280', icon:'bi-calendar2'},
       {label:'YoY 성장률', val:yoy===null?'-':((yoy>=0?'▲':'▼')+Math.abs(yoy).toFixed(1)+'%'), sub:'전년 동기 대비', chg:null, col:yoy===null?'#6b7280':yoy>=0?'#16a34a':'#dc2626', icon:'bi-graph-up'},
-      {label:'취급 제품수', val:Object.keys(curProds).length+'종', sub:P.label+' · 클릭 랭킹', chg:null, col:'#7c3aed', icon:'bi-grid', click:"openOvCategory('dev')"},
+      {label:'취급 제품수', val:Object.keys(curProds).length+'종', sub:P.label+' · 클릭 랭킹', chg:null, col:'#2563eb', icon:'bi-grid', click:"openOvCategory('dev')"},
     ].map(c=>`<div class="col-6 col-md-3"><div class="kpi-card"${c.click?` onclick="${c.click}"`:''}>
       <div class="kpi-label"><i class="bi ${c.icon} me-1" style="color:${c.col}"></i>${c.label}${c.click?' <i class="bi bi-search" style="font-size:9px;color:#cbd5e1"></i>':''}</div>
       <div class="kpi-value" style="color:${c.col};font-size:1.5rem">${c.val}</div>
@@ -10217,7 +10217,7 @@ function _drawParetoChart(el,data){
   var cumPct=top.map(function(e){ cum+=e.cur; return +(cum/total*100).toFixed(1); });
   _devChartObj=new Chart(el,{ data:{ labels:top.map(function(e){ return e.name; }), datasets:[
     { type:'bar', label:'매출', data:top.map(function(e){ return e.cur; }), backgroundColor:top.map(function(e){ return e.isTeam?'#2563eb':'#f59e0b'; }), yAxisID:'y', order:2 },
-    { type:'line', label:'누적 비중(%)', data:cumPct, borderColor:'#7c3aed', backgroundColor:'#7c3aed', yAxisID:'y1', tension:.25, pointRadius:2, order:1 }
+    { type:'line', label:'누적 비중(%)', data:cumPct, borderColor:'#64748b', backgroundColor:'#64748b', yAxisID:'y1', tension:.25, pointRadius:2, order:1 }
   ] }, options:{ maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, plugins:{ legend:{display:true,labels:{font:{size:11}}}, tooltip:{ callbacks:{ label:function(c){ return c.dataset.type==='line'?('누적 '+c.parsed.y+'%'):('매출 '+_devFmt(c.parsed.y)); } } } }, scales:{
     x:{ ticks:{font:{size:9},maxRotation:65,minRotation:65,autoSkip:false} },
     y:{ position:'left', ticks:{font:{size:10},callback:function(v){ return _devFmt(v); }} },
