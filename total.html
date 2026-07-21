@@ -560,7 +560,7 @@ tr.lb-clk:hover td,tr.qs-clk:hover td{background:var(--surface-2)}
 .xs-cr i{font-style:normal;font-size:7.5px;color:#16324f;font-weight:800;background:#e3ebf4;padding:1px 4px;border-radius:6px;margin-left:0;flex-shrink:0;letter-spacing:-.02em}
 .ex-ybars.mini{flex:1;height:auto;min-height:54px;padding:16px 0 0;gap:4px;border-bottom:1.5px solid #16324f;margin-top:4px}
 .ex-ybars.mini .ex-ybar{min-width:0}
-.ex-ybars.mini .v{font-size:8.5px;letter-spacing:-.04em;margin-bottom:4px}
+.ex-ybars.mini .v{font-size:11px;letter-spacing:-.02em;font-weight:800;margin-bottom:4px}
 .ex-ybars.mini .bar{width:60%}
 .ex-yx.mini{margin-top:5px;gap:4px;flex-shrink:0}
 .ex-yx.mini span{font-size:9px;letter-spacing:-.03em;min-width:0}
@@ -3471,7 +3471,7 @@ function exPrintDesign(btn){
 /* ── 수출의 탑: 모바일 화면 구성으로 PNG 저장 ── */
 function exSaveImage(btn){
   var ob=btn?btn.innerHTML:''; _exBusy(btn,true);
-  _exCapture(360,'exp-mobile','#eef1f6',1).then(function(cv){
+  _exCapture(360,'exp-mobile','#eef1f6',2).then(function(cv){
     cv.toBlob(function(blob){
       if(!blob){ _exBusy(btn,false,ob); alert('이미지 생성에 실패했습니다.'); return; }
       var url=URL.createObjectURL(blob), a=document.createElement('a');
