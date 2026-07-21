@@ -10014,6 +10014,21 @@ function renderDeviceSales() {
     const g2=p2v>0?(c2/p2v-1)*100:null;
     devSub2='<div style="margin-top:4px;font-size:10px;color:#64748b">'+P2d.label+' 기준 <b>'+fmtW(c2)+'</b> · 전년 '+fmtW(p2v)+' '+chgBadge(g2)+'</div>';
   }
+  // 임원용 인사이트 집계: 제품별 매출/대수 · 월평균 · 최고월 · 평균단가
+  const _pRev={}, _pQty={}, _pQtyPrev={};
+  spanMs.forEach(x=>{ const pm=prodMoY(x.y), qm=prodMoQtyY(x.y);
+    for(const k in pm){ if(pm[k][x.m]) _pRev[k]=(_pRev[k]||0)+pm[k][x.m]; }
+    for(const k in qm){ if(qm[k][x.m]) _pQty[k]=(_pQty[k]||0)+qm[k][x.m]; } });
+  prevMs.forEach(x=>{ const qm=prodMoQtyY(x.y); for(const k in qm){ if(qm[k][x.m]) _pQtyPrev[k]=(_pQtyPrev[k]||0)+qm[k][x.m]; } });
+  const _pRank=Object.entries(_pRev).sort((a,b)=>b[1]-a[1]);
+  const topP=_pRank[0]||['-',0];
+  const topShare=ytdCur>0?(topP[1]/ytdCur*100):0;
+  const totUnits=Object.values(_pQty).reduce((s,v)=>s+v,0);
+  const totUnitsPrev=Object.values(_pQtyPrev).reduce((s,v)=>s+v,0);
+  const unitsYoY=(totUnitsPrev>0&&_prevFull)?(totUnits/totUnitsPrev-1)*100:null;
+  const nMo=spanMs.length||1, avgMo=ytdCur/nMo;
+  let peakM=null,peakV=0; spanMs.forEach(x=>{ const v=moY(x.y)[x.m]||0; if(v>peakV){peakV=v;peakM=x.m;} });
+  const avgPrice=totUnits>0?ytdCur/totUnits:0;
   // KPI 카드
   const noData = Object.keys(DEVICE.monthly2026||{}).length === 0 && Object.keys(DEVICE.monthly2025||{}).length === 0;
   document.getElementById('dev-kpi').innerHTML = noData
@@ -10022,6 +10037,9 @@ function renderDeviceSales() {
       +'<div class="wt-hero" style="cursor:pointer" onclick="openOvCategory(\'dev\')"><span class="l">누계 매출 · '+P.label+'</span><b>'+fmtW(ytdCur)+'</b><span class="s">'+(_prevFull?'전년 동기 '+fmtW(ytdPrev)+' '+chgBadge(yoy):'연도경계 누적')+'</span>'+devSub2+'</div>'
       
       
+      +'<div class="wt-fact" onclick="openOvCategory(\'dev\')"><span class="l">1위 제품 <i class="bi bi-search" style="font-size:9px;color:#cbd5e1"></i></span><b style="font-size:15px;display:block;overflow:hidden;text-overflow:ellipsis">'+_ovEsc(topP[0])+'</b><span class="s">'+fmtW(topP[1])+' · 비중 '+topShare.toFixed(0)+'%</span></div>'
+      +'<div class="wt-fact" style="cursor:default"><span class="l">월 평균 매출</span><b>'+fmtW(avgMo)+'</b><span class="s">최고 '+(peakM?peakM+'월 '+fmtW(peakV):'-')+'</span></div>'
+      +(totUnits>0?'<div class="wt-fact" style="cursor:default"><span class="l">총 판매 대수</span><b>'+totUnits.toLocaleString()+'대</b><span class="s">'+(unitsYoY!==null?'전년 '+totUnitsPrev.toLocaleString()+'대 '+chgBadge(unitsYoY):'평균단가 '+fmtW(avgPrice)+'/대')+'</span></div>':'')
       +'<div class="wt-fact" onclick="openOvCategory(\'dev\')"><span class="l">취급 제품수 <i class="bi bi-search" style="font-size:9px;color:#cbd5e1"></i></span><b>'+Object.keys(curProds).length+'종</b><span class="s">'+P.label+' · 클릭 랭킹</span></div>'
       +'</div>';
 
