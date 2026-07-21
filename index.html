@@ -202,7 +202,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 .kpi-card:hover{box-shadow:0 4px 12px rgba(15,23,42,.06);transform:none}
 .kpi-card[onclick]:hover,.card[onclick]:hover{box-shadow:0 4px 12px rgba(15,23,42,.08);transform:none;border-color:#cfd8e3}
 .table{font-variant-numeric:tabular-nums}
-.table thead th{background:#fafbfc;color:#475569;font-size:12px;font-weight:700;border-top:2px solid #16324f;border-bottom:1px solid #e4e8ef}
+.table thead th{background:#fafbfc;color:#475569;font-size:12px;font-weight:700;border-top:2px solid #16324f;border-bottom:1px solid #e4e8ef;text-transform:none;letter-spacing:0}
 .table tbody td{border-color:#eef1f5}
 /* 문서형 페이지 헤더(전 페이지 공통) */
 .page-header{border-bottom:1px solid #e4e8ef;padding-bottom:13px}
@@ -1744,7 +1744,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <button type="button" class="btn-close ms-1" data-bs-dismiss="modal"></button>
     </div>
   </div>
-  <div class="modal-body" style="background:#eef2f6;padding:18px"><div id="cduwk-sheet" style="background:#fff;padding:30px 38px;border-radius:6px;box-shadow:0 4px 18px rgba(15,23,42,.08)"></div></div>
+  <div class="modal-body" style="background:#eef2f6;padding:18px"><div id="cduwk-sheet" style="background:#fff;padding:30px 38px;border-radius:6px;box-shadow:0 4px 18px rgba(15,23,42,.08);overflow-x:auto"></div></div>
 </div></div></div>
 
 <!-- 프로모션 자동 작성/발송 모달 -->
