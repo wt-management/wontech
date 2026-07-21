@@ -3485,11 +3485,13 @@ function _pngSetDpi(buf,dpi){ try{
 function exSaveImage(btn){
   var ob=btn?btn.innerHTML:''; _exBusy(btn,true);
   _exCapture(360,'exp-mobile','#eef1f6',3).then(function(cv){
-    // 3배(1080px) 고해상도 그대로 저장(축소 안 함) + pHYs로 3배 밀도(288DPI) 표시 → 파일은 선명, 표시 크기는 360으로 작게
-    cv.toBlob(function(blob){
+    // 폰 폭에 맞는 360px로 고품질 축소(3배 렌더→슈퍼샘플링) — 메일에 넣어 바로 보낼 때 딱 맞음
+    var TW=360, out=cv;
+    if(cv.width>TW){ var c2=document.createElement('canvas'); c2.width=TW; c2.height=Math.round(cv.height*TW/cv.width); var cx=c2.getContext('2d'); cx.imageSmoothingEnabled=true; cx.imageSmoothingQuality='high'; cx.drawImage(cv,0,0,c2.width,c2.height); out=c2; }
+    out.toBlob(function(blob){
       if(!blob){ _exBusy(btn,false,ob); alert('이미지 생성에 실패했습니다.'); return; }
       blob.arrayBuffer().then(function(ab){
-      var hi=_pngSetDpi(ab,288); var blob2=new Blob([hi],{type:'image/png'});
+      var hi=_pngSetDpi(ab,96); var blob2=new Blob([hi],{type:'image/png'});
       var url=URL.createObjectURL(blob2), a=document.createElement('a');
       a.href=url; a.download=_exDocName()+'_모바일.png';
       document.body.appendChild(a); a.click(); a.remove();
