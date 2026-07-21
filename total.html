@@ -3054,7 +3054,7 @@ function renderExport(){
   document.getElementById('ex-body').innerHTML=fn(D);
 }
 /* ── 디자인 선택(기억): 보고서/모바일/다크/미니멀/타임라인. 모바일 기기는 최초 기본이 모바일 ── */
-var _EXD_LIST=[['report','\uD83D\uDCC4 \uBCF4\uACE0\uC11C'],['brief','\uD83C\uDFAF \uBE0C\uB9AC\uD551'],['mobile','\uD83D\uDCF1 \uBAA8\uBC14\uC77C'],['score','\u25FB \uC2A4\uCF54\uC5B4\uCE74\uB4DC'],['plan','\uD83D\uDDFA \uD50C\uB79C\uBCF4\uB4DC']];
+var _EXD_LIST=[['report','\uD83D\uDCC4 \uBCF4\uACE0\uC11C'],['mobile','\uD83D\uDCF1 \uBAA8\uBC14\uC77C']];
 var _exDesign=(function(){ try{ var v=localStorage.getItem('wt_ex_design'); var mig={dark:'brief',minimal:'score',story:'plan'}; if(mig[v]) v=mig[v]; if(v&&_EXD_LIST.some(function(d){return d[0]===v;})) return v; }catch(e){}
   try{ if(window.matchMedia&&matchMedia('(max-width:640px)').matches) return 'mobile'; }catch(e){}
   return 'report'; })();
