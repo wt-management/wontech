@@ -1625,15 +1625,9 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <!-- 매출 한눈에 그래프 -->
     <div class="card p-3 mb-3">
       <div class="d-flex align-items-center mb-2" style="font-size:13px">
-        <span class="fw-bold"><i class="bi bi-grid-1x2-fill me-1" style="color:#7c3aed"></i>매출 한눈에</span>
-        <span id="devchart-hint" style="font-size:11px;color:#64748b;margin-left:8px">진한 막대=올해 / 연한 막대=전년 · 이름 옆 ▲▼=전년비 · 파랑=영업사원 주황=대리점</span>
-        <div class="btn-group btn-group-sm ms-auto" role="group" style="font-size:11px">
-          <button id="devchart-tree" type="button" class="btn btn-outline-primary active" onclick="_setDevChart('bar',this)">순위·전년비</button>
-          <button id="devchart-pareto" type="button" class="btn btn-outline-primary" onclick="_setDevChart('pareto',this)">집중도</button>
-        </div>
+        <span class="fw-bold"><i class="bi bi-grid-1x2-fill me-1" style="color:#7c3aed"></i>핵심 지표 <span style="font-size:11px;font-weight:400;color:#94a3b8">· 담당별 상세는 아래 순위표에서</span></span>
       </div>
-      <div id="devrep-insight" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"></div>
-      <div style="position:relative;height:300px"><canvas id="devrep-chart"></canvas></div>
+      <div id="devrep-insight" style="display:flex;gap:8px;flex-wrap:wrap"></div>
     </div>
     <!-- 전체 순위 테이블 -->
     <div class="card p-0">
@@ -4963,12 +4957,7 @@ function renderConsumables() {
                 ${chgBadge(chg,false)}
               </div>
             </div>
-            <div style="display:flex;gap:4px;align-items:center">
-              <div style="flex:1;background:#f3f4f6;border-radius:4px;height:6px;overflow:hidden">
-                <div style="width:${barW.toFixed(1)}%;height:100%;border-radius:4px;background:${p.col}"></div>
-              </div>
-              <span style="font-size:10px;color:#64748b;min-width:48px;text-align:right">전년 ${fmtW(p.v25)}</span>
-            </div>
+            <div style="font-size:10.5px;color:#94a3b8;padding-left:14px;margin-top:1px">전년 <span style="font-variant-numeric:tabular-nums">${fmtW(p.v25)}</span></div>
           </div>`;
         }).join('')}
       </div>`;
