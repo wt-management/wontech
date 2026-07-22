@@ -3825,20 +3825,28 @@ function renderRegion(){
     +'</div>';
   const sorted=entries.sort((a,b)=>b[1].v26-a[1].v26); const maxV=sorted.length?sorted[0][1].v26:1;
   const rankB=function(i){ if(i<3){ var c=['#f59e0b','#64748b','#b45309'][i]; return '<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:'+c+'22;color:'+c+';font-weight:800;font-size:11px">'+(i+1)+'</span>'; } return '<span style="color:#cbd5e1;font-weight:700;font-size:12px">'+(i+1)+'</span>'; };
-  const rows=sorted.map(function(e,i){ const x=e[0],o=e[1]; const nl=_cntNewLost(o.hosps); const hc=Object.values(o.hosps).filter(h=>h.v26>0).length; const col=x==='미분류'?'#94a3b8':'#2563eb'; const pct=(o.v26/grand*100);
+  const _rowHtml=function(e,i){ const x=e[0],o=e[1]; const nl=_cntNewLost(o.hosps); const hc=Object.values(o.hosps).filter(h=>h.v26>0).length; const col=x==='미분류'?'#94a3b8':'#2563eb'; const pct=(o.v26/grand*100);
     return '<tr data-s="'+String(x).replace(/"/g,'&quot;')+'" onclick="openRegionDetail(this.getAttribute(\'data-s\'))" style="cursor:pointer;transition:background .12s" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'">'
-      +'<td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;text-align:center">'+rankB(i)+'</td>'
+      +'<td style="padding:9px 10px;border-bottom:1px solid #f1f5f9;text-align:center">'+rankB(i)+'</td>'
       +'<td style="border-bottom:1px solid #f1f5f9;font-weight:700;color:#1e293b;white-space:nowrap">'+_ovEsc(x)+' <i class="bi bi-search" style="font-size:9px;color:#cbd5e1"></i></td>'
       +'<td style="text-align:right;border-bottom:1px solid #f1f5f9;font-weight:800;color:'+col+';font-variant-numeric:tabular-nums;white-space:nowrap">'+_ovFmt(o.v26)+'</td>'
       +'<td style="text-align:right;border-bottom:1px solid #f1f5f9;color:#94a3b8;font-variant-numeric:tabular-nums;white-space:nowrap">'+(o.v25?_ovFmt(o.v25):'-')+'</td>'
       +'<td style="text-align:right;border-bottom:1px solid #f1f5f9;white-space:nowrap">'+_grBadge(o.v26,o.v25)+'</td>'
       +'<td style="text-align:center;border-bottom:1px solid #f1f5f9;color:#475569;font-variant-numeric:tabular-nums">'+hc+'</td>'
       +'<td style="text-align:center;border-bottom:1px solid #f1f5f9;font-size:11px;white-space:nowrap"><span style="color:#7c3aed;font-weight:600">+'+nl.nw+'</span> <span style="color:#cbd5e1">/</span> <span style="color:#dc2626;font-weight:600">-'+nl.lost+'</span></td>'
-      +'<td style="border-bottom:1px solid #f1f5f9;min-width:120px"><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;background:#eef2f7;border-radius:99px;height:7px;overflow:hidden"><div style="width:'+pct.toFixed(1)+'%;height:100%;background:linear-gradient(90deg,'+col+',rgba(37,99,235,.5));border-radius:99px"></div></div><span style="color:#64748b;font-size:11px;font-variant-numeric:tabular-nums;min-width:36px;text-align:right">'+pct.toFixed(1)+'%</span></div></td>'
+      +'<td style="border-bottom:1px solid #f1f5f9;min-width:84px"><div style="display:flex;align-items:center;gap:7px"><div style="flex:1;background:#eef2f7;border-radius:99px;height:7px;overflow:hidden;min-width:24px"><div style="width:'+pct.toFixed(1)+'%;height:100%;background:linear-gradient(90deg,'+col+',rgba(37,99,235,.5));border-radius:99px"></div></div><span style="color:#64748b;font-size:11px;font-variant-numeric:tabular-nums;min-width:32px;text-align:right">'+pct.toFixed(1)+'%</span></div></td>'
     +'</tr>';
-  }).join('');
+  };
   const thB='padding:9px 10px;background:#f8fafc;border-bottom:2px solid #e5e7eb;font-weight:700;position:sticky;top:0';
-  document.getElementById('reg-list').innerHTML='<div style="overflow-x:auto;border:1px solid #eef2f7;border-radius:12px"><table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:720px"><thead><tr style="color:#94a3b8;font-size:10.5px;letter-spacing:.02em"><th style="'+thB+';text-align:center;border-radius:12px 0 0 0">#</th><th style="'+thB+';text-align:left">시도</th><th style="'+thB+';text-align:right">매출</th><th style="'+thB+';text-align:right">전년</th><th style="'+thB+';text-align:right">성장률</th><th style="'+thB+';text-align:center">거래처</th><th style="'+thB+';text-align:center">신규/이탈</th><th style="'+thB+';text-align:left;border-radius:0 12px 0 0">비중</th></tr></thead><tbody>'+(rows||'<tr><td colspan="8" style="text-align:center;color:#64748b;padding:16px">데이터 없음 — 지역 매핑 SQL을 먼저 적재하세요</td></tr>')+'</tbody></table></div>';
+  const _thead='<thead><tr style="color:#94a3b8;font-size:10.5px;letter-spacing:.02em"><th style="'+thB+';text-align:center;border-radius:12px 0 0 0">#</th><th style="'+thB+';text-align:left">시도</th><th style="'+thB+';text-align:right">매출</th><th style="'+thB+';text-align:right">전년</th><th style="'+thB+';text-align:right">성장률</th><th style="'+thB+';text-align:center">거래처</th><th style="'+thB+';text-align:center">신규/이탈</th><th style="'+thB+';text-align:left;border-radius:0 12px 0 0">비중</th></tr></thead>';
+  const _tbl=function(rh){ return '<div style="overflow-x:auto;border:1px solid #eef2f7;border-radius:12px"><table style="width:100%;border-collapse:collapse;font-size:12.5px">'+_thead+'<tbody>'+rh+'</tbody></table></div>'; };
+  const _half=Math.ceil(sorted.length/2);
+  const _L=sorted.slice(0,_half).map(function(e,i){return _rowHtml(e,i);}).join('');
+  const _R=sorted.slice(_half).map(function(e,i){return _rowHtml(e,_half+i);}).join('');
+  // 좌우 2단(좁은 화면은 자동 1단) — 세로 길이 절반
+  document.getElementById('reg-list').innerHTML= sorted.length
+    ? '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:14px;align-items:start">'+_tbl(_L)+(_R?_tbl(_R):'')+'</div>'
+    : '<div style="border:1px solid #eef2f7;border-radius:12px;padding:16px;text-align:center;color:#64748b;font-size:12.5px">데이터 없음 — 지역 매핑 SQL을 먼저 적재하세요</div>';
   const info=document.getElementById('reg-info'); if(info) info.textContent=(CONS.updatedAt?'기준일 '+CONS.updatedAt:'')+((HOSP_REGION.regions&&Object.keys(HOSP_REGION.regions).length)?'':' · ⚠ 지역매핑 미적재');
   if(_regViewMode==='map' && _regMap) _plotHospitalMarkers();
 }
