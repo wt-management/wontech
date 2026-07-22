@@ -282,12 +282,15 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .up-bar{flex:1;height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden}
 .up-v{width:62px;text-align:right;flex-shrink:0;font-weight:700;font-variant-numeric:tabular-nums}
 /* P3 분기 */
-.q-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.q-card{background:#fff;border:1px solid #eef2f7;border-radius:14px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.q-cards{display:block}
+.q-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px}
+.q-grid+.q-grid{margin-top:12px}
+.q-card{background:#fff;border:1px solid #eef2f7;border-radius:12px;padding:13px 15px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
 .q-card.hi{background:linear-gradient(180deg,#eef2ff,#fff);border-color:#c7d2fe}
-.q-lbl{font-size:12.5px;color:#64748b;font-weight:700}
-.q-val{font-size:1.8rem;font-weight:800;margin:4px 0 2px;color:#0f172a}
-.q-yoy{font-size:11.5px;color:#64748b;margin-bottom:8px}
+.q-lbl{font-size:12px;color:#64748b;font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.q-val{font-size:1.55rem;font-weight:800;margin:3px 0 0;color:#0f172a;line-height:1.1}
+.q-yoy{font-size:11.5px;color:#64748b}
+.q-foot{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:#64748b;border-top:1px solid #f1f5f9;padding-top:8px;margin-top:9px}
 .q-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-top:1px solid #f1f5f9}
 .q-seg{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
 .q-seg-l{flex:1;font-weight:600}
@@ -2367,18 +2370,16 @@ function renderQuarters(){
   for(let q=1;q<=Math.min(4,curQ);q++)periods.push({k:q+'Q',f:(q-1)*3+1,t:q*3,lbl:q+'분기 ('+((q-1)*3+1)+'~'+(q*3)+'월)'});
   if(curQ>=2)periods.push({k:'H1',f:1,t:6,lbl:'상반기 (1~6월)'});
   if(cur>=7)periods.push({k:'H2',f:7,t:12,lbl:'하반기 (7~12월)'});
-  let h='';
-  periods.forEach(pr=>{
+  const _qc=pr=>{
     const done=cur>=pr.t; const x=sumP(pr.f,Math.min(pr.t,cur)); const tg=allTgt(pr.f,pr.t); const pn=pendP(pr.f,Math.min(pr.t,cur));
     const yoy=pct(x.a,x.p); const ach=tg>0?(x.a)/tg*100:null; const achF=tg>0?(x.a+pn)/tg*100:null;
     const mom=pr.k==='2Q'?qoq:null;
-    h+='<div class="q-card'+(pr.k==='H1'?' hi':'')+(mom!=null&&mom<0?' ':'')+'"><div class="q-lbl">'+pr.lbl+(done?'':' <span class="muted" style="font-size:10px">진행중</span>')+(mom!=null?' <span class="exec-chip" style="font-size:10px;background:'+_yoyCol(mom)+'22;color:'+_yoyCol(mom)+'">1Q대비 '+arrow(mom)+'</span>':'')+'</div>'+
-      '<div class="q-val">'+fmtW(x.a)+'</div>'+
-      '<div class="q-yoy">전년 '+fmtW(x.p)+' '+(yoy===null?'':badge(yoy))+'</div>'+
-      '<div class="q-row"><span>목표</span><span>'+fmtW(tg)+'</span></div>'+
-      '<div class="q-row"><span>달성률</span><span style="color:'+_achCol(ach)+';font-weight:800">'+(ach==null?'-':ach.toFixed(0)+'%')+(pn>0&&achF!=null?' <span class="muted" style="font-weight:500">(전망 '+achF.toFixed(0)+'%)</span>':'')+'</span></div></div>';
-  });
-  document.getElementById('q-cards').innerHTML=h;
+    return '<div class="q-card'+(pr.k==='H1'?' hi':'')+'"><div class="q-lbl">'+pr.lbl+(done?'':' <span class="muted" style="font-size:10px;font-weight:600">진행중</span>')+(mom!=null?' <span class="exec-chip" style="font-size:10px;background:'+_yoyCol(mom)+'22;color:'+_yoyCol(mom)+'">1Q대비 '+arrow(mom)+'</span>':'')+'</div>'+
+      '<div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap"><div class="q-val">'+fmtW(x.a)+'</div><div class="q-yoy">전년 '+fmtW(x.p)+' '+(yoy===null?'':badge(yoy))+'</div></div>'+
+      '<div class="q-foot"><span>목표 <b style="color:#334155">'+fmtW(tg)+'</b></span><span>달성률 <b style="color:'+_achCol(ach)+'">'+(ach==null?'-':ach.toFixed(0)+'%')+'</b>'+(pn>0&&achF!=null?' <span class="muted" style="font-weight:500">전망 '+achF.toFixed(0)+'%</span>':'')+'</span></div></div>';
+  };
+  const qs=periods.filter(p=>/Q$/.test(p.k)), hs=periods.filter(p=>/^H/.test(p.k));
+  document.getElementById('q-cards').innerHTML='<div class="q-grid">'+qs.map(_qc).join('')+'</div>'+(hs.length?'<div class="q-grid">'+hs.map(_qc).join('')+'</div>':'');
   // 채널×분기 모멘텀 히트맵
   const hc=v=>'<span class="heat-cell" style="background:'+_yoyCol(v)+'1f;color:'+_yoyCol(v)+'">'+(v===null?'-':arrow(v))+'</span>';
   let hm='<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:#94a3b8;font-size:11px;text-align:right"><th style="text-align:left;padding:4px 6px">채널</th><th>1Q</th><th>2Q(전망)</th><th style="text-align:center;padding:4px 8px">QoQ</th><th style="text-align:center">YoY</th></tr>';
