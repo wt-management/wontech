@@ -254,6 +254,19 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 #page-goals .g-rv{width:172px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums;font-weight:600;color:#64748b;font-size:12px}
 #page-goals .g-rv b{color:#1c2534}
 #page-goals .g-rd{margin-left:7px;font-weight:800}
+#page-goals .g-top{display:flex;flex-wrap:wrap;align-items:center;gap:18px;background:linear-gradient(135deg,#eef5ff,#f7fbff);border:1px solid #e1e9f3;border-radius:14px;padding:15px 22px;margin-bottom:18px}
+#page-goals .g-top-main{flex:1;min-width:230px}
+#page-goals .g-top-k{font-size:12px;color:#5b7591;font-weight:700}
+#page-goals .g-top-vr{display:flex;align-items:baseline;gap:11px;margin-top:3px}
+#page-goals .g-top-v{font-size:2.7rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+#page-goals .g-top-s{font-size:12px;color:#64748b}
+#page-goals .g-top-stats{display:flex;flex-wrap:wrap;gap:28px}
+#page-goals .g-st .k{font-size:11px;color:#64748b;font-weight:600}
+#page-goals .g-st .v{font-size:1.4rem;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums;line-height:1.1}
+#page-goals .g-sec{font-size:13px;font-weight:800;color:#1c2534;margin:18px 0 6px;padding-left:9px;border-left:3px solid #2563eb}
+#page-goals .g-row-tot{border-top:2px solid #dbe3ec;margin-top:3px;padding-top:9px}
+#page-goals .g-row-tot .g-rl{font-weight:800;color:#1c2534}
+#page-goals .g-row-tot .g-rv{color:#334155}
 /* P2 출고 대수 */
 .u-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .u-kpi{background:#fff;border:1px solid #eef2f7;border-radius:14px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
@@ -2204,32 +2217,27 @@ function renderGoals(){
   const short=setG.filter(x=>x.gap<0).sort((a,b)=>a.gap-b.gap);
   const over=setG.filter(x=>x.gap>=0).sort((a,b)=>b.r-a.r);
   const gapSum=short.reduce((s,x)=>s-x.gap,0), need=Math.max(totTgt-totAct,0);
-  let h='<div class="g-hero"><div><div class="g-hl">전사 목표 달성률 <span style="font-weight:500;color:#94a3b8">· 1~'+t+'월 누적</span></div>'+
-    '<div class="g-hr" style="color:'+_achCol(achC)+'">'+(achC==null?'-':achC.toFixed(0)+'%')+'</div>'+
-    '<div class="g-hs">실적 '+fmtW(totAct)+' / 목표 '+fmtW(totTgt)+'</div></div>'+
-    '<div class="g-hero-r"><div class="g-hrr">예정분 포함 전망</div><div class="g-hrv" style="color:'+_achCol(achP)+'">'+(achP==null?'-':achP.toFixed(0)+'%')+'</div><div class="g-hs">+예정 '+fmtW(totPnd)+'</div></div></div>';
-  if(short.length||over.length){ let n='';
-    if(short.length) n+='<b class="dn">'+short[0].label+' '+short[0].r.toFixed(0)+'% (갭 '+fmtD(short[0].gap)+')</b> 최대 미달';
-    if(over.length) n+=(n?' · ':'')+'<b class="up">'+over[0].label+' '+over[0].r.toFixed(0)+'%</b> 초과 견인';
-    h+='<div class="exec-narr" style="color:#475569;margin:2px 0 12px">'+n+'</div>'; }
-  h+='<div class="row g-2 mb-3">'+[
-    {l:'100%까지 필요 (확정)',v:fmtW(need),c:'#dc2626'},{l:'미달 갭 합계',v:fmtW(gapSum),c:'#b91c1c'},
-    {l:'미달 부문',v:short.length+'개',c:'#f59e0b'},{l:'초과달성 부문',v:over.length+'개',c:'#16a34a'},
-  ].map(c=>'<div class="col-6 col-md-3"><div class="kpi-card acc-card" style="padding:12px 14px;border-left-color:'+c.c+'"><div class="kpi-label">'+c.l+'</div><div class="kpi-value" style="font-size:1.15rem;color:'+c.c+'">'+c.v+'</div></div></div>').join('')+'</div>';
-  h+='<div class="g-twin">'+_goalMini('국내 합계',S(dom,'act')+S(dom,'pnd'),S(dom,'tgt'))+_goalMini('해외 합계',S(intl,'act')+S(intl,'pnd'),S(intl,'tgt'))+'</div>';
-  const gc=(x,kind)=>{const col=kind==='s'?'#dc2626':'#16a34a';
-    return '<div class="dl-row clk"'+(x.dk?(' onclick="openDrill(\''+x.dk+'\')" title="세그먼트 상세 드릴다운"'):'')+'><span class="dl-dot" style="background:'+col+'"></span><span class="dl-name">'+x.label+' <span style="color:#cbd5e1">›</span></span><span class="dl-d" style="color:'+col+'">'+x.r.toFixed(0)+'%</span><span class="dl-sub" style="color:'+col+'">'+(kind==='s'?'갭 '+fmtD(x.gap):'+'+fmtW(x.gap))+'</span></div>'; };
-  const dcol=(title,arr,kind)=>'<div><div class="dl-h" style="color:'+(kind==='s'?'#b91c1c':'#15803d')+'">'+title+'</div>'+(arr.length?arr.map(x=>gc(x,kind)).join(''):'<div class="muted" style="font-size:12px;padding:10px 4px">해당 없음</div>')+'</div>';
-  h+='<div class="card p-3 mb-3" style="margin-top:14px"><div style="font-size:13.5px;font-weight:800;margin-bottom:10px"><i class="bi bi-flag-fill me-1" style="color:#4f46e5"></i>집중 드라이브 ↔ 초과 견인</div>'+
-    '<div class="dual-grid">'+dcol('🔴 미달 (메워야 할 갭)',short.slice(0,4),'s')+dcol('🟢 초과 견인',over.slice(0,4),'o')+'</div></div>';
-  const bar=x=>{ const a=x.act+x.pnd, r=x.tgt>0?a/x.tgt*100:null, rc=x.tgt>0?Math.min(x.act/x.tgt*100,100):0, rg=x.tgt>0?Math.min(Math.max(a/x.tgt*100-x.act/x.tgt*100,0),100-rc):0, gap=x.tgt>0?a-x.tgt:null;
-    return '<div class="g-row clk"'+(x.dk?(' onclick="openDrill(\''+x.dk+'\')" title="세그먼트 상세 드릴다운"'):'')+'><div class="g-rl">'+x.label+'</div>'+
+  const achCol=_achCol(achC);
+  const dTot={act:S(dom,'act'),pnd:S(dom,'pnd'),tgt:S(dom,'tgt')};
+  const iTot={act:S(intl,'act'),pnd:S(intl,'pnd'),tgt:S(intl,'tgt')};
+  // ── 상단 요약 스트립 (히어로·KPI 4장·합계 카드 통합, 여백 제거) ──
+  let h='<div class="g-top"><div class="g-top-main"><div class="g-top-k">전사 목표 달성률 <span style="font-weight:500;color:#94a3b8">· 1~'+t+'월 누적</span></div>'+
+    '<div class="g-top-vr"><span class="g-top-v" style="color:'+achCol+'">'+(achC==null?'-':achC.toFixed(0)+'%')+'</span><span class="g-top-s">실적 '+fmtW(totAct)+' / 목표 '+fmtW(totTgt)+'</span></div></div>'+
+    '<div class="g-top-stats">'+
+      [['예정 포함 전망',(achP==null?'-':achP.toFixed(0)+'%'),_achCol(achP)],
+       ['100%까지 필요',(need>0?fmtW(need):'0원'),need>0?'#dc2626':'#16a34a'],
+       ['미달 갭 합계',(gapSum>0?fmtW(gapSum):'0원'),gapSum>0?'#dc2626':'#16a34a']].map(function(s){
+         return '<div class="g-st"><div class="k">'+s[0]+'</div><div class="v" style="color:'+s[2]+'">'+s[1]+'</div></div>';}).join('')+
+      '<div class="g-st"><div class="k">미달 / 초과 부문</div><div class="v"><span style="color:#dc2626">'+short.length+'</span> <span style="color:#cbd5e1;font-weight:500">/</span> <span style="color:#16a34a">'+over.length+'</span></div></div>'+
+    '</div></div>';
+  const bar=(x,isTot)=>{ const a=x.act+x.pnd, r=x.tgt>0?a/x.tgt*100:null, rc=x.tgt>0?Math.min(x.act/x.tgt*100,100):0, rg=x.tgt>0?Math.min(Math.max(a/x.tgt*100-x.act/x.tgt*100,0),100-rc):0, gap=x.tgt>0?a-x.tgt:null;
+    return '<div class="g-row'+(isTot?' g-row-tot':' clk')+'"'+((!isTot&&x.dk)?(' onclick="openDrill(\''+x.dk+'\')" title="세그먼트 상세 드릴다운"'):'')+'><div class="g-rl">'+x.label+'</div>'+
       '<div class="g-rp" style="color:'+_achCol(r)+'">'+(r==null?'<span class="muted" style="font-size:11px;font-weight:600">–</span>':r.toFixed(0)+'%')+'</div>'+
       '<div class="g-rb"><div class="g-rf" style="width:'+rc+'%;background:'+_achCol(r)+'"></div><div class="g-rg" style="width:'+rg+'%"></div></div>'+
       '<div class="g-rv"><b>'+fmtW(a)+'</b> / '+fmtW(x.tgt)+(gap!=null?'<span class="g-rd" style="color:'+(gap>=0?'#16a34a':'#dc2626')+'">'+fmtD(gap)+'</span>':'')+'</div></div>'; };
   const rk=x=>x.tgt>0?(x.act+x.pnd)/x.tgt:9;
-  h+='<div class="g-sec">국내 영업 <span style="font-weight:500;color:#94a3b8;font-size:11px">· 위험(미달) 순</span></div>'+dom.slice().sort((a,b)=>rk(a)-rk(b)).map(bar).join('');
-  h+='<div class="g-sec">해외 영업 (지역·법인) <span style="font-weight:500;color:#94a3b8;font-size:11px">· 위험(미달) 순</span></div>'+intl.slice().sort((a,b)=>rk(a)-rk(b)).map(bar).join('');
+  h+='<div class="g-sec">국내 영업 <span style="font-weight:500;color:#94a3b8;font-size:11px">· 위험(미달) 순</span></div>'+dom.slice().sort((a,b)=>rk(a)-rk(b)).map(x=>bar(x)).join('')+bar({label:'국내 합계',act:dTot.act,pnd:dTot.pnd,tgt:dTot.tgt},true);
+  h+='<div class="g-sec">해외 영업 (지역·법인) <span style="font-weight:500;color:#94a3b8;font-size:11px">· 위험(미달) 순</span></div>'+intl.slice().sort((a,b)=>rk(a)-rk(b)).map(x=>bar(x)).join('')+bar({label:'해외 합계',act:iTot.act,pnd:iTot.pnd,tgt:iTot.tgt},true);
   const y2=short.slice(0,2).reduce((s,x)=>s-x.gap,0);
   h+='<div class="exec-ins"><i class="bi bi-lightbulb-fill me-1" style="color:#f59e0b"></i>전사 <b>'+(achC==null?'-':achC.toFixed(0)+'%')+'</b> 달성, 100%까지 <b>'+fmtW(need)+'</b> 부족'+
     (short.length?(' · 부족분의 <b>'+(gapSum>0?Math.round(y2/gapSum*100):0)+'%</b>가 <b style="color:#dc2626">'+short[0].label+(short[1]?' · '+short[1].label:'')+'</b>에서 발생 → 집중 드라이브'):'')+
