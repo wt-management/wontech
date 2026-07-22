@@ -1602,6 +1602,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <div class="wt-mast">
       <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-person-badge me-2"></i>담당자별 매출 현황</div></div>
       <div class="d-flex gap-2 align-items-center">
+        <button class="btn btn-outline-primary btn-sm" onclick="openClaimReview()"><i class="bi bi-inbox me-1"></i>실적 정정 신청 <span id="claim-badge" class="badge bg-danger" style="display:none">0</span></button>
         <button class="btn btn-outline-success btn-sm" onclick="devRepExport()"><i class="bi bi-file-earmark-excel me-1"></i>내보내기</button>
       </div>
     </div>
@@ -1922,6 +1923,12 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 <div class="modal fade" id="mgrHistModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
   <div class="modal-header"><h6 class="modal-title" id="mgrHistTitle">담당자 변경 이력</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
   <div class="modal-body" id="mgrHistBody"></div>
+</div></div></div>
+
+<!-- 실적 정정 신청 검토(파트장 전용) 모달 -->
+<div class="modal fade" id="claimModal" tabindex="-1"><div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title"><i class="bi bi-inbox me-1" style="color:#2563eb"></i>실적 정정 신청 검토 <span class="text-muted" style="font-size:11px;font-weight:400">· 파트장 전용</span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body" id="claimBody"></div>
 </div></div></div>
 
 <!-- 현황판 상세(다음 액션 / 보증만료) 모달 -->
@@ -3665,6 +3672,7 @@ async function deletePending() {
 
 // ── 지역별 분석 ───────────────────────────────────────────────────
 let HOSP_REGION = {regions:{}, kw:{}};  // cons_cache.hospital_regions = {regions:{정규화명:[시도,구군]}, kw:{키워드:[시도,구군]}}
+let MGR_CLAIMS = [];  // cons_cache.mgr_claims={claims:[{hosp,by,at,status,decidedBy,decidedAt}]} — 팀원 실적정정 신청
 let HOSP_INFO = {};  // cons_cache.hospital_info = {병원명:{doctor,tel,address,contact,note,tags,region:[시도,구군],updatedBy,updatedAt}} — 담당자 수정분
 let _KW_SORTED = null;
 async function _loadHospRegions(){
@@ -3676,6 +3684,10 @@ async function _loadHospRegions(){
     const {data:hi}=await _sb.from('cons_cache').select('data').eq('key','hospital_info').maybeSingle();
     if(hi&&hi.data) HOSP_INFO = hi.data;
   }catch(e){ console.warn('hosp info load',e); }
+  try{
+    const {data:mc}=await _sb.from('cons_cache').select('data').eq('key','mgr_claims').maybeSingle();
+    if(mc&&mc.data&&Array.isArray(mc.data.claims)) MGR_CLAIMS = mc.data.claims;
+  }catch(e){ console.warn('mgr claims load',e); }
 }
 function _rNorm(s){ return String(s||'').replace(/\s+/g,'').toLowerCase(); }
 // 병원명 → [시도,구군]: 정확매칭 우선, 실패 시 이름 속 지역 키워드 추론
@@ -5804,6 +5816,45 @@ function setPipeChip(stage, el) {
 
 // 공용 HTML 이스케이프 (저장형 XSS 방지 + 특수문자 깨짐 방지)
 function _escH(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+// ── 실적 정정 신청(팀원) + 파트장 승인(담당 재배정=mgr 오버라이드) ──
+function _claimPending(){ return (MGR_CLAIMS||[]).filter(function(c){return c.status==='pending';}); }
+function _saveClaims(){ return _sb.from('cons_cache').upsert({key:'mgr_claims',data:{claims:MGR_CLAIMS}},{onConflict:'key'}); }
+function _claimHosp(btn, hosp){
+  var me=((typeof currentUserName==='function'?currentUserName():'')||'').trim();
+  if(!me){ alert('로그인 사용자 정보를 확인할 수 없습니다.'); return; }
+  if((MGR_CLAIMS||[]).some(function(c){return c.hosp===hosp&&c.by===me&&c.status==='pending';})){ showToast('이미 신청한 병원입니다.', true); return; }
+  MGR_CLAIMS.push({hosp:hosp, by:me, at:new Date().toISOString().slice(0,10), status:'pending'});
+  if(btn){ btn.disabled=true; btn.textContent='신청됨'; btn.className='btn btn-sm btn-secondary'; }
+  _saveClaims().then(function(r){ if(r&&r.error){ showToast('신청 저장 실패: '+r.error.message, true, true); } else { showToast(hosp+' — 파트장에게 실적 정정 신청됨', true); } });
+}
+function openClaimReview(){
+  if(!(typeof _isMgr!=='undefined'&&_isMgr)){ alert('파트장/관리자만 사용할 수 있습니다.'); return; }
+  var pend=(MGR_CLAIMS||[]).map(function(c,idx){return {c:c,idx:idx};}).filter(function(o){return o.c.status==='pending';});
+  var thc='background:#f8fafc;border-bottom:2px solid #e5e7eb;padding:7px 8px';
+  var b='<div style="font-size:12px;color:#94a3b8;margin-bottom:10px">팀원이 "제 실적입니다"라고 신청한 건입니다. 승인하면 해당 병원 담당이 신청자로 정정됩니다(담당자별 분석·본인 실적 즉시 반영).</div>';
+  if(pend.length){
+    b+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums"><thead><tr style="color:#94a3b8;font-size:10.5px"><th style="text-align:left;'+thc+'">병원</th><th style="text-align:left;'+thc+'">신청자</th><th style="text-align:left;'+thc+'">현재 담당</th><th style="text-align:right;'+thc+'">올해 매출</th><th style="'+thc+'"></th></tr></thead><tbody>'
+      +pend.map(function(o){ var c=o.c; var h=(DEVICE.hospitals||{})[c.hosp]||{}; var v=Number(h.y2026||0); var cur=_repOf(c.hosp)||'미배정';
+        return '<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:8px;font-weight:600">'+_escH(c.hosp)+'<div style="font-size:10px;color:#c0c7d0">신청 '+_escH(c.at||'')+'</div></td><td style="color:#2563eb;font-weight:600">'+_escH(c.by)+'</td><td style="color:#64748b">'+_escH(cur)+'</td><td style="text-align:right;font-weight:700;padding:8px;white-space:nowrap">'+fmtAmt(v)+'</td><td style="white-space:nowrap;padding:8px;text-align:right"><button class="btn btn-sm btn-success me-1" style="font-size:11px;padding:2px 8px" onclick="_decideClaim(this,'+o.idx+',true)">승인</button><button class="btn btn-sm btn-outline-secondary" style="font-size:11px;padding:2px 8px" onclick="_decideClaim(this,'+o.idx+',false)">반려</button></td></tr>';
+      }).join('')+'</tbody></table></div>';
+  } else b+='<div class="text-muted text-center py-4" style="font-size:13px">대기 중인 정정 신청이 없습니다.</div>';
+  document.getElementById('claimBody').innerHTML=b;
+  var m=document.getElementById('claimModal'); (bootstrap.Modal.getInstance(m)||new bootstrap.Modal(m)).show();
+}
+function _decideClaim(btn, idx, approve){
+  var c=(MGR_CLAIMS||[])[idx]; if(!c||c.status!=='pending') return;
+  var admin=((typeof currentUserName==='function'?currentUserName():'')||'').trim();
+  if(approve){
+    var hi=HOSP_INFO[c.hosp]||(HOSP_INFO[c.hosp]={});
+    var prev=(hi.mgr||'').trim();
+    hi.mgrHistory=(hi.mgrHistory||[]).concat([{mgr:c.by, prev:prev, from:new Date().toISOString().slice(0,10), by:admin, reason:'실적 정정 신청 승인'}]);
+    hi.mgr=c.by; hi.updatedBy=admin; hi.updatedAt=new Date().toISOString().slice(0,10);
+    _sb.from('cons_cache').upsert({key:'hospital_info',data:HOSP_INFO},{onConflict:'key'}); _KW_SORTED=null;
+    c.status='approved';
+  } else { c.status='rejected'; }
+  c.decidedBy=admin; c.decidedAt=new Date().toISOString().slice(0,10);
+  _saveClaims().then(function(){ try{ renderDevReps(); }catch(e){} openClaimReview(); showToast(approve?(c.hosp+' → '+c.by+' 담당으로 정정됨'):(c.hosp+' 신청 반려'), true); });
+}
 // ─ 내 실적: 회계 데이터 기준(담당자별 분석과 동일 소스: DEVICE.hospitals, mgr 오버라이드) ─
 function openMyPerf(){
   const meRaw=((typeof currentUserName==='function'?currentUserName():'')||'').trim();
@@ -5849,6 +5900,15 @@ function openMyPerf(){
       +prodRank.map(function(x){ var pct=y26>0?(x[1]/y26*100):0; return '<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:8px;font-weight:600">'+_escH(x[0])+'</td><td style="text-align:right;font-weight:700;color:#16a34a;padding:8px;white-space:nowrap">'+fmtAmt(x[1])+'</td><td style="text-align:right;color:#64748b;white-space:nowrap">'+pct.toFixed(0)+'%</td></tr>'; }).join('')
       +'</tbody></table></div>';
   }
+  // 미배정·대리점 매출(1·2파트 담당 아님) → 내 것이면 정정 신청 → 파트장 승인 시 반영
+  var others=Object.entries(DEVICE.hospitals||{}).filter(function(x){ return Number((x[1]||{}).y2026||0)>0 && !_isKorSales(_repOf(x[0])); }).sort(function(a,b){return Number(b[1].y2026||0)-Number(a[1].y2026||0);});
+  html+='<div style="font-size:12px;font-weight:700;color:#374151;margin:18px 0 4px"><i class="bi bi-search me-1" style="color:#ea580c"></i>미배정·대리점 매출 <span style="color:#94a3b8;font-weight:400">· 내 실적이면 신청 → 파트장 승인 후 반영</span></div>';
+  if(others.length){
+    html+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums"><thead><tr style="color:#94a3b8;font-size:10.5px"><th style="text-align:left;'+thc+'">병원</th><th style="text-align:left;'+thc+'">현재 담당(회계)</th><th style="text-align:right;'+thc+'">올해 매출</th><th style="'+thc+'"></th></tr></thead><tbody>'
+      +others.map(function(x){ var n=x[0],h=x[1]; var v=Number(h.y2026||0); var cur=_repOf(n)||'미배정'; var pd=(MGR_CLAIMS||[]).some(function(c){return c.hosp===n&&c.by===meRaw&&c.status==='pending';}); var nEsc=_escH(n);
+        return '<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:8px;font-weight:600">'+nEsc+'</td><td style="color:#64748b">'+_escH(cur)+'</td><td style="text-align:right;font-weight:700;padding:8px;white-space:nowrap">'+fmtAmt(v)+'</td><td style="text-align:right;padding:8px;white-space:nowrap">'+(pd?'<span class="btn btn-sm btn-secondary disabled" style="font-size:11px;padding:2px 8px">신청됨</span>':'<button class="btn btn-sm btn-outline-primary" style="font-size:11px;padding:2px 8px" data-h="'+nEsc+'" onclick="_claimHosp(this,this.dataset.h)">제 실적 신청</button>')+'</td></tr>';
+      }).join('')+'</tbody></table></div>';
+  } else html+='<div style="color:#94a3b8;font-size:12px;padding:6px 0">미배정·대리점 매출 건이 없습니다.</div>';
   document.getElementById('myPerfBody').innerHTML=html;
   new bootstrap.Modal(document.getElementById('myPerfModal')).show();
 }
@@ -10387,6 +10447,7 @@ function _devRepName(e){
   return esc(e.name)+'<span style="font-size:8.5px;font-weight:700;color:#a16207;background:#fef9c3;border-radius:4px;padding:1px 5px;margin-left:5px;vertical-align:middle">대리점</span>';
 }
 function renderDevReps() {
+  var _cb=document.getElementById('claim-badge'); if(_cb){ var _pc=((typeof MGR_CLAIMS!=='undefined'?MGR_CLAIMS:[])||[]).filter(function(c){return c.status==='pending';}).length; _cb.textContent=_pc; _cb.style.display=_pc?'':'none'; }
   const fmtW = v => (v=Number(v||0))>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만원':Math.round(v).toLocaleString()+'원';
   _injectPeriodCtrl('devrep');
   const P=_getPeriod('devrep'), _cur=_spanMonths(P), _prev=_spanMonths(_yoyShift(P));
