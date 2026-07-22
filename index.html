@@ -8796,7 +8796,7 @@ async function _loadDemoSched(){
     const today=_schTodayStr();
     const lim=new Date(); lim.setDate(lim.getDate()+7);
     const limStr=lim.getFullYear()+'-'+String(lim.getMonth()+1).padStart(2,'0')+'-'+String(lim.getDate()).padStart(2,'0');
-    _demoSched=data.filter(r=>r&&r.date&&r.date>=today&&r.date<=limStr).map(r=>({id:'demo_'+r.id,date:r.date,time:r.time||'',type:'데모',custName:r.cust||'',sales:r.sales||'',product:r.product||'',content:r.content||r.outcome||'',done:(r.status==='done'),kind:'demo'}));
+    _demoSched=data.filter(r=>r&&r.date&&r.date>=today&&r.date<=limStr).map(r=>({id:'demo_'+r.id,rawId:r.id,date:r.date,end:r.end_date||'',time:r.time||'',type:'데모',custName:r.cust||'',sales:r.sales||'',product:r.product||'',content:r.content||'',outcome:r.outcome||'',status:r.status||'',result:r.result||'',done:(r.status==='done'),kind:'demo'}));
   }catch(e){ _demoSched=[]; }
 }
 function _schItems(){
@@ -8881,10 +8881,47 @@ function _schInfoPop(id){
   t.textContent=i.custName||'';
   var row=(l,v)=>v?'<div style="display:flex;gap:10px;padding:6px 0;border-bottom:1px solid #f1f5f9"><span style="font-size:11px;color:#94a3b8;min-width:56px;flex-shrink:0">'+l+'</span><span style="font-size:13px;color:#1f2937;font-weight:600">'+_schEsc(v)+'</span></div>':'';
   var dow=i.date?' ('+['일','월','화','수','목','금','토'][new Date(i.date+'T00:00').getDay()]+')':'';
+  var _demoForm='';
+  if(i.kind==='demo'){
+    var _op=function(v){ return '<option value="'+v+'"'+((i.result||'미정')===v?' selected':'')+'>'+v+'</option>'; };
+    _demoForm='<div style="margin-top:12px;padding-top:10px;border-top:1px dashed #e4e8ef">'
+      +'<div style="font-size:11px;font-weight:700;color:#2563eb;margin-bottom:8px"><i class="bi bi-pencil-square me-1"></i>영업 입력 <span style="font-weight:400;color:#94a3b8">· 저장 시 데모(장비관리) 사이트에 연동</span></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+      +'<div><label style="font-size:11px;color:#94a3b8">시작일</label><input type="date" id="dsc-start" class="form-control form-control-sm" value="'+(i.date||'')+'"></div>'
+      +'<div><label style="font-size:11px;color:#94a3b8">종료일</label><input type="date" id="dsc-end" class="form-control form-control-sm" value="'+(i.end||'')+'"></div>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;align-items:center">'
+      +'<div><label style="font-size:11px;color:#94a3b8">데모 결과</label><select id="dsc-result" class="form-select form-select-sm">'+_op('미정')+_op('계약전환')+_op('보류')+_op('미계약')+'</select></div>'
+      +'<label style="font-size:12.5px;color:#374151;display:flex;align-items:center;gap:6px;margin-top:16px"><input type="checkbox" id="dsc-done" '+(i.done?'checked':'')+'> 데모 완료 처리</label>'
+      +'</div>'
+      +'<div style="margin-top:8px"><label style="font-size:11px;color:#94a3b8">결과 메모</label><textarea id="dsc-outcome" class="form-control form-control-sm" rows="2" placeholder="데모 반응·특이사항·후속 계획">'+_schEsc(i.outcome||'')+'</textarea></div>'
+      +'<div class="text-end mt-2"><button id="dsc-save" class="btn btn-sm btn-primary" onclick="_saveDemoSched(\''+_schEsc(i.id)+'\')"><i class="bi bi-cloud-arrow-up me-1"></i>저장 → 데모 사이트 연동</button></div>'
+      +'</div>';
+  }
   b.innerHTML=row('유형',i.type)+row('날짜',(i.date||'')+dow)+row('담당',i.sales)+row('제품/장비',i.product)+row('내용',i.content)
-    +(i.kind==='demo'?'<div style="margin-top:10px;font-size:11px;color:#94a3b8"><i class="bi bi-info-circle me-1"></i>데모 일정 사이트에서 등록된 일정입니다 — 여기서는 조회만 가능하고, 수정은 데모 일정 사이트에서 해주세요.</div>':'')
+    +_demoForm
     +'<div class="text-end mt-3"><button class="btn btn-sm btn-outline-primary" onclick="bootstrap.Modal.getInstance(document.getElementById(\'schInfoModal\')).hide();setTimeout(function(){showHospitalDetail(_schInfoCache[\''+_schEsc(i.id)+'\'].custName)},200)"><i class="bi bi-hospital me-1"></i>병원 상세 보기</button></div>';
   new bootstrap.Modal(document.getElementById('schInfoModal')).show();
+}
+// 데모 일정: 영업 입력분(시작/종료/결과/완료)을 demo_schedules에 저장 → 장비관리(데모) 사이트 연동
+async function _saveDemoSched(id){
+  var i=_schInfoCache[id]; if(!i||i.kind!=='demo') return;
+  var g=function(x){ var el=document.getElementById(x); return el?el.value:''; };
+  var start=g('dsc-start')||null, end=g('dsc-end')||null, result=g('dsc-result')||null, outcome=(g('dsc-outcome')||'').trim();
+  var doneEl=document.getElementById('dsc-done'), doneChk=!!(doneEl&&doneEl.checked);
+  if(start&&end&&end<start){ alert('종료일이 시작일보다 빠릅니다.'); return; }
+  var payload={date:start, end_date:end, result:result, outcome:outcome, status:(doneChk?'done':'scheduled')};
+  var btn=document.getElementById('dsc-save'); if(btn){ btn.disabled=true; btn.innerHTML='저장 중...'; }
+  try{
+    const {error}=await _sb.from('demo_schedules').update(payload).eq('id', i.rawId);
+    if(error) throw error;
+    showToast('데모 일정 저장됨 — 장비관리(데모) 사이트에 연동', true);
+    try{ bootstrap.Modal.getInstance(document.getElementById('schInfoModal')).hide(); }catch(e){}
+    try{ await _loadDemoSched(); renderSchedule(); }catch(e){}
+  }catch(err){
+    alert('저장 실패: '+(err&&err.message?err.message:err)+'\n\n※ demo_schedules 테이블에 end_date(date)·result(text) 컬럼과, 영업 계정의 쓰기(RLS update) 권한이 필요합니다. 안내드린 SQL을 먼저 적용해 주세요.');
+    if(btn){ btn.disabled=false; btn.innerHTML='<i class="bi bi-cloud-arrow-up me-1"></i>저장 → 데모 사이트 연동'; }
+  }
 }
 function _schMiniCard(i){
   const c=i.kind==='deal'?'#7c3aed':(_SCH_COL[i.type]||'#64748b');
