@@ -2267,7 +2267,7 @@ function renderGoals(){
       '<div class="g-st"><div class="k">미달 / 초과 부문</div><div class="v"><span style="color:#dc2626">'+short.length+'</span> <span style="color:#cbd5e1;font-weight:500">/</span> <span style="color:#16a34a">'+over.length+'</span></div></div>'+
     '</div></div>';
   const bar=(x,isTot)=>{ const a=x.act+x.pnd, r=x.tgt>0?a/x.tgt*100:null, rc=x.tgt>0?Math.min(x.act/x.tgt*100,100):0, rg=x.tgt>0?Math.min(Math.max(a/x.tgt*100-x.act/x.tgt*100,0),100-rc):0, gap=x.tgt>0?a-x.tgt:null;
-    return '<div class="g-row'+(isTot?' g-row-tot':' clk')+'"'+((!isTot&&x.dk)?(' onclick="openDrill(\''+x.dk+'\')" title="세그먼트 상세 드릴다운"'):'')+'><div class="g-rl">'+x.label+'</div>'+
+    return '<div class="g-row'+(isTot?' g-row-tot':' clk')+'"'+((!isTot&&x.dk)?(' onclick="openDrill(\''+x.dk+'\',1,'+t+')" title="세그먼트 상세 드릴다운"'):'')+'><div class="g-rl">'+x.label+'</div>'+
       '<div class="g-rp" style="color:'+_achCol(r)+'">'+(r==null?'<span class="muted" style="font-size:11px;font-weight:600">–</span>':r.toFixed(0)+'%')+'</div>'+
       '<div class="g-rb"><div class="g-rf" style="width:'+rc+'%;background:'+_achCol(r)+'"></div><div class="g-rg" style="width:'+rg+'%"></div></div>'+
       '<div class="g-rv"><b>'+fmtW(a)+'</b> / '+fmtW(x.tgt)+(gap!=null?'<span class="g-rd" style="color:'+(gap>=0?'#16a34a':'#dc2626')+'">'+fmtD(gap)+'</span>':'')+'</div></div>'; };
