@@ -5850,12 +5850,9 @@ function renderPipeline() {
     const hdrBg=isWon?'#f0fdf4':'#f8faff';
     const hdrBorder=SC[stage]||'#e5e7eb';
     return`<div class="pipeline-col" ondragover="dragOver(event,'${stage}')" ondragleave="dragLeave(event)" ondrop="dropDeal(event,'${stage}')">
-      <div style="background:${hdrBg};border-radius:8px;padding:10px 12px;margin-bottom:10px;border-left:3px solid ${hdrBorder}">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <span style="font-size:12px;font-weight:700;color:${SC[stage]};letter-spacing:.04em">${stage}</span>
-          <span style="background:${SC[stage]};color:#fff;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:700">${deals.length}</span>
-        </div>
-        <div style="font-size:13px;font-weight:800;color:#374151">${fmtAmt(stotal)}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;background:${hdrBg};border-radius:8px;padding:9px 12px;margin-bottom:10px;border-left:3px solid ${hdrBorder}">
+        <span style="font-size:12px;font-weight:700;color:${SC[stage]};letter-spacing:.04em;white-space:nowrap">${stage} <span style="color:#94a3b8;font-weight:600">${deals.length}건</span></span>
+        <span style="font-size:13px;font-weight:800;color:#374151;white-space:nowrap;font-variant-numeric:tabular-nums">${fmtAmt(stotal)}</span>
       </div>
       ${deals.length===0?`<div style="text-align:center;padding:24px 0;color:#d1d5db;font-size:12px"><i class="bi bi-inbox" style="font-size:22px;display:block;margin-bottom:4px"></i>딜 없음</div>`:''}
       ${deals.map(d=>{
