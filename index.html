@@ -7728,9 +7728,11 @@ function renderPerformance(){
     {icon:'bi-check-circle-fill',c:'#16a34a',label:'계약완료 누계',value:fmtAmt(_wonAmtAll),sub:'전체 기간 · 클릭 목록',
       onclick:`showPerfDrill('deals','계약완료 딜(누계)',d=>d.stage==='계약완료')`},
   ].map(k=>`<div class="col-6 col-md-4 col-lg"><div class="card p-2 px-3 h-100" style="border-top:3px solid ${k.c};${k.onclick?'cursor:pointer;':''}" ${k.onclick?`onclick="${k.onclick}"`:''}">
-    <div style="font-size:11px;color:#6b7280;margin-bottom:4px"><i class="bi ${k.icon} me-1" style="color:${k.c}"></i>${k.label}</div>
-    <div style="font-size:1.15rem;font-weight:800;white-space:nowrap;${k.onclick?'color:#2563eb;text-decoration:underline dotted;':''}">${k.value}</div>
-    <div style="font-size:10px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${k.sub}</div>
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:6px">
+      <span style="font-size:11px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><i class="bi ${k.icon} me-1" style="color:${k.c}"></i>${k.label}</span>
+      <span style="font-size:1.2rem;font-weight:800;white-space:nowrap;${k.onclick?'color:#2563eb;':'color:#111827;'}">${k.value}</span>
+    </div>
+    <div style="font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px">${k.sub}</div>
   </div></div>`).join('');
 
   // 영업사원별 카드
