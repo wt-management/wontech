@@ -1632,7 +1632,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
           <button id="devchart-pareto" type="button" class="btn btn-outline-primary" onclick="_setDevChart('pareto',this)">집중도</button>
         </div>
       </div>
-      <div style="position:relative;height:360px"><canvas id="devrep-chart"></canvas></div>
+      <div id="devrep-insight" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"></div>
+      <div style="position:relative;height:300px"><canvas id="devrep-chart"></canvas></div>
     </div>
     <!-- 전체 순위 테이블 -->
     <div class="card p-0">
@@ -10504,6 +10505,29 @@ function _ensureTreemap(cb){
   var s=document.createElement('script'); s.id='_treemap-js'; s.src='https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@3.1.0/dist/chartjs-chart-treemap.min.js';
   s.onload=cb; s.onerror=function(){ _devChartMode='pareto'; renderDevChart(); }; document.head.appendChild(s);
 }
+// 담당자별 '매출 한눈에' 상단 인사이트 타일(합계·1위·성장1위·집중도·신규/이탈)
+function _renderDevInsight(){
+  var box=document.getElementById('devrep-insight'); if(!box) return;
+  var E=(_devLastEntries||[]).filter(function(e){return e.cur>0||e.pre>0;});
+  if(!E.length){ box.innerHTML=''; return; }
+  var fw=function(v){ v=Number(v||0); return v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만':Math.round(v).toLocaleString(); };
+  var totCur=E.reduce(function(s,e){return s+e.cur;},0), totPre=E.reduce(function(s,e){return s+e.pre;},0);
+  var yoy=totPre>0?((totCur/totPre-1)*100):null;
+  var byCur=E.slice().sort(function(a,b){return b.cur-a.cur;});
+  var top=byCur[0], top3=byCur.slice(0,3).reduce(function(s,e){return s+e.cur;},0);
+  var conc=totCur>0?(top3/totCur*100):0;
+  var grown=E.filter(function(e){return e.pre>=1e7&&e.cur>0;}).map(function(e){return {name:e.name,g:(e.cur/e.pre-1)*100};}).sort(function(a,b){return b.g-a.g;});
+  var g1=grown[0];
+  var nw=E.filter(function(e){return e.pre<=0&&e.cur>0;}).length, lost=E.filter(function(e){return e.cur<=0&&e.pre>0;}).length;
+  var esc=(typeof _escH==='function')?_escH:function(x){return String(x==null?'':x);};
+  var chg=function(c){ return c==null?'':' <b style="color:'+(c>=0?'#16a34a':'#dc2626')+'">'+(c>=0?'▲':'▼')+Math.abs(c).toFixed(0)+'%</b>'; };
+  var tile=function(l,v,s,accent){ return '<div style="flex:1;min-width:118px;background:#f8fafc;border-radius:11px;padding:11px 14px"><div style="font-size:10.5px;color:#94a3b8;font-weight:700">'+l+'</div><div style="font-size:18px;font-weight:800;color:'+(accent||'#111827')+';line-height:1.15;margin-top:2px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+v+'</div>'+(s?'<div style="font-size:10.5px;color:#94a3b8;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+s+'</div>':'')+'</div>'; };
+  box.innerHTML=tile('합계 매출',fw(totCur),'전년 '+fw(totPre)+chg(yoy))
+    +tile('1위 담당',esc(top?top.name:'-'),top?fw(top.cur)+' · 비중 '+(top.cur/totCur*100).toFixed(0)+'%':'')
+    +(g1?tile('성장 1위',esc(g1.name),'전년비 ▲'+g1.g.toFixed(0)+'%','#16a34a'):'')
+    +tile('상위 3 집중도',conc.toFixed(0)+'%','상위 3인 매출 비중')
+    +tile('신규 / 이탈',nw+' / '+lost,'담당 기준');
+}
 function renderDevChart(){
   var el=document.getElementById('devrep-chart'); if(!el||!window.Chart) return;
   var data=(_devLastEntries||[]).filter(function(e){ return e.cur>0; });
@@ -10514,8 +10538,8 @@ function renderDevChart(){
 // 순위·전년비 가로막대 — 담당자 비교/성장 분석용(트리맵 대체)
 function _drawRankBar(el,data){
   if(_devChartObj){ _devChartObj.destroy(); _devChartObj=null; }
-  var sorted=data.slice().sort(function(a,b){ return b.cur-a.cur; }).slice(0,20);
-  var wrap=el.parentNode; if(wrap) wrap.style.height=Math.max(340, sorted.length*30+48)+'px';
+  var sorted=data.slice().sort(function(a,b){ return b.cur-a.cur; }).slice(0,10);
+  var wrap=el.parentNode; if(wrap) wrap.style.height=Math.max(240, sorted.length*28+40)+'px';
   var yoy=function(e){ return (e.pre>0)?((e.cur/e.pre-1)*100):null; };
   _devChartObj=new Chart(el,{ type:'bar', data:{ labels:sorted.map(function(e){return e.name;}), datasets:[
     { label:'전년', data:sorted.map(function(e){return Math.round(e.pre||0);}), backgroundColor:sorted.map(function(e){return e.isTeam?'rgba(37,99,235,.22)':'rgba(245,158,11,.22)';}), borderWidth:0, order:2 },
@@ -10599,7 +10623,7 @@ function renderDevReps() {
     </tr>`;
   }).join('') || '<tr><td colspan="8" class="text-center text-muted py-3">데이터 없음</td></tr>';
   _devLastEntries = entries.map(function(e){ return {name:e.name, cur:e.cur, pre:e.pre, isTeam:e.isTeam}; });
-  renderDevChart();
+  _renderDevInsight(); renderDevChart();
 }
 
 function showDevRepDetail(repName) {
