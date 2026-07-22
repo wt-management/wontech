@@ -4004,7 +4004,8 @@ function renderDashboard() {
   document.getElementById('kpi-pipe-balance-sub').textContent=`진행중 ${activePipe.length}건 합계`;
   // 매출 전망 바
   const revBar=document.getElementById('dash-revenue-bar');
-  if(revBar&&totalForecast>0){
+  if(revBar){ revBar.style.display='none'; }   // KPI 밴드(확정·예상·총전망)와 중복 → 제거
+  if(false&&revBar&&totalForecast>0){
     revBar.style.display='block';
     const cp=Math.round(wonAmt/totalForecast*100);
     document.getElementById('dash-bar-confirmed').style.width=cp+'%';
