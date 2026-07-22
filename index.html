@@ -1853,7 +1853,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <div id="sch-deal-badge" style="display:none;margin-bottom:8px;font-size:11.5px;background:#f5f3ff;border:1px solid #ddd6fe;color:#6d28d9;border-radius:8px;padding:6px 10px"><i class="bi bi-kanban me-1"></i>수주관리 딜과 연결된 일정입니다 — 완료 처리하면 딜에 자동으로 기록됩니다.</div>
     <div class="row g-2">
       <div class="col-md-8"><label class="form-label" style="font-size:12px">병원 * <span class="text-muted" style="font-weight:400">(입력하면 자동완성)</span></label><input type="text" id="sch-cust" class="form-control form-control-sm" list="sch-cust-list" placeholder="병원명 입력…" oninput="_schHospInfo(this.value)" autocomplete="off"><datalist id="sch-cust-list"></datalist></div>
-      <div class="col-md-4"><label class="form-label" style="font-size:12px">유형 <span class="text-muted" style="font-size:10px">(선택 또는 직접 입력)</span></label><input id="sch-type" class="form-control form-control-sm" list="sch-type-list" value="방문" autocomplete="off"><datalist id="sch-type-list"><option value="방문"><option value="콜"><option value="데모협의"><option value="A/S"><option value="견적발송"><option value="계약검토"><option value="기타"></datalist></div>
+      <div class="col-md-4"><label class="form-label" style="font-size:12px">유형</label><select id="sch-type" class="form-select form-select-sm" onchange="_schTypeToggle()"><option>방문</option><option>콜</option><option>데모협의</option><option>A/S</option><option>견적발송</option><option>계약검토</option><option>기타</option><option value="직접 입력">✏️ 직접 입력…</option></select><input id="sch-type-etc" class="form-control form-control-sm mt-1" placeholder="유형 직접 입력" style="display:none" autocomplete="off"></div>
       <div class="col-md-6"><label class="form-label" style="font-size:12px">날짜 *</label><input type="date" id="sch-date" class="form-control form-control-sm"></div>
       <div class="col-md-6"><label class="form-label" style="font-size:12px">담당자</label><input type="text" id="sch-sales" class="form-control form-control-sm" list="sch-sales-list" autocomplete="off"><datalist id="sch-sales-list"></datalist></div>
       <div class="col-12"><label class="form-label" style="font-size:12px">제품 / 장비 <span class="text-muted" style="font-weight:400">(자동완성)</span></label><input type="text" id="sch-prod" class="form-control form-control-sm" list="sch-prod-list" placeholder="예: Oligio Kiss / Pico Andy / Tips F4.0" autocomplete="off"><datalist id="sch-prod-list"></datalist></div>
@@ -9074,7 +9074,7 @@ function openSchedule(pre){ pre=pre||{};
   document.getElementById('sch-deal-id').value=pre.dealId||'';
   document.getElementById('sch-deal-badge').style.display=pre.dealId?'block':'none';
   document.getElementById('sch-cust').value=pre.custName||'';
-  document.getElementById('sch-type').value=pre.type||'방문';
+  _schTypeSet(pre.type||'방문');
   document.getElementById('sch-date').value=pre.date||_schTodayStr();
   document.getElementById('sch-sales').value=pre.sales||_schMe();
   document.getElementById('sch-prod').value=pre.product||'';
@@ -9185,12 +9185,16 @@ async function saveSchedule(){
   if(!cust||!date){ alert('병원과 날짜를 입력하세요.'); return; }
   const id=document.getElementById('sch-id').value||uid();
   const idx=(DB.d.logs||[]).findIndex(l=>l.id===id);
-  const rec={id:id,kind:'schedule',custName:cust,date:date,time:(idx>=0?(DB.d.logs[idx].time||''):''),type:document.getElementById('sch-type').value,product:document.getElementById('sch-prod').value.trim(),content:document.getElementById('sch-note').value.trim(),sales:document.getElementById('sch-sales').value.trim(),done:(idx>=0?!!DB.d.logs[idx].done:false),dealId:document.getElementById('sch-deal-id').value||(idx>=0?DB.d.logs[idx].dealId||'':'')};
+  const rec={id:id,kind:'schedule',custName:cust,date:date,time:(idx>=0?(DB.d.logs[idx].time||''):''),type:_schTypeGet(),product:document.getElementById('sch-prod').value.trim(),content:document.getElementById('sch-note').value.trim(),sales:document.getElementById('sch-sales').value.trim(),done:(idx>=0?!!DB.d.logs[idx].done:false),dealId:document.getElementById('sch-deal-id').value||(idx>=0?DB.d.logs[idx].dealId||'':'')};
   if(idx>=0) DB.d.logs[idx]=rec; else DB.d.logs.push(rec);
   if(idx<0 && rec.type==='방문'){ try{ _mgrAutoAssign(rec.custName, rec.sales); }catch(e){} }   // 방문 등록 → 영업 담당자 자동 지정(이력 기록)
   try{ bootstrap.Modal.getInstance(document.getElementById('scheduleModal')).hide(); }catch(e){}
   renderSchedule(); showToast('일정 저장, 저장 중...'); await DB.save('logs'); showToast('저장 완료', true);
 }
+// 일정 유형: 선택 목록 + '직접 입력' 선택 시 입력칸 표시
+function _schTypeToggle(){ var s=document.getElementById('sch-type'), e=document.getElementById('sch-type-etc'); if(!s||!e) return; if(s.value==='직접 입력'){ e.style.display=''; e.focus(); } else { e.style.display='none'; } }
+function _schTypeGet(){ var s=document.getElementById('sch-type'), e=document.getElementById('sch-type-etc'); if(!s) return '방문'; return (s.value==='직접 입력') ? (((e&&e.value)||'').trim()||'기타') : s.value; }
+function _schTypeSet(v){ var s=document.getElementById('sch-type'), e=document.getElementById('sch-type-etc'); if(!s) return; v=v||'방문'; var has=[].slice.call(s.options).some(function(o){return o.value===v&&o.value!=='직접 입력';}); if(has){ s.value=v; if(e){ e.value=''; e.style.display='none'; } } else { s.value='직접 입력'; if(e){ e.value=v; e.style.display=''; } } }
 function delSchedule(){ const id=document.getElementById('sch-id').value; if(!id)return; if(!confirm('일정을 삭제할까요?'))return; DB.d.logs=(DB.d.logs||[]).filter(l=>l.id!==id); try{ bootstrap.Modal.getInstance(document.getElementById('scheduleModal')).hide(); }catch(e){} renderSchedule(); DB.del('logs',id); }
 async function toggleSchedDone(id){
   const l=(DB.d.logs||[]).find(x=>x.id===id); if(!l)return;
