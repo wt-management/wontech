@@ -267,6 +267,8 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 #page-goals .g-row-tot{border-top:2px solid #dbe3ec;margin-top:3px;padding-top:9px}
 #page-goals .g-row-tot .g-rl{font-weight:800;color:#1c2534}
 #page-goals .g-row-tot .g-rv{color:#334155}
+.exec-sel{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#5b7591;font-weight:600}
+.exec-sel select{border:1px solid #d5dde8;border-radius:8px;padding:4px 9px;font-size:12px;font-family:inherit;background:#fff;color:#1c2534;cursor:pointer;font-weight:600}
 /* P2 출고 대수 */
 .u-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .u-kpi{background:#fff;border:1px solid #eef2f7;border-radius:14px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
@@ -948,7 +950,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <h5 style="font-weight:800;margin:0"><i class="bi bi-building-fill-gear me-2" style="color:#0f766e"></i><span id="page-title">전사 종합 경영현황</span></h5>
       <div id="page-subtitle" style="font-size:12px;color:#94a3b8;margin-top:3px">국내(소모품·제품) + 해외 통합</div>
     </div>
-    <div style="font-size:12px;color:#64748b" id="updated-label"></div>
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><span id="exec-sel-host"></span><div style="font-size:12px;color:#64748b" id="updated-label"></div></div>
   </div>
 
   <!-- ===== 전사 종합 ===== -->
@@ -1443,6 +1445,7 @@ function showPage(name,el,push){
   const _titles={query:'전사 상세 조회',report:'글로벌영업 매출현황',export:'수출의 탑 진행현황',corps:'법인별 상세현황',goals:'목표 달성률 종합',quarters:'분기·반기 요약',units:'장비 출고 대수 현황',leaderboard:'담당자·팀 실적 리더보드',customers:'거래처 신규·이탈 분석'};
   document.getElementById('page-title').textContent=_titles[name]||'전사 종합 경영현황';
   var _mt=document.getElementById('m-title'); if(_mt) _mt.textContent=_titles[name]||'전사 종합';
+  try{ _paintExecSel(name); }catch(_){}
   if(window.innerWidth<=820) toggleNav(false);
   if(name==='query') renderQuery();
   if(name==='report') renderReport();
@@ -2169,7 +2172,13 @@ function miniBar(label,v,max,col){
 
 // ════════ 임원용 대시보드 (목표달성·출고대수·분기요약·리더보드·거래처) ════════
 const EXEC_REGS=['동남아','중화','중동','유럽','미주','태국법인','미국법인','일본법인'];
-function _execT(){ return _matureMonth(); }   // 임원리포트 누적 상한 — 월초 왜곡(모멘텀 ▼100%·연환산 급변) 방지
+// 보고 기준월(누적 상한): 기본=자동(현재 달력월 — 월 바뀌면 자동 반영), 셀렉터로 변경 가능
+window._execTsel = (typeof window._execTsel!=='undefined')?window._execTsel:null;
+function _execCalMonth(){ var n=new Date(); return n.getFullYear()<2026?1:(n.getFullYear()>2026?12:Math.min(12,n.getMonth()+1)); }
+function _execT(){ return (window._execTsel!=null)?Math.max(1,Math.min(12,window._execTsel)):_execCalMonth(); }
+var _EXEC_SEL_PAGES=['goals','units','quarters','corps'];
+function _setExecT(v){ window._execTsel=(v==='auto'||v==='')?null:parseInt(v,10); var ap=document.querySelector('.page.on'); if(!ap)return; var id=ap.id.replace('page-',''); var nav=Array.prototype.slice.call(document.querySelectorAll('.nav-link')).filter(function(a){return (a.getAttribute('onclick')||'').indexOf("'"+id+"'")>=0;})[0]; showPage(id, nav||null); }
+function _paintExecSel(name){ var host=document.getElementById('exec-sel-host'); if(!host)return; if(_EXEC_SEL_PAGES.indexOf(name)<0){ host.innerHTML=''; return; } var cal=_execCalMonth(),auto=(window._execTsel==null),cur=_execT(); var o='<option value="auto"'+(auto?' selected':'')+'>자동 · 당월(1~'+cal+'월)</option>'; for(var m=1;m<=cal;m++)o+='<option value="'+m+'"'+((!auto&&m===cur)?' selected':'')+'>1~'+m+'월</option>'; host.innerHTML='<span class="exec-sel"><i class="bi bi-calendar3 me-1"></i>보고 기간 <select onchange="_setExecT(this.value)">'+o+'</select></span>'; }
 const _achCol=r=> r==null?'#94a3b8' : r>=100?'#16a34a' : r>=80?'#0d9488' : r>=60?'#f59e0b':'#dc2626';
 // 성장률 RAG 색 (급성장~급락)
 const _yoyCol=v=> v==null?'#94a3b8' : v>=30?'#15803d' : v>=5?'#16a34a' : v>=-5?'#94a3b8' : v>=-20?'#f59e0b':'#b91c1c';
