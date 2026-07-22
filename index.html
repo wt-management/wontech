@@ -285,7 +285,7 @@ var K='sb_publishable_aPMOOWAlyJlMcP1ZM_gpPA_jlrcvCRd';
 var SITE=(location.pathname.split('/')[1]||'root');
 var PAGE=(location.pathname.split('/').slice(2).join('/')||'index.html');
 function wtPost(t,b){try{fetch(U+t,{method:'POST',headers:{'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(b)});}catch(e){}}
-function wtEmail(){try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf('sb-')===0&&k.indexOf('auth-token')>-1){var v=JSON.parse(localStorage.getItem(k)||'{}');return (v.user&&v.user.email)||(v.currentSession&&v.currentSession.user&&v.currentSession.user.email)||'';}}}catch(e){}return '';}
+function wtEmail(){try{if(window.__WT_EMAIL)return window.__WT_EMAIL;}catch(e){}try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf('sb-')===0&&k.indexOf('auth-token')>-1){var raw=JSON.parse(localStorage.getItem(k)||'{}');var v=Array.isArray(raw)?(raw[0]||{}):raw;return (v.user&&v.user.email)||(v.currentSession&&v.currentSession.user&&v.currentSession.user.email)||(v.access_token&&v.user&&v.user.email)||'';}}}catch(e){}return '';}
 var wtSeen={},wtN=0;
 window.addEventListener('error',function(e){if(!e||!e.message)return;var key=e.message+'|'+(e.filename||'')+'|'+e.lineno;if(wtSeen[key]||wtN>=10)return;wtSeen[key]=1;wtN++;wtPost('site_errors',{site:SITE,page:PAGE,href:location.href.slice(0,500),message:String(e.message).slice(0,500),source:String(e.filename||'').slice(0,300),line:e.lineno||null,col:e.colno||null,stack:(e.error&&e.error.stack)?String(e.error.stack).slice(0,1500):null,ua:navigator.userAgent.slice(0,300),user_email:wtEmail()||null});},true);
 window.addEventListener('unhandledrejection',function(e){var r=(e&&e.reason)||{};var m=('unhandledrejection: '+(r.message||String(r))).slice(0,500);if(wtSeen[m]||wtN>=10)return;wtSeen[m]=1;wtN++;wtPost('site_errors',{site:SITE,page:PAGE,href:location.href.slice(0,500),message:m,stack:r.stack?String(r.stack).slice(0,1500):null,ua:navigator.userAgent.slice(0,300),user_email:wtEmail()||null});});
@@ -9704,6 +9704,7 @@ async function loadUserRole() {
   if(!session) return;
   const {data} = await _sb.from('crm_profiles').select('role,display_name,position,dept').eq('id', session.user.id).single();
   _isAdmin = data?.role === 'admin';
+  try{ window.__WT_EMAIL = (session.user.email||''); }catch(e){}   // 요청·신고 작성자 정확 표기용
   _isMaster = session.user.email === 'pmw0406@gmail.com';
   _isMgr   = _isAdmin || data?.role === 'manager';
   _meId    = session.user.id;
