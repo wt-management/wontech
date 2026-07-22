@@ -6461,7 +6461,7 @@ function renderCDUReport(vs){
   var regArr=Object.entries(reg).sort((a,b)=>b[1]-a[1]);
   var docArr=Object.entries(docB).filter(x=>x[1]>0);
   // ── 빌더 ──
-  var barRow=(name,cnt,pct,col,suffix,click)=>'<div'+(click?' onclick="'+click+'" style="display:flex;align-items:center;gap:10px;padding:5px 0;cursor:pointer"':' style="display:flex;align-items:center;gap:10px;padding:5px 0"')+'><span style="font-size:12px;min-width:96px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_cduEsc(name)+'</span>'+_cduBar(pct,col)+'<span style="font-size:13px;font-weight:800;min-width:58px;text-align:right">'+cnt+(suffix||'개')+' <span style="color:#6b7280;font-weight:400">'+Math.round(pct)+'%</span></span></div>';
+  var barRow=(name,cnt,pct,col,suffix,click)=>'<div'+(click?' onclick="'+click+'" style="display:flex;align-items:center;gap:10px;padding:8px 2px;cursor:pointer;border-bottom:1px solid #f5f7fa"':' style="display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid #f5f7fa"')+'><span style="width:9px;height:9px;border-radius:2px;background:'+col+';flex-shrink:0"></span><span style="font-size:12.5px;flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_cduEsc(name)+'</span><span style="font-size:13.5px;font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums">'+cnt+(suffix||'개')+' <span style="color:#94a3b8;font-weight:600;font-size:11.5px">'+Math.round(pct)+'%</span></span>'+(click?'<i class="bi bi-chevron-right" style="font-size:10px;color:#cbd5e1;flex-shrink:0"></i>':'')+'</div>';
   var card=(title,ic,iccol,inner)=>'<div class="card p-3 h-100"><div class="fw-bold mb-2" style="font-size:13px"><i class="bi '+ic+' me-1" style="color:'+iccol+'"></i>'+title+'</div>'+inner+'</div>';
   // 활동 하이라이트(성과 프레임): 신규 개척·정보 수집·마케팅 유치 — 현업이 한 일이 드러나게
   var _rangeHL=_cduPeriodRange();
@@ -6509,8 +6509,8 @@ function renderCDUReport(vs){
   var trendHtml = weeks.length? weeks.map(function(w){ var a=wk[w]; var ap=a.pn?Math.round(a.psum/a.pn):0; var isF=(w===focusW); var wq=_cduEsc(w).replace(/\x27/g,"\\x27");
       return '<div onclick="_cduDrillWeek(\''+wq+'\')" title="클릭하면 이 주 방문 상세" style="display:flex;align-items:center;gap:10px;padding:6px;border-radius:6px;cursor:pointer;'+(isF?'background:#eff6ff':'')+'" onmouseover="this.style.background=\'#f1f5f9\'" onmouseout="this.style.background=\''+(isF?'#eff6ff':'')+'\'">'
         +'<span style="font-size:12px;min-width:70px;font-weight:'+(isF?'800':'600')+';color:'+(isF?'#1d4ed8':'#334155')+'">'+_cduEsc(w)+'</span>'
-        +_cduBar(a.n/maxWkN*100,'#2563eb')
-        +'<span style="font-size:12px;font-weight:700;min-width:44px;text-align:right">'+a.n+'개처</span>'
+        +'<span style="flex:1"></span>'
+        +'<span style="font-size:13px;font-weight:800;min-width:48px;text-align:right">'+a.n+'개처</span>'
         +'<span class="cdud-tx" style="font-size:11px;color:#64748b;min-width:74px;text-align:right">수가 '+(ap||'-')+(ap?'천':'')+'</span>'
         +'<span class="cdud-tx" style="font-size:11px;color:#64748b;min-width:52px;text-align:right">이벤트 '+a.ev+'</span>'
         +'<i class="bi bi-chevron-right" style="font-size:10px;color:#cbd5e1"></i></div>'; }).join('')
@@ -6568,7 +6568,7 @@ function renderCDUReport(vs){
       +sec('소모품 미구매 사유','누적 · 병원별 최신 사유 기준 · 클릭 목록',_reasonHtml)
       +sec('선제 감지 · 집중 대응 병원','담당자가 현장에서 조기 감지해 대응 중 · 클릭하면 이력',churnHtml)
     +'</div>'
-    +sec('기간 내 활동 추이','주 단위 · 막대=방문 병원 수 · 수가=주 평균 · 이벤트=진행 병원 수',trendHtml)
+    +sec('기간 내 활동 추이','주 단위 · 개처=방문 병원 수 · 수가=주 평균 · 이벤트=진행 병원 수 · 클릭 상세',trendHtml)
     +'<button class="cdud-tgl" onclick="_cduToggleDetail()"><i class="bi bi-chevron-'+(_cduDetailOpen?'up':'down')+' me-1"></i>상세 분석 '+(_cduDetailOpen?'접기':'펼치기')+' <u>수가 밴드 · 경쟁사 · 마케팅 채널 · 시술/규모 분포 · 담당자 · 매출 상위</u></button>'
     +(_cduDetailOpen?detailSec:'')
     +_cduNoteCard()
