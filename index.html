@@ -1093,6 +1093,12 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
           <div><span class="cdu-chip" data-for="cd-proc" data-v="리프팅" onclick="_cduChip(this)">리프팅</span><span class="cdu-chip" data-for="cd-proc" data-v="레이저" onclick="_cduChip(this)">레이저</span><span class="cdu-chip" data-for="cd-proc" data-v="여드름" onclick="_cduChip(this)">여드름</span><span class="cdu-chip" data-for="cd-proc" data-v="비만" onclick="_cduChip(this)">비만</span><span class="cdu-chip" data-for="cd-proc" data-v="탈모" onclick="_cduChip(this)">탈모</span><span class="cdu-chip" data-for="cd-proc" data-v="색소·미백" onclick="_cduChip(this)">색소·미백</span><span class="cdu-chip" data-for="cd-proc" data-v="모공·흉터" onclick="_cduChip(this)">모공·흉터</span><span class="cdu-chip" data-for="cd-proc" data-v="스킨부스터" onclick="_cduChip(this)">스킨부스터</span><span class="cdu-chip" data-for="cd-proc" data-v="보톡스·필러" onclick="_cduChip(this)">보톡스·필러</span><span class="cdu-chip" data-for="cd-proc" data-v="질환치료" onclick="_cduChip(this)">질환치료</span><span class="cdu-chip" data-for="cd-proc" data-v="수술" onclick="_cduChip(this)">수술</span></div></div>
         <div class="col-12"><label class="form-label" style="font-size:12px">경쟁사 <span class="text-muted">(보유 타사 장비)</span></label><input id="cd-comp" class="form-control form-control-sm" placeholder="직접 입력 가능" oninput="_cduChipSync()">
           <div><span class="cdu-chip" data-for="cd-comp" data-v="볼뉴머" onclick="_cduChip(this)">볼뉴머</span><span class="cdu-chip" data-for="cd-comp" data-v="써마지" onclick="_cduChip(this)">써마지</span><span class="cdu-chip" data-for="cd-comp" data-v="덴서티" onclick="_cduChip(this)">덴서티</span><span class="cdu-chip" data-for="cd-comp" data-v="인모드" onclick="_cduChip(this)">인모드</span><span class="cdu-chip" data-for="cd-comp" data-v="세르프" onclick="_cduChip(this)">세르프</span><span class="cdu-chip" data-for="cd-comp" data-v="울쎄라" onclick="_cduChip(this)">울쎄라</span><span class="cdu-chip" data-for="cd-comp" data-v="티타늄" onclick="_cduChip(this)">티타늄</span><span class="cdu-chip" data-for="cd-comp" data-v="온다" onclick="_cduChip(this)">온다</span><span class="cdu-chip" data-for="cd-comp" data-v="슈링크" onclick="_cduChip(this)">슈링크</span><span class="cdu-chip" data-for="cd-comp" data-v="리프테라" onclick="_cduChip(this)">리프테라</span><span class="cdu-chip" data-for="cd-comp" data-v="쿨소닉" onclick="_cduChip(this)">쿨소닉</span><span class="cdu-chip" data-for="cd-comp" data-v="소프웨이브" onclick="_cduChip(this)">소프웨이브</span></div></div>
+        <div class="col-12"><label class="form-label" style="font-size:12px">보유 올리지오 <span class="text-muted">(라인업별 대수 — 유저 구분)</span></label>
+          <div class="d-flex gap-2">
+            <div style="flex:1"><input type="number" id="cd-oli-basic" class="form-control form-control-sm" min="0" placeholder="0"><div style="font-size:10px;color:#94a3b8;text-align:center;margin-top:2px">올리지오</div></div>
+            <div style="flex:1"><input type="number" id="cd-oli-x" class="form-control form-control-sm" min="0" placeholder="0"><div style="font-size:10px;color:#94a3b8;text-align:center;margin-top:2px">올리지오 X</div></div>
+            <div style="flex:1"><input type="number" id="cd-oli-kiss" class="form-control form-control-sm" min="0" placeholder="0"><div style="font-size:10px;color:#94a3b8;text-align:center;margin-top:2px">올리지오 Kiss</div></div>
+          </div></div>
         <div class="col-md-6 col-6"><label class="form-label" style="font-size:12px">재고</label><input id="cd-stock" class="form-control form-control-sm"></div>
         <div class="col-md-3 col-6"><label class="form-label" style="font-size:12px">국내/해외</label><select id="cdv-region" class="form-select form-select-sm"><option>국내</option><option>국내/해외</option><option>해외</option></select></div>
         <div class="col-md-3 col-12"><label class="form-label" style="font-size:12px">대리점/담당</label><input id="cd-dealer" class="form-control form-control-sm"></div>
@@ -1105,6 +1111,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
         <div class="col-12 cdu-sec">영업 코멘트</div>
         <div class="col-12"><label class="form-label" style="font-size:12px">병원 피드백</label><textarea id="cd-fb" class="form-control form-control-sm" rows="2"></textarea></div>
+        <div class="col-12"><label class="form-label" style="font-size:12px">병원 담당자 프로필 <span class="text-muted">(실장·구매담당 등 이력·성향 참고)</span></label><textarea id="cd-contact-profile" class="form-control form-control-sm" rows="2" placeholder="예: 김실장 — 결정권 큼, 가격 민감. 전 병원서 써마지 운영. 원장 신뢰 두터움"></textarea></div>
         <div class="col-12"><label class="form-label" style="font-size:12px">이탈 가능성</label><input id="cd-churn" class="form-control form-control-sm" placeholder="예: 볼뉴머로 이탈 우려"></div>
         <div class="col-12" style="border-top:1px dashed #d8b4fe;padding-top:10px;margin-top:6px"><label class="form-label" style="font-size:12px;color:#7c3aed;font-weight:700">소모품 미구매 사유 <span class="text-muted" style="font-weight:400">(장비는 있는데 왜 안 사는가 — 집중관리 핵심)</span></label>
           <select id="cd-reason" class="form-select form-select-sm">
@@ -6812,6 +6819,7 @@ function openCDUVisit(id, copy){
   document.getElementById('cd-event').value=(v&&!copy)?(v.event||''):''; document.getElementById('cd-reels').value=(v&&!copy)?(v.reels||''):'';
   sv('cd-price', v?v.price:''); sv('cd-pcount', copy?'':(v?v.procCount:'')); sv('cd-stock', v?v.stock:''); sv('cd-churn', copy?'':(v?v.churnRisk:''));
   sv('cd-reason', copy?'':(v?(v.noBuyReason||''):''));
+  sv('cd-contact-profile', copy?'':(v?(v.contactProfile||''):'')); sv('cd-oli-basic', v?(v.oliBasic||''):''); sv('cd-oli-x', v?(v.oliX||''):''); sv('cd-oli-kiss', v?(v.oliKiss||''):'');
   (function(){ var e=document.getElementById('cd-action'); if(!e) return; var val=copy?'':(v?(v.action||''):'');
     if(val&&![].slice.call(e.options).some(function(o){return o.value===val;})){ var o=document.createElement('option'); o.value=val; o.textContent=val; e.appendChild(o); }
     e.value=val; })();
@@ -6831,6 +6839,7 @@ function saveCDUVisit(){
     mainProc:g('cd-proc').trim(), competitor:g('cd-comp').trim(), feedback:g('cd-fb').trim(), channels:g('cd-chan').trim(), region:g('cdv-region'),
     sales:g('cd-sales').trim(), event:g('cd-event'), reels:g('cd-reels'), price:g('cd-price'), procCount:g('cd-pcount'), stock:g('cd-stock').trim(), churnRisk:g('cd-churn').trim(),
     noBuyReason:g('cd-reason'), action:g('cd-action').trim(),
+    contactProfile:g('cd-contact-profile').trim(), oliBasic:g('cd-oli-basic'), oliX:g('cd-oli-x'), oliKiss:g('cd-oli-kiss'),
     by:(typeof currentUserName==='function'?currentUserName():'')};
   var idx=(DB.d.logs||[]).findIndex(l=>l.id===id);
   if(idx>=0) DB.d.logs[idx]=rec; else DB.d.logs.push(rec);
