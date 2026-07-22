@@ -488,7 +488,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     </ul>
     <div class="nav-label mt-3">영업</div>
     <ul class="nav flex-column gap-0">
-      <li><a class="nav-link" onclick="showPage('dashboard',this)"><i class="bi bi-grid-1x2"></i>현황판</a></li>
+      <li id="nav-dashboard" style="display:none"><a class="nav-link" onclick="showPage('dashboard',this)"><i class="bi bi-grid-1x2"></i>현황판 <span style="font-size:9px;background:#e8eef6;color:#5b7591;border-radius:4px;padding:1px 5px;margin-left:2px">파트장</span></a></li>
       <li><a class="nav-link" onclick="showPage('sales',this)"><i class="bi bi-kanban"></i>수주관리</a></li>
       <li><a class="nav-link" onclick="showPage('schedule',this)"><i class="bi bi-calendar-week"></i>일정</a></li>
       <li><a class="nav-link" onclick="showPage('cdu',this)"><i class="bi bi-clipboard-data"></i>CDU</a></li>
@@ -559,7 +559,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
   <!-- 모바일 하단 탭바(768px 이하에서만 표시) -->
   <nav id="m-bottomnav">
-    <button data-p="dashboard" onclick="showPage('dashboard',null)"><i class="bi bi-grid-1x2"></i>현황판</button>
+    <button id="mnav-dashboard" data-p="dashboard" style="display:none" onclick="showPage('dashboard',null)"><i class="bi bi-grid-1x2"></i>현황판</button>
     <button data-p="schedule" onclick="showPage('schedule',null)"><i class="bi bi-calendar3"></i>일정</button>
     <button data-p="customers" onclick="showPage('customers',null)"><i class="bi bi-buildings"></i>고객사</button>
     <button data-p="cdu" onclick="showPage('cdu',null)"><i class="bi bi-clipboard-data"></i>CDU</button>
@@ -2829,13 +2829,15 @@ async function _bootApp(access) {
   if(_isMgr) {
     const rm = document.getElementById('nav-device-reps');
     if(rm) rm.style.display='';
+    const dm = document.getElementById('nav-dashboard'); if(dm) dm.style.display='';
+    const dmn = document.getElementById('mnav-dashboard'); if(dmn) dmn.style.display='';
   }
   await _loadPending();
   await _loadIlboPending();
   await _loadHospRegions();
   var _nav=(performance.getEntriesByType('navigation')[0]||{}).type;   // reload=새로고침 / back_forward=복귀 / navigate=신규진입
   var _sv=sessionStorage.getItem('wt_page');
-  var _validPage=function(k){ return !!(k && document.getElementById('page-'+k) && !(k==='device-reps' && typeof _isMgr!=='undefined' && !_isMgr)); };   // 요소 존재 + 권한 게이트
+  var _validPage=function(k){ return !!(k && document.getElementById('page-'+k) && !((k==='device-reps'||k==='dashboard') && typeof _isMgr!=='undefined' && !_isMgr)); };   // 요소 존재 + 권한 게이트(담당자별분석·현황판=파트장 전용)
   var _hp=(location.hash||'').replace(/^#/,'');   // 딥링크 해시(#페이지키)
   var _t = _validPage(_hp) ? _hp
          : ((_nav==='reload'||_nav==='back_forward') && _validPage(_sv)) ? _sv
@@ -2899,8 +2901,8 @@ function _mNavSync(n){ document.querySelectorAll('#m-bottomnav button[data-p]').
 
 function showPage(name, el, noPush) {
   _closeSidebar();
-  // 담당자별 분석 = 파트장/관리자 전용 (팀원 접근 차단)
-  if(name==='device-reps' && typeof _isMgr!=='undefined' && !_isMgr){ name='sales-overview'; el=null; }
+  // 담당자별 분석·현황판 = 파트장/관리자 전용 (팀원 접근 차단 → 종합현황으로)
+  if((name==='device-reps'||name==='dashboard') && typeof _isMgr!=='undefined' && !_isMgr){ name='sales-overview'; el=null; }
   sessionStorage.setItem('wt_page', name);
   if(!noPush && !(history.state && history.state.page===name)) history.pushState({page: name}, '', location.href.split('#')[0] + '#' + name);   // 같은 페이지 중복 push 금지(재클릭 시 엔트리 누적 방지)
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
