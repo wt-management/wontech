@@ -2753,7 +2753,7 @@ function _consumeRet(){
 async function _showLauncherOrApp(user) {
   if(_consumeRet()) return;   // 하위 사이트에서 로그인하러 온 경우 → 원래 사이트로 복귀
   const [{data: profile}] = await Promise.all([
-    _sb.from('crm_profiles').select('access,role').eq('id', user.id).single(),
+    _sb.from('crm_profiles').select('access,role,dept').eq('id', user.id).single(),
     _loadSiteRegistry()
   ]);
   if(!profile){
@@ -2765,6 +2765,7 @@ async function _showLauncherOrApp(user) {
   _currentAccess = access;
   _isAdmin = profile?.role === 'admin';
   _isMgr   = _isAdmin || profile?.role === 'manager';
+  _isStrat = String(profile?.dept||'').replace(/\s/g,'').includes('영업전략');   // 영업전략파트 → 현황판 열람 허용
   // 새로고침 시 이전 상태 복원
   if(sessionStorage.getItem('wt_app') === 'admin' && _isAdmin) {
     document.getElementById('launcher-screen').style.display='flex';
@@ -2829,6 +2830,8 @@ async function _bootApp(access) {
   if(_isMgr) {
     const rm = document.getElementById('nav-device-reps');
     if(rm) rm.style.display='';
+  }
+  if(_isMgr || _isStrat) {   // 현황판 = 파트장/관리자 + 영업전략파트
     const dm = document.getElementById('nav-dashboard'); if(dm) dm.style.display='';
     const dmn = document.getElementById('mnav-dashboard'); if(dmn) dmn.style.display='';
   }
@@ -2837,7 +2840,7 @@ async function _bootApp(access) {
   await _loadHospRegions();
   var _nav=(performance.getEntriesByType('navigation')[0]||{}).type;   // reload=새로고침 / back_forward=복귀 / navigate=신규진입
   var _sv=sessionStorage.getItem('wt_page');
-  var _validPage=function(k){ return !!(k && document.getElementById('page-'+k) && !((k==='device-reps'||k==='dashboard') && typeof _isMgr!=='undefined' && !_isMgr)); };   // 요소 존재 + 권한 게이트(담당자별분석·현황판=파트장 전용)
+  var _validPage=function(k){ return !!(k && document.getElementById('page-'+k) && !(k==='device-reps' && typeof _isMgr!=='undefined' && !_isMgr) && !(k==='dashboard' && typeof _isMgr!=='undefined' && !(_isMgr||_isStrat))); };   // 담당자별분석=파트장, 현황판=파트장+영업전략파트
   var _hp=(location.hash||'').replace(/^#/,'');   // 딥링크 해시(#페이지키)
   var _t = _validPage(_hp) ? _hp
          : ((_nav==='reload'||_nav==='back_forward') && _validPage(_sv)) ? _sv
@@ -2901,8 +2904,9 @@ function _mNavSync(n){ document.querySelectorAll('#m-bottomnav button[data-p]').
 
 function showPage(name, el, noPush) {
   _closeSidebar();
-  // 담당자별 분석·현황판 = 파트장/관리자 전용 (팀원 접근 차단 → 종합현황으로)
-  if((name==='device-reps'||name==='dashboard') && typeof _isMgr!=='undefined' && !_isMgr){ name='sales-overview'; el=null; }
+  // 담당자별 분석=파트장/관리자, 현황판=파트장/관리자+영업전략파트 (그 외 팀원 → 종합현황)
+  if(name==='device-reps' && typeof _isMgr!=='undefined' && !_isMgr){ name='sales-overview'; el=null; }
+  if(name==='dashboard' && typeof _isMgr!=='undefined' && !(_isMgr||_isStrat)){ name='sales-overview'; el=null; }
   sessionStorage.setItem('wt_page', name);
   if(!noPush && !(history.state && history.state.page===name)) history.pushState({page: name}, '', location.href.split('#')[0] + '#' + name);   // 같은 페이지 중복 push 금지(재클릭 시 엔트리 누적 방지)
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -9531,6 +9535,7 @@ function delLog(){
 let _isAdmin = false;
 let _isMaster = false;
 let _isMgr   = false;
+let _isStrat = false;
 let _meId = null, _meName = '';
 let _currentAccess = ['korea'];
 
