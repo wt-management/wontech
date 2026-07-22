@@ -207,7 +207,7 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 }
 /* ── 임원 리포트 공통 ── */
 .muted{color:#94a3b8}
-.exec-narr{font-size:12.5px;color:#cbd5e1;margin-top:9px;line-height:1.5;font-weight:600}
+.exec-narr{font-size:12.5px;color:#475569;margin-top:9px;line-height:1.5;font-weight:600}
 .exec-narr b.up{color:#86efac;font-weight:800}.exec-narr b.dn{color:#fca5a5;font-weight:800}
 .dual-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 @media(max-width:1100px){.dual-grid{grid-template-columns:1fr}}
@@ -233,7 +233,7 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .exec-ins{font-size:12px;color:#475569;margin-top:10px;background:#fffbeb;border:1px solid #fef3c7;border-radius:9px;padding:9px 13px;line-height:1.5}
 /* P1 목표 달성률 */
 #page-goals .g-hero{display:flex;justify-content:space-between;align-items:center;gap:16px;background:linear-gradient(135deg,#eef5ff,#f7fbff);color:#1c2534;border:1px solid #e1e9f3;border-radius:14px;padding:18px 22px;margin-bottom:14px}
-#page-goals .g-hl{font-size:13px;color:#cbd5e1;font-weight:700}
+#page-goals .g-hl{font-size:13px;color:#5b7591;font-weight:700}
 #page-goals .g-hr{font-size:2.6rem;font-weight:800;line-height:1.05;margin:4px 0}
 #page-goals .g-hs{font-size:12px;color:#94a3b8}
 #page-goals .g-hero-r{text-align:right}
@@ -438,7 +438,7 @@ button,.nav-link,.seg button,.qpreset,.sw-item{transition:background-color .15s 
 .sb-cell:first-child{padding-left:0;border-left:none}
 .sb-l{font-size:11px;font-weight:600;color:var(--hero-sub);display:flex;align-items:center;gap:6px}
 .sb-l i{color:var(--hero-accent)}
-.sb-v{font-size:2.35rem;font-weight:750;line-height:1.08;margin:5px 0 3px;color:#fff}
+.sb-v{font-size:2.35rem;font-weight:750;line-height:1.08;margin:5px 0 3px;color:var(--hero-ink)}
 .sb-cell.sm .sb-v{font-size:1.55rem}
 .sb-s{font-size:11.5px;color:var(--hero-sub)}
 .sb-s b.up{color:var(--pos-hero);font-weight:700}.sb-s b.dn{color:var(--neg-hero);font-weight:700}.sb-s b.wr{color:var(--warn-hero);font-weight:700}
@@ -2800,7 +2800,7 @@ function renderCorps(){
   const _usd=v=>{const u=v/_rate;return u>=1e6?'$'+(u/1e6).toFixed(2)+'M':'$'+Math.round(u/1e3).toLocaleString()+'K';};
   const gapP=yAch==null?null:yAch-paceP;
   document.getElementById('corp-hero').innerHTML=
-    '<div class="corp-hero" style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 60%,'+sel.cp.c+'59 145%)">'+
+    '<div class="corp-hero" style="background:linear-gradient(135deg,#eef5ff 0%,#f7fbff 55%,'+sel.cp.c+'1f 140%);border:1px solid #e1e9f3">'+
     '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">'+
     '<span style="font-size:14px;font-weight:800"><i class="bi '+sel.cp.i+' me-1" style="color:'+sel.cp.c+'"></i>'+sel.cp.n+' 상세 <span style="font-size:11px;font-weight:500;color:var(--hero-sub)">· 1~'+t+'월 누적 · 실적 = 회계 + 미반영</span></span>'+
     (sel.cp.n==='일본법인'?'<button class="btn btn-sm" style="background:#f59e0b;color:#fff;font-weight:700;font-size:11.5px" onclick="goSite(\'https://wt-management.github.io/wtj-management/\',\'\')"><i class="bi bi-box-arrow-up-right me-1"></i>일본법인 관리 사이트</button>':'')+
