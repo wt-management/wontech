@@ -4935,31 +4935,32 @@ function renderConsumables() {
       const gv26=g.items.reduce((s,p)=>s+p.v26,0);
       const gv25=g.items.reduce((s,p)=>s+p.v25,0);
       const gChg=gv25>0?(gv26/gv25-1)*100:null;
-      return `<div style="margin-bottom:12px">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:${g.col}14;border-radius:8px;margin-bottom:6px">
-          <span style="font-size:12px;font-weight:800;color:${g.col}">${g.name}</span>
+      return `<div style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:${g.col}14;border-radius:8px;margin-bottom:6px">
+          <span style="font-size:13px;font-weight:800;color:${g.col}">${g.name}</span>
           <span style="display:flex;align-items:center;gap:6px">
-            <span style="font-size:13px;font-weight:800">${fmtW(gv26)}</span>
+            <span style="font-size:14px;font-weight:800;font-variant-numeric:tabular-nums">${fmtW(gv26)}</span>
             ${chgBadge(gChg,false)}
           </span>
         </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));column-gap:24px">
         ${g.items.map(p=>{
           const chg=p.v25>0?(p.v26/p.v25-1)*100:null;
-          const barW=(p.v26/maxV*100)||0;
-          return `<div style="padding:7px 2px;border-bottom:1px solid #f3f4f6;cursor:pointer" onclick="showConsDrill(['${p.key}'],'${p.grp} ${p.label} 구매 병원')" title="클릭하여 병원 내역 조회">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-              <div style="display:flex;align-items:center;gap:6px">
-                <span style="width:8px;height:8px;border-radius:2px;background:${p.col};display:inline-block;flex-shrink:0"></span>
-                <span style="font-size:12px;font-weight:600">${p.grp} <span style="font-size:10px;font-weight:400;color:#64748b">${p.label}</span> <span style="font-size:10px;color:#64748b"><i class="bi bi-search"></i></span></span>
+          return `<div style="padding:8px 4px;border-bottom:1px solid #f3f4f6;cursor:pointer" onclick="showConsDrill(['${p.key}'],'${p.grp} ${p.label} 구매 병원')" title="클릭하여 병원 내역 조회">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <div style="display:flex;align-items:center;gap:6px;min-width:0">
+                <span style="width:9px;height:9px;border-radius:2px;background:${p.col};display:inline-block;flex-shrink:0"></span>
+                <span style="font-size:13px;font-weight:600;white-space:nowrap">${p.grp} <span style="font-size:11px;font-weight:400;color:#64748b">${p.label}</span> <span style="font-size:10px;color:#cbd5e1"><i class="bi bi-search"></i></span></span>
               </div>
-              <div style="display:flex;align-items:center;gap:6px">
-                <span style="font-size:12px;font-weight:800">${fmtW(p.v26)}</span>
+              <div style="display:flex;align-items:center;gap:6px;white-space:nowrap">
+                <span style="font-size:13.5px;font-weight:800;font-variant-numeric:tabular-nums">${fmtW(p.v26)}</span>
                 ${chgBadge(chg,false)}
               </div>
             </div>
-            <div style="font-size:10.5px;color:#94a3b8;padding-left:14px;margin-top:1px">전년 <span style="font-variant-numeric:tabular-nums">${fmtW(p.v25)}</span></div>
+            <div style="font-size:11px;color:#94a3b8;padding-left:15px;margin-top:1px">전년 <span style="font-variant-numeric:tabular-nums">${fmtW(p.v25)}</span></div>
           </div>`;
         }).join('')}
+        </div>
       </div>`;
     }).join('');
   }
