@@ -5770,8 +5770,15 @@ function renderPipeline() {
   // 담당자 필터 = 한국영업1/2파트 명단
   _fillSalesFilter(document.getElementById('pipe-sales-filter'));
 
+  // 권한: 파트장·관리자는 전체 딜, 팀원은 본인(담당=d.sales) 딜만 (견적서와 동일 규칙)
+  const _me=((typeof currentUserName==='function'?currentUserName():'')||'').trim();
+  const _canAllDeals=(typeof _isMgr!=='undefined'&&_isMgr);
+  const _basePipe=(_canAllDeals||!_me)?DB.d.pipeline:DB.d.pipeline.filter(d=>{ const s=String(d.sales||'').trim(); return s&&(s===_me||s.includes(_me)||_me.includes(s)); });
+  // 팀원에겐 담당자 필터 드롭다운 숨김(어차피 본인 것만 보이므로)
+  var _psf=document.getElementById('pipe-sales-filter'); if(_psf) _psf.style.display=_canAllDeals?'':'none';
+
   // 전체 데이터 기준 요약 (필터 전)
-  const allRaw=DB.d.pipeline;
+  const allRaw=_basePipe;
   const thisYm=new Date().toISOString().substring(0,7);
   const today=new Date().toISOString().split('T')[0];
   const activeRaw=allRaw.filter(d=>d.stage!=='계약완료');
@@ -5781,7 +5788,7 @@ function renderPipeline() {
 
 
   // 필터 적용
-  let allDeals=DB.d.pipeline;
+  let allDeals=_basePipe;
   if(q) allDeals=allDeals.filter(d=>(d.custName||'').toLowerCase().includes(q)||(d.model||'').toLowerCase().includes(q)||(d.sales||'').toLowerCase().includes(q));
   if(salesF) allDeals=allDeals.filter(d=>(d.sales||'')=== salesF);
 
