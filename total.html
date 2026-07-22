@@ -22,8 +22,8 @@
   --bg:#f6f8fb; --surface:#ffffff; --surface-2:#f8fafc;
   --hero-grad:linear-gradient(135deg,#eef5ff 0%,#f7fbff 55%,#eafaf6 130%);
   --hero-ink:#1c2534; --hero-sub:#5b7591; --hero-line:rgba(15,42,67,.1); --hero-accent:#0f766e;
-  --pos:#15803d; --pos-hero:#4ade80; --neg:#dc2626; --neg-hero:#f87171;
-  --warn:#b45309; --warn-hero:#fbbf24; --pend:#7c3aed;
+  --pos:#15803d; --pos-hero:#16a34a; --neg:#dc2626; --neg-hero:#e11d48;
+  --warn:#b45309; --warn-hero:#d97706; --pend:#7c3aed;
   --c-dom:#2563eb; --c-intl:#0d9488; --c-dev:#7c3aed; --c-cons:#0891b2; --c-etc:#94a3b8;
   --r-sm:8px; --r-md:12px; --r-lg:16px;
   --sh-1:0 1px 2px rgba(15,23,42,.05);
@@ -1892,12 +1892,12 @@ function _sbCat(d){
     return '<div class="sb-cat clk" onclick="qGo(\'all\',\''+lbl+'\')" title="'+lbl+' 상세 조회">'+
       '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:6px">'+
       '<span style="font-size:11px;font-weight:700;color:'+col+'">'+lbl+' <span style="color:#475569">›</span></span>'+
-      '<span style="font-size:12px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums">'+fmtW(v)+' <span style="font-size:10px;color:var(--hero-sub);font-weight:600">'+p+'%</span></span></div>'+
+      '<span style="font-size:12px;font-weight:700;color:var(--hero-ink);font-variant-numeric:tabular-nums">'+fmtW(v)+' <span style="font-size:10px;color:var(--hero-sub);font-weight:600">'+p+'%</span></span></div>'+
       '<div style="height:5px;background:rgba(148,163,184,.22);border-radius:99px;overflow:hidden;margin-top:3px"><div style="width:'+p+'%;height:100%;border-radius:99px;background:'+col+'"></div></div></div>';
   };
   if(!(dev>0||cons>0)) return '';
   return '<div class="sb-cell sm"><div class="sb-l"><i class="bi bi-boxes"></i>장비 vs 소모품 <span style="font-size:9.5px;color:#475569">미반영 포함</span></div>'+
-    row('장비',dev,'#a78bfa')+row('소모품',cons,'#67e8f9')+'</div>';
+    row('장비',dev,'#7c3aed')+row('소모품',cons,'#0891b2')+'</div>';
 }
 function _renderScoreboard(f,t,d){
   const host=document.getElementById('ov-hero');
@@ -2821,8 +2821,8 @@ function renderCorps(){
       const need=(yTgt>sel.act&&t<12)?(yTgt-sel.act)/(12-t):0;
       const ok=sel.avg3>0&&need<=sel.avg3*1.05;
       return '<div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:9px;font-size:11.5px;color:var(--hero-sub);border-top:1px solid var(--hero-line);padding-top:8px">'+
-        '<span>연말 전망(run-rate) <b style="color:#fff">'+fmtW(rr)+'</b>'+(fc!=null?' · 목표 대비 <b style="color:'+(fc>=100?'var(--pos-hero)':'var(--warn-hero)')+'">'+fc.toFixed(0)+'%</b>':'')+'</span>'+
-        (need>0?('<span>잔여 '+(12-t)+'개월 필요 페이스 <b style="color:#fff">월 '+fmtW(need)+'</b> · 최근 3개월 평균 '+fmtW(sel.avg3)+' → <b style="color:'+(ok?'var(--pos-hero)':'var(--neg-hero)')+'">'+(ok?'현 페이스로 달성권':(sel.avg3>0?('페이스 '+(need/sel.avg3).toFixed(1)+'배 상향 필요'):'페이스 상향 필요'))+'</b></span>')
+        '<span>연말 전망(run-rate) <b style="color:var(--hero-ink)">'+fmtW(rr)+'</b>'+(fc!=null?' · 목표 대비 <b style="color:'+(fc>=100?'var(--pos-hero)':'var(--warn-hero)')+'">'+fc.toFixed(0)+'%</b>':'')+'</span>'+
+        (need>0?('<span>잔여 '+(12-t)+'개월 필요 페이스 <b style="color:var(--hero-ink)">월 '+fmtW(need)+'</b> · 최근 3개월 평균 '+fmtW(sel.avg3)+' → <b style="color:'+(ok?'var(--pos-hero)':'var(--neg-hero)')+'">'+(ok?'현 페이스로 달성권':(sel.avg3>0?('페이스 '+(need/sel.avg3).toFixed(1)+'배 상향 필요'):'페이스 상향 필요'))+'</b></span>')
           :(yTgt>0?'<span><b style="color:var(--pos-hero)">연간 목표 이미 달성</b></span>':''))+
         '</div>'; })()+
     '</div>';
