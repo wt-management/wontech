@@ -1344,25 +1344,22 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
     <!-- ② Oligio Tip 월별 트렌드 — 3패널 -->
     <div class="row g-3 mb-3">
-      <div class="col-12">
-        <div class="card p-3">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <div class="fw-bold" style="font-size:14px"><i class="bi bi-graph-up-arrow me-1" style="color:#374151"></i>Oligio Tip 종합 <span style="font-size:11px;font-weight:400;color:#64748b">전체 합산 · 점선=2025 실선=2026</span></div>
-          </div>
-          <div style="position:relative;height:160px"><canvas id="cons-chart-total"></canvas></div>
-          
+      <div class="col-md-4">
+        <div class="card p-3 h-100">
+          <div class="fw-bold mb-1" style="font-size:13px"><i class="bi bi-graph-up-arrow me-1" style="color:#374151"></i>Oligio Tip 종합 <span style="font-size:10px;font-weight:400;color:#94a3b8">점선=2025 실선=2026</span></div>
+          <div style="position:relative;height:250px"><canvas id="cons-chart-total"></canvas></div>
         </div>
       </div>
-      <div class="col-md-6">
-        <div class="card p-3">
+      <div class="col-md-4">
+        <div class="card p-3 h-100">
           <div class="fw-bold mb-1" style="font-size:13px"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#2563eb;margin-right:6px;vertical-align:middle"></span>Oligio (F-4.0 · E-0.25)</div>
-          <div style="position:relative;height:150px"><canvas id="cons-chart-olig"></canvas></div>
+          <div style="position:relative;height:250px"><canvas id="cons-chart-olig"></canvas></div>
         </div>
       </div>
-      <div class="col-md-6">
-        <div class="card p-3">
+      <div class="col-md-4">
+        <div class="card p-3 h-100">
           <div class="fw-bold mb-1" style="font-size:13px"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#16324f;margin-right:6px;vertical-align:middle"></span>Oligio X/XM (XF-4.0 · XE-0.25)</div>
-          <div style="position:relative;height:150px"><canvas id="cons-chart-xm"></canvas></div>
+          <div style="position:relative;height:250px"><canvas id="cons-chart-xm"></canvas></div>
         </div>
       </div>
     </div>
@@ -10374,12 +10371,7 @@ function renderDeviceSales() {
             ${chgBadge(chg)}
           </div>
         </div>
-        <div style="display:flex;gap:4px;align-items:center">
-          <div style="flex:1;background:#f3f4f6;border-radius:4px;height:5px;overflow:hidden">
-            <div style="width:${barW.toFixed(1)}%;height:100%;border-radius:4px;background:${col}"></div>
-          </div>
-          <span style="font-size:10px;color:#64748b;min-width:60px;text-align:right">전년 ${fmtW(p.v25)} ${p.qty25?p.qty25+'대':''}</span>
-        </div>
+        <div style="font-size:10.5px;color:#94a3b8;padding-left:14px;margin-top:1px">전년 <span style="font-variant-numeric:tabular-nums">${fmtW(p.v25)}</span>${p.qty25?' '+p.qty25+'대':''}</div>
       </div>`;
     }).join('') || '<div class="text-muted" style="font-size:13px">해당 기간 데이터 없음</div>';
   }
