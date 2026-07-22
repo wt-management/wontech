@@ -738,6 +738,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <div class="wt-fact" style="cursor:pointer"><span class="l"><i class="bi bi-bullseye me-1" style="color:#2563eb"></i>총 전망</span><b id="kpi-total-forecast">-</b><span class="s" id="kpi-total-forecast-sub"></span></div>
       <div class="wt-fact" style="cursor:pointer"><span class="l"><i class="bi bi-percent me-1" style="color:#2563eb"></i>Win Rate</span><b id="kpi-winrate">-</b><span class="s" id="kpi-winrate-sub"></span></div>
       <div class="wt-fact" style="cursor:pointer"><span class="l"><i class="bi bi-layers-fill me-1" style="color:#2563eb"></i>파이프라인 잔고</span><b id="kpi-pipe-balance">-</b><span class="s" id="kpi-pipe-balance-sub"></span></div>
+      <div class="wt-fact" style="cursor:pointer" onclick="openWarrantyDetail()" title="클릭하면 상세 내역"><span class="l"><i class="bi bi-shield-exclamation me-1" style="color:#ea580c"></i>보증만료 임박</span><b id="kpi-warranty">-</b><span class="s">30일 이내 · 클릭 상세</span></div>
     </div>
 
     <!-- 매출 전망 바 -->
@@ -779,26 +780,18 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     </div>
 
 
-    <!-- 액션 + 보증만료 -->
-    <div class="row g-3 mb-4" id="dash-action-section">
-      <div class="col-md-7">
-        <div class="card p-0 h-100">
-          <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
-            <div class="fw-bold" style="font-size:14px"><i class="bi bi-bell-fill me-2" style="color:#ea580c"></i>다음 액션</div>
-            <div class="d-flex gap-2">
-              <span class="badge" style="background:#fef2f2;color:#dc2626;font-weight:600;font-size:11px" id="action-overdue-cnt"></span>
-              <span class="badge" style="background:#fff7ed;color:#ea580c;font-weight:600;font-size:11px" id="action-today-cnt"></span>
-              <span class="badge" style="background:#eff6ff;color:#2563eb;font-weight:600;font-size:11px" id="action-week-cnt"></span>
-            </div>
+    <!-- 다음 액션(전체폭·컴팩트) -->
+    <div class="mb-4" id="dash-action-section">
+      <div class="card p-0">
+        <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+          <div class="fw-bold" style="font-size:14px"><i class="bi bi-bell-fill me-2" style="color:#ea580c"></i>다음 액션 <span style="font-size:11px;font-weight:400;color:#94a3b8">· 행 클릭 시 상세</span></div>
+          <div class="d-flex gap-2">
+            <span class="badge" style="background:#fef2f2;color:#dc2626;font-weight:600;font-size:11px" id="action-overdue-cnt"></span>
+            <span class="badge" style="background:#fff7ed;color:#ea580c;font-weight:600;font-size:11px" id="action-today-cnt"></span>
+            <span class="badge" style="background:#eff6ff;color:#2563eb;font-weight:600;font-size:11px" id="action-week-cnt"></span>
           </div>
-          <div id="action-board" style="max-height:300px;overflow-y:auto"></div>
         </div>
-      </div>
-      <div class="col-md-5">
-        <div class="card p-3 h-100">
-          <div class="fw-bold mb-2" style="font-size:14px"><i class="bi bi-shield-exclamation me-1" style="color:#ea580c"></i>보증만료 임박 <span style="font-weight:400;color:#64748b;font-size:12px">30일 이내</span></div>
-          <div id="warranty-list"></div>
-        </div>
+        <div id="action-board" style="max-height:280px;overflow-y:auto"></div>
       </div>
     </div>
 
@@ -1929,6 +1922,12 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 <div class="modal fade" id="mgrHistModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
   <div class="modal-header"><h6 class="modal-title" id="mgrHistTitle">담당자 변경 이력</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
   <div class="modal-body" id="mgrHistBody"></div>
+</div></div></div>
+
+<!-- 현황판 상세(다음 액션 / 보증만료) 모달 -->
+<div class="modal fade" id="dashDetailModal" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title" id="dashDetailTitle">상세</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body" id="dashDetailBody"></div>
 </div></div></div>
 
 <!-- 내 실적(본인 연간 누계) 모달 -->
@@ -3887,6 +3886,42 @@ function _showOverdue(){
   _ovShowModal('<i class="bi bi-clock-history me-1" style="color:#dc2626"></i>지연된 후속조치 <span style="font-size:13px;color:#94a3b8;font-weight:500">'+od.length+'건</span>',
     '<div style="font-size:12px;color:#64748b;margin-bottom:8px">상담일지에 남긴 <b>“다음 방문 예정일”이 이미 지난</b> 건입니다. 다시 일정을 잡아 챙기세요.</div>'+rows);
 }
+// ── 현황판: 다음 액션 상세(화면 이동 대신 팝업) ──
+function _dashActionDetail(i){
+  const l=(window._dashActions||[])[i]; if(!l) return;
+  const isOverdue=l.date<new Date().toISOString().split('T')[0];
+  const kindLbl=l.kind==='deal'?'수주 딜':l.kind==='sched'?'놓친 일정':'상담 후속';
+  var b='<div style="font-size:13px;line-height:1.95">'
+    +'<div><b style="color:#111827;font-size:16px">'+_escH(l.custName||'-')+'</b> <span style="color:#94a3b8">'+_escH(l.sales||'')+'</span></div>'
+    +'<div style="margin-top:10px;display:grid;grid-template-columns:70px 1fr;row-gap:6px;align-items:baseline">'
+    +'<span style="color:#94a3b8">유형</span><span>'+kindLbl+'</span>'
+    +'<span style="color:#94a3b8">액션</span><span style="font-weight:600;color:#374151">'+_escH(l.action||'-')+'</span>'
+    +'<span style="color:#94a3b8">예정일</span><span style="font-weight:700;color:'+(isOverdue?'#dc2626':'#2563eb')+'">'+_escH(l.date||'-')+(isOverdue?' (지연)':'')+'</span>'
+    +'</div></div>';
+  b+='<div style="margin-top:16px;text-align:right"><button class="btn btn-sm btn-outline-primary" onclick="_dashActGo('+i+')"><i class="bi bi-box-arrow-up-right me-1"></i>관련 화면 열기</button></div>';
+  document.getElementById('dashDetailTitle').innerHTML='<i class="bi bi-bell-fill me-1" style="color:#ea580c"></i>다음 액션 상세';
+  document.getElementById('dashDetailBody').innerHTML=b;
+  new bootstrap.Modal(document.getElementById('dashDetailModal')).show();
+}
+function _dashActGo(i){
+  const l=(window._dashActions||[])[i]; if(!l) return;
+  try{ bootstrap.Modal.getInstance(document.getElementById('dashDetailModal')).hide(); }catch(e){}
+  if(l.kind==='deal'&&l.dealId) openDealDrawer(l.dealId);
+  else if(l.kind==='sched'){ showPage('schedule'); if(typeof _schShowOverdueOnly==='function') _schShowOverdueOnly(); }
+  else showHospitalDetail(l.custName);
+}
+// ── 현황판: 보증만료 임박 상세(KPI 카드 클릭) ──
+function openWarrantyDetail(){
+  const exp=window._dashExpiring||[]; const nowD=new Date();
+  document.getElementById('dashDetailTitle').innerHTML='<i class="bi bi-shield-exclamation me-1" style="color:#ea580c"></i>보증만료 임박 <span style="font-size:12px;font-weight:400;color:#94a3b8">30일 이내 '+exp.length+'건</span>';
+  const thc='background:#f8fafc;border-bottom:2px solid #e5e7eb;padding:7px 8px';
+  var b=exp.length?'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums"><thead><tr style="color:#94a3b8;font-size:10.5px"><th style="text-align:left;'+thc+'">병원</th><th style="text-align:left;'+thc+'">모델 · 시리얼</th><th style="text-align:left;'+thc+'">보증만료일</th><th style="text-align:right;'+thc+'">남은일수</th></tr></thead><tbody>'
+    +exp.map(e=>{ const days=Math.ceil((new Date(e.warrantyEnd)-nowD)/864e5); const c=days<=7?'#dc2626':days<=14?'#ea580c':'#f59e0b';
+      return '<tr onclick="try{bootstrap.Modal.getInstance(document.getElementById(\'dashDetailModal\')).hide();}catch(e){} showHospitalDetail(this.dataset.c)" data-c="'+_escH(String(e.custName||''))+'" style="border-bottom:1px solid #f1f5f9;cursor:pointer" title="병원 상세" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'"><td style="padding:8px;font-weight:600">'+_escH(e.custName||'-')+'</td><td style="color:#475569">'+_escH(e.model||'')+' · '+_escH(e.serial||'')+'</td><td style="color:#64748b;white-space:nowrap">'+_escH(e.warrantyEnd||'')+'</td><td style="text-align:right;font-weight:700;color:'+c+';padding:8px;white-space:nowrap">'+days+'일 후</td></tr>';
+    }).join('')+'</tbody></table></div>':'<div class="text-muted text-center py-3" style="font-size:13px">만료 임박 장비 없음</div>';
+  document.getElementById('dashDetailBody').innerHTML=b;
+  new bootstrap.Modal(document.getElementById('dashDetailModal')).show();
+}
 function renderDashboard() {
   const now = new Date();
   _initDashPeriodUI();
@@ -4025,32 +4060,25 @@ function renderDashboard() {
   document.getElementById('action-overdue-cnt').textContent=overdueItems.length?`지연 ${overdueItems.length}건`:'';
   document.getElementById('action-today-cnt').textContent=todayItems.length?`오늘 ${todayItems.length}건`:'';
   document.getElementById('action-week-cnt').textContent=weekItems.length?`이번주 ${weekItems.length}건`:'';
-  const allActions=[...overdueItems,...todayItems,...weekItems].slice(0,20);
-  document.getElementById('action-board').innerHTML=allActions.length?allActions.map(l=>{
+  const allActions=[...overdueItems,...todayItems,...weekItems].slice(0,50);
+  window._dashActions=allActions;
+  document.getElementById('action-board').innerHTML=allActions.length?allActions.map((l,i)=>{
     const isOverdue=l.date<todayStr,isToday=l.date===todayStr;
     const dotC=isOverdue?'#dc2626':isToday?'#ea580c':'#2563eb';
-    const click=l.kind==='deal'?`openDealDrawer('${l.dealId}')`:l.kind==='sched'?`showPage('schedule');_schShowOverdueOnly()`:`showHospitalDetail(this.dataset.cust)`;
-    return`<div onclick="${click}" data-cust="${_escH(String(l.custName||''))}" style="display:flex;align-items:flex-start;gap:10px;padding:10px 16px;border-bottom:1px solid #f3f4f6;cursor:pointer" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
-      <div style="width:8px;height:8px;border-radius:50%;background:${dotC};margin-top:5px;flex-shrink:0"></div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:12px;font-weight:600">${_escH(l.custName)} <span style="font-weight:400;color:#6b7280">${_escH(l.sales)}</span></div>
-        <div style="font-size:12px;color:#374151;margin-top:2px">${_escH(l.action)}</div>
-        <div style="font-size:11px;color:${dotC};margin-top:2px;font-weight:600">${l.date}${isOverdue?' (지연)':isToday?' (오늘)':''}</div>
-      </div>
+    // 한 줄: [점] 병원 담당 · 액션(신축) · 예정일(우측) — 가로폭 활용해 세로 최소화
+    return`<div onclick="_dashActionDetail(${i})" style="display:flex;align-items:center;gap:9px;padding:7px 16px;border-bottom:1px solid #f5f7fa;cursor:pointer;font-size:12px" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+      <div style="width:7px;height:7px;border-radius:50%;background:${dotC};flex-shrink:0"></div>
+      <div style="font-weight:600;white-space:nowrap;flex-shrink:0;max-width:38%;overflow:hidden;text-overflow:ellipsis">${_escH(l.custName)} <span style="font-weight:400;color:#94a3b8">${_escH(l.sales)}</span></div>
+      <div style="color:#475569;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escH(l.action)}</div>
+      <div style="color:${dotC};font-weight:700;font-size:11px;white-space:nowrap;flex-shrink:0">${l.date}${isOverdue?' 지연':isToday?' 오늘':''}</div>
     </div>`;
   }).join(''):'<div class="text-muted text-center py-4" style="font-size:13px">예정된 액션 없음</div>';
 
   // 보증만료 임박 (이미 만료된 건 제외, 30일 이내만)
   const warningDays=30;
   const expiring=_allEquip().filter(e=>e.warrantyEnd&&(()=>{const d=Math.ceil((new Date(e.warrantyEnd)-now)/864e5);return d>0&&d<=warningDays;})()).sort((a,b)=>new Date(a.warrantyEnd)-new Date(b.warrantyEnd));
-  document.getElementById('warranty-list').innerHTML=expiring.length?expiring.slice(0,8).map(e=>{
-    const days=Math.ceil((new Date(e.warrantyEnd)-now)/864e5);
-    const c=days<=7?'#dc2626':days<=14?'#ea580c':'#f59e0b';
-    return`<div onclick="showHospitalDetail(this.dataset.cust)" data-cust="${_escH(String(e.custName||''))}" style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f3f4f6;font-size:12px;cursor:pointer" title="병원 상세" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
-      <div><div style="font-weight:600">${_escH(e.custName)}</div><div style="color:#6b7280;font-size:11px">${_escH(e.model)} · ${_escH(e.serial)}</div></div>
-      <span style="color:${c};font-weight:700;font-size:11px;white-space:nowrap">${days}일 후</span>
-    </div>`;
-  }).join(''):'<div class="text-muted text-center py-3" style="font-size:13px">만료 임박 장비 없음</div>';
+  window._dashExpiring=expiring;
+  var _wk=document.getElementById('kpi-warranty'); if(_wk) _wk.textContent=expiring.length+'건';
 
   // KPI 카드 5종 클릭 → 수주관리(딜 상세)
   ['kpi-confirmed','kpi-expected','kpi-total-forecast','kpi-winrate','kpi-pipe-balance'].forEach(function(id){ var el=document.getElementById(id); var card=el&&el.closest('.wt-hero,.wt-fact,.kpi-card'); if(card&&!card.getAttribute('onclick')){ card.setAttribute('onclick',"showPage('sales')"); card.setAttribute('title','클릭하면 수주관리로 이동'); } });
