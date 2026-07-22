@@ -5863,6 +5863,14 @@ function _decideClaim(btn, idx, approve){
   c.decidedBy=admin; c.decidedAt=new Date().toISOString().slice(0,10);
   _saveClaims().then(function(){ try{ renderDevReps(); }catch(e){} openClaimReview(); showToast(approve?(c.hosp+' → '+c.by+' 담당으로 정정됨'):(c.hosp+' 신청 반려'), true); });
 }
+// 내 실적 모달: 미배정·대리점 매출 검색 필터(병원·담당·장비)
+function _myPerfFilter(){
+  var el=document.getElementById('myperf-claim-q'); if(!el) return;
+  var q=(el.value||'').toLowerCase().trim();
+  var rows=document.querySelectorAll('#myperf-claim-tbody tr'); var shown=0;
+  rows.forEach(function(tr){ var m=!q||(tr.getAttribute('data-q')||'').indexOf(q)>=0; tr.style.display=m?'':'none'; if(m)shown++; });
+  var e=document.getElementById('myperf-claim-empty'); if(e) e.style.display=shown?'none':'';
+}
 // ─ 내 실적: 회계 데이터 기준(담당자별 분석과 동일 소스: DEVICE.hospitals, mgr 오버라이드) ─
 function openMyPerf(){
   const meRaw=((typeof currentUserName==='function'?currentUserName():'')||'').trim();
@@ -5910,12 +5918,16 @@ function openMyPerf(){
   }
   // 미배정·대리점 매출(1·2파트 담당 아님) → 내 것이면 정정 신청 → 파트장 승인 시 반영
   var others=Object.entries(DEVICE.hospitals||{}).filter(function(x){ return Number((x[1]||{}).y2026||0)>0 && !_isKorSales(_repOf(x[0])); }).sort(function(a,b){return Number(b[1].y2026||0)-Number(a[1].y2026||0);});
-  html+='<div style="font-size:12px;font-weight:700;color:#374151;margin:18px 0 4px"><i class="bi bi-search me-1" style="color:#ea580c"></i>미배정·대리점 매출 <span style="color:#94a3b8;font-weight:400">· 내 실적이면 신청 → 파트장 승인 후 반영</span></div>';
+  html+='<div style="font-size:12px;font-weight:700;color:#374151;margin:18px 0 6px"><i class="bi bi-search me-1" style="color:#ea580c"></i>미배정·대리점 매출 <span style="color:#94a3b8;font-weight:400">· 내 실적이면 신청 → 파트장 승인 후 반영</span> <span style="color:#cbd5e1;font-weight:400">'+others.length+'건</span></div>';
   if(others.length){
-    html+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums"><thead><tr style="color:#94a3b8;font-size:10.5px"><th style="text-align:left;'+thc+'">병원</th><th style="text-align:left;'+thc+'">현재 담당(회계)</th><th style="text-align:right;'+thc+'">올해 매출</th><th style="'+thc+'"></th></tr></thead><tbody>'
+    html+='<input id="myperf-claim-q" oninput="_myPerfFilter()" placeholder="병원 · 담당 · 장비명 검색" class="form-control form-control-sm" style="margin-bottom:8px;font-size:12.5px">';
+    var _sth=thc+';position:sticky;top:0;z-index:1';
+    html+='<div style="max-height:320px;overflow:auto;border:1px solid #eef2f7;border-radius:10px"><table style="width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums"><thead><tr style="color:#94a3b8;font-size:10.5px"><th style="text-align:left;'+_sth+'">병원</th><th style="text-align:left;'+_sth+'">현재 담당</th><th style="text-align:left;'+_sth+'">장비</th><th style="text-align:right;'+_sth+'">올해 매출</th><th style="'+_sth+'"></th></tr></thead><tbody id="myperf-claim-tbody">'
       +others.map(function(x){ var n=x[0],h=x[1]; var v=Number(h.y2026||0); var cur=_repOf(n)||'미배정'; var pd=(MGR_CLAIMS||[]).some(function(c){return c.hosp===n&&c.by===meRaw&&c.status==='pending';}); var nEsc=_escH(n);
-        return '<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:8px;font-weight:600">'+nEsc+'</td><td style="color:#64748b">'+_escH(cur)+'</td><td style="text-align:right;font-weight:700;padding:8px;white-space:nowrap">'+fmtAmt(v)+'</td><td style="text-align:right;padding:8px;white-space:nowrap">'+(pd?'<span class="btn btn-sm btn-secondary disabled" style="font-size:11px;padding:2px 8px">신청됨</span>':'<button class="btn btn-sm btn-outline-primary" style="font-size:11px;padding:2px 8px" data-h="'+nEsc+'" onclick="_claimHosp(this,this.dataset.h)">제 실적 신청</button>')+'</td></tr>';
-      }).join('')+'</tbody></table></div>';
+        var prods=Object.entries(h.prods2026||{}).sort(function(a,b){return b[1]-a[1];}); var equip=prods.slice(0,2).map(function(p){return p[0];}).join(', ')||'-';
+        var qd=(n+' '+cur+' '+equip).toLowerCase().replace(/"/g,'');
+        return '<tr data-q="'+_escH(qd)+'" style="border-bottom:1px solid #f1f5f9"><td style="padding:8px;font-weight:600">'+nEsc+'</td><td style="color:#64748b;white-space:nowrap">'+_escH(cur)+'</td><td style="color:#475569;font-size:11px">'+_escH(equip)+'</td><td style="text-align:right;font-weight:700;padding:8px;white-space:nowrap">'+fmtAmt(v)+'</td><td style="text-align:right;padding:8px;white-space:nowrap">'+(pd?'<span class="btn btn-sm btn-secondary disabled" style="font-size:11px;padding:2px 8px">신청됨</span>':'<button class="btn btn-sm btn-outline-primary" style="font-size:11px;padding:2px 8px" data-h="'+nEsc+'" onclick="_claimHosp(this,this.dataset.h)">제 실적 신청</button>')+'</td></tr>';
+      }).join('')+'</tbody></table></div><div id="myperf-claim-empty" style="display:none;color:#94a3b8;font-size:12px;padding:10px 0;text-align:center">검색 결과가 없습니다.</div>';
   } else html+='<div style="color:#94a3b8;font-size:12px;padding:6px 0">미배정·대리점 매출 건이 없습니다.</div>';
   document.getElementById('myPerfBody').innerHTML=html;
   new bootstrap.Modal(document.getElementById('myPerfModal')).show();
