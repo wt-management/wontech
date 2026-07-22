@@ -35,24 +35,24 @@
 *{box-sizing:border-box}
 html{color-scheme:light}
 body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color:#1e293b;margin:0}
-.sidebar{position:fixed;top:0;left:0;width:220px;height:100vh;background:#0f172a;color:#cbd5e1;overflow-y:auto;z-index:100;display:flex;flex-direction:column}
-.brand{padding:20px 18px 12px;border-bottom:1px solid #1e293b}
-.brand-name{font-size:16px;font-weight:800;color:#fff;letter-spacing:-0.5px}
+.sidebar{position:fixed;top:0;left:0;width:220px;height:100vh;background:#f1f5f9;color:#334155;border-right:1px solid #d8e0ea;box-shadow:3px 0 16px rgba(16,42,67,.06);overflow-y:auto;z-index:100;display:flex;flex-direction:column}
+.brand{padding:20px 18px 12px;border-bottom:1px solid #e4e8ef}
+.brand-name{font-size:16px;font-weight:800;color:#1c2534;letter-spacing:-0.5px}
 .brand-sub{font-size:11px;color:#64748b;margin-top:2px}
 .nav-wrap{padding:10px;flex:1}
 .nav-label{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;padding:8px 10px 4px}
-.nav-link{display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:8px;color:#94a3b8;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;text-decoration:none}
-.nav-link:hover{background:#1e293b;color:#e2e8f0}
-.nav-link.active{background:#0f766e;color:#fff}
+.nav-link{display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:8px;color:#475569;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;text-decoration:none}
+.nav-link:hover{background:#eef2f7;color:#1c2534}
+.nav-link.active{background:#dbf0ec;color:#0f766e}
 .nav-link i{font-size:15px;width:17px}
-.sidebar-foot{padding:12px;border-top:1px solid #1e293b}
+.sidebar-foot{padding:12px;border-top:1px solid #e4e8ef}
 .user-box{display:flex;align-items:center;gap:9px;margin-bottom:10px}
 .user-av{width:34px;height:34px;border-radius:50%;background:#0f766e;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
-.user-nm{font-size:12px;font-weight:700;color:#e2e8f0;line-height:1.2}
+.user-nm{font-size:12px;font-weight:700;color:#1c2534;line-height:1.2}
 .user-em{font-size:10px;color:#64748b}
 /* 사이트 이동 드롭다운 */
-.sw-item{margin-top:2px;border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:12px;cursor:pointer;transition:background .15s}
-.sw-item:hover{background:rgba(255,255,255,.08)}
+.sw-item{margin-top:2px;border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:#475569;font-size:12px;cursor:pointer;transition:background .15s}
+.sw-item:hover{background:#eef2f7}
 .sw-badge{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;color:#fff;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em;padding:0 5px;flex-shrink:0}
 .sw-ar{font-size:11px;opacity:.5}
 .main{margin-left:220px;padding:18px 22px 60px}
@@ -184,8 +184,8 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
   .sidebar{transform:translateX(-100%);transition:transform .25s ease;width:min(84vw,290px);box-shadow:2px 0 22px rgba(0,0,0,.35);z-index:200}
   .sidebar.open{transform:translateX(0)}
   .main{margin-left:0;padding:12px 12px 64px;padding-top:64px}
-  #m-topbar{display:flex;align-items:center;gap:10px;position:fixed;top:0;left:0;right:0;height:52px;background:#0f172a;color:#fff;padding:0 10px;z-index:150;box-shadow:0 2px 10px rgba(0,0,0,.15)}
-  #m-topbar .m-burger{background:none;border:none;color:#fff;font-size:25px;line-height:1;padding:4px 8px;cursor:pointer}
+  #m-topbar{display:flex;align-items:center;gap:10px;position:fixed;top:0;left:0;right:0;height:52px;background:#fff;color:#1c2534;padding:0 10px;z-index:150;box-shadow:0 2px 10px rgba(16,42,67,.1);border-bottom:1px solid #e4e8ef}
+  #m-topbar .m-burger{background:none;border:none;color:#334155;font-size:25px;line-height:1;padding:4px 8px;cursor:pointer}
   #m-topbar .m-title{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #m-backdrop.open{display:block;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:190}
   body{overflow-x:hidden}
@@ -386,10 +386,10 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 /* ═══════════ RESTYLE LAYER v1 (오버라이드 — 원본 규칙 무수정, 캐스케이드 우선) ═══════════ */
 body{font-family:var(--font);background:var(--bg);color:var(--ink-2);letter-spacing:-.01em;-webkit-font-smoothing:antialiased}
 .kpi-value,.kpi-side-value,.tm-v,.eh-v,.u-kv,.q-val,.cc-v,.sb-v,.g-hr,.g-mr,.rpt-hk .v{font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-/* 사이드바 — 다크 유지, 활성 teal-soft 필 */
-.sidebar{border-right:1px solid rgba(148,163,184,.12)}
+/* 사이드바 — 라이트, 활성 teal-soft 필 */
+.sidebar{border-right:1px solid #d8e0ea}
 .nav-link{border-radius:var(--r-sm)}
-.nav-link.active{background:rgba(45,212,191,.14);color:var(--hero-accent);font-weight:600}
+.nav-link.active{background:#dbf0ec;color:#0f766e;font-weight:600}
 .nav-label{letter-spacing:.08em}
 /* 카드 — 헤어라인 + 1단 그림자 + 호버 부상 */
 .kpi-card,.card,.tm-box,.u-kpi,.g-mini,.q-card,.cust-card,.period-bar,.qfilter-bar,#page-export .ex-kpi{
@@ -907,14 +907,14 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <div class="user-av" id="u-av">?</div>
       <div><div class="user-nm" id="u-nm">-</div><div class="user-em" id="u-em">-</div></div>
     </div>
-    <button class="btn btn-sm w-100 mb-2" style="background:#1e293b;color:#cbd5e1;border:none;font-size:12px" onclick="wtChangePw()"><i class="bi bi-key me-1"></i>비밀번호 변경</button>
-    <button class="btn btn-sm w-100 mb-2" style="background:#1e293b;color:#cbd5e1;border:none;font-size:12px" onclick="doLogout()"><i class="bi bi-box-arrow-right me-1"></i>로그아웃</button>
+    <button class="btn btn-sm w-100 mb-2" style="background:#f8fafc;color:#475569;border:1px solid #d5dde8;font-size:12px" onclick="wtChangePw()"><i class="bi bi-key me-1"></i>비밀번호 변경</button>
+    <button class="btn btn-sm w-100 mb-2" style="background:#f8fafc;color:#475569;border:1px solid #d5dde8;font-size:12px" onclick="doLogout()"><i class="bi bi-box-arrow-right me-1"></i>로그아웃</button>
     <div style="position:relative">
       <button onclick="(function(){var d=document.getElementById('site-dropdown');d.style.display=d.style.display==='block'?'none':'block'})(); event.stopPropagation()"
-        style="width:100%;background:rgba(255,255,255,.05);border:1px solid #334155;border-radius:8px;padding:7px 10px;color:#94a3b8;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;text-align:left">
+        style="width:100%;background:#fff;border:1px solid #d5dde8;border-radius:8px;padding:7px 10px;color:#475569;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;text-align:left">
         <i class="bi bi-grid-3x3-gap" style="font-size:13px"></i><span style="flex:1;font-weight:600">사이트 이동</span><i class="bi bi-chevron-up" style="font-size:10px"></i>
       </button>
-      <div id="site-dropdown" style="display:none;position:absolute;bottom:110%;left:0;right:0;background:#1e293b;border:1px solid #334155;border-radius:10px;overflow:hidden;box-shadow:0 -8px 24px rgba(0,0,0,.5);z-index:200">
+      <div id="site-dropdown" style="display:none;position:absolute;bottom:110%;left:0;right:0;background:#fff;border:1px solid #e4e8ef;border-radius:10px;overflow:hidden;box-shadow:0 -8px 24px rgba(16,42,67,.16);z-index:200">
         <div style="padding:6px">
           <div style="border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;color:#4f46e5;font-size:12px;font-weight:700;background:rgba(79,70,229,.12)"><span class="sw-badge" style="background:#4f46e5">종합</span><span style="flex:1">전사 종합 경영현황</span><i class="bi bi-check2" style="font-size:12px"></i></div>
           <div id="swdd-dyn"><!-- 사이트 목록은 _wtRenderSwitcher()가 site_registry 권한 기반으로 동적 렌더 --></div>
@@ -2268,9 +2268,8 @@ function renderUnits(){
   const mom=pct(Number(domMo[t]||0)+Number(intlMo[t]||0), Number(domMo25[t]||0)+Number(intlMo25[t]||0));
   const uk=(l,v,sub,c)=>'<div class="u-kpi" style="border-left:4px solid '+(c||'#cbd5e1')+'"><div class="u-kl">'+l+'</div><div class="u-kv" style="font-size:1.4rem">'+v+'</div><div class="u-ks">'+(sub||'')+'</div></div>';
   document.getElementById('units-kpi').innerHTML=
-    uk('전사 출고',_num(totU)+'<span class="u-ku">대</span>','전년 '+_num(totU25)+'대 '+(pct(totU,totU25)===null?'':badge(pct(totU,totU25))),'#7c3aed')+
+    '<div class="u-kpi" style="border-left:4px solid #7c3aed"><div class="u-kl">전사 출고 · 대당 단가(ASP)</div><div style="display:flex;align-items:baseline;gap:13px;flex-wrap:wrap"><div class="u-kv" style="font-size:1.4rem">'+_num(totU)+'<span class="u-ku">대</span></div><div style="font-size:1.05rem;font-weight:800;color:#475569">'+fmtW(asp)+'</div></div><div class="u-ks">전년 '+_num(totU25)+'대 '+(pct(totU,totU25)===null?'':badge(pct(totU,totU25)))+' · ASP '+(aspY===null?'-':badge(aspY))+'</div></div>'+
     uk('국내 / 해외 증감','<span style="color:'+_yoyCol(pct(domU,domU25))+'">'+(dDom>=0?'+':'')+_num(dDom)+'</span> / <span style="color:'+_yoyCol(pct(intlU,intlU25))+'">'+(dIntl>=0?'+':'')+_num(dIntl)+'</span><span class="u-ku">대</span>','국내 '+_num(domU)+'대 · 해외 '+_num(intlU)+'대','#0d9488')+
-    uk('대당 단가 (ASP)',fmtW(asp),'전년比 '+(aspY===null?'-':badge(aspY)),_yoyCol(aspY))+
     uk('최근월 모멘텀',(mom===null?'-':arrow(mom)),t+'월 출고 vs 전년 동월',_yoyCol(mom));
   // 월별 차트
   const labels=[]; for(let m=1;m<=12;m++) labels.push(m+'월');
