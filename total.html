@@ -208,7 +208,7 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 /* ── 임원 리포트 공통 ── */
 .muted{color:#94a3b8}
 .exec-narr{font-size:12.5px;color:#475569;margin-top:9px;line-height:1.5;font-weight:600}
-.exec-narr b.up{color:#86efac;font-weight:800}.exec-narr b.dn{color:#fca5a5;font-weight:800}
+.exec-narr b.up{color:#16a34a;font-weight:800}.exec-narr b.dn{color:#e11d48;font-weight:800}
 .dual-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 @media(max-width:1100px){.dual-grid{grid-template-columns:1fr}}
 .dl-h{font-size:12.5px;font-weight:800;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #f1f5f9}
@@ -480,7 +480,7 @@ button,.nav-link,.seg button,.qpreset,.sw-item{transition:background-color .15s 
 .corp-pq-t tr.cpq-q{cursor:pointer}
 .corp-pq-t tr.cpq-q:hover td{background:var(--surface-3,#eef2f7)}
 .pq-car{display:inline-block;width:12px;color:var(--ink-3);font-size:10px}
-.corp-pq-t tr.cpq-fut td{color:#cbd5e1!important}
+.corp-pq-t tr.cpq-fut td{color:#94a3b8!important}
 /* 클릭 가능 요소 공통 어포던스 */
 .sb-cell.clk{cursor:pointer;border-radius:10px;transition:background .15s ease}
 .sb-cell.clk:hover{background:rgba(148,163,184,.10)}
@@ -1989,7 +1989,7 @@ function renderQuery(){
   const ratio=items.length?Math.round(grewN/items.length*100):0, totGrowth=G.filter(x=>x.d>0).reduce((s,x)=>s+x.d,0)||1;
   const tabLbl=qState.tab==='prod'?'제품별':qState.tab==='geo'?'지역별':'담당자별';
   document.getElementById('q-head').innerHTML='<div class="eh-l">'+chName+' '+tabLbl+' <span style="font-weight:500;color:#94a3b8">· '+qState.f+'~'+qState.t+'월 누적</span></div>'+
-    '<div class="eh-v">'+fmtW(tot)+' <span style="font-size:1rem">'+(totY===null?'':badge(totY))+'</span> <span style="font-size:1rem;color:'+(totDelta>=0?'#86efac':'#fca5a5')+'">'+fmtD(totDelta)+'</span></div>'+
+    '<div class="eh-v">'+fmtW(tot)+' <span style="font-size:1rem">'+(totY===null?'':badge(totY))+'</span> <span style="font-size:1rem;color:'+(totDelta>=0?'#16a34a':'#e11d48')+'">'+fmtD(totDelta)+'</span></div>'+
     '<div class="eh-l" style="color:#94a3b8;font-weight:500">전년 동기 '+fmtW(totPrev)+' · 회계 '+fmtW(_accF)+' + 미반영 '+fmtW(_pendF)+(_etcF>0?' <span style="color:#cbd5e1">(기타 '+fmtW(_etcF)+' 포함)</span>':'')+' <span style="color:#cbd5e1">· 아래 분해는 회계 확정 기준</span></div>'+
     execNarr(G.map(x=>({name:x.name,delta:x.d,val:x.val,prev:x.prev})));
   document.getElementById('q-kpi').innerHTML=[
@@ -2433,7 +2433,7 @@ function renderCustomers(){
   if(names[0]) cn+='<b class="up">'+esc(names[0].nm)+' '+fmtW(names[0].v)+'</b> 최대 거래처';
   if(risk[0]) cn+=(cn?' · ':'')+'<b class="dn">'+esc(risk[0].nm)+' '+fmtD(risk[0].d)+'</b> '+(risk[0].y26<=0?'올해 미구매':'둔화');
   document.getElementById('cust-head').innerHTML='<div class="eh-l">국내 거래처 <span style="font-weight:500;color:#94a3b8">· 올해 누적(연환산) vs 전년 연간</span></div>'+
-    '<div class="eh-v">'+active+'개사 <span style="font-size:1rem;color:#86efac">신규 +'+nw+'</span></div>'+
+    '<div class="eh-v">'+active+'개사 <span style="font-size:1rem;color:#16a34a">신규 +'+nw+'</span></div>'+
     '<div class="eh-l" style="color:#94a3b8;font-weight:500">유지 '+keep+'개 · 상위10 집중도 '+conc.toFixed(0)+'% · 재구매 필요 '+riskN+'개사</div>'+
     (cn?'<div class="exec-narr">'+cn+'</div>':'');
   const card=(lbl,big,sub,col)=>'<div class="cust-card acc-card" style="border-left-color:'+(col||'#cbd5e1')+'"><div class="cc-l">'+lbl+'</div><div class="cc-v" style="color:'+(col||'#0f172a')+'">'+big+'</div><div class="cc-s">'+sub+'</div></div>';
