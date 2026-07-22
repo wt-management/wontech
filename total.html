@@ -287,6 +287,7 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .q-grid+.q-grid{margin-top:12px}
 .q-card{background:#fff;border:1px solid #eef2f7;border-radius:12px;padding:13px 15px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
 .q-card.hi{background:linear-gradient(180deg,#eef2ff,#fff);border-color:#c7d2fe}
+.q-card.clk:hover{border-color:#a9c4e8;box-shadow:0 3px 10px rgba(16,42,67,.09);transform:translateY(-1px)}
 .q-lbl{font-size:12px;color:#64748b;font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .q-val{font-size:1.55rem;font-weight:800;margin:3px 0 0;color:#0f172a;line-height:1.1}
 .q-yoy{font-size:11.5px;color:#64748b}
@@ -1852,15 +1853,16 @@ function _drillSeg(dept,item){
   return {mo26,mo25,pend,tgt,custs,prods,pendRows};
 }
 let _drillChart=null;
-function openDrill(dk){
+function openDrill(dk,_f,_t){
   if(!_rptCache.reg26){ if(!(CONS.updatedAt||DEVICE.updatedAt||INTL.updatedAt)) return; try{_rptBuildCache();}catch(e){return;} }
   // 모달이 #page-report 안에 있어 타 페이지(display:none)에선 안 보임 → body로 재부착
   const _dbgEl=document.getElementById('rpt-dbg');
   if(_dbgEl&&_dbgEl.parentElement!==document.body) document.body.appendChild(_dbgEl);
   const parts=String(dk).split('|'), dept=parts[0], item=parts[1];
   const seg=_drillSeg(dept,item), P=_rptPeriods();
+  const F=(_f!=null?_f:P.hf), T=(_t!=null?_t:P.ht);
   const sm=(o,f,t)=>{let s=0;for(let m=f;m<=t;m++)s+=Number((o||{})[m]||0);return s;};
-  const act=sm(seg.mo26,P.hf,P.ht)+sm(seg.pend,P.hf,P.ht), prev=sm(seg.mo25,P.hf,P.ht), tg=sm(seg.tgt,P.hf,P.ht);
+  const act=sm(seg.mo26,F,T)+sm(seg.pend,F,T), prev=sm(seg.mo25,F,T), tg=sm(seg.tgt,F,T);
   const ach=tg>0?act/tg*100:null, grw=prev>0?(act/prev-1)*100:null;
   const title=(dept==='국내영업'?'한국영업 · '+item
     :dept==='서지컬'?'서지컬영업 · 국내 <span style="font-size:11px;font-weight:500;color:#94a3b8">(해외 수출분은 해외영업 지역에 포함)</span>'
@@ -1871,7 +1873,7 @@ function openDrill(dk){
   const cmax=custTop.length?custTop[0][1]:1, pmax=prodTop.length?prodTop[0][1]:1;
   const bar=(n,v,mx,col)=>'<div class="dr-bar"><span class="n" title="'+esc(n)+'">'+esc(n)+'</span><span class="t"><span class="f" style="width:'+(mx>0?Math.max(v/mx*100,1):0).toFixed(1)+'%;background:'+col+'"></span></span><span class="vv">'+_fM(v)+'</span></div>';
   const pendTot=seg.pendRows.reduce((s,p)=>s+Number(p.amount||0),0);
-  let html='<div class="dr-hd"><div><h3>'+title+'</h3><div style="font-size:11.5px;color:#94a3b8;margin-top:2px">'+P.hLbl+' 누적 · 실적=회계+미반영 · 단위 백만원</div></div><button class="dr-x" onclick="closeDrill()">✕</button></div>';
+  let html='<div class="dr-hd"><div><h3>'+title+'</h3><div style="font-size:11.5px;color:#94a3b8;margin-top:2px">'+(_f!=null?(F+'~'+T+'월'):P.hLbl)+' 누적 · 실적=회계+미반영 · 단위 백만원</div></div><button class="dr-x" onclick="closeDrill()">✕</button></div>';
   html+='<div class="dr-kpi"><div class="dr-k"><div class="l">실적</div><div class="v">'+_fM(act)+'</div></div>'+
     '<div class="dr-k"><div class="l">목표</div><div class="v" style="color:#64748b">'+_fM(tg)+'</div></div>'+
     '<div class="dr-k"><div class="l">달성률</div><div class="v" style="color:'+_achCol(ach)+'">'+(ach==null?'-':ach.toFixed(1)+'%')+'</div></div>'+
@@ -1900,6 +1902,28 @@ function openDrill(dk){
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y+'백만'}}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:'#f3f4f6'},ticks:{font:{size:10}}}}}});
 }
 function closeDrill(){ const b=document.getElementById('rpt-dbg'); if(b)b.classList.remove('on'); if(_drillChart){_drillChart.destroy();_drillChart=null;} }
+// 기간 단위 드릴 — 분기/반기 카드 클릭 시 해당 기간의 채널·지역 breakdown (각 행 클릭=채널 상세)
+function _periodDrill(f,t,lbl){
+  try{ if(!_rptCache.reg26){ _rptBuildCache(); } }catch(e){}
+  var _dbgEl=document.getElementById('rpt-dbg'); if(_dbgEl&&_dbgEl.parentElement!==document.body) document.body.appendChild(_dbgEl);
+  var pend=_pendingAgg(2026), regMo=_intlRegionMonthly(INTL), ipend=(_pendForReport().intl)||{}, reg25={};
+  try{ reg25=_intlRegionMonthly(INTL.data2025||{})||{}; }catch(e){}
+  var sm=function(o){var s=0;for(var m=f;m<=t;m++)s+=Number((o||{})[m]||0);return s;};
+  var rows=[{n:'국내 제품',dk:'국내영업|제품',a:sm(DEVICE.monthly2026)+sm(pend.devMonthly),p:sm(DEVICE.monthly2025),tg:_tgt('국내영업','제품',f,t)},
+    {n:'국내 소모품',dk:'국내영업|소모품',a:sm(CONS.monthly2026)+sm(pend.consMonthly),p:sm(CONS.monthly2025),tg:_tgt('국내영업','소모품',f,t)}];
+  (EXEC_REGS||[]).forEach(function(rg){ rows.push({n:'해외 '+rg,dk:'해외영업|'+rg,a:sm(regMo[rg])+sm(ipend[rg]),p:sm(reg25[rg]),tg:_tgt('해외영업',rg,f,t)}); });
+  rows=rows.filter(function(r){return r.a>0||r.tg>0||r.p>0;}).sort(function(a,b){return b.a-a.a;});
+  var tA=rows.reduce(function(s,r){return s+r.a;},0), tP=rows.reduce(function(s,r){return s+r.p;},0), tT=rows.reduce(function(s,r){return s+r.tg;},0);
+  var tAch=tT>0?tA/tT*100:null, tYoY=tP>0?(tA/tP-1)*100:null, mx=rows.length?rows[0].a:1;
+  var yb=function(v){return v==null?'<span style="color:#94a3b8">-</span>':'<span style="color:'+(v>=0?'#16a34a':'#dc2626')+'">'+(v>=0?'▲':'▼')+Math.abs(v).toFixed(1)+'%</span>';};
+  var html='<div class="dr-hd"><div><h3>'+esc(lbl)+'</h3><div style="font-size:11.5px;color:#94a3b8;margin-top:2px">'+f+'~'+t+'월 누적 · 실적=회계+미반영 · 채널 클릭 시 거래처/제품 상세</div></div><button class="dr-x" onclick="closeDrill()">✕</button></div>';
+  html+='<div class="dr-kpi"><div class="dr-k"><div class="l">실적(전망)</div><div class="v">'+fmtW(tA)+'</div></div><div class="dr-k"><div class="l">목표</div><div class="v" style="color:#64748b">'+fmtW(tT)+'</div></div><div class="dr-k"><div class="l">달성률</div><div class="v" style="color:'+_achCol(tAch)+'">'+(tAch==null?'-':tAch.toFixed(1)+'%')+'</div></div><div class="dr-k"><div class="l">전년 성장</div><div class="v">'+yb(tYoY)+'</div></div></div>';
+  html+='<div class="dr-sec-t">채널·지역별 <span style="font-weight:500;color:#94a3b8">· 클릭 시 해당 채널 거래처/제품 상세</span></div>';
+  html+=rows.map(function(r){ var ach=r.tg>0?r.a/r.tg*100:null, yy=r.p>0?(r.a/r.p-1)*100:null;
+    return '<div class="dr-bar" style="cursor:pointer" onclick="openDrill(\''+r.dk+'\','+f+','+t+')"><span class="n">'+esc(r.n)+' <span style="color:#cbd5e1">›</span></span><span class="t"><span class="f" style="width:'+(mx>0?Math.max(r.a/mx*100,1):0).toFixed(1)+'%;background:'+(ach==null?'#94a3b8':_achCol(ach))+'"></span></span><span class="vv">'+fmtW(r.a)+' <b style="color:'+_achCol(ach)+'">'+(ach==null?'':ach.toFixed(0)+'%')+'</b> '+yb(yy)+'</span></div>'; }).join('');
+  document.getElementById('rpt-drill').innerHTML=html;
+  document.getElementById('rpt-dbg').classList.add('on');
+}
 
 // ── 전사 스코어보드(히어로) + 자동 인사이트 칩 ─────────────────
 // renderOverview가 이미 계산한 로컬만 받아 표시(데이터 로직 무변경). SALEST 0건·전년 0 가드.
@@ -2374,7 +2398,7 @@ function renderQuarters(){
     const done=cur>=pr.t; const x=sumP(pr.f,Math.min(pr.t,cur)); const tg=allTgt(pr.f,pr.t); const pn=pendP(pr.f,Math.min(pr.t,cur));
     const yoy=pct(x.a,x.p); const ach=tg>0?(x.a)/tg*100:null; const achF=tg>0?(x.a+pn)/tg*100:null;
     const mom=pr.k==='2Q'?qoq:null;
-    return '<div class="q-card'+(pr.k==='H1'?' hi':'')+'"><div class="q-lbl">'+pr.lbl+(done?'':' <span class="muted" style="font-size:10px;font-weight:600">진행중</span>')+(mom!=null?' <span class="exec-chip" style="font-size:10px;background:'+_yoyCol(mom)+'22;color:'+_yoyCol(mom)+'">1Q대비 '+arrow(mom)+'</span>':'')+'</div>'+
+    return '<div class="q-card clk'+(pr.k==='H1'?' hi':'')+'" style="cursor:pointer" onclick="_periodDrill('+pr.f+','+Math.min(pr.t,cur)+',\''+String(pr.lbl).replace(/\x27/g,'')+'\')" title="'+pr.lbl+' 상세 조회"><div class="q-lbl">'+pr.lbl+(done?'':' <span class="muted" style="font-size:10px;font-weight:600">진행중</span>')+(mom!=null?' <span class="exec-chip" style="font-size:10px;background:'+_yoyCol(mom)+'22;color:'+_yoyCol(mom)+'">1Q대비 '+arrow(mom)+'</span>':'')+'</div>'+
       '<div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap"><div class="q-val">'+fmtW(x.a)+'</div><div class="q-yoy">전년 '+fmtW(x.p)+' '+(yoy===null?'':badge(yoy))+'</div></div>'+
       '<div class="q-foot"><span>목표 <b style="color:#334155">'+fmtW(tg)+'</b></span><span>달성률 <b style="color:'+_achCol(ach)+'">'+(ach==null?'-':ach.toFixed(0)+'%')+'</b>'+(pn>0&&achF!=null?' <span class="muted" style="font-weight:500">전망 '+achF.toFixed(0)+'%</span>':'')+'</span></div></div>';
   };
