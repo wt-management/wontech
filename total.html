@@ -269,6 +269,18 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 #page-goals .g-row-tot .g-rv{color:#334155}
 .exec-sel{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#5b7591;font-weight:600}
 .exec-sel select{border:1px solid #d5dde8;border-radius:8px;padding:4px 9px;font-size:12px;font-family:inherit;background:#fff;color:#1c2534;cursor:pointer;font-weight:600}
+.pr-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.pr-tbl th{font-size:10.5px;color:#94a3b8;font-weight:600;padding:4px 8px;text-align:right;border-bottom:1px solid #eef2f7;white-space:nowrap}
+.pr-tbl td{padding:6px 8px;border-bottom:1px solid #f5f7fa;font-variant-numeric:tabular-nums;vertical-align:middle}
+.pr-tbl tbody tr:last-child td{border-bottom:none}
+.pr-tbl tbody tr.clk{cursor:pointer}.pr-tbl tbody tr.clk:hover td{background:#f8fafc}
+.pr-rk{color:#94a3b8;font-weight:700;text-align:center;width:26px}
+.pr-nm{text-align:left;font-weight:600;color:#1c2534}
+.pr-num{text-align:right;white-space:nowrap;color:#475569}
+.pr-tot{font-weight:800;color:#1c2534}
+.pb-track{background:#eef2f7;border-radius:4px;height:9px;overflow:hidden;min-width:80px}
+.pb-fill{height:100%;display:flex;border-radius:4px;overflow:hidden}
+.pb-fill i{height:100%;display:block}
 /* P2 출고 대수 */
 .u-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .u-kpi{background:#fff;border:1px solid #eef2f7;border-radius:14px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
@@ -1619,14 +1631,34 @@ function _scale(o,f,t){ const full=sumMo(o,1,12); return full>0?sumMo(o,f,t)/ful
 
 function renderOvProds(f,t,pend){
   const map=_productMap(f,t,pend);
-  const arr=Object.entries(map).map(([n,o])=>({n,v:o.dom+o.intl,cat:o.cat})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,10);
-  const max=arr.length?arr[0].v:1;
+  const all=Object.entries(map).map(([n,o])=>({n,dom:o.dom,intl:o.intl,v:o.dom+o.intl,cat:o.cat})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+  const grand=all.reduce((s,x)=>s+x.v,0)||1;
+  const arr=all.slice(0,10);
+  const max=arr.length?arr[0].v:1, top10=arr.reduce((s,x)=>s+x.v,0);
+  const t10Dom=arr.reduce((s,x)=>s+x.dom,0), t10Intl=arr.reduce((s,x)=>s+x.intl,0);
   const cols={'장비':DEV_PURPLE,'소모품':CONS_CYAN,'기타':'#64748b'};
+  const host=document.getElementById('ov-prods'); if(!host) return;
+  if(!arr.length){ host.innerHTML='<div class="text-muted" style="font-size:12px">데이터 없음</div>'; return; }
   _ovProdN=arr.map(x=>x.n);
-  document.getElementById('ov-prods').innerHTML=arr.map((x,i)=>{
-    const col=cols[x.cat]||'#64748b';
-    return '<div class="ovp-row clk" style="padding:6px 0;border-bottom:1px solid #f3f4f6" onclick="openProdInfo(_ovProdN['+i+'])" title="제품 상세"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:12px;font-weight:600"><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:'+col+';margin-right:6px"></span>'+esc(x.n)+' <span style="color:#cbd5e1">›</span></span><span style="font-size:12px;font-weight:700;color:'+col+'">'+fmtW(x.v)+'</span></div><div style="background:#f3f4f6;border-radius:3px;height:5px;overflow:hidden"><div style="width:'+(x.v/max*100).toFixed(1)+'%;height:100%;background:'+col+'"></div></div></div>';
-  }).join('')||'<div class="text-muted" style="font-size:12px">데이터 없음</div>';
+  // 요약: Top10 집중도 + 국내/해외 · 장비/소모품 구성
+  const catAgg={}; arr.forEach(x=>{catAgg[x.cat]=(catAgg[x.cat]||0)+x.v;});
+  const head='<div style="display:flex;flex-wrap:wrap;gap:18px;align-items:baseline;margin-bottom:11px;padding-bottom:9px;border-bottom:1px solid #eef2f7;font-size:12px;color:#64748b">'+
+    '<span>Top10 <b style="color:#1c2534;font-size:15px">'+fmtW(top10)+'</b> <span style="color:#94a3b8">· 전체의 '+Math.round(top10/grand*100)+'%</span></span>'+
+    '<span>국내 <b style="color:#2563eb">'+fmtW(t10Dom)+'</b> <span style="color:#94a3b8">'+Math.round(t10Dom/top10*100)+'%</span> · 해외 <b style="color:#0d9488">'+fmtW(t10Intl)+'</b> <span style="color:#94a3b8">'+Math.round(t10Intl/top10*100)+'%</span></span>'+
+    '<span>장비 <b style="color:'+DEV_PURPLE+'">'+fmtW(catAgg['장비']||0)+'</b> · 소모품 <b style="color:'+CONS_CYAN+'">'+fmtW(catAgg['소모품']||0)+'</b></span></div>';
+  const rows=arr.map((x,i)=>{
+    const col=cols[x.cat]||'#64748b', bw=(x.v/max*100).toFixed(1), dp=x.v>0?(x.dom/x.v*100).toFixed(1):0;
+    return '<tr class="clk" onclick="openProdInfo(_ovProdN['+i+'])" title="제품 상세">'+
+      '<td class="pr-rk">'+(i+1)+'</td>'+
+      '<td class="pr-nm"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+col+';margin-right:6px;vertical-align:0"></span>'+esc(x.n)+' <span style="color:#cbd5e1">›</span></td>'+
+      '<td class="pr-num" style="color:#2563eb">'+fmtW(x.dom)+'</td>'+
+      '<td class="pr-num" style="color:#0d9488">'+fmtW(x.intl)+'</td>'+
+      '<td class="pr-num pr-tot">'+fmtW(x.v)+'</td>'+
+      '<td class="pr-num">'+Math.round(x.v/grand*100)+'%</td>'+
+      '<td style="padding:6px 8px"><div class="pb-track"><div class="pb-fill" style="width:'+bw+'%"><i style="width:'+dp+'%;background:#2563eb"></i><i style="flex:1;background:#0d9488"></i></div></div></td>'+
+      '</tr>';
+  }).join('');
+  host.innerHTML=head+'<div style="overflow-x:auto"><table class="pr-tbl"><thead><tr><th>#</th><th style="text-align:left">제품</th><th>국내</th><th>해외</th><th>합계</th><th>비중</th><th style="text-align:left;width:24%">구성 <span style="font-weight:400;color:#cbd5e1">국내</span>·<span style="font-weight:400;color:#0d9488">해외</span></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 
 // 제품 통합 맵: {name:{dom, intl, cat}}
