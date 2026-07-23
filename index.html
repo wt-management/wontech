@@ -6517,15 +6517,10 @@ function renderCDUReport(vs){
   // ── 문서형 재조립: 히어로 KPI 밴드 + 집중관리 밴드 + 플랫 섹션 (Madia 원칙) ──
 
   var fact=(l,v,s,cl,click)=>'<div class="cdud-fact'+(click?' clk" onclick="'+click+'"':'"')+'><span>'+l+'</span><b'+(cl?' class="'+cl+'"':'')+'>'+v+'</b>'+(s?'<i>'+s+'</i>':'')+'</div>';
-  var _cdDown=(visitedRevPrev>0&&visitedRevPrev>visitedRev);
-  var heroL=_cdDown?'관리 병원 회복 여지':'방문처 팁매출 · 올해';
-  var heroB=_cdDown?_cduWon(visitedRevPrev-visitedRev):_cduWon(visitedRev);
-  var heroSub=_cdDown
-    ?('올해 팁매출 '+_cduWon(visitedRev))
-    :(visitedRevPrev>0?('작년 동기 '+_cduWon(visitedRevPrev)+' · <em style="color:#15803d">▲'+Math.abs(Math.round((visitedRev/visitedRevPrev-1)*100))+'%</em>'):'작년 동기 매출 이력 없음');
-  var kpiBand='<div class="cdud-kpis">'
-    +'<div class="cdud-hero" onclick="_cduDrillVip()"><span class="l">'+heroL+'</span><b>'+heroB+'</b><span class="s">'+heroSub+'</span></div>'
-    +fact('방문 병원',nHosp+'개처','방문 '+nVisit+'건 · 영업일수 '+days.size+'일','','_cduDrillAll()')
+  var kpiBand='<div class="cdud-bt">방문 관리 현황 <u>· 이번 기간 활동량·매출·리스크 요약 · 클릭 상세</u></div>'
+    +'<div class="cdud-kpis">'
+    +'<div class="cdud-hero" onclick="_cduDrillAll()"><span class="l">방문 관리 병원</span><b>'+nHosp+'개처</b><span class="s">방문 '+nVisit+'건 · 영업일수 '+days.size+'일</span></div>'
+    +fact('올해 팁매출',_cduWon(visitedRev),(visitedRevPrev>0?'전년 동기 '+_cduWon(visitedRevPrev):'관리처 팁매출'),'','_cduDrillVip()')
     +fact('리스크 감지',churn.length+'개처',(churn.length?'선제 대응 진행 중':'감지 리스크 없음'),(churn.length?'rd':''),'_cduDrillChurn()')
     +fact('평균 시술수가',(avg?avg+'천':'-'),(prices.length?mn+'~'+mx+' · '+prices.length+'개처 파악':'미파악'),'',prices.length?'_cduDrillBand(0)':'')
   +'</div>';
@@ -7059,7 +7054,7 @@ function renderCDUWeekly(){
       +(cls.dor.length?liK('<b class="c-rd">휴면(올해 팁 0)</b> '+cls.dor.length+'개처 · '+nm3(cls.dor),'dor'):li('<b class="c-rd">휴면(올해 팁 0)</b> 0개처'))
       +(cls.drop.length?liK('<b class="c-am">급감(작년比 60%↓)</b> '+cls.drop.length+'개처 · '+nm3(cls.drop),'drop'):li('<b class="c-am">급감(작년比 60%↓)</b> 0개처'))
       +(cls.ok.length||cls.non.length?liK('<b class="c-gr">정상 구매</b> '+cls.ok.length+'개처 · <b class="c-mu">매출이력 없음</b> '+cls.non.length+'개처','okno'):li('<b class="c-gr">정상 구매</b> 0개처'))
-      +li('올해 팁매출 <b>'+_cduWon(visitedRev)+'</b>'+(prevTot>visitedRev?' · <b style="color:#2563eb">회복 여지 '+_cduWon(prevTot-visitedRev)+'</b>':(prevTot>0?' · 작년 동기 '+_cduWon(prevTot)+' <b class="c-gr">▲'+Math.abs(Math.round((visitedRev/prevTot-1)*100))+'%</b>':'')))
+      +li('올해 팁매출 <b>'+_cduWon(visitedRev)+'</b>'+(prevTot>0?' · 작년 동기 '+_cduWon(prevTot)+(visitedRev>=prevTot?' <b class="c-gr">▲':' <b class="c-rd">▼')+Math.abs(Math.round((visitedRev/prevTot-1)*100))+'%</b>':''))
     +'</div>'
     +'<div><div class="wkr-st">수집 정보 · 시사점</div>'
       +(rsnArr.length?liK('미구매 사유 '+rsnArr.reduce((s,x)=>s+x[1],0)+'건 — '+rsnArr.map(x=>_cduEsc(x[0])+' '+x[1]).join(' · '),'reason'):'')
@@ -7074,14 +7069,9 @@ function renderCDUWeekly(){
   var rsnHosp={}; vs.forEach(function(v){ if((v.noBuyReason||'').trim()) rsnHosp[(v.custName||'').trim()]=1; });
   var rsnHN=Object.keys(rsnHosp).length;
   var fact=(l,v,s,cl)=>'<div class="wkr-fact"><span>'+l+'</span><b'+(cl?' class="'+cl+'"':'')+'>'+v+'</b>'+(s?'<i>'+s+'</i>':'')+'</div>';
-  var _wkDown=prevTot>visitedRev;
-  var heroL=_wkDown?'관리 병원 회복 여지':'방문처 팁매출 · 올해';
-  var heroB=_wkDown?_cduWon(prevTot-visitedRev):_cduWon(visitedRev);
-  var heroSub=_wkDown?('올해 팁매출 '+_cduWon(visitedRev))
-    :(prevTot>0?('작년 동기 '+_cduWon(prevTot)+' · <em style="color:#15803d">▲'+Math.abs(Math.round((visitedRev/prevTot-1)*100))+'%</em>'):'작년 동기 매출 이력 없음');
   var kpis='<div class="wkr-kpis">'
-    +'<div class="wkr-hero"><span class="l">'+heroL+'</span><b>'+heroB+'</b><span class="s">'+heroSub+'</span></div>'
-    +fact('방문 병원',hN+'개처',(vs.length!==hN?'방문 '+vs.length+'건':''))
+    +'<div class="wkr-hero"><span class="l">방문 관리 병원</span><b>'+hN+'개처</b><span class="s">방문 '+vs.length+'건</span></div>'
+    +fact('올해 팁매출',_cduWon(visitedRev),(prevTot>0?'전년 동기 '+_cduWon(prevTot):'관리처 팁매출'))
     +(tgtN?fact('휴면·급감 공략',tgtN+'개처','타깃 방문','rd'):'')
     +(rsnHN?fact('미구매 사유 파악',rsnHN+'개처',''):'')
     +(avg?fact('평균 수가',avg+'천',(lowW?'인상 여지 '+lowW+'개처':'')):'')
