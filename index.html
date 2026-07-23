@@ -6447,11 +6447,13 @@ function renderCDUReport(vs){
   var topCompByRev=compRevArr.filter(x=>x[1]>0)[0]||null;
   // 저가 병원(수가 350천 미만) 비중 — 가격 건전성
   var lowP=prices.filter(p=>p<350).length;
-  // 주차별 추이 — 상단과 동일 데이터(선택 기간·월~일 주) · 개처=고유 병원 수
-  var base=vs.slice();
-  var weeks=[...new Set(base.map(v=>_cduWeekLabel(v.date)).filter(Boolean))].sort();
+  // 주차별 추이 — 최근 8주(과거 비교용, 기간 무관) · 월~일 주 · 개처=고유 병원 수(각 주 카드는 상단과 동일 기준)
+  var base=_cduBaseFiltered().filter(function(v){ return v.status!=='planned' && String(v.date||'').slice(0,10)<=_cduTdyS; });
+  var _allW=[...new Set(base.map(v=>_cduWeekLabel(v.date)).filter(Boolean))].sort();
+  var weeks=_allW.slice(-8);
+  var _wkSet={}; weeks.forEach(function(w){ _wkSet[w]=1; });
   var wk={}; weeks.forEach(w=>wk[w]={hs:{},psum:0,pn:0,ev:0});
-  base.forEach(function(v){ var w=_cduWeekLabel(v.date); if(!w||!wk[w])return; var nm=(v.custName||'').trim(); if(nm) wk[w].hs[nm]=1; var p=num(v.price); if(p>0){wk[w].psum+=p;wk[w].pn++;} if(String(v.event||'').toUpperCase()==='O')wk[w].ev++; });
+  base.forEach(function(v){ var w=_cduWeekLabel(v.date); if(!w||!_wkSet[w])return; var nm=(v.custName||'').trim(); if(nm) wk[w].hs[nm]=1; var p=num(v.price); if(p>0){wk[w].psum+=p;wk[w].pn++;} if(String(v.event||'').toUpperCase()==='O')wk[w].ev++; });
   weeks.forEach(function(w){ wk[w].n=Object.keys(wk[w].hs).length; });
   var maxWkN=Math.max.apply(null,weeks.map(w=>wk[w].n).concat([1]));
   var focusW=(weeks.length?weeks[weeks.length-1]:''); var fi=weeks.indexOf(focusW); var prevW=fi>0?weeks[fi-1]:'';
@@ -6573,7 +6575,7 @@ function renderCDUReport(vs){
       +sec('소모품 미구매 사유','누적 · 병원별 최신 사유 기준 · 클릭 목록',_reasonHtml)
       +sec('선제 감지 · 집중 대응 병원','담당자가 현장에서 조기 감지해 대응 중 · 클릭하면 이력',churnHtml)
     +'</div>'
-    +sec('기간 내 활동 추이','주 단위 · 개처=방문 병원 수 · 수가=주 평균 · 이벤트=진행 병원 수 · 클릭 상세',trendHtml)
+    +sec('최근 8주 활동 추이','월~일 주 · 개처=방문 병원 수 · 수가=주 평균 · 이벤트=진행 병원 수 · 선택 기간과 별개 과거 비교용 · 클릭 상세',trendHtml)
     +'<button class="cdud-tgl" onclick="_cduToggleDetail()"><i class="bi bi-chevron-'+(_cduDetailOpen?'up':'down')+' me-1"></i>상세 분석 '+(_cduDetailOpen?'접기':'펼치기')+' <u>수가 밴드 · 경쟁사 · 마케팅 채널 · 시술/규모 분포 · 담당자 · 매출 상위</u></button>'
     +(_cduDetailOpen?detailSec:'')
     +_cduNoteCard()
