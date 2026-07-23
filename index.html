@@ -6093,7 +6093,7 @@ let _cduView='report';
 var _cduDetailOpen=false;
 function _cduToggleDetail(){ _cduDetailOpen=!_cduDetailOpen; renderCDU(); }
 function _cduEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-function _cduWeekLabel(ds){ if(!ds) return ''; var d=new Date(String(ds).slice(0,10)+'T00:00:00'); if(isNaN(d)) return ''; return (d.getMonth()+1)+'월 '+(Math.floor((d.getDate()-1)/7)+1)+'주'; }
+function _cduWeekLabel(ds){ if(!ds) return ''; var d=new Date(String(ds).slice(0,10)+'T00:00:00'); if(isNaN(d)) return ''; var dow=(d.getDay()+6)%7; var mon=new Date(d); mon.setDate(d.getDate()-dow); var sun=new Date(mon); sun.setDate(mon.getDate()+6); var f=function(x){ return ('0'+(x.getMonth()+1)).slice(-2)+'.'+('0'+x.getDate()).slice(-2); }; return f(mon)+'~'+f(sun); }   // 월~일 주(상단 '이번 주' 기준과 일치)
 function _cduVisits(){ return (DB.d.logs||[]).filter(l=>l.kind==='cdu'); }
 function _cduMeta(){ return (DB.d.logs||[]).find(l=>l.kind==='cdu_meta')||null; }
 function _cduFillSales(){ var sel=document.getElementById('cdu-sales'); if(!sel)return; var names=[...new Set(_cduVisits().map(v=>(v.sales||'').trim()).filter(Boolean))].sort(); var cur=sel.value; sel.innerHTML='<option value="">담당 전체</option>'+names.map(n=>'<option>'+_cduEsc(n)+'</option>').join(''); if([...sel.options].some(o=>o.value===cur))sel.value=cur; }
@@ -6436,11 +6436,12 @@ function renderCDUReport(vs){
   var topCompByRev=compRevArr.filter(x=>x[1]>0)[0]||null;
   // 저가 병원(수가 350천 미만) 비중 — 가격 건전성
   var lowP=prices.filter(p=>p<350).length;
-  // 주차별 추이(담당·검색 반영, 주차 무관) — 완료 방문만
-  var base=_cduBaseFiltered().filter(v=>v.status!=='planned' && String(v.date||'').slice(0,10)<=_cduTdyS);
+  // 주차별 추이 — 상단과 동일 데이터(선택 기간·월~일 주) · 개처=고유 병원 수
+  var base=vs.slice();
   var weeks=[...new Set(base.map(v=>_cduWeekLabel(v.date)).filter(Boolean))].sort();
-  var wk={}; weeks.forEach(w=>wk[w]={n:0,psum:0,pn:0,ev:0});
-  base.forEach(function(v){ var w=_cduWeekLabel(v.date); if(!w||!wk[w])return; wk[w].n++; var p=num(v.price); if(p>0){wk[w].psum+=p;wk[w].pn++;} if(String(v.event||'').toUpperCase()==='O')wk[w].ev++; });
+  var wk={}; weeks.forEach(w=>wk[w]={hs:{},psum:0,pn:0,ev:0});
+  base.forEach(function(v){ var w=_cduWeekLabel(v.date); if(!w||!wk[w])return; var nm=(v.custName||'').trim(); if(nm) wk[w].hs[nm]=1; var p=num(v.price); if(p>0){wk[w].psum+=p;wk[w].pn++;} if(String(v.event||'').toUpperCase()==='O')wk[w].ev++; });
+  weeks.forEach(function(w){ wk[w].n=Object.keys(wk[w].hs).length; });
   var maxWkN=Math.max.apply(null,weeks.map(w=>wk[w].n).concat([1]));
   var focusW=(weeks.length?weeks[weeks.length-1]:''); var fi=weeks.indexOf(focusW); var prevW=fi>0?weeks[fi-1]:'';
   var wow=(focusW&&prevW&&wk[prevW])?(wk[focusW].n-wk[prevW].n):null;
