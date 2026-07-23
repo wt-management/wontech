@@ -244,36 +244,45 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 #page-goals .g-ml{font-size:12px;color:#64748b;font-weight:700}
 #page-goals .g-mr{font-size:1.6rem;font-weight:800;line-height:1.1;margin:2px 0}
 #page-goals .g-sec{font-size:12px;font-weight:800;color:#334155;margin:14px 0 7px;padding-left:8px;border-left:3px solid #4f46e5}
-#page-goals .g-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:4px}
-@media(max-width:1024px){#page-goals .g-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:640px){#page-goals .g-cards{grid-template-columns:1fr}}
-#page-goals .gc{display:flex;align-items:stretch;gap:14px;border:1px solid #eaeef4;border-radius:12px;padding:13px 16px;background:#fff}
+#page-goals .g-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:6px}
+@media(max-width:720px){#page-goals .g-cards{grid-template-columns:1fr}}
+#page-goals .gc{display:flex;align-items:stretch;gap:15px;border:1px solid #eaeef4;border-radius:12px;padding:15px 18px;background:#fff}
 #page-goals .gc.clk{cursor:pointer;transition:border-color .12s,box-shadow .12s}
 #page-goals .gc.clk:hover{border-color:#c9d5e6;box-shadow:0 3px 12px rgba(16,42,67,.07)}
-#page-goals .gc-pcbox{flex-shrink:0;width:82px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;border-right:1px solid #eef2f7;padding-right:13px}
-#page-goals .gc-pc{font-size:2rem;font-weight:800;line-height:.95;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+#page-goals .gc-pcbox{flex-shrink:0;width:88px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;border-right:1px solid #eef2f7;padding-right:15px}
+#page-goals .gc-pc{font-size:2.15rem;font-weight:800;line-height:.95;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
 #page-goals .gc-plbl{font-size:10px;font-weight:700;color:#94a3b8;margin-top:3px}
-#page-goals .gc-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:7px}
-#page-goals .gc-r{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums}
-#page-goals .gc-nm{display:flex;align-items:center;gap:6px;min-width:0;font-size:13px;font-weight:700;color:#1c2534;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#page-goals .gc-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:11px}
+#page-goals .gc-r1{display:flex;align-items:center;gap:13px}
+#page-goals .gc-nm{display:flex;align-items:center;gap:6px;flex-shrink:0;max-width:56%;font-size:13.5px;font-weight:700;color:#1c2534;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #page-goals .gc-dot{width:8px;height:8px;border-radius:3px;flex-shrink:0}
-#page-goals .gc-track{display:flex;height:6px;border-radius:4px;background:#eef2f7;overflow:hidden}
+#page-goals .gc-track{flex:1;display:flex;height:7px;border-radius:4px;background:#eef2f7;overflow:hidden;min-width:70px}
 #page-goals .gc-fill{height:100%}
-#page-goals .gc-r3{font-size:12px}
+#page-goals .gc-r2{display:flex;align-items:baseline;justify-content:space-between;gap:12px;font-size:12px;font-variant-numeric:tabular-nums}
 #page-goals .gc-av{font-weight:800;color:#1c2534}
 #page-goals .gc-tv{color:#94a3b8;font-weight:500;font-size:11.5px}
 #page-goals .gc-gap{font-weight:800;white-space:nowrap}
 #page-goals .gc-sub{color:#94a3b8;font-weight:500}
-#page-goals .gc-yoy{flex-shrink:0;font-size:11.5px;white-space:nowrap}
-#page-goals .gc-tot{border-color:#c7d7f0;background:linear-gradient(135deg,#f2f8ff,#fff)}
-#page-goals .gc-tot .gc-pcbox{border-right-color:#d5e3f5}
-#page-goals .g-top{display:flex;flex-wrap:wrap;align-items:center;gap:18px;background:linear-gradient(135deg,#eef5ff,#f7fbff);border:1px solid #e1e9f3;border-radius:14px;padding:15px 22px;margin-bottom:18px}
-#page-goals .g-top-main{flex:1;min-width:230px}
+#page-goals .gc-meta{white-space:nowrap;flex-shrink:0}
+/* 합계 밴드(지역 카드와 분리) */
+#page-goals .g-tband{display:flex;align-items:center;gap:16px;border:1px solid #c7d7f0;background:linear-gradient(135deg,#eaf3ff,#f8fbff);border-radius:12px;padding:12px 20px;margin-bottom:9px}
+#page-goals .tb-pc{font-size:1.85rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;flex-shrink:0;letter-spacing:-.02em}
+#page-goals .tb-lbl{font-size:10px;font-weight:700;color:#94a3b8;flex-shrink:0;margin-left:-9px;align-self:flex-end;margin-bottom:5px}
+#page-goals .tb-nm{font-size:14px;font-weight:800;color:#1c2534;flex-shrink:0}
+#page-goals .tb-track{flex:1;display:flex;height:9px;border-radius:5px;background:#e2eaf4;overflow:hidden;min-width:80px}
+#page-goals .tb-fill{height:100%}
+#page-goals .tb-nums{font-size:12.5px;color:#64748b;font-variant-numeric:tabular-nums;flex-shrink:0}
+#page-goals .tb-nums b{color:#1c2534;font-weight:800}
+#page-goals .tb-gap{font-size:12.5px;font-weight:800;flex-shrink:0;font-variant-numeric:tabular-nums}
+#page-goals .tb-yoy{font-size:12px;flex-shrink:0}
+#page-goals .g-top{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px 0;background:linear-gradient(135deg,#eef5ff,#f7fbff);border:1px solid #e1e9f3;border-radius:14px;padding:14px 10px;margin-bottom:16px}
+#page-goals .g-top-main{flex:1.5 1 220px;padding:0 14px;align-self:center}
 #page-goals .g-top-k{font-size:12px;color:#5b7591;font-weight:700}
 #page-goals .g-top-vr{display:flex;align-items:baseline;gap:11px;margin-top:3px}
 #page-goals .g-top-v{font-size:2.7rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 #page-goals .g-top-s{font-size:12px;color:#64748b}
-#page-goals .g-top-stats{display:flex;flex-wrap:wrap;gap:28px}
+#page-goals .g-top-stats{flex:4 1 320px;display:flex;align-items:center}
+#page-goals .g-st{flex:1;padding:0 16px;border-left:1px solid #dbe6f3}
 #page-goals .g-st .k{font-size:11px;color:#64748b;font-weight:600}
 #page-goals .g-st .v{font-size:1.4rem;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums;line-height:1.1}
 #page-goals .g-sec{font-size:13px;font-weight:800;color:#1c2534;margin:18px 0 6px;padding-left:9px;border-left:3px solid #2563eb}
@@ -2325,30 +2334,35 @@ function renderGoals(){
          return '<div class="g-st"><div class="k">'+s[0]+'</div><div class="v" style="color:'+s[2]+'">'+s[1]+'</div></div>';}).join('')+
       '<div class="g-st"><div class="k">미달 / 초과 부문</div><div class="v"><span style="color:#dc2626">'+short.length+'</span> <span style="color:#cbd5e1;font-weight:500">/</span> <span style="color:#16a34a">'+over.length+'</span></div></div>'+
     '</div></div>';
-  // 가로형 리치 카드(3열): 좌 달성률 큰수치 · 우 이름/진행바/실적·목표/갭·전년비 — 죽은 여백 없이 폭 채움
-  const card=(x,isTot)=>{
-    const actC=x.tgt>0?x.act/x.tgt*100:null;              // 실적 달성률
-    const a=x.act+x.pnd, r=x.tgt>0?a/x.tgt*100:null;      // 예정 포함 전망
-    const gap=x.tgt>0?x.act-x.tgt:null;                   // 실적 갭
-    const col=_achCol(actC);
-    const rc=actC==null?0:Math.min(actC,100), rg=r==null?0:Math.min(Math.max(r-actC,0),100-rc);
-    const yoy=(x.act25>0)?pct(x.act,x.act25):null;
-    const yoyH=(!x.act25||x.act25<=0)?'<span class="gc-sub">전년 신규</span>':(yoy===null?'':'전년 '+badge(yoy));
-    const projH=(!isTot&&x.pnd>0&&r!=null)?' <span class="gc-sub">→전망 '+r.toFixed(0)+'%</span>':'';
-    return '<div class="gc'+(isTot?' gc-tot':(x.dk?' clk':''))+'"'+
-      ((!isTot&&x.dk)?(' onclick="openDrill(\''+x.dk+'\',1,'+t+')" title="'+x.label+' 상세 드릴다운"'):'')+'>'+
-      '<div class="gc-pcbox" style="color:'+col+'"><div class="gc-pc">'+(actC==null?'–':actC.toFixed(0)+'%')+'</div><div class="gc-plbl">달성</div></div>'+
+  // 공통 계산
+  const _calc=x=>{ const actC=x.tgt>0?x.act/x.tgt*100:null, a=x.act+x.pnd, r=x.tgt>0?a/x.tgt*100:null, gap=x.tgt>0?x.act-x.tgt:null, col=_achCol(actC);
+    const rc=actC==null?0:Math.min(actC,100), rg=r==null?0:Math.min(Math.max(r-actC,0),100-rc), yoy=(x.act25>0)?pct(x.act,x.act25):null;
+    return {actC,r,gap,col,rc,rg,yoy,gapH:(gap==null?'–':(gap>=0?'초과 +'+fmtW(gap):'미달 '+fmtW(-gap))),gcol:(gap==null?'#94a3b8':gap>=0?'#16a34a':'#dc2626')}; };
+  // 합계 밴드(전폭·지역 카드와 분리) — 바가 중앙 여백을 채움
+  const band=(label,x)=>{ const c=_calc(x);
+    return '<div class="g-tband"><div class="tb-pc" style="color:'+c.col+'">'+(c.actC==null?'–':c.actC.toFixed(0)+'%')+'</div><div class="tb-lbl">달성</div>'+
+      '<div class="tb-nm">'+label+'</div>'+
+      '<div class="tb-track"><div class="tb-fill" style="width:'+c.rc.toFixed(1)+'%;background:'+c.col+'"></div><div class="tb-fill" style="width:'+c.rg.toFixed(1)+'%;background:'+c.col+';opacity:.3"></div></div>'+
+      '<div class="tb-nums"><b>'+fmtW(x.act)+'</b> / '+fmtW(x.tgt)+' 목표</div>'+
+      '<div class="tb-gap" style="color:'+c.gcol+'">'+c.gapH+'</div>'+
+      '<div class="tb-yoy">'+(c.yoy===null?'':'전년 '+badge(c.yoy))+'</div></div>'; };
+  // 지역/부문 카드(2열·2줄): 1행 이름+진행바(바가 여백 흡수) / 2행 실적·목표 + 갭·전망·전년비
+  const card=x=>{ const c=_calc(x);
+    const projH=(x.pnd>0&&c.r!=null)?' <span class="gc-sub">→전망 '+c.r.toFixed(0)+'%</span>':'';
+    const yoyH=(!x.act25||x.act25<=0)?'<span class="gc-sub">신규</span>':(c.yoy===null?'':badge(c.yoy));
+    return '<div class="gc'+(x.dk?' clk':'')+'"'+(x.dk?(' onclick="openDrill(\''+x.dk+'\',1,'+t+')" title="'+x.label+' 상세 드릴다운"'):'')+'>'+
+      '<div class="gc-pcbox" style="color:'+c.col+'"><div class="gc-pc">'+(c.actC==null?'–':c.actC.toFixed(0)+'%')+'</div><div class="gc-plbl">달성</div></div>'+
       '<div class="gc-body">'+
-        '<div class="gc-r"><span class="gc-nm">'+(isTot?'':'<span class="gc-dot" style="background:'+col+'"></span>')+x.label+(!isTot&&x.dk?' <span style="color:#cbd5e1;font-weight:400">›</span>':'')+'</span><span class="gc-yoy">'+yoyH+'</span></div>'+
-        '<div class="gc-track"><div class="gc-fill" style="width:'+rc.toFixed(1)+'%;background:'+col+'"></div><div class="gc-fill" style="width:'+rg.toFixed(1)+'%;background:'+col+';opacity:.3"></div></div>'+
-        '<div class="gc-r gc-r3"><span><span class="gc-av">'+fmtW(x.act)+'</span> <span class="gc-tv">/ '+fmtW(x.tgt)+' 목표</span></span>'+
-          '<span class="gc-gap" style="color:'+(gap==null?'#94a3b8':gap>=0?'#16a34a':'#dc2626')+'">'+(gap==null?'–':(gap>=0?'초과 +'+fmtW(gap):'미달 '+fmtW(-gap)))+projH+'</span></div>'+
+        '<div class="gc-r1"><span class="gc-nm"><span class="gc-dot" style="background:'+c.col+'"></span>'+x.label+(x.dk?' <span style="color:#cbd5e1;font-weight:400">›</span>':'')+'</span>'+
+          '<div class="gc-track"><div class="gc-fill" style="width:'+c.rc.toFixed(1)+'%;background:'+c.col+'"></div><div class="gc-fill" style="width:'+c.rg.toFixed(1)+'%;background:'+c.col+';opacity:.3"></div></div></div>'+
+        '<div class="gc-r2"><span><span class="gc-av">'+fmtW(x.act)+'</span> <span class="gc-tv">/ '+fmtW(x.tgt)+' 목표</span></span>'+
+          '<span class="gc-meta"><span class="gc-gap" style="color:'+c.gcol+'">'+c.gapH+'</span>'+projH+' <span class="gc-sub">· 전년</span> '+yoyH+'</span></div>'+
       '</div></div>'; };
   const rk=x=>x.tgt>0?x.act/x.tgt:9;
   h+='<div class="g-sec">국내 영업 <span style="font-weight:500;color:#94a3b8;font-size:11px">· 위험(미달) 순</span></div>'+
-    '<div class="g-cards">'+card({label:'국내 합계',act:dTot.act,pnd:dTot.pnd,tgt:dTot.tgt,act25:dTot.act25},true)+dom.slice().sort((a,b)=>rk(a)-rk(b)).map(x=>card(x)).join('')+'</div>';
+    band('국내 합계',dTot)+'<div class="g-cards">'+dom.slice().sort((a,b)=>rk(a)-rk(b)).map(card).join('')+'</div>';
   h+='<div class="g-sec">해외 영업 (지역·법인) <span style="font-weight:500;color:#94a3b8;font-size:11px">· 위험(미달) 순</span></div>'+
-    '<div class="g-cards">'+card({label:'해외 합계',act:iTot.act,pnd:iTot.pnd,tgt:iTot.tgt,act25:iTot.act25},true)+intl.slice().sort((a,b)=>rk(a)-rk(b)).map(x=>card(x)).join('')+'</div>';
+    band('해외 합계',iTot)+'<div class="g-cards">'+intl.slice().sort((a,b)=>rk(a)-rk(b)).map(card).join('')+'</div>';
   const y2=short.slice(0,2).reduce((s,x)=>s-x.gap,0);
   h+='<div class="exec-ins"><i class="bi bi-lightbulb-fill me-1" style="color:#f59e0b"></i>전사 <b>'+(achC==null?'-':achC.toFixed(0)+'%')+'</b> 달성, 100%까지 <b>'+fmtW(need)+'</b> 부족'+
     (short.length?(' · 부족분의 <b>'+(gapSum>0?Math.round(y2/gapSum*100):0)+'%</b>가 <b style="color:#dc2626">'+short[0].label+(short[1]?' · '+short[1].label:'')+'</b>에서 발생 → 집중 드라이브'):'')+
