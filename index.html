@@ -326,12 +326,23 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 .lc-grp-row>div>div:nth-child(2){padding:20px 18px!important}
 @media(max-width:860px){#launcher-cards{max-width:600px!important}.lc-grp-row{justify-content:center}}
 @media(max-width:640px){
-  #launcher-screen{padding:22px 12px!important;justify-content:flex-start!important}
-  #launcher-main{padding:0 6px;width:100%}
-  #launcher-cards{max-width:100%!important;gap:18px!important}
-  .lc-grp-row{gap:10px!important;justify-content:flex-start!important}
-  .lc-grp-row>div{width:100%!important}
-  .lc-grp-row>div>div:nth-child(2){padding:18px 16px!important}
+  #launcher-screen{padding:18px 10px!important;justify-content:flex-start!important}
+  #launcher-main{padding:0 4px;width:100%}
+  #launcher-cards{max-width:100%!important;gap:14px!important}
+  .lc-grp-t{font-size:11px!important;margin-bottom:7px!important}
+  .lc-grp-row{gap:9px!important;justify-content:flex-start!important}
+  /* 2열 컴팩트 타일: 세로 스크롤 대폭 축소 */
+  .lc-grp-row>div{width:calc(50% - 5px)!important}
+  .lc-grp-row>div>div:first-child{height:4px!important}
+  .lc-grp-row>div>div:nth-child(2){padding:13px 12px!important}
+  /* 아이콘 축소 */
+  .lc-grp-row>div>div:nth-child(2)>div:nth-child(1){width:34px!important;height:34px!important;margin-bottom:8px!important;border-radius:10px!important;box-shadow:none!important}
+  .lc-grp-row>div>div:nth-child(2)>div:nth-child(1) i{font-size:16px!important}
+  /* 제목 크게 유지 */
+  .lc-grp-row>div>div:nth-child(2)>div:nth-child(2){font-size:15px!important;margin-bottom:0!important}
+  /* 설명 2줄 + 입장하기 숨김 → 높이 축소 */
+  .lc-grp-row>div>div:nth-child(2)>div:nth-child(3),
+  .lc-grp-row>div>div:nth-child(2)>div:nth-child(4){display:none!important}
 }
 </style>
 <div id="launcher-screen" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,#0f172a 0%,#1e2140 100%);z-index:9998;align-items:center;justify-content:center;flex-direction:column;overflow-y:auto">
