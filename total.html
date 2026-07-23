@@ -244,24 +244,29 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 #page-goals .g-ml{font-size:12px;color:#64748b;font-weight:700}
 #page-goals .g-mr{font-size:1.6rem;font-weight:800;line-height:1.1;margin:2px 0}
 #page-goals .g-sec{font-size:12px;font-weight:800;color:#334155;margin:14px 0 7px;padding-left:8px;border-left:3px solid #4f46e5}
-#page-goals .g-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(224px,1fr));gap:9px;margin-bottom:4px}
-#page-goals .gc{position:relative;border:1px solid #eaeef4;border-radius:11px;padding:11px 13px 12px;background:#fff}
-#page-goals .gc.clk{cursor:pointer;transition:border-color .12s,box-shadow .12s,transform .12s}
+#page-goals .g-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:4px}
+@media(max-width:1024px){#page-goals .g-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){#page-goals .g-cards{grid-template-columns:1fr}}
+#page-goals .gc{display:flex;align-items:stretch;gap:14px;border:1px solid #eaeef4;border-radius:12px;padding:13px 16px;background:#fff}
+#page-goals .gc.clk{cursor:pointer;transition:border-color .12s,box-shadow .12s}
 #page-goals .gc.clk:hover{border-color:#c9d5e6;box-shadow:0 3px 12px rgba(16,42,67,.07)}
-#page-goals .gc-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
-#page-goals .gc-nm{display:flex;align-items:center;gap:6px;min-width:0;font-size:12.5px;font-weight:700;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#page-goals .gc-pcbox{flex-shrink:0;width:82px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;border-right:1px solid #eef2f7;padding-right:13px}
+#page-goals .gc-pc{font-size:2rem;font-weight:800;line-height:.95;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+#page-goals .gc-plbl{font-size:10px;font-weight:700;color:#94a3b8;margin-top:3px}
+#page-goals .gc-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:7px}
+#page-goals .gc-r{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums}
+#page-goals .gc-nm{display:flex;align-items:center;gap:6px;min-width:0;font-size:13px;font-weight:700;color:#1c2534;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #page-goals .gc-dot{width:8px;height:8px;border-radius:3px;flex-shrink:0}
-#page-goals .gc-pc{font-size:1.55rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;flex-shrink:0;letter-spacing:-.02em}
-#page-goals .gc-track{display:flex;height:5px;border-radius:3px;background:#eef2f7;overflow:hidden;margin:9px 0 8px}
+#page-goals .gc-track{display:flex;height:6px;border-radius:4px;background:#eef2f7;overflow:hidden}
 #page-goals .gc-fill{height:100%}
-#page-goals .gc-nums{display:flex;align-items:baseline;gap:5px;font-size:12px;font-variant-numeric:tabular-nums;line-height:1}
+#page-goals .gc-r3{font-size:12px}
 #page-goals .gc-av{font-weight:800;color:#1c2534}
-#page-goals .gc-tv{color:#94a3b8;font-weight:500;font-size:11px}
-#page-goals .gc-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:7px;padding-top:7px;border-top:1px dashed #eef2f7;font-size:11px;font-variant-numeric:tabular-nums}
-#page-goals .gc-gap{font-weight:800}
+#page-goals .gc-tv{color:#94a3b8;font-weight:500;font-size:11.5px}
+#page-goals .gc-gap{font-weight:800;white-space:nowrap}
 #page-goals .gc-sub{color:#94a3b8;font-weight:500}
-#page-goals .gc-tot{border-color:#c7d7f0;background:linear-gradient(180deg,#f5f9ff,#fff)}
-#page-goals .gc-tot .gc-nm{font-weight:800;color:#1c2534}
+#page-goals .gc-yoy{flex-shrink:0;font-size:11.5px;white-space:nowrap}
+#page-goals .gc-tot{border-color:#c7d7f0;background:linear-gradient(135deg,#f2f8ff,#fff)}
+#page-goals .gc-tot .gc-pcbox{border-right-color:#d5e3f5}
 #page-goals .g-top{display:flex;flex-wrap:wrap;align-items:center;gap:18px;background:linear-gradient(135deg,#eef5ff,#f7fbff);border:1px solid #e1e9f3;border-radius:14px;padding:15px 22px;margin-bottom:18px}
 #page-goals .g-top-main{flex:1;min-width:230px}
 #page-goals .g-top-k{font-size:12px;color:#5b7591;font-weight:700}
@@ -2303,7 +2308,7 @@ function renderGoals(){
          return '<div class="g-st"><div class="k">'+s[0]+'</div><div class="v" style="color:'+s[2]+'">'+s[1]+'</div></div>';}).join('')+
       '<div class="g-st"><div class="k">미달 / 초과 부문</div><div class="v"><span style="color:#dc2626">'+short.length+'</span> <span style="color:#cbd5e1;font-weight:500">/</span> <span style="color:#16a34a">'+over.length+'</span></div></div>'+
     '</div></div>';
-  // 카드 그리드(스몰 멀티플): 가로 공간을 카드로 채우고 세로 축소 — 이름·달성률·진행(실적+예정)·실적/목표·갭·전년비
+  // 가로형 리치 카드(3열): 좌 달성률 큰수치 · 우 이름/진행바/실적·목표/갭·전년비 — 죽은 여백 없이 폭 채움
   const card=(x,isTot)=>{
     const actC=x.tgt>0?x.act/x.tgt*100:null;              // 실적 달성률
     const a=x.act+x.pnd, r=x.tgt>0?a/x.tgt*100:null;      // 예정 포함 전망
@@ -2315,11 +2320,13 @@ function renderGoals(){
     const projH=(!isTot&&x.pnd>0&&r!=null)?' <span class="gc-sub">→전망 '+r.toFixed(0)+'%</span>':'';
     return '<div class="gc'+(isTot?' gc-tot':(x.dk?' clk':''))+'"'+
       ((!isTot&&x.dk)?(' onclick="openDrill(\''+x.dk+'\',1,'+t+')" title="'+x.label+' 상세 드릴다운"'):'')+'>'+
-      '<div class="gc-top"><span class="gc-nm">'+(isTot?'':'<span class="gc-dot" style="background:'+col+'"></span>')+x.label+(!isTot&&x.dk?' <span style="color:#cbd5e1;font-weight:400">›</span>':'')+'</span>'+
-        '<span class="gc-pc" style="color:'+col+'">'+(actC==null?'–':actC.toFixed(0)+'%')+'</span></div>'+
-      '<div class="gc-track"><div class="gc-fill" style="width:'+rc.toFixed(1)+'%;background:'+col+'"></div><div class="gc-fill" style="width:'+rg.toFixed(1)+'%;background:'+col+';opacity:.3"></div></div>'+
-      '<div class="gc-nums"><span class="gc-av">'+fmtW(x.act)+'</span><span class="gc-tv">/ '+fmtW(x.tgt)+' 목표</span>'+projH+'</div>'+
-      '<div class="gc-meta"><span class="gc-gap" style="color:'+(gap==null?'#94a3b8':gap>=0?'#16a34a':'#dc2626')+'">'+(gap==null?'–':(gap>=0?'초과 +'+fmtW(gap):'미달 '+fmtW(-gap)))+'</span><span>'+yoyH+'</span></div></div>'; };
+      '<div class="gc-pcbox" style="color:'+col+'"><div class="gc-pc">'+(actC==null?'–':actC.toFixed(0)+'%')+'</div><div class="gc-plbl">달성</div></div>'+
+      '<div class="gc-body">'+
+        '<div class="gc-r"><span class="gc-nm">'+(isTot?'':'<span class="gc-dot" style="background:'+col+'"></span>')+x.label+(!isTot&&x.dk?' <span style="color:#cbd5e1;font-weight:400">›</span>':'')+'</span><span class="gc-yoy">'+yoyH+'</span></div>'+
+        '<div class="gc-track"><div class="gc-fill" style="width:'+rc.toFixed(1)+'%;background:'+col+'"></div><div class="gc-fill" style="width:'+rg.toFixed(1)+'%;background:'+col+';opacity:.3"></div></div>'+
+        '<div class="gc-r gc-r3"><span><span class="gc-av">'+fmtW(x.act)+'</span> <span class="gc-tv">/ '+fmtW(x.tgt)+' 목표</span></span>'+
+          '<span class="gc-gap" style="color:'+(gap==null?'#94a3b8':gap>=0?'#16a34a':'#dc2626')+'">'+(gap==null?'–':(gap>=0?'초과 +'+fmtW(gap):'미달 '+fmtW(-gap)))+projH+'</span></div>'+
+      '</div></div>'; };
   const rk=x=>x.tgt>0?x.act/x.tgt:9;
   h+='<div class="g-sec">국내 영업 <span style="font-weight:500;color:#94a3b8;font-size:11px">· 위험(미달) 순</span></div>'+
     '<div class="g-cards">'+card({label:'국내 합계',act:dTot.act,pnd:dTot.pnd,tgt:dTot.tgt,act25:dTot.act25},true)+dom.slice().sort((a,b)=>rk(a)-rk(b)).map(x=>card(x)).join('')+'</div>';
