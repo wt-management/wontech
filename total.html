@@ -294,6 +294,23 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 /* P2 출고 대수 */
 .u-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .u-kpi{background:#fff;border:1px solid #eef2f7;border-radius:14px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+#page-units .um-tbl{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums;table-layout:auto}
+#page-units .um-tbl thead th{font-size:10.5px;font-weight:700;color:#94a3b8;letter-spacing:.02em;padding:5px 9px;border-bottom:1px solid #e9edf3;text-align:right;white-space:nowrap}
+#page-units .um-tbl thead th.l{text-align:left}
+#page-units .um-r{border-bottom:1px solid #f4f6f9;cursor:pointer}
+#page-units .um-r:hover{background:#f8fafc}
+#page-units .um-r td{padding:8px 9px;text-align:right;white-space:nowrap}
+#page-units .um-nm{text-align:left;font-weight:700;color:#1c2534;max-width:230px;overflow:hidden;text-overflow:ellipsis}
+#page-units .um-dot{display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:6px;vertical-align:middle}
+#page-units .um-n b{color:#1c2534;font-weight:700}
+#page-units .um-mut{color:#94a3b8;font-size:11.5px}
+#page-units .um-d{font-weight:800}
+#page-units .um-bar{width:100%;padding-left:14px;padding-right:14px}
+#page-units .um-track{position:relative;height:9px;background:#f1f5f9;border-radius:5px;overflow:hidden;min-width:130px}
+#page-units .um-z{position:absolute;left:50%;top:0;width:1px;height:100%;background:#cbd5e1;z-index:1}
+#page-units .um-fill{position:absolute;top:0;height:100%;border-radius:4px}
+#page-units .um-y{width:66px}
+#page-units .um-sub{color:#94a3b8;font-weight:500;font-size:11px}
 .u-kl{font-size:12px;color:#64748b;font-weight:700}
 .u-kv{font-size:2.1rem;font-weight:800;line-height:1.05;margin:6px 0 2px;color:#7c3aed}
 .u-ku{font-size:1rem;font-weight:700;margin-left:3px;color:#94a3b8}
@@ -2400,9 +2417,19 @@ function renderUnits(){
   const maxAbs=Math.max(1,...models.map(x=>Math.abs(x.d)));
   const utop=models.filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,6), ubot=models.filter(x=>x.d<0).sort((a,b)=>a.d-b.d).slice(0,6);
   _unProdN=[];
-  const mrow=x=>{ const y=pct(x.q26,x.q25); const gi=_unProdN.push(x.n)-1;
-    return '<div class="dl-row clk" onclick="openProdInfo(_unProdN['+gi+'])" title="제품 상세"><span class="dl-dot" style="background:'+_yoyCol(y)+'"></span><span class="dl-name">'+esc(x.n)+' <span style="color:#cbd5e1">›</span></span>'+divBar(x.d,maxAbs)+'<span class="dl-d" style="color:'+_yoyCol(y)+'">'+(x.d>=0?'+':'')+_num(x.d)+'대</span><span class="dl-sub">'+_num(x.q26)+'대</span></div>'; };
-  document.getElementById('units-prods').innerHTML=dualList(utop,ubot,mrow,['🟢 물량 성장 Top','🔴 물량 감소 Top']);
+  const allM=utop.concat(ubot).sort((a,b)=>b.d-a.d);   // 성장(상단)→감소(하단), 발산바로 한눈에
+  const umRow=x=>{ const y=pct(x.q26,x.q25); const gi=_unProdN.push(x.n)-1;
+    const w=Math.min(Math.abs(x.d)/maxAbs*50,50), pos=x.d>=0, col=pos?'#16a34a':'#dc2626';
+    return '<tr class="um-r" onclick="openProdInfo(_unProdN['+gi+'])" title="'+esc(x.n)+' 상세">'+
+      '<td class="um-nm"><span class="um-dot" style="background:'+col+'"></span>'+esc(x.n)+' <span style="color:#cbd5e1">›</span></td>'+
+      '<td class="um-n"><b>'+_num(x.q26)+'</b>대</td>'+
+      '<td class="um-n um-mut">'+_num(x.q25)+'대</td>'+
+      '<td class="um-d" style="color:'+col+'">'+(pos?'+':'')+_num(x.d)+'대</td>'+
+      '<td class="um-bar"><div class="um-track"><div class="um-z"></div><div class="um-fill" style="'+(pos?'left:50%':'right:50%')+';width:'+w.toFixed(1)+'%;background:'+col+'"></div></div></td>'+
+      '<td class="um-y">'+(y===null?'<span class="um-sub">신규</span>':badge(y))+'</td></tr>'; };
+  document.getElementById('units-prods').innerHTML= allM.length
+    ? '<table class="um-tbl"><thead><tr><th class="l">모델</th><th>올해</th><th>전년</th><th>증감</th><th class="l">증감 시각화 <span style="font-weight:500">· 전년比 ±대</span></th><th>YoY</th></tr></thead><tbody>'+allM.map(umRow).join('')+'</tbody></table>'
+    : '<div class="muted" style="font-size:12px;padding:10px 4px">모델별 대수 데이터 없음</div>';
   const ub=models.slice().sort((a,b)=>b.d-a.d)[0], uw=models.slice().sort((a,b)=>a.d-b.d)[0];
   const posU=models.filter(x=>x.d>0).reduce((s,x)=>s+x.d,0)||1;
   let un='';
