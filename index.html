@@ -6504,14 +6504,14 @@ function renderCDUReport(vs){
       +(v.sales?'<span style="font-size:10px;color:#94a3b8;flex-shrink:0">'+_cduEsc(v.sales)+'</span>':'')+'</div>'; }).join('')
     : '<div class="text-muted" style="font-size:12px">감지된 이탈 리스크 없음 — 전 담당처 안정 관리 중 👍</div>';
   // 주차별 추이
-  var trendHtml = weeks.length? weeks.map(function(w){ var a=wk[w]; var ap=a.pn?Math.round(a.psum/a.pn):0; var isF=(w===focusW); var wq=_cduEsc(w).replace(/\x27/g,"\\x27");
-      return '<div onclick="_cduDrillWeek(\''+wq+'\')" title="클릭하면 이 주 방문 상세" style="display:flex;align-items:center;gap:10px;padding:6px;border-radius:6px;cursor:pointer;'+(isF?'background:#eff6ff':'')+'" onmouseover="this.style.background=\'#f1f5f9\'" onmouseout="this.style.background=\''+(isF?'#eff6ff':'')+'\'">'
-        +'<span style="font-size:12px;min-width:70px;font-weight:'+(isF?'800':'600')+';color:'+(isF?'#1d4ed8':'#334155')+'">'+_cduEsc(w)+'</span>'
-        +'<span style="flex:1"></span>'
-        +'<span style="font-size:13px;font-weight:800;min-width:48px;text-align:right">'+a.n+'개처</span>'
-        +'<span class="cdud-tx" style="font-size:11px;color:#64748b;min-width:74px;text-align:right">수가 '+(ap||'-')+(ap?'천':'')+'</span>'
-        +'<span class="cdud-tx" style="font-size:11px;color:#64748b;min-width:52px;text-align:right">이벤트 '+a.ev+'</span>'
-        +'<i class="bi bi-chevron-right" style="font-size:10px;color:#cbd5e1"></i></div>'; }).join('')
+  var trendHtml = weeks.length? '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">'+weeks.map(function(w,wi){ var a=wk[w]; var ap=a.pn?Math.round(a.psum/a.pn):0; var isF=(w===focusW); var wq=_cduEsc(w).replace(/\x27/g,"\\x27");
+      var prev=wi>0?wk[weeks[wi-1]].n:null; var dn=(prev!=null&&prev>0)?Math.round((a.n/prev-1)*100):null; var evRate=a.n>0?Math.round(a.ev/a.n*100):0;
+      return '<div onclick="_cduDrillWeek(\''+wq+'\')" title="클릭하면 이 주 방문 상세" style="cursor:pointer;border:1px solid '+(isF?'#bfdbfe':'#eef2f7')+';background:'+(isF?'#eff6ff':'#fff')+';border-radius:11px;padding:12px 14px;transition:box-shadow .12s" onmouseover="this.style.boxShadow=\'0 3px 12px rgba(15,23,42,.1)\'" onmouseout="this.style.boxShadow=\'none\'">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12.5px;font-weight:'+(isF?'800':'700')+';color:'+(isF?'#1d4ed8':'#334155')+'">'+_cduEsc(w)+'</span><i class="bi bi-chevron-right" style="font-size:10px;color:#cbd5e1"></i></div>'
+        +'<div style="font-size:24px;font-weight:800;color:#111827;line-height:1.1;margin-top:6px;font-variant-numeric:tabular-nums">'+a.n+'<span style="font-size:13px;font-weight:600;color:#94a3b8;margin-left:1px">개처</span>'+(dn!=null?' <span style="font-size:12px;font-weight:700;color:'+(dn>=0?'#16a34a':'#dc2626')+'">'+(dn>=0?'▲':'▼')+Math.abs(dn)+'%</span>':'')+'</div>'
+        +'<div style="border-top:1px solid #f1f5f9;margin-top:9px;padding-top:8px;display:flex;justify-content:space-between;font-size:11.5px;color:#64748b"><span>수가 <b style="color:#374151">'+(ap||'-')+(ap?'천':'')+'</b></span><span>이벤트 <b style="color:#7c3aed">'+a.ev+'</b> <span style="color:#cbd5e1">'+evRate+'%</span></span></div>'
+      +'</div>';
+    }).join('')+'</div>'
     : '<div class="text-muted" style="font-size:12px">주차 데이터 없음</div>';
 
   // ── 문서형 재조립: 히어로 KPI 밴드 + 집중관리 밴드 + 플랫 섹션 (Madia 원칙) ──
