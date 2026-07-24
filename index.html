@@ -1345,6 +1345,41 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
 
   <!-- 제품 -->
+  <!-- 요청·신고 (고도화 페이지) -->
+  <div id="page-feedback" class="page">
+    <div class="wt-mast"><div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-megaphone me-2" style="color:#2563eb"></i>요청 · 신고</div></div><span class="text-muted" style="font-size:12px"><i class="bi bi-info-circle me-1"></i>불편한 점·개선 요청을 남기면 관리자가 처리하고, 처리 상태를 여기서 확인할 수 있습니다</span></div>
+    <div class="card" style="border:1px solid var(--border);border-radius:16px;padding:20px 22px;margin-bottom:6px;box-shadow:none">
+      <div style="font-weight:700;font-size:14px;margin-bottom:12px"><i class="bi bi-pencil-square me-1" style="color:#2563eb"></i>새 요청·신고 작성</div>
+      <div class="d-flex gap-2 flex-wrap mb-2" style="align-items:center">
+        <label style="font-size:12px;color:#64748b;font-weight:600">유형</label>
+        <select id="fb-type" class="form-select form-select-sm" style="max-width:220px;border-radius:9999px">
+          <option value="기능 개선">기능 개선 요청</option>
+          <option value="버그 신고">버그·오류 신고</option>
+          <option value="데이터 오류">데이터 오류</option>
+          <option value="신규 기능">신규 기능 제안</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+      <textarea id="fb-content" class="form-control" rows="5" style="font-size:13.5px;border-radius:12px;resize:vertical" placeholder="어떤 점이 불편한가요? 어느 화면인지, 어떻게 동작하길 원하는지 구체적으로 적어주실수록 빠르게 처리됩니다."></textarea>
+      <div class="d-flex justify-content-between align-items-center mt-2">
+        <span id="fb-form-msg" style="font-size:12px"></span>
+        <button class="btn btn-primary btn-sm" onclick="submitFeedbackPage()" style="border-radius:9999px;padding:7px 22px"><i class="bi bi-send me-1"></i>제출</button>
+      </div>
+    </div>
+    <div style="font-weight:700;font-size:14px;margin:22px 0 10px"><i class="bi bi-clock-history me-1" style="color:#64748b"></i>내 요청 <span style="font-size:12px;color:#94a3b8;font-weight:400">· 처리 상태 확인</span></div>
+    <div id="fb-mine"></div>
+    <div id="fb-admin-wrap" style="display:none">
+      <div style="font-weight:700;font-size:14px;margin:28px 0 10px"><i class="bi bi-inbox me-1" style="color:#ea580c"></i>관리자 처리함 <span style="font-size:12px;color:#94a3b8;font-weight:400">· 전체 요청</span></div>
+      <div class="d-flex gap-2 mb-2 align-items-center flex-wrap">
+        <div class="btn-group btn-group-sm">
+          <button id="fbp-open" class="btn btn-primary" onclick="_fbpFilter('open')">미처리</button>
+          <button id="fbp-all" class="btn btn-outline-secondary" onclick="_fbpFilter('all')">전체</button>
+        </div>
+        <span id="fb-admin-count" style="font-size:12px;color:#94a3b8"></span>
+      </div>
+      <div id="fb-admin-list"></div>
+    </div>
+  </div>
   <div id="page-products" class="page">
     <div class="wt-mast"><div><div class="kick">WONTECH SALES</div><div class="t">제품 목록</div></div><button class="btn btn-primary btn-sm" onclick="openModal('product')"><i class="bi bi-plus-lg me-1"></i>제품 추가</button></div>
     <div class="card"><div class="card-body p-0"><table class="table table-hover mb-0">
@@ -3039,6 +3074,7 @@ function showPage(name, el, noPush) {
   else if(name==='cons-accounts') renderConsAccounts();
   else if(name==='region') renderRegion();
   else if(name==='pending') _loadIlboPending();
+  else if(name==='feedback') renderFeedbackPage();
 }
 
 function renderSalesPage(hint) {
@@ -9379,7 +9415,8 @@ function _sbTools(){
   var bell=document.getElementById('wt-bell');
   if(bell && !bell.querySelector('.sb-lb')){ var lb=document.createElement('span'); lb.className='sb-lb'; lb.textContent='알림'; var bd=document.getElementById('wt-bell-badge'); bell.insertBefore(lb, bd||null); }
   ['wt-bell','wt-fb-btn','pdf-fab'].forEach(function(id){ var el=document.getElementById(id); if(el && el.parentElement!==box){ el.classList.add('sb-tool'); box.appendChild(el); } });
-  var p=document.getElementById('wt-fb-panel'); if(p){ p.style.left='12px'; p.style.right='auto'; p.style.bottom='120px'; }
+  var fb=document.getElementById('wt-fb-btn'); if(fb){ fb.onclick=function(e){ if(e&&e.stopPropagation)e.stopPropagation(); if(typeof showPage==='function') showPage('feedback'); }; }
+  var p=document.getElementById('wt-fb-panel'); if(p){ p.style.display='none'; }
 }
 function _bellSync(){
   const bell=document.getElementById('wt-bell'); if(!bell) return;
@@ -10099,6 +10136,80 @@ function _showResolvedPopup(items){
     +'</div>';
   document.body.appendChild(d);
 }
+// ── 요청·신고 고도화 페이지(작성·내요청·관리자처리) ──
+let _fbpMode='open';
+function _fbpFilter(m){ _fbpMode=m; renderFeedbackPage(); }
+function _fbType(msg){ var m=String(msg||'').match(/^【([^】]+)】\s*([\s\S]*)$/); return m?{t:m[1],body:m[2]}:{t:'',body:String(msg||'')}; }
+function _fbEmail(){ try{ return (window.__WT_EMAIL||'').trim() || (typeof wtEmail==='function'?wtEmail():''); }catch(e){ return ''; } }
+async function submitFeedbackPage(){
+  var t=(document.getElementById('fb-type')||{}).value||'기타';
+  var el=document.getElementById('fb-content'); var c=(el&&el.value||'').trim();
+  var msgEl=document.getElementById('fb-form-msg');
+  if(!c){ if(msgEl){msgEl.style.color='#dc2626'; msgEl.textContent='내용을 입력해주세요.';} if(el)el.focus(); return; }
+  var email=_fbEmail();
+  if(msgEl){ msgEl.style.color='#64748b'; msgEl.textContent='제출 중...'; }
+  try{
+    const {error}=await _sb.from('site_feedback').insert({site:'wontech',page:'feedback',message:'【'+t+'】 '+c,reporter:email||null});
+    if(error) throw error;
+    if(el) el.value='';
+    if(msgEl){ msgEl.style.color='#16a34a'; msgEl.textContent='접수되었습니다. 감사합니다 🙏'; }
+    renderFeedbackPage();
+    setTimeout(function(){ if(msgEl) msgEl.textContent=''; },2600);
+  }catch(e){ if(msgEl){ msgEl.style.color='#dc2626'; msgEl.textContent='제출 실패: '+(e&&e.message?e.message:e); } }
+}
+async function _fbpResolve(id){
+  if(!confirm('이 요청을 완료 처리할까요? 요청자가 접속하면 반영 알림이 표시됩니다.')) return;
+  try{ const {error}=await _sb.from('site_feedback').update({status:'done',resolved_at:new Date().toISOString()}).eq('id',id); if(error) throw error; if(typeof showToast==='function') showToast('완료 처리됨',true); renderFeedbackPage(); }
+  catch(e){ alert('완료 처리 실패: '+(e&&e.message?e.message:e)); }
+}
+async function renderFeedbackPage(){
+  var mineBox=document.getElementById('fb-mine'); if(!mineBox) return;
+  var email=_fbEmail();
+  var esc=(typeof _escH==='function')?_escH:function(x){return String(x==null?'':x);};
+  var fmt=function(d){ return d?String(d).replace('T',' ').slice(0,16):''; };
+  var TCOL={'기능 개선':'#2563eb','버그 신고':'#dc2626','데이터 오류':'#d97706','신규 기능':'#7c3aed','기타':'#64748b'};
+  var badge=function(t){ if(!t) return '<span style="font-size:10.5px;color:#94a3b8">요청</span>'; var col=TCOL[t]||'#64748b'; return '<span style="font-size:10.5px;font-weight:700;color:'+col+';background:'+col+'1a;border-radius:9999px;padding:2px 10px">'+esc(t)+'</span>'; };
+  var stat=function(r){ return r.status==='done'
+      ? '<span style="font-size:11.5px;font-weight:700;color:#16a34a"><i class="bi bi-check-circle-fill me-1"></i>완료'+(r.resolved_at?' · '+String(r.resolved_at).slice(0,10):'')+'</span>'
+      : '<span style="font-size:11.5px;font-weight:700;color:#d97706"><i class="bi bi-hourglass-split me-1"></i>접수됨</span>'; };
+  var card=function(r,admin){ var ty=_fbType(r.message);
+    return '<div style="border:1px solid var(--border);border-radius:12px;padding:13px 16px;margin-bottom:8px;background:#fff">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:7px">'+badge(ty.t)+'<span style="font-size:11px;color:#94a3b8">'+fmt(r.created_at)+'</span></div>'
+      +'<div style="font-size:13.5px;color:#1f2937;white-space:pre-wrap;line-height:1.55">'+esc(ty.body)+'</div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:9px;gap:8px">'
+        +(admin?'<span style="font-size:11px;color:#64748b"><i class="bi bi-person me-1"></i>'+esc(r.reporter||'익명')+'</span>':'<span></span>')
+        +'<span style="display:flex;gap:8px;align-items:center">'+stat(r)+(admin&&r.status!=='done'?' <button class="btn btn-sm" style="background:#0d9488;color:#fff;font-size:11px;padding:3px 12px;border:0;border-radius:9999px" onclick="_fbpResolve(\''+r.id+'\')">완료 처리</button>':'')+'</span>'
+      +'</div></div>'; };
+  // 내 요청
+  mineBox.innerHTML='<div style="color:#94a3b8;font-size:13px;padding:8px 0">불러오는 중...</div>';
+  try{
+    var mine=[];
+    if(email){ var res=await _sb.from('site_feedback').select('*').eq('reporter',email).order('created_at',{ascending:false}).limit(100); if(!res.error) mine=res.data||[]; }
+    mineBox.innerHTML = mine.length ? mine.map(function(r){return card(r,false);}).join('')
+      : '<div style="color:#94a3b8;font-size:13px;padding:12px 2px;border:1px dashed var(--border);border-radius:12px;text-align:center">아직 남긴 요청이 없습니다. 위에서 첫 요청을 작성해보세요.</div>';
+  }catch(e){ mineBox.innerHTML='<div style="color:#dc2626;font-size:12px">불러오기 실패: '+esc(e&&e.message?e.message:e)+'</div>'; }
+  // 관리자 처리함
+  var aw=document.getElementById('fb-admin-wrap');
+  var isAdm=(typeof _isAdmin!=='undefined' && _isAdmin);
+  if(aw && isAdm){
+    aw.style.display='';
+    var bo=document.getElementById('fbp-open'), ba=document.getElementById('fbp-all');
+    if(bo) bo.className='btn '+(_fbpMode==='open'?'btn-primary':'btn-outline-secondary');
+    if(ba) ba.className='btn '+(_fbpMode==='all'?'btn-primary':'btn-outline-secondary');
+    var alist=document.getElementById('fb-admin-list'); alist.innerHTML='<div style="color:#94a3b8;font-size:13px;padding:8px 0">불러오는 중...</div>';
+    try{
+      var r2=await _sb.from('site_feedback').select('*').order('created_at',{ascending:false}).limit(300);
+      if(r2.error){ alist.innerHTML='<div style="color:#dc2626;font-size:12.5px;padding:10px 0">읽기 권한이 없습니다(RLS 정책 필요).<br><span style="color:#94a3b8;font-size:11px">'+esc(r2.error.message||r2.error)+'</span></div>'; return; }
+      var rows=r2.data||[];
+      var openN=rows.filter(function(r){return r.status!=='done';}).length;
+      var cnt=document.getElementById('fb-admin-count'); if(cnt) cnt.textContent='미처리 '+openN+'건 · 전체 '+rows.length+'건';
+      var shown=rows.filter(function(r){ return _fbpMode==='all' || r.status!=='done'; });
+      alist.innerHTML = shown.length ? shown.map(function(r){return card(r,true);}).join('')
+        : '<div style="color:#94a3b8;font-size:13px;padding:12px 0;text-align:center">'+(_fbpMode==='open'?'미처리 요청이 없습니다 👍':'요청이 없습니다.')+'</div>';
+    }catch(e){ alist.innerHTML='<div style="color:#dc2626;font-size:12px">불러오기 실패: '+esc(e&&e.message?e.message:e)+'</div>'; }
+  } else if(aw){ aw.style.display='none'; }
+}
+
 async function renderAdminFeedback(){
   var box=document.getElementById('admin-fb-list'); if(!box) return;
   var esc=function(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
