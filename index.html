@@ -506,7 +506,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <div class="nav-label">매출현황</div>
     <ul class="nav flex-column gap-0">
       <li><a class="nav-link active" onclick="showPage('sales-overview',this)"><i class="bi bi-bar-chart-line"></i>종합</a></li>
-      <li id="nav-salesmix"><a class="nav-link" onclick="showPage('consumables',this)"><i class="bi bi-capsule"></i>소모품·제품 매출</a></li>
+      <li id="nav-salesmix"><a class="nav-link" onclick="showPage('device-sales',this)"><i class="bi bi-box-seam"></i>제품·소모품 매출</a></li>
       <li><a class="nav-link" onclick="showPage('pending',this)"><i class="bi bi-hourglass-split"></i>회계 미반영 매출</a></li>
     </ul>
     <div class="nav-label mt-3">영업</div>
@@ -1390,8 +1390,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   <!-- 소모품 매출 -->
   <div id="page-consumables" class="page">
     <div class="ana-tabs">
-      <button class="anatab" data-sub="consumables" onclick="showPage('consumables')"><i class="bi bi-capsule"></i>소모품 매출</button>
       <button class="anatab" data-sub="device-sales" onclick="showPage('device-sales')"><i class="bi bi-box-seam"></i>제품 매출</button>
+      <button class="anatab" data-sub="consumables" onclick="showPage('consumables')"><i class="bi bi-capsule"></i>소모품 매출</button>
     </div>
     <div class="wt-mast">
       <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-capsule me-2"></i>국내 소모품 매출현황</div></div>
@@ -1504,8 +1504,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   <!-- 제품 매출현황 -->
   <div id="page-device-sales" class="page">
     <div class="ana-tabs">
-      <button class="anatab" data-sub="consumables" onclick="showPage('consumables')"><i class="bi bi-capsule"></i>소모품 매출</button>
       <button class="anatab" data-sub="device-sales" onclick="showPage('device-sales')"><i class="bi bi-box-seam"></i>제품 매출</button>
+      <button class="anatab" data-sub="consumables" onclick="showPage('consumables')"><i class="bi bi-capsule"></i>소모품 매출</button>
     </div>
     <div class="wt-mast">
       <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-box-seam me-2"></i>국내 제품 매출현황</div></div>
