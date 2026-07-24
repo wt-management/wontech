@@ -246,14 +246,14 @@ function parseMibanyong(wb){
       const dc=r[4], dp=r[11];
       if(dc&&String(dc).trim()&&dp&&String(dp).trim()){
         const dq=_mvNum(r[16])||1, ddel=_mvNum(r[22]), dpen=_mvNum(r[33]);
-        if(ddel!==0) out.push({id:'s국'+(di++),region:'국내',country:'',customer:String(dc).trim(),product:String(dp).trim(),qty:dq,amount:Math.round(ddel),expectedDate:_mvDt(r[28]),type:'완료',status:'대기',memo:'납품완료·회계미반영'});
-        if(dpen!==0) out.push({id:'s국'+(di++),region:'국내',country:'',customer:String(dc).trim(),product:String(dp).trim(),qty:dq,amount:Math.round(dpen),expectedDate:_mvDt(r[39]),type:'예정',status:'대기',memo:(String(dc).trim()==='기타'?'기타 조정':'')});
+        if(ddel!==0) out.push({id:'s국'+(di++),region:'국내',country:'',customer:String(dc).trim(),product:String(dp).trim(),qty:dq,amount:ddel,expectedDate:_mvDt(r[28]),type:'완료',status:'대기',memo:'납품완료·회계미반영'});
+        if(dpen!==0) out.push({id:'s국'+(di++),region:'국내',country:'',customer:String(dc).trim(),product:String(dp).trim(),qty:dq,amount:dpen,expectedDate:_mvDt(r[39]),type:'예정',status:'대기',memo:(String(dc).trim()==='기타'?'기타 조정':'')});
       }
       const ic=r[45], ip=r[53];
       if(ic&&String(ic).trim()&&ip&&String(ip).trim()){ const full=String(ic).trim(), ctry=full.indexOf('/')>=0?full.split('/')[0].trim():'', iq=_mvNum(r[58])||1;
         const idel=_mvNum(r[66]), ipen=_mvNum(r[78]);
-        if(idel!==0) out.push({id:'s해'+(ii++),region:'해외',country:ctry,customer:full,product:String(ip).trim(),qty:iq,amount:Math.round(idel),expectedDate:_mvDt(r[73]),type:'완료',status:'대기',memo:'선적완료·회계미반영'});
-        if(ipen!==0) out.push({id:'s해'+(ii++),region:'해외',country:ctry,customer:full,product:String(ip).trim(),qty:iq,amount:Math.round(ipen),expectedDate:_mvDt(r[118]),type:'예정',status:'대기',memo:''});
+        if(idel!==0) out.push({id:'s해'+(ii++),region:'해외',country:ctry,customer:full,product:String(ip).trim(),qty:iq,amount:idel,expectedDate:_mvDt(r[73]),type:'완료',status:'대기',memo:'선적완료·회계미반영'});
+        if(ipen!==0) out.push({id:'s해'+(ii++),region:'해외',country:ctry,customer:full,product:String(ip).trim(),qty:iq,amount:ipen,expectedDate:_mvDt(r[118]),type:'예정',status:'대기',memo:''});
       }
     }
   });
