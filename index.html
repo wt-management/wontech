@@ -235,12 +235,11 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 #pdf-fab{position:fixed;bottom:18px;right:18px;z-index:90;background:#475569;color:#fff;border:0;border-radius:22px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(15,23,42,.28)}
 #pdf-fab:hover{background:#334155}
 /* 사이드바 도구(알림·요청신고·PDF) — 플로팅 제거, 계정정보 위 행 버튼 */
-#sidebar-tools{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
-#sidebar-tools .sb-tool{position:static!important;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;width:100%!important;height:auto!important;min-width:0!important;border-radius:8px!important;box-shadow:none!important;margin:0!important;padding:8px 12px!important;font-size:12px!important;font-weight:700;opacity:1!important;display:flex;align-items:center;gap:8px;justify-content:flex-start;border:1px solid #e4e8ef;background:#fff;color:#334155;cursor:pointer;text-align:left}
-#sidebar-tools .sb-tool i{font-size:14px}
+#sidebar-tools{display:flex;flex-direction:column;gap:0;margin-bottom:6px}
+#sidebar-tools .sb-tool{position:static!important;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;width:auto!important;height:auto!important;min-width:0!important;border-radius:6px!important;box-shadow:none!important;border:0!important;background:none!important;margin:1px 0!important;padding:8px 18px!important;font-size:13px!important;font-weight:500!important;opacity:1!important;display:flex;align-items:center;gap:9px;justify-content:flex-start;color:#475569;cursor:pointer;text-align:left}
+#sidebar-tools .sb-tool i{font-size:15px;width:18px;text-align:center;flex-shrink:0;color:#475569}
 #sidebar-tools .sb-tool .sb-lb{flex:1}
-#sidebar-tools .sb-tool:hover{background:#f1f5f9;border-color:#d5dde8}
-#sidebar-tools #wt-bell.sb-tool i{color:#2563eb}
+#sidebar-tools .sb-tool:hover{background:var(--sidebar-hover)!important;color:#1c2534!important}
 #sidebar-tools #wt-bell-badge{position:static!important;top:auto!important;right:auto!important;margin-left:auto;box-shadow:none}
 /* ══ WT 문서 언어 테마(2026-07-21, Madia 스터디) — 전 페이지 공통 오버라이드 ══ */
 :root{--border:#e4e8ef;--text-2:#64748b}
@@ -299,7 +298,7 @@ window.addEventListener('error',function(e){if(!e||!e.message)return;var key=e.m
 window.addEventListener('unhandledrejection',function(e){var r=(e&&e.reason)||{};var m=('unhandledrejection: '+(r.message||String(r))).slice(0,500);if(wtSeen[m]||wtN>=10)return;wtSeen[m]=1;wtN++;wtPost('site_errors',{site:SITE,page:PAGE,href:location.href.slice(0,500),message:m,stack:r.stack?String(r.stack).slice(0,1500):null,ua:navigator.userAgent.slice(0,300),user_email:wtEmail()||null});});
 function wtFb(){
 if(document.getElementById('wt-fb-btn'))return;
-var b=document.createElement('div');b.id='wt-fb-btn';b.textContent='\uD83D\uDE4B \uC694\uCCAD\u00B7\uC2E0\uACE0';
+var b=document.createElement('div');b.id='wt-fb-btn';b.innerHTML='<i class="bi bi-megaphone"></i>요청·신고';
 b.style.cssText='position:fixed;right:18px;bottom:64px;z-index:99990;background:#334155;color:#e2e8f0;padding:7px 13px;border-radius:20px;font-size:12px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35);font-family:inherit;user-select:none;opacity:.85';
 b.onmouseover=function(){b.style.opacity='1';};b.onmouseout=function(){b.style.opacity='.85';};
 var p=document.createElement('div');p.id='wt-fb-panel';
@@ -11327,6 +11326,6 @@ window.addEventListener('pageshow', function(e){
   }
 })();
 function printPDF(){var t=document.title;var r=function(){document.title=t;window.removeEventListener('afterprint',r);};window.addEventListener('afterprint',r);window.print();}</script>
-<button id="pdf-fab" onclick="printPDF()" title="이 페이지를 PDF로 추출">📄 PDF</button>
+<button id="pdf-fab" onclick="printPDF()" title="이 페이지를 PDF로 추출"><i class="bi bi-filetype-pdf"></i>PDF</button>
 </body>
 </html>
