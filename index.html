@@ -433,6 +433,21 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 </div>
 
 <!-- 로그인 화면 -->
+<!-- 최초 로그인/임시비번 사용자 강제 비밀번호 변경 -->
+<div id="force-pw-screen" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,#0f172a 0%,#1e2140 100%);z-index:10000;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:20px;padding:36px 32px;width:340px;box-shadow:0 25px 60px rgba(0,0,0,.4)">
+    <div style="text-align:center;margin-bottom:18px">
+      <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;margin:0 auto 14px"><i class="bi bi-shield-lock-fill" style="font-size:24px;color:#fff"></i></div>
+      <div style="font-size:19px;font-weight:800;color:#111827">비밀번호 변경 필요</div>
+      <div style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.5">보안을 위해 관리자가 발급한 임시 비밀번호를<br>본인만 아는 비밀번호로 변경해주세요.</div>
+    </div>
+    <input id="fpw-new" type="password" placeholder="새 비밀번호 (6자 이상)" style="width:100%;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:11px 12px;font-size:14px;color:#111827;margin-bottom:10px;box-sizing:border-box">
+    <input id="fpw-confirm" type="password" placeholder="새 비밀번호 확인" onkeydown="if(event.key===String.fromCharCode(69,110,116,101,114))_doForcePw()" style="width:100%;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:11px 12px;font-size:14px;color:#111827;margin-bottom:12px;box-sizing:border-box">
+    <div id="fpw-error" style="font-size:12px;color:#dc2626;margin-bottom:10px;display:none"></div>
+    <button id="fpw-btn" onclick="_doForcePw()" style="width:100%;background:#0d9488;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer">변경하고 시작하기</button>
+    <div style="text-align:center;margin-top:12px"><span onclick="doLogout()" style="font-size:12px;color:#9ca3af;cursor:pointer;text-decoration:none">나중에 하기 (로그아웃)</span></div>
+  </div>
+</div>
 <div id="login-screen" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,#0f172a 0%,#1e2140 100%);z-index:9999;display:flex;align-items:center;justify-content:center">
   <div style="background:#fff;border-radius:20px;padding:40px 36px;width:340px;box-shadow:0 25px 60px rgba(0,0,0,.4)">
     <div style="text-align:center;margin-bottom:28px">
@@ -2883,7 +2898,7 @@ function _consumeRet(){
 async function _showLauncherOrApp(user) {
   if(_consumeRet()) return;   // 하위 사이트에서 로그인하러 온 경우 → 원래 사이트로 복귀
   const [{data: profile}] = await Promise.all([
-    _sb.from('crm_profiles').select('access,role,dept').eq('id', user.id).single(),
+    _sb.from('crm_profiles').select('access,role,dept,temp_pw').eq('id', user.id).single(),
     _loadSiteRegistry()
   ]);
   if(!profile){
@@ -2896,6 +2911,8 @@ async function _showLauncherOrApp(user) {
   _isAdmin = profile?.role === 'admin';
   _isMgr   = _isAdmin || profile?.role === 'manager';
   _isStrat = String(profile?.dept||'').replace(/\s/g,'').includes('영업전략');   // 영업전략파트 → 현황판 열람 허용
+  // 임시비밀번호를 아직 안 바꾼 사용자 → 강제 변경(마스터 제외)
+  if(profile.temp_pw && String(profile.temp_pw).trim() && user.email !== 'pmw0406@gmail.com'){ _hideLoading(); _showForcePw(); return; }
   // 새로고침 시 이전 상태 복원
   if(sessionStorage.getItem('wt_app') === 'admin' && (_isStrat || _isAdmin)) {
     document.getElementById('launcher-screen').style.display='flex';
@@ -10481,6 +10498,23 @@ async function doChangePw() {
   if(session) await _sb.from('crm_profiles').update({temp_pw: null}).eq('id', session.user.id);
   bootstrap.Modal.getInstance(document.getElementById('changePwModal')).hide();
   showToast('비밀번호가 변경됐습니다', true);
+}
+function _showForcePw(){
+  document.getElementById('login-screen').style.display='none';
+  var el=document.getElementById('force-pw-screen'); if(el){ el.style.display='flex'; }
+  var i=document.getElementById('fpw-new'); if(i) setTimeout(function(){i.focus();},100);
+}
+async function _doForcePw(){
+  var pw=document.getElementById('fpw-new').value;
+  var pw2=document.getElementById('fpw-confirm').value;
+  var err=document.getElementById('fpw-error'); err.style.display='none';
+  if(pw.length<6){ err.textContent='비밀번호는 6자 이상이어야 합니다.'; err.style.display='block'; return; }
+  if(pw!==pw2){ err.textContent='비밀번호가 일치하지 않습니다.'; err.style.display='block'; return; }
+  var btn=document.getElementById('fpw-btn'); btn.disabled=true; btn.textContent='변경 중...';
+  var r=await _sb.auth.updateUser({password:pw});
+  if(r.error){ btn.disabled=false; btn.textContent='변경하고 시작하기'; err.textContent='오류: '+r.error.message; err.style.display='block'; return; }
+  try{ var s=(await _sb.auth.getSession()).data.session; if(s) await _sb.from('crm_profiles').update({temp_pw:null}).eq('id', s.user.id); }catch(e){}
+  location.reload();
 }
 
 function _devPeriodChange() {
