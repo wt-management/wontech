@@ -6466,11 +6466,11 @@ function _cduHospAuto(force){
 function _cduEnsureCss(){ if(document.getElementById('cdud-css')) return;
   var st=document.createElement('style'); st.id='cdud-css';
   st.textContent=''
-    +'.cdud{--ink:#182230;--mut:#64748b;--line:#e4e8ef;--navy:#16324f;--acc:#0066cc;--rd:#dc2626;--grn:#15803d;background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px 26px 24px;letter-spacing:-.01em}'
-    +'.cdud .cdud-kpis{display:flex;align-items:stretch;padding:4px 0 16px;border-bottom:1px solid var(--line)}'
+    +'.cdud{--ink:#182230;--mut:#64748b;--line:#e4e8ef;--navy:#16324f;--acc:#0066cc;--rd:#dc2626;--grn:#15803d;background:#fff;border:1px solid var(--line);border-radius:20px;padding:28px 34px 32px;letter-spacing:-.01em}'
+    +'.cdud .cdud-kpis{display:flex;align-items:stretch;padding:8px 0 24px;border-bottom:1px solid var(--line)}'
     +'.cdud .cdud-hero{flex:1.4;min-width:0;padding-right:22px;cursor:pointer;display:flex;flex-direction:column;justify-content:center}'
     +'.cdud .cdud-hero .l{display:block;font-size:12.5px;font-weight:700;color:var(--mut)}'
-    +'.cdud .cdud-hero b{display:block;font-size:32px;font-weight:800;color:var(--ink);line-height:1.15;letter-spacing:-.02em;font-variant-numeric:tabular-nums}'
+    +'.cdud .cdud-hero b{display:block;font-size:38px;font-weight:800;color:var(--ink);line-height:1.1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}'
     +'.cdud .cdud-hero .s{display:block;font-size:13px;color:var(--mut);margin-top:3px}'
     +'.cdud .cdud-hero .s em{font-style:normal;font-weight:800;color:var(--rd)}'
     +'.cdud .cdud-fact{flex:1;min-width:0;padding:2px 18px;border-left:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}'
@@ -6479,13 +6479,13 @@ function _cduEnsureCss(){ if(document.getElementById('cdud-css')) return;
     +'.cdud .cdud-fact b{display:block;font-size:20px;font-weight:800;color:var(--ink);line-height:1.3;margin-top:2px;font-variant-numeric:tabular-nums;white-space:nowrap}'
     +'.cdud .cdud-fact b.rd{color:var(--rd)}.cdud .cdud-fact b.gr{color:var(--grn)}'
     +'.cdud .cdud-fact i{display:block;font-style:normal;font-size:12px;color:#94a3b8;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
-    +'.cdud .cdud-band{display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1px solid var(--line);padding:12px 0 14px}'
+    +'.cdud .cdud-band{display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1px solid var(--line);padding:18px 0 22px}'
     +'.cdud .cdud-band .cdud-fact:first-child{border-left:0;padding-left:0}'
-    +'.cdud .cdud-bt{font-size:13px;font-weight:800;color:var(--ink);padding:14px 0 0}'
+    +'.cdud .cdud-bt{font-size:13.5px;font-weight:800;color:var(--ink);padding:24px 0 2px}'
     +'.cdud .cdud-bt u{text-decoration:none;font-weight:600;color:var(--mut);font-size:12.5px;margin-left:6px}'
     +'.cdud .cdud-st{font-size:13px;font-weight:800;color:var(--ink);padding-bottom:7px;border-bottom:1px solid var(--line);margin-bottom:6px}'
     +'.cdud .cdud-st u{text-decoration:none;font-size:12.5px;font-weight:600;color:var(--mut);margin-left:4px}'
-    +'.cdud .cdud-sec{margin-top:20px}'
+    +'.cdud .cdud-sec{margin-top:30px}'
     +'.cdud .cdud-two{display:grid;grid-template-columns:1fr 1fr;gap:0 30px}'
     +'.cdud .cdud-grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px 30px;margin-top:20px}'
     +'.cdud .cdud-tgl{display:block;width:100%;margin-top:22px;padding:9px 0;background:none;border:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);color:var(--mut);font-size:13px;font-weight:700;cursor:pointer;text-align:center}'
@@ -6610,7 +6610,7 @@ function renderCDUReport(vs){
   var _wd=weeks.slice().reverse();   // 최근 주가 맨 왼쪽(내림차순)
   var trendHtml = _wd.length? '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">'+_wd.map(function(w,wi){ var a=wk[w]; var ap=a.pn?Math.round(a.psum/a.pn):0; var isF=(w===focusW); var wq=_cduEsc(w).replace(/\x27/g,"\\x27");
       var prev=(wi<_wd.length-1)?wk[_wd[wi+1]].n:null; var dn=(prev!=null&&prev>0)?Math.round((a.n/prev-1)*100):null; var evRate=a.n>0?Math.round(a.ev/a.n*100):0;
-      return '<div onclick="_cduDrillWeek(\''+wq+'\')" title="클릭하면 이 주 방문 상세" style="cursor:pointer;border:1px solid '+(isF?'#bfdbfe':'#eef2f7')+';background:'+(isF?'#eff6ff':'#fff')+';border-radius:11px;padding:12px 14px;transition:box-shadow .12s" onmouseover="this.style.boxShadow=\'0 3px 12px rgba(15,23,42,.1)\'" onmouseout="this.style.boxShadow=\'none\'">'
+      return '<div onclick="_cduDrillWeek(\''+wq+'\')" title="클릭하면 이 주 방문 상세" style="cursor:pointer;border:1px solid '+(isF?'#bfdbfe':'#eef2f7')+';background:'+(isF?'#eff6ff':'#fff')+';border-radius:16px;padding:16px 18px;transition:box-shadow .12s" onmouseover="this.style.boxShadow=\'0 3px 12px rgba(15,23,42,.1)\'" onmouseout="this.style.boxShadow=\'none\'">'
         +'<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13.5px;font-weight:'+(isF?'800':'700')+';color:'+(isF?'#1d4ed8':'#334155')+'">'+_cduEsc(w)+'</span><i class="bi bi-chevron-right" style="font-size:11.5px;color:#cbd5e1"></i></div>'
         +'<div style="font-size:24px;font-weight:800;color:#111827;line-height:1.1;margin-top:6px;font-variant-numeric:tabular-nums">'+a.n+'<span style="font-size:13px;font-weight:600;color:#94a3b8;margin-left:1px">개처</span>'+(dn!=null?' <span style="font-size:13px;font-weight:700;color:'+(dn>=0?'#16a34a':'#dc2626')+'">'+(dn>=0?'▲':'▼')+Math.abs(dn)+'%</span>':'')+'</div>'
         +'<div style="border-top:1px solid #f1f5f9;margin-top:9px;padding-top:8px;display:flex;justify-content:space-between;font-size:12.5px;color:#64748b"><span>수가 <b style="color:#374151">'+(ap||'-')+(ap?'천':'')+'</b></span><span>이벤트 <b style="color:#7c3aed">'+a.ev+'</b> <span style="color:#cbd5e1">'+evRate+'%</span></span></div>'
@@ -6623,7 +6623,7 @@ function renderCDUReport(vs){
   var fact=(l,v,s,cl,click)=>'<div class="cdud-fact'+(click?' clk" onclick="'+click+'"':'"')+'><span>'+l+'</span><b'+(cl?' class="'+cl+'"':'')+'>'+v+'</b>'+(s?'<i>'+s+'</i>':'')+'</div>';
   var kpiBand='<div class="cdud-bt">방문 관리 현황 <u>· 이번 기간 활동량·매출·리스크 요약 · 클릭 상세</u></div>'
     +'<div class="cdud-kpis">'
-    +'<div class="cdud-hero" onclick="_cduDrillAll()"><span class="l">방문 관리 병원</span><b>'+nHosp+'개처</b><span class="s">방문 '+nVisit+'건 · 영업일수 '+days.size+'일</span></div>'
+    +'<div class="cdud-hero" onclick="_cduDrillAll()"><span class="l">방문 관리 병원</span><b>'+nHosp+'개처</b><span class="s">방문 <b style="color:var(--acc);font-weight:800">'+nVisit+'건</b> · 영업일수 <b style="color:var(--acc);font-weight:800">'+days.size+'일</b></span></div>'
     +fact('올해 팁매출',_cduWon(visitedRev),(visitedRevPrev>0?'전년 동기 '+_cduWon(visitedRevPrev):'관리처 팁매출'),'','_cduDrillVip()')
     +fact('리스크 감지',churn.length+'개처',(churn.length?'선제 대응 진행 중':'감지 리스크 없음'),(churn.length?'rd':''),'_cduDrillChurn()')
     +fact('이벤트 진행',ev+'건','마케팅 이벤트 방문','',ev?'_cduDrillEvent()':'')
