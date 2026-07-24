@@ -9405,6 +9405,7 @@ function _sbTools(){
   ['wt-bell','wt-fb-btn','pdf-fab'].forEach(function(id){ var el=document.getElementById(id); if(el && el.parentElement!==box){ el.classList.add('sb-tool'); box.appendChild(el); } });
   var fb=document.getElementById('wt-fb-btn'); if(fb){ fb.onclick=function(e){ if(e&&e.stopPropagation)e.stopPropagation(); if(typeof showPage==='function') showPage('feedback'); }; }
   var p=document.getElementById('wt-fb-panel'); if(p){ p.style.display='none'; }
+  var pf=document.getElementById('pdf-fab'); if(pf) pf.style.display=(typeof _isMgr!=='undefined'&&_isMgr)?'':'none';
 }
 function _bellSync(){
   const bell=document.getElementById('wt-bell'); if(!bell) return;
