@@ -4905,6 +4905,12 @@ function renderConsumables() {
   const total2026ytd = spanMonthlySum(spanMs);
   const total2025ytd = spanMonthlySum(prevMs);
   const yoy = total2025ytd>0?(total2026ytd/total2025ytd-1)*100:0;
+  // 종합과 동일한 미반영(예정+일매출일보) 병기 — 회계반영/보고기준 대사
+  const _pvC=(typeof _pendingView==='function')?(_pendingView(2026).agg||{}):{};
+  const _imC=(typeof _ilboMonthMaps==='function')?(_ilboMonthMaps()||{}):{};
+  const _pvCm=_pvC.consMonthly||{}, _imCm=_imC.consMo||{};
+  const consPendYtd = spanMs.reduce((s,x)=>s+(x.y===2026?((_pvCm[x.m]||0)+(_imCm[x.m]||0)):0),0);
+  const _rbCons = consPendYtd>0 ? '<div style="margin-top:5px;font-size:10.5px;color:#64748b">회계반영 <b>'+fmtB(total2026ytd)+'</b> · 미반영 <b style="color:#7c3aed">+'+fmtB(consPendYtd)+'</b> · 보고기준 <b style="color:#111827">'+fmtB(total2026ytd+consPendYtd)+'</b> <span style="color:#cbd5e1">· 종합과 동일 기준</span></div>' : '';
   const oMo25 = CONS.oligioMo2025||{}, oMo26 = CONS.oligioMo2026||{};
   const OLIG = [
     {key:'Oligio Tip [F-4.0]',  label:'F-4.0',  grp:'Oligio',      col:'#2563eb'},
@@ -4963,7 +4969,7 @@ function renderConsumables() {
   document.getElementById('cons-kpi').innerHTML = '<div class="wt-band">'+kpiData.map((k,i)=>{
     const badge = (k.chg!==null && k.chg!==undefined) ? ' '+chgBadge(k.chg,false) : '';
     if(k.hero){
-      return '<div class="wt-hero" style="cursor:pointer" onclick="_consKpiDrill('+i+')"><span class="l"><i class="bi '+k.icon+' me-1"></i>소모품 합계 · '+P.label+'</span><b>'+k.value+'</b><span class="s">'+k.sub+badge+'</span>'+(k.sub2||'')+'</div>';
+      return '<div class="wt-hero" style="cursor:pointer" onclick="_consKpiDrill('+i+')"><span class="l"><i class="bi '+k.icon+' me-1"></i>소모품 합계 · '+P.label+'</span><b>'+k.value+'</b><span class="s">'+k.sub+badge+'</span>'+(k.sub2||'')+_rbCons+'</div>';
     }
     return '<div class="wt-fact" onclick="_consKpiDrill('+i+')"><span class="l">'+_stripP(k.label)+'</span><b>'+k.value+'</b><span class="s">'+k.sub+badge+'</span>'+(k.sub2||'')+'</div>';
   }).join('')+'</div>';
@@ -10481,6 +10487,12 @@ function renderDeviceSales() {
   const ytdCur  = spanMs.reduce((s,x)=>s+(moY(x.y)[x.m]||0), 0);
   const ytdPrev = prevMs.reduce((s,x)=>s+(moY(x.y)[x.m]||0), 0);
   const yoy     = (ytdPrev>0 && _prevFull) ? (ytdCur/ytdPrev-1)*100 : null;
+  // 종합과 동일한 미반영(예정+일매출일보) 병기 — 회계반영/보고기준 대사
+  const _pvD=(typeof _pendingView==='function')?(_pendingView(2026).agg||{}):{};
+  const _imD=(typeof _ilboMonthMaps==='function')?(_ilboMonthMaps()||{}):{};
+  const _pvDm=_pvD.devMonthly||{}, _imDm=_imD.devMo||{};
+  const devPendYtd = spanMs.reduce((s,x)=>s+(x.y===2026?((_pvDm[x.m]||0)+(_imDm[x.m]||0)):0),0);
+  const _rbDev = devPendYtd>0 ? '<div style="margin-top:5px;font-size:10.5px;color:#64748b">회계반영 <b>'+fmtW(ytdCur)+'</b> · 미반영 <b style="color:#7c3aed">+'+fmtW(devPendYtd)+'</b> · 보고기준 <b style="color:#111827">'+fmtW(ytdCur+devPendYtd)+'</b> <span style="color:#cbd5e1">· 종합과 동일 기준</span></div>' : '';
   const _prodSet={}; spanMs.forEach(x=>{ const pm=prodMoY(x.y); for(const p in pm){ if(pm[p][x.m]) _prodSet[p]=1; } });
   const curProds = _prodSet;
   const _lastSpan = spanMs[spanMs.length-1] || {y:2026,m:_dataMaxMonth()};  // 당월=기간 마지막달
@@ -10514,7 +10526,7 @@ function renderDeviceSales() {
   document.getElementById('dev-kpi').innerHTML = noData
     ? `<div class="card p-4 text-center text-muted mb-3"><i class="bi bi-cloud-upload me-2"></i>소모품 메뉴에서 Excel 업로드 후 데이터가 표시됩니다</div>`
     : '<div class="wt-band">'
-      +'<div class="wt-hero" style="cursor:pointer" onclick="openOvCategory(\'dev\')"><span class="l">누계 매출 · '+P.label+'</span><b>'+fmtW(ytdCur)+'</b><span class="s">'+(_prevFull?'전년 동기 '+fmtW(ytdPrev)+' '+chgBadge(yoy):'연도경계 누적')+'</span>'+devSub2+'</div>'
+      +'<div class="wt-hero" style="cursor:pointer" onclick="openOvCategory(\'dev\')"><span class="l">누계 매출 · '+P.label+'</span><b>'+fmtW(ytdCur)+'</b><span class="s">'+(_prevFull?'전년 동기 '+fmtW(ytdPrev)+' '+chgBadge(yoy):'연도경계 누적')+'</span>'+devSub2+_rbDev+'</div>'
       
       
       +'<div class="wt-fact" onclick="openOvCategory(\'dev\')"><span class="l">1위 제품 <i class="bi bi-search" style="font-size:9px;color:#cbd5e1"></i></span><b style="font-size:15px;display:block;overflow:hidden;text-overflow:ellipsis">'+_ovEsc(topP[0])+'</b><span class="s">'+fmtW(topP[1])+' · 비중 '+topShare.toFixed(0)+'%</span></div>'
