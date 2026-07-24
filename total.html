@@ -1951,6 +1951,16 @@ function _drillSeg(dept,item){
   }
   return {mo26,mo25,pend,tgt,custs,prods,pendRows};
 }
+// 공용: 의미없는 장식 막대 대신 비중·누적(집중도/파레토) 분석 테이블 (전 드릴/엔티티 모달 공용)
+function _topTbl(rows,total,lbl){
+  if(!rows||!rows.length) return '<div style="font-size:12px;color:#94a3b8">데이터 없음</div>';
+  var tot=(total!=null&&total>0)?total:rows.reduce(function(s,c){return s+(Number(c[1])||0);},0), cum=0;
+  var body=rows.map(function(c,i){ var v=Number(c[1])||0, sh=tot>0?v/tot*100:0; cum+=sh;
+    return '<tr class="dr-tr"><td class="dr-rk">'+(i+1)+'</td><td class="dr-nm" title="'+esc(c[0])+'">'+esc(c[0])+'</td><td class="dr-vv">'+_fM(v)+'</td><td class="dr-sh">'+sh.toFixed(1)+'%</td><td class="dr-cum">'+cum.toFixed(0)+'%</td></tr>'; }).join('');
+  var c3=tot>0?rows.slice(0,3).reduce(function(s,c){return s+(Number(c[1])||0);},0)/tot*100:0, cN=tot>0?rows.reduce(function(s,c){return s+(Number(c[1])||0);},0)/tot*100:0;
+  return '<table class="dr-tbl"><thead><tr><th></th><th class="l">'+(lbl||'항목')+'</th><th>실적</th><th>비중</th><th>누적</th></tr></thead><tbody>'+body+'</tbody></table>'+
+    '<div class="dr-conc"><i class="bi bi-pie-chart-fill me-1" style="color:#94a3b8"></i>상위 3 <b>'+c3.toFixed(0)+'%</b> · 표시 '+rows.length+'개 <b>'+cN.toFixed(0)+'%</b> 집중</div>';
+}
 let _drillChart=null;
 function openDrill(dk,_f,_t){
   if(!_rptCache.reg26){ if(!(CONS.updatedAt||DEVICE.updatedAt||INTL.updatedAt)) return; try{_rptBuildCache();}catch(e){return;} }
@@ -1972,12 +1982,7 @@ function openDrill(dk,_f,_t){
   const custTotal=Object.values(seg.custs).reduce((s,v)=>s+(Number(v)||0),0), prodTotal=Object.values(seg.prods).reduce((s,v)=>s+(Number(v)||0),0);
   const custN=Object.keys(seg.custs).length, prodN=Object.keys(seg.prods).length;
   // 의미 없는 막대 → 비중·누적(집중도/파레토) 분석 테이블
-  const topTbl=(rows,total,lbl)=>{ if(!rows.length) return '<div style="font-size:12px;color:#94a3b8">데이터 없음</div>';
-    let cum=0; const body=rows.map((c,i)=>{ const v=Number(c[1])||0, sh=total>0?v/total*100:0; cum+=sh;
-      return '<tr class="dr-tr"><td class="dr-rk">'+(i+1)+'</td><td class="dr-nm" title="'+esc(c[0])+'">'+esc(c[0])+'</td><td class="dr-vv">'+_fM(v)+'</td><td class="dr-sh">'+sh.toFixed(1)+'%</td><td class="dr-cum">'+cum.toFixed(0)+'%</td></tr>'; }).join('');
-    const c3=total>0?rows.slice(0,3).reduce((s,c)=>s+(Number(c[1])||0),0)/total*100:0, cN=total>0?rows.reduce((s,c)=>s+(Number(c[1])||0),0)/total*100:0;
-    return '<table class="dr-tbl"><thead><tr><th></th><th class="l">'+lbl+'</th><th>실적</th><th>비중</th><th>누적</th></tr></thead><tbody>'+body+'</tbody></table>'+
-      '<div class="dr-conc"><i class="bi bi-pie-chart-fill me-1" style="color:#94a3b8"></i>상위 3 <b>'+c3.toFixed(0)+'%</b> · 표시 '+rows.length+'개 <b>'+cN.toFixed(0)+'%</b> 집중</div>'; };
+  const topTbl=_topTbl;   // 공용 분석 테이블 사용
   const pendTot=seg.pendRows.reduce((s,p)=>s+Number(p.amount||0),0);
   let html='<div class="dr-hd"><div><h3>'+title+'</h3><div style="font-size:11.5px;color:#94a3b8;margin-top:2px">'+(_f!=null?(F+'~'+T+'월'):P.hLbl)+' 누적 · 실적=회계+미반영 · 단위 백만원</div></div><button class="dr-x" onclick="closeDrill()">✕</button></div>';
   html+='<div class="dr-kpi"><div class="dr-k"><div class="l">실적</div><div class="v">'+_fM(act)+'</div></div>'+
@@ -2026,7 +2031,7 @@ function _periodDrill(f,t,lbl){
   html+='<div class="dr-kpi"><div class="dr-k"><div class="l">실적(전망)</div><div class="v">'+fmtW(tA)+'</div></div><div class="dr-k"><div class="l">목표</div><div class="v" style="color:#64748b">'+fmtW(tT)+'</div></div><div class="dr-k"><div class="l">달성률</div><div class="v" style="color:'+_achCol(tAch)+'">'+(tAch==null?'-':tAch.toFixed(1)+'%')+'</div></div><div class="dr-k"><div class="l">전년 성장</div><div class="v">'+yb(tYoY)+'</div></div></div>';
   html+='<div class="dr-sec-t">채널·지역별 <span style="font-weight:500;color:#94a3b8">· 클릭 시 해당 채널 거래처/제품 상세</span></div>';
   html+=rows.map(function(r){ var ach=r.tg>0?r.a/r.tg*100:null, yy=r.p>0?(r.a/r.p-1)*100:null;
-    return '<div class="dr-bar" style="cursor:pointer" onclick="openDrill(\''+r.dk+'\','+f+','+t+')"><span class="n">'+esc(r.n)+' <span style="color:#cbd5e1">›</span></span><span class="t"><span class="f" style="width:'+(mx>0?Math.max(r.a/mx*100,1):0).toFixed(1)+'%;background:'+(ach==null?'#94a3b8':_achCol(ach))+'"></span></span><span class="vv">'+fmtW(r.a)+' <b style="color:'+_achCol(ach)+'">'+(ach==null?'':ach.toFixed(0)+'%')+'</b> '+yb(yy)+'</span></div>'; }).join('');
+    return '<div class="dr-bar" style="cursor:pointer" onclick="openDrill(\''+r.dk+'\','+f+','+t+')"><span class="n">'+esc(r.n)+' <span style="color:#cbd5e1">›</span></span><span class="t"><span class="f" style="width:'+(mx>0?Math.max(r.a/mx*100,1):0).toFixed(1)+'%;background:'+(ach==null?'#d1d9e2':_achBar(ach))+'"></span></span><span class="vv">'+fmtW(r.a)+' <b style="color:'+_achCol(ach)+'">'+(ach==null?'':ach.toFixed(0)+'%')+'</b> '+yb(yy)+'</span></div>'; }).join('');
   document.getElementById('rpt-drill').innerHTML=html;
   document.getElementById('rpt-dbg').classList.add('on');
 }
@@ -2660,13 +2665,12 @@ function _infoShow(d){
     el.innerHTML='<div class="rpt-drill" id="info-drill"></div>';
     el.addEventListener('click',function(e){ if(e.target===el) closeInfo(); });
     document.body.appendChild(el); }
-  const bar=(n,v,mx,col)=>'<div class="dr-bar"><span class="n" title="'+esc(n)+'">'+esc(n)+'</span><span class="t"><span class="f" style="width:'+(mx>0?Math.max(v/mx*100,1):0).toFixed(1)+'%;background:'+col+'"></span></span><span class="vv">'+_fM(v)+'</span></div>';
   let html='<div class="dr-hd"><div><h3>'+esc(d.title)+'</h3><div style="font-size:11.5px;color:#94a3b8;margin-top:2px">'+(d.sub||'')+'</div></div><button class="dr-x" onclick="closeInfo()">✕</button></div>';
   if(d.kpi&&d.kpi.length) html+='<div class="dr-kpi">'+d.kpi.map(k=>'<div class="dr-k"><div class="l">'+k.l+'</div><div class="v"'+(k.c?' style="color:'+k.c+'"':'')+'>'+k.v+'</div></div>').join('')+'</div>';
   const hasMo=d.mo26&&Object.keys(d.mo26).some(k=>d.mo26[k]);
   if(hasMo) html+='<div class="dr-sec-t">월별 추이 <span style="font-weight:500;color:#94a3b8">· 2026 vs 전년 · 단위 백만원</span></div><div style="position:relative;height:190px"><canvas id="info-chart"></canvas></div>';
-  if(d.cols&&d.cols.length) html+='<div class="dr-col">'+d.cols.map(c=>{ const mx=c.rows.length?c.rows[0][1]:1;
-    return '<div><div class="dr-sec-t">'+c.t+'</div>'+(c.rows.length?c.rows.map(r=>bar(r[0],r[1],mx,c.col||'#0d9488')).join(''):'<div style="font-size:12px;color:#94a3b8">데이터 없음</div>')+'</div>'; }).join('')+'</div>';
+  if(d.cols&&d.cols.length) html+='<div class="dr-col">'+d.cols.map(c=>
+    '<div><div class="dr-sec-t">'+c.t+'</div>'+_topTbl(c.rows,c.total,(c.t||'항목').replace(/\s*Top\s*$/,''))+'</div>').join('')+'</div>';
   if(d.txns&&d.txns.length) html+='<div class="dr-sec-t" style="margin-top:16px">최근 거래 <span style="font-weight:500;color:#94a3b8">· 최근 '+d.txns.length+'건</span></div>'+
     d.txns.map(t=>'<div class="dr-pend"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(t[0])+'</span><span style="color:#94a3b8">'+esc(t[1]||'')+'</span><span style="font-weight:700;width:70px;text-align:right">'+fmtW(t[2])+'</span></div>').join('');
   // 거래 원장 테이블 (날짜·제품·수량·금액·USD) — 회계 원본 라인 단위
