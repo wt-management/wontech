@@ -242,17 +242,18 @@ function parseMibanyong(wb){
     for(let i=0;i<rows.length;i++){ const r=rows[i]||[]; if(String(r[4]||'').indexOf('거래처명')>=0 && String(r[11]||'').indexOf('제품명')>=0){ hdr=i; break; } }
     if(hdr<0) return; foundAny=true;
     for(let i=hdr+2;i<rows.length;i++){ const r=rows[i]||[];
+      if(String(r[4]||'').trim()==='합계'||String(r[45]||'').trim()==='합계') break;   // 미반영 표는 첫 합계행에서 끝. 이후 익월/품목 섹션 오독 방지
       const dc=r[4], dp=r[11];
       if(dc&&String(dc).trim()&&dp&&String(dp).trim()){
         const dq=_mvNum(r[16])||1, ddel=_mvNum(r[22]), dpen=_mvNum(r[33]);
-        if(ddel>0) out.push({id:'s국'+(di++),region:'국내',country:'',customer:String(dc).trim(),product:String(dp).trim(),qty:dq,amount:Math.round(ddel),expectedDate:_mvDt(r[28]),type:'완료',status:'대기',memo:'납품완료·회계미반영'});
-        if(dpen>0) out.push({id:'s국'+(di++),region:'국내',country:'',customer:String(dc).trim(),product:String(dp).trim(),qty:dq,amount:Math.round(dpen),expectedDate:_mvDt(r[39]),type:'예정',status:'대기',memo:''});
+        if(ddel!==0) out.push({id:'s국'+(di++),region:'국내',country:'',customer:String(dc).trim(),product:String(dp).trim(),qty:dq,amount:Math.round(ddel),expectedDate:_mvDt(r[28]),type:'완료',status:'대기',memo:'납품완료·회계미반영'});
+        if(dpen!==0) out.push({id:'s국'+(di++),region:'국내',country:'',customer:String(dc).trim(),product:String(dp).trim(),qty:dq,amount:Math.round(dpen),expectedDate:_mvDt(r[39]),type:'예정',status:'대기',memo:(String(dc).trim()==='기타'?'기타 조정':'')});
       }
       const ic=r[45], ip=r[53];
       if(ic&&String(ic).trim()&&ip&&String(ip).trim()){ const full=String(ic).trim(), ctry=full.indexOf('/')>=0?full.split('/')[0].trim():'', iq=_mvNum(r[58])||1;
         const idel=_mvNum(r[66]), ipen=_mvNum(r[78]);
-        if(idel>0) out.push({id:'s해'+(ii++),region:'해외',country:ctry,customer:full,product:String(ip).trim(),qty:iq,amount:Math.round(idel),expectedDate:_mvDt(r[73]),type:'완료',status:'대기',memo:'선적완료·회계미반영'});
-        if(ipen>0) out.push({id:'s해'+(ii++),region:'해외',country:ctry,customer:full,product:String(ip).trim(),qty:iq,amount:Math.round(ipen),expectedDate:_mvDt(r[118]),type:'예정',status:'대기',memo:''});
+        if(idel!==0) out.push({id:'s해'+(ii++),region:'해외',country:ctry,customer:full,product:String(ip).trim(),qty:iq,amount:Math.round(idel),expectedDate:_mvDt(r[73]),type:'완료',status:'대기',memo:'선적완료·회계미반영'});
+        if(ipen!==0) out.push({id:'s해'+(ii++),region:'해외',country:ctry,customer:full,product:String(ip).trim(),qty:iq,amount:Math.round(ipen),expectedDate:_mvDt(r[118]),type:'예정',status:'대기',memo:''});
       }
     }
   });
@@ -351,6 +352,7 @@ function renderPreview(s){
 // 미반영(ilbo_pending) ↔ 새 회계(ilbo_acc.lines) 대조 → 반영처리(자동제외). ilbo.html flagMatches와 동일 규칙: 국내=거래처, 해외=국가(법인/딜러 표기달라도)+제품+금액정확(±2%)만 자동, 근접은 확인필요.
 function _upNorm(s){ return String(s==null?'':s).replace(/[\s()（）\[\]·.,_\/\-]/g,'').toLowerCase(); }
 function _upCtry(name){ name=String(name||''); var i=name.indexOf('/'); if(i>=0) return _upNorm(name.slice(0,i)); var m=name.match(/^(.+?)법인/); return m?_upNorm(m[1]):''; }
+function _upDate(s){ if(!s) return null; var d=new Date(s); return isNaN(d.getTime())?null:d; }
 // 해외 회계 원장(intl.INTL2026.countries[].clientData[].txns) → 대조용 라인. 연간 누적이라 전월 선적분도 잡힘.
 function _intlLines(intlAcc){
   var out=[]; var C=(intlAcc&&intlAcc.INTL2026&&intlAcc.INTL2026.countries)||{};
@@ -365,11 +367,14 @@ function reconcilePending(rows, ilboAcc, intlAcc){
   var _rd=(ilboAcc&&ilboAcc.reportDate)||(intlAcc&&intlAcc.updatedAt)||'';
   rows.forEach(function(p){
     if((p.status&&p.status!=='대기')||p.lock) return;
+    if(p.type==='예정') return;   // 예정(미납품·미선적)은 아직 회계에 있을 수 없음 → 대조 제외(오탐방지)
     var pc=_upNorm(p.customer),pp=_upNorm(p.product),pa=Math.round(Number(p.amount)||0),pq=Number(p.qty)||0;
     if(!pc) return;
     var isIntl=(p.region==='해외'), pcty=isIntl?(_upCtry(p.customer)||_upNorm(p.country||'')):null;
+    var _pd=_upDate(p.expectedDate), _pdMs=_pd?_pd.getTime():null;
     var hit=null, cand=0;
     lines.forEach(function(l){
+      if(_pdMs){ var _ld=_upDate(l.date); if(_ld&&_ld.getTime()<_pdMs-31*864e5) return; }   // 회계라인이 선적/납품일보다 1개월+ 과거면 다른(과거) 거래 → 대조 제외
       var la=Math.round(l.amount), lq=Number(l.qty)||0, prodEq=pp&&_upNorm(l.product)===pp;
       var custOk = isIntl ? (pcty&&_upCtry(l.customer)===pcty) : (_upNorm(l.customer)===pc);
       if(custOk){
