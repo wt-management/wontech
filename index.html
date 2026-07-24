@@ -285,6 +285,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 .wt-hero{flex:1.5;padding-right:22px;display:flex;flex-direction:column;justify-content:center;min-width:0}
 .wt-hero .l{font-size:11.5px;font-weight:700;color:#64748b}
 .wt-hero>b{font-size:38px;font-weight:800;color:#2563eb;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.08}
+#page-consumables .wt-hero>b,#page-device-sales .wt-hero>b{font-size:30px}
 .wt-hero .s{font-size:12px;color:#64748b;margin-top:3px}
 .wt-fact{flex:1;padding:2px 18px;border-left:1px solid #e4e8ef;display:flex;flex-direction:column;justify-content:center;min-width:0;cursor:pointer}
 .wt-fact .l{font-size:11px;font-weight:700;color:#64748b;white-space:nowrap}
@@ -1394,7 +1395,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <button class="anatab" data-sub="consumables" onclick="showPage('consumables')"><i class="bi bi-capsule"></i>소모품 매출</button>
     </div>
     <div class="wt-mast">
-      <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-capsule me-2"></i>국내 소모품 매출현황</div></div>
+      <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-capsule me-2"></i>소모품 매출 <span style="font-size:14px;font-weight:700;color:#2563eb">심층분석</span></div><div style="font-size:11.5px;color:#94a3b8;margin-top:3px">Oligio 그룹 · 카트리지 · Tip 월별 추이 — <b style="color:#64748b">종합엔 없는 품목 심층</b></div></div>
       <div class="d-flex gap-2 align-items-center">
         <small class="text-muted" id="cons-updated"></small>
         <button class="btn btn-outline-secondary btn-sm" id="cons-lock-btn" onclick="consUnlock()" title="데이터 업로드">
@@ -1508,7 +1509,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <button class="anatab" data-sub="consumables" onclick="showPage('consumables')"><i class="bi bi-capsule"></i>소모품 매출</button>
     </div>
     <div class="wt-mast">
-      <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-box-seam me-2"></i>국내 제품 매출현황</div></div>
+      <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-box-seam me-2"></i>제품 매출 <span style="font-size:14px;font-weight:700;color:#2563eb">심층분석</span></div><div style="font-size:11.5px;color:#94a3b8;margin-top:3px">제품별 랭킹 · 판매 대수 · 평균단가 · 믹스 — <b style="color:#64748b">종합엔 없는 품목 심층</b></div></div>
       <div class="d-flex gap-2 align-items-center">
         <small class="text-muted" id="dev-updated"></small>
         <small class="text-muted" style="font-size:11px;color:#64748b">* 소모품 업로드 시 함께 갱신됩니다</small>
