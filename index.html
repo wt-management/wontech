@@ -491,9 +491,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <ul class="nav flex-column gap-0">
       <li><a class="nav-link active" onclick="showPage('sales-overview',this)"><i class="bi bi-bar-chart-line"></i>종합</a></li>
       <li><a class="nav-link" onclick="showPage('consumables',this)"><i class="bi bi-capsule"></i>소모품 매출</a></li>
-      <li><a class="nav-link" onclick="showPage('cons-hospitals',this)"><i class="bi bi-building-check"></i>병원별 분석</a></li>
       <li><a class="nav-link" onclick="showPage('device-sales',this)"><i class="bi bi-box-seam"></i>제품 매출</a></li>
-      <li><a class="nav-link" onclick="showPage('region',this)"><i class="bi bi-geo-alt"></i>지역별 분석</a></li>
       <li><a class="nav-link" onclick="showPage('pending',this)"><i class="bi bi-hourglass-split"></i>회계 미반영 매출</a></li>
     </ul>
     <div class="nav-label mt-3">영업</div>
@@ -512,6 +510,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
       <li><a class="nav-link" onclick="showPage('products',this)"><i class="bi bi-box-seam"></i>제품</a></li>
       <li id="nav-device-reps" style="display:none"><a class="nav-link" onclick="showPage('device-reps',this)"><i class="bi bi-person-badge"></i>담당자별 분석 <span style="font-size:9px;background:#e8eef6;color:#5b7591;border-radius:4px;padding:1px 5px;margin-left:2px">파트장</span></a></li>
+      <li id="nav-cons-hospitals" style="display:none"><a class="nav-link" onclick="showPage('cons-hospitals',this)"><i class="bi bi-building-check"></i>병원별 분석 <span style="font-size:9px;background:#e8eef6;color:#5b7591;border-radius:4px;padding:1px 5px;margin-left:2px">파트장</span></a></li>
+      <li id="nav-region" style="display:none"><a class="nav-link" onclick="showPage('region',this)"><i class="bi bi-geo-alt"></i>지역별 분석 <span style="font-size:9px;background:#e8eef6;color:#5b7591;border-radius:4px;padding:1px 5px;margin-left:2px">파트장</span></a></li>
     </ul>
   </div>
   <div class="sidebar-footer">
@@ -2888,6 +2888,7 @@ async function _bootApp(access) {
   if(_isMgr) {
     const rm = document.getElementById('nav-device-reps');
     if(rm) rm.style.display='';
+    ['nav-cons-hospitals','nav-region'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display=''; });
   }
   if(_isMgr || _isStrat) {   // 현황판 = 파트장/관리자 + 영업전략파트
     const dm = document.getElementById('nav-dashboard'); if(dm) dm.style.display='';
@@ -2898,7 +2899,7 @@ async function _bootApp(access) {
   await _loadHospRegions();
   var _nav=(performance.getEntriesByType('navigation')[0]||{}).type;   // reload=새로고침 / back_forward=복귀 / navigate=신규진입
   var _sv=sessionStorage.getItem('wt_page');
-  var _validPage=function(k){ return !!(k && document.getElementById('page-'+k) && !(k==='device-reps' && typeof _isMgr!=='undefined' && !_isMgr) && !(k==='dashboard' && typeof _isMgr!=='undefined' && !(_isMgr||_isStrat))); };   // 담당자별분석=파트장, 현황판=파트장+영업전략파트
+  var _validPage=function(k){ return !!(k && document.getElementById('page-'+k) && !(k==='device-reps' && typeof _isMgr!=='undefined' && !_isMgr) && !((k==='cons-hospitals'||k==='region') && typeof _isMgr!=='undefined' && !_isMgr) && !(k==='dashboard' && typeof _isMgr!=='undefined' && !(_isMgr||_isStrat))); };   // 담당자별분석=파트장, 현황판=파트장+영업전략파트
   var _hp=(location.hash||'').replace(/^#/,'');   // 딥링크 해시(#페이지키)
   var _t = _validPage(_hp) ? _hp
          : ((_nav==='reload'||_nav==='back_forward') && _validPage(_sv)) ? _sv
