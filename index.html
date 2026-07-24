@@ -5975,6 +5975,8 @@ function setPipeChip(stage, el) {
 
 // 공용 HTML 이스케이프 (저장형 XSS 방지 + 특수문자 깨짐 방지)
 function _escH(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+// onclick/속성 JS 문자열 인자용 이스케이프
+function _jsAttr(s){return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 // ── 실적 정정 신청(팀원) + 파트장 승인(담당 재배정=mgr 오버라이드) ──
 function _claimPending(){ return (MGR_CLAIMS||[]).filter(function(c){return c.status==='pending';}); }
 function _saveClaims(){ return _sb.from('cons_cache').upsert({key:'mgr_claims',data:{claims:MGR_CLAIMS}},{onConflict:'key'}); }
@@ -8324,7 +8326,7 @@ function renderCustomersOLD(){
   const allTags = new Set();
   DB.d.customers.forEach(c=>(c.tags||[]).forEach(t=>allTags.add(t)));
   const tagBar = document.getElementById('tag-filter-bar');
-  tagBar.innerHTML = ['전체',...allTags].map(t=>`<span onclick="setTagFilter('${t}')" style="cursor:pointer;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid ${_activeTag===t||(_activeTag===''&&t==='전체')?'#2563eb':'#e5e7eb'};background:${_activeTag===t||(_activeTag===''&&t==='전체')?'#eff6ff':'#fff'};color:${_activeTag===t||(_activeTag===''&&t==='전체')?'#2563eb':'#6b7280'}">${t}</span>`).join('');
+  tagBar.innerHTML = ['전체',...allTags].map(t=>`<span onclick="setTagFilter('${_jsAttr(t)}')" style="cursor:pointer;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid ${_activeTag===t||(_activeTag===''&&t==='전체')?'#2563eb':'#e5e7eb'};background:${_activeTag===t||(_activeTag===''&&t==='전체')?'#eff6ff':'#fff'};color:${_activeTag===t||(_activeTag===''&&t==='전체')?'#2563eb':'#6b7280'}">${_escH(t)}</span>`).join('');
 
   const list=DB.d.customers.filter(c=>{
     const matchQ=!q||(c.name||'').toLowerCase().includes(q)||(c.region||'').toLowerCase().includes(q)||(c.sales||'').toLowerCase().includes(q)||((c.tags||[]).join(',').toLowerCase().includes(q));
@@ -8334,9 +8336,9 @@ function renderCustomersOLD(){
   const el=document.getElementById('cust-list');
   if(!list.length){el.innerHTML='<tr><td colspan="8" class="text-center text-muted py-3">데이터 없음</td></tr>';return;}
   el.innerHTML=list.map(c=>`<tr>
-    <td><strong>${c.name||''}</strong></td><td>${c.doctor||''}</td><td>${c.region||''}</td><td>${c.tel||''}</td><td>${c.sales||''}</td><td>${gradeBadge(c.grade)}</td>
-    <td>${(c.tags||[]).map(t=>`<span style="background:#eff6ff;color:#2563eb;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:600;margin-right:3px">${t}</span>`).join('')}</td>
-    <td><button class="btn btn-outline-primary" style="font-size:11px;padding:1px 6px" onclick='editCustomer("${c.id}")'>수정</button></td>
+    <td><strong>${_escH(c.name||'')}</strong></td><td>${_escH(c.doctor||'')}</td><td>${_escH(c.region||'')}</td><td>${_escH(c.tel||'')}</td><td>${_escH(c.sales||'')}</td><td>${gradeBadge(c.grade)}</td>
+    <td>${(c.tags||[]).map(t=>`<span style="background:#eff6ff;color:#2563eb;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:600;margin-right:3px">${_escH(t)}</span>`).join('')}</td>
+    <td><button class="btn btn-outline-primary" style="font-size:11px;padding:1px 6px" onclick='editCustomer("${_jsAttr(c.id)}")'>수정</button></td>
   </tr>`).join('');
 }
 function setTagFilter(t){ _activeTag=(t==='전체')?'':t; renderCustomers(); }
@@ -8468,12 +8470,12 @@ function showHospitalDetail(name){
   const _reg=_hospRegion(name); const _regStr=(_reg&&_reg[0])?(_reg[0]+' '+(_reg[1]||'')).trim():'지역 미분류';
   const _hinfo=HOSP_INFO[name]||{}; const _mgr=_hinfo.mgr||'';
   const _txnSales=(CONS.hospitals&&CONS.hospitals[name]&&CONS.hospitals[name].sales)||(DEVICE.hospitals&&DEVICE.hospitals[name]&&DEVICE.hospitals[name].sales)||'';
-  document.getElementById('hosp-modal-sub').innerHTML=`<i class="bi bi-geo-alt-fill" style="color:#059669"></i> ${_regStr} &nbsp;·&nbsp; <span onclick="showMgrHist()" style="cursor:pointer" title="담당자 변경 이력 보기"><i class="bi bi-person-badge" style="color:#2563eb"></i> 영업 담당자 <b>${_mgr||'<span style="color:#d1d5db">미배정</span>'}</b> <i class="bi bi-clock-history" style="font-size:10px;color:#94a3b8"></i></span>${_txnSales&&_txnSales!==_mgr?` <span style="color:#64748b">(거래담당 ${_txnSales})</span>`:''} &nbsp;·&nbsp; 납품 장비 ${equips.length}대`;
+  document.getElementById('hosp-modal-sub').innerHTML=`<i class="bi bi-geo-alt-fill" style="color:#059669"></i> ${_regStr} &nbsp;·&nbsp; <span onclick="showMgrHist()" style="cursor:pointer" title="담당자 변경 이력 보기"><i class="bi bi-person-badge" style="color:#2563eb"></i> 영업 담당자 <b>${_escH(_mgr)||'<span style="color:#d1d5db">미배정</span>'}</b> <i class="bi bi-clock-history" style="font-size:10px;color:#94a3b8"></i></span>${_txnSales&&_txnSales!==_mgr?` <span style="color:#64748b">(거래담당 ${_escH(_txnSales)})</span>`:''} &nbsp;·&nbsp; 납품 장비 ${equips.length}대`;
   // 연락처 칩(읽기전용) — 여러 담당자 한눈에
   (function(){ const box=document.getElementById('hosp-modal-contacts'); if(!box) return;
     const cs=(_hinfo.contacts||[]).filter(c=>c&&(c.name||c.tel));
     if(!cs.length){ box.innerHTML=''; return; }
-    box.innerHTML=cs.map(c=>`<span class="badge rounded-pill" style="background:#eef2ff;color:#3730a3;font-weight:500;font-size:11px"><i class="bi bi-person-fill me-1"></i>${c.role||''} ${c.name||''}${c.tel?` <span style="color:#6366f1">· ${c.tel}</span>`:''}</span>`).join('');
+    box.innerHTML=cs.map(c=>`<span class="badge rounded-pill" style="background:#eef2ff;color:#3730a3;font-weight:500;font-size:11px"><i class="bi bi-person-fill me-1"></i>${_escH(c.role||'')} ${_escH(c.name||'')}${c.tel?` <span style="color:#6366f1">· ${_escH(c.tel)}</span>`:''}</span>`).join('');
   })();
   // 병원정보 수정 탭 채우기
   (function(){ const v=(id,val)=>{const e=document.getElementById(id); if(e)e.value=val||'';};
@@ -8541,19 +8543,19 @@ function showHospitalDetail(name){
   const tlItems = [];
   DB.d.logs.filter(l=>l.custName===name&&l.kind!=='cdu'&&l.kind!=='cdu_meta'&&l.kind!=='cdu_key'&&l.kind!=='cdu_plan'&&l.kind!=='cdu_note'&&l.kind!=='sdr'&&l.kind!=='promo').forEach(l=>tlItems.push({
     date:l.date, type:'log', icon:'bi-journal-text', color:'#2563eb', bg:'#eff6ff',
-    title:`상담 — ${l.type||''}`, sub: l.content||'', sales: l.sales||'', extra: l.nextAction?`다음액션: ${l.nextAction}${l.nextDate?' ('+fmtDate(l.nextDate)+')':''}`:''
+    title:`상담 — ${_escH(l.type||'')}`, sub: _escH(l.content||''), sales: l.sales||'', extra: l.nextAction?`다음액션: ${l.nextAction}${l.nextDate?' ('+fmtDate(l.nextDate)+')':''}`:''
   }));
   DB.d.quotes.filter(q=>q.custName===name).forEach(q=>tlItems.push({
     date:q.quoteDate, type:'quote', icon:'bi-file-earmark-text', color:'#7c3aed', bg:'#faf5ff',
-    title:`견적서 — ${fmtAmt(q.total||0)}`, sub:`${q.id} · ${q.status||''}`, extra:''
+    title:`견적서 — ${fmtAmt(q.total||0)}`, sub:`${_escH(q.id)} · ${_escH(q.status||'')}`, extra:''
   }));
   DB.d.pipeline.filter(p=>p.custName===name).forEach(p=>tlItems.push({
     date:p.stageUpdatedAt||p.expectedDate||'', type:'deal', icon:'bi-kanban', color:SC[p.stage]||'#adb5bd', bg:'#f9fafb',
-    title:`딜 — ${p.stage}`, sub:`${p.model||''} · ${fmtAmt(p.amount||0)} (${p.prob||0}%)`, extra:p.expectedDate?`예상마감: ${fmtDate(p.expectedDate)}`:''
+    title:`딜 — ${_escH(p.stage)}`, sub:`${_escH(p.model||'')} · ${fmtAmt(p.amount||0)} (${p.prob||0}%)`, extra:p.expectedDate?`예상마감: ${fmtDate(p.expectedDate)}`:''
   }));
   _allEquipFor(name).forEach(e=>tlItems.push({
     date:e.delivDate, type:'equip', icon:'bi-cpu', color:'#16a34a', bg:'#f0fdf4',
-    title:`납품 — ${e.model||''}`, sub:`S/N ${e.serial||''} · 보증 ${fmtDate(e.warrantyEnd)}까지`, extra:''
+    title:`납품 — ${_escH(e.model||'')}`, sub:`S/N ${_escH(e.serial||'')} · 보증 ${fmtDate(e.warrantyEnd)}까지`, extra:''
   }));
   tlItems.sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
 
@@ -8566,10 +8568,10 @@ function showHospitalDetail(name){
         ${i<tlItems.length-1?`<div style="width:2px;flex:1;background:#e5e7eb;margin:4px 0"></div>`:''}
       </div>
       <div style="flex:1;padding-bottom:20px">
-        <div style="font-size:11px;color:#64748b;margin-bottom:2px">${fmtDate(t.date)}${t.sales?` · <span style="color:#6b7280;font-weight:600">${t.sales}</span>`:''}</div>
+        <div style="font-size:11px;color:#64748b;margin-bottom:2px">${fmtDate(t.date)}${t.sales?` · <span style="color:#6b7280;font-weight:600">${_escH(t.sales)}</span>`:''}</div>
         <div style="font-size:13px;font-weight:600;color:#111827">${t.title}</div>
         <div style="font-size:12px;color:#6b7280;margin-top:2px">${t.sub}</div>
-        ${t.extra?`<div style="font-size:11px;color:#64748b;margin-top:2px">${t.extra}</div>`:''}
+        ${t.extra?`<div style="font-size:11px;color:#64748b;margin-top:2px">${_escH(t.extra)}</div>`:''}
       </div>
     </div>`).join('') : '<div class="text-muted text-center py-4" style="font-size:13px">활동 기록이 없습니다</div>';
 
@@ -8594,8 +8596,8 @@ function showHospitalDetail(name){
     filtered = filtered.slice().sort((a,b)=>(b[1]||'').localeCompare(a[1]||'') || (a[2]||'').localeCompare(b[2]||'','ko') || (b[3]-a[3]));  // 날짜↓ → 같은 제품 묶기 → 매출 먼저·보상 뒤
     const total = filtered.reduce((s,t)=>s+t[3],0);
     const rows = filtered.map(t=>`<tr>
-      <td style="font-size:11px;white-space:nowrap">${t[1]}</td>
-      <td style="font-size:11px">${t[2]||'(미분류)'}</td>
+      <td style="font-size:11px;white-space:nowrap">${_escH(t[1])}</td>
+      <td style="font-size:11px">${_escH(t[2])||'(미분류)'}</td>
       <td class="text-end fw-bold" style="font-size:11px;color:${t[3]<0?'#dc2626':'#111827'}">${t[3]<0?'−':''}${fmtMl(Math.abs(t[3]))}${t[3]<0?' <span style="font-size:9px;font-weight:600">보상</span>':''}</td>
     </tr>`).join('');
     const label = filterType==='mo' ? `${filterVal}월` : filterType==='all' ? '전체' : filterVal||'전체';
@@ -10415,7 +10417,7 @@ async function saveNewUser() {
 function renderProducts(){
   const el=document.getElementById('product-list');
   if(!DB.d.products.length){el.innerHTML='<tr><td colspan="6" class="text-center text-muted py-3">데이터 없음</td></tr>';return;}
-  el.innerHTML=DB.d.products.map(p=>`<tr><td>${p.code||''}</td><td><strong>${p.name||''}</strong></td><td>${p.category||''}</td><td>${p.price?Number(p.price).toLocaleString()+'원':''}</td><td>${p.warranty?p.warranty+'개월':''}</td><td><button class="btn btn-outline-primary" style="font-size:11px;padding:1px 6px" onclick='editProduct("${p.id}")'>수정</button></td></tr>`).join('');
+  el.innerHTML=DB.d.products.map(p=>`<tr><td>${_escH(p.code||'')}</td><td><strong>${_escH(p.name||'')}</strong></td><td>${_escH(p.category||'')}</td><td>${p.price?Number(p.price).toLocaleString()+'원':''}</td><td>${p.warranty?p.warranty+'개월':''}</td><td><button class="btn btn-outline-primary" style="font-size:11px;padding:1px 6px" onclick='editProduct("${_jsAttr(p.id)}")'>수정</button></td></tr>`).join('');
 }
 
 function editProduct(id){
