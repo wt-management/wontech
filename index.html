@@ -3034,9 +3034,8 @@ function showPage(name, el, noPush) {
   else if(!['logs','users','pipeline','performance'].includes(name) && name!=='sales-overview'){ return showPage('sales-overview', null, noPush); }
   if(el) el.classList.add('active');
   else { const links = document.querySelectorAll('.nav-link');
-    links.forEach(l=>{ if(l.textContent.trim().includes(
-      {'sales-overview':'종합',dashboard:'현황판',sales:'수주관리',quotes:'견적서/ROI',schedule:'일정',cdu:'CDU',roi:'견적서/ROI · ROI 계산기',speech:'Sales Speech',customers:'고객사',equipments:'장비',logs:'상담일지',products:'제품',consumables:'소모품 매출','cons-hospitals':'병원별','device-sales':'제품 매출','device-reps':'담당자별',region:'지역별 분석',pending:'회계 미반영 매출','cons-accounts':'거래처'}[name]||''
-    )) l.classList.add('active'); }); }
+    const _navLbl={'sales-overview':'종합',dashboard:'현황판',sales:'수주관리',quotes:'견적서/ROI',schedule:'일정',cdu:'CDU',roi:'견적서/ROI · ROI 계산기',speech:'Sales Speech',customers:'고객사',equipments:'장비',logs:'상담일지',products:'제품',consumables:'소모품 매출','cons-hospitals':'병원별','device-sales':'제품 매출','device-reps':'담당자별',region:'지역별 분석',pending:'회계 미반영 매출','cons-accounts':'거래처'}[name]||'';
+    if(_navLbl) links.forEach(l=>{ if(l.textContent.trim().includes(_navLbl)) l.classList.add('active'); }); }
   try{ var _GRP={'nav-analysis':['device-reps','cons-hospitals','region'],'nav-custequip':['customers','equipments'],'nav-salesmix':['consumables','device-sales']};
     var _gid=null; for(var _k in _GRP){ if(_GRP[_k].indexOf(name)>=0){ _gid=_k; break; } }
     if(_gid){ document.querySelectorAll('.nav-link').forEach(function(a){a.classList.remove('active');}); var _g=document.getElementById(_gid); if(_g){ var _l=_g.querySelector('.nav-link'); if(_l)_l.classList.add('active'); } }
