@@ -9007,7 +9007,7 @@ function _schItemRow(i){
 }
 // 요약 통계바 + 유형 범례
 function _schStatsBar(all){
-  const today=_schTodayStr(), wk=_schWeekRange();
+  const today=_schTodayStr(), _navWk=(_schView==='week'&&!!_schRef), wk=_schWeekRange(_navWk?_schRef:null), _wkLbl=(_navWk?(wk.start.slice(5).replace('-','.')+'~'+wk.end.slice(5).replace('-','.')+' 일정'):'이번주 일정');
   const tArr=all.filter(i=>i.date===today);
   const t=tArr.length, tDone=tArr.filter(i=>i.kind==='sched'&&i.done).length, tVisit=tArr.filter(i=>i.type==='방문').length;
   const wArr=all.filter(i=>i.date>=wk.start&&i.date<=wk.end);
@@ -9026,11 +9026,11 @@ function _schStatsBar(all){
   const sf=(lbl,n,sub,cl,click)=>'<div class="cdud-fact'+(click?' clk" onclick="'+click+'"':'"')+'><span>'+lbl+'</span><b'+(cl?' class="'+cl+'"':'')+'>'+n+'</b>'+(sub?'<i>'+sub+'</i>':'')+'</div>';
   return '<div class="cdud" style="padding:16px 20px;margin:0 0 12px">'
     +'<div class="cdud-kpis" style="border-bottom:0;padding:2px 0 4px">'
-      +'<div class="cdud-hero" style="flex:1.4;cursor:pointer" onclick="setSchView(\'week\',document.getElementById(\'sch-v-week\'))"><span class="l">이번주 일정</span><b>'+w+'건</b><span class="s">방문 '+wVisit+' · 완료 '+wDone+'/'+w+(nextUp?' · 다음 예정 '+nextUp.slice(5).replace('-','/'):'')+'</span></div>'
+      +'<div class="cdud-hero" style="flex:1.4;cursor:pointer" onclick="setSchView(\'week\',document.getElementById(\'sch-v-week\'))"><span class="l">'+_wkLbl+'</span><b>'+w+'건</b><span class="s">방문 '+wVisit+' · 완료 '+wDone+'/'+w+(nextUp?' · 다음 예정 '+nextUp.slice(5).replace('-','/'):'')+'</span></div>'
       +sf('오늘',t+'건','방문 '+tVisit+' · 완료 '+tDone,'',"setSchView('today',document.getElementById('sch-v-today'))")
       +sf('놓친 일정',overdue+'건',(overdue?'눌러서 결과 입력':'없음 👍'),(overdue?'rd':''),overdue?'_schShowOverdueOnly()':'')
       +sf('예정',pend+'건',(nextUp?'다음 '+nextUp.slice(5).replace('-','/'):'오늘 이후'),'',"setSchView('week',document.getElementById('sch-v-week'))")
-      +sf('완료',done+'건','이번주'+(noResAll?' · 결과누락 '+noResAll:''),(noResAll?'':'gr'),'_schShowDoneOnly()')
+      +sf('완료',done+'건',(_navWk?'선택 주':'이번주')+(noResAll?' · 결과누락 '+noResAll:''),(noResAll?'':'gr'),'_schShowDoneOnly()')
     +'</div>'
     +'<div style="display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;padding-top:10px;margin-top:6px;border-top:1px solid #e4e8ef"><span style="font-size:10.5px;color:#64748b;font-weight:700">유형</span>'+legend+'</div>'
   +'</div>';
