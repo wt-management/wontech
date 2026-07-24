@@ -6794,7 +6794,7 @@ function renderCDUInput(vs){
   else if(_cduInputView==='today') body='<div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:6px">오늘 '+todayS.slice(5).replace('-','/')+' · '+cToday+'건</div>'+_cduInputList(base.filter(v=>dOf(v)===todayS));
   else body=_cduInputCal();
   _cduEnsureCss();
-  el.innerHTML='<div class="cdud">'+toolbar+pendHtml+statsBar+legend+_cduRevisitBox()+body+'</div>';
+  el.innerHTML='<div class="cdud">'+toolbar+pendHtml+statsBar+(_cduInputView==='week'?'':legend)+_cduRevisitBox()+body+'</div>';
 }
 // 월간 달력(일정 메뉴 양식)
 function _cduInputMonth(){
@@ -6859,7 +6859,9 @@ function _cduInputCal(){
       +'<div style="padding:5px">'+(its.length?its.map(_cduMiniCard).join(''):'<div style="font-size:11.5px;color:#cbd5e1;text-align:center;padding:14px 0"><i class="bi bi-plus-circle" style="opacity:.4"></i></div>')+'</div>'
     +'</div>';
   }
-  var nav='<div class="d-flex align-items-center mb-2"><span style="font-size:14px;font-weight:800;color:#374151">'+days[0].slice(5).replace('-','.')+' ~ '+days[6].slice(5).replace('-','.')+'</span><span style="font-size:12.5px;color:#94a3b8;margin-left:6px">· '+cnt+'건</span>'
+  var _lg=function(col,lb){return '<span style="font-size:12px;color:#64748b;font-weight:600"><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:'+col+';margin-right:4px;vertical-align:middle"></span>'+lb+'</span>';};
+  var _legendInline='<span style="margin-left:18px;display:inline-flex;flex-wrap:wrap;gap:4px 12px;align-items:center"><span style="font-size:12px;color:#64748b;font-weight:700">상태</span>'+_lg('#2563eb','방문 예정')+_lg('#16a34a','완료')+_lg('#ea580c','이탈위험 감지')+'</span>';
+  var nav='<div class="d-flex align-items-center mb-2" style="flex-wrap:wrap;gap:6px 0"><span style="font-size:14px;font-weight:800;color:#374151">'+days[0].slice(5).replace('-','.')+' ~ '+days[6].slice(5).replace('-','.')+'</span><span style="font-size:12.5px;color:#94a3b8;margin-left:6px">· '+cnt+'건</span>'+_legendInline
     +'<span class="ms-auto"><button class="btn btn-sm btn-outline-secondary" onclick="_cduWeekNav(-1)"><i class="bi bi-chevron-left"></i></button> <button class="btn btn-sm btn-outline-secondary" onclick="_cduWeekOff=0;renderCDU()">이번주</button> <button class="btn btn-sm btn-outline-secondary" onclick="_cduWeekNav(1)"><i class="bi bi-chevron-right"></i></button></span></div>';
   return nav+'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><div style="display:grid;grid-template-columns:repeat(7,minmax(96px,1fr));gap:6px;min-width:700px">'+cols+'</div></div>';
 }
