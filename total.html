@@ -173,6 +173,18 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .dr-bar .n{width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#475569}
 .dr-bar .t{flex:1;height:8px;background:#eef2f7;border-radius:4px;overflow:hidden}.dr-bar .f{height:100%;border-radius:4px}
 .dr-bar .vv{width:66px;text-align:right;font-weight:700;color:#0f172a}
+.dr-tbl{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+.dr-tbl thead th{font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:.02em;padding:3px 7px;border-bottom:1px solid #eef2f6;text-align:right;white-space:nowrap}
+.dr-tbl thead th.l{text-align:left}
+.dr-tbl .dr-tr{border-bottom:1px solid #f5f7fa}
+.dr-tbl td{padding:6.5px 7px;text-align:right;white-space:nowrap}
+.dr-rk{color:#cbd5e1;font-weight:800;width:20px;text-align:center}
+.dr-nm{text-align:left;color:#334155;font-weight:600;max-width:148px;overflow:hidden;text-overflow:ellipsis}
+.dr-vv{font-weight:800;color:#0f172a}
+.dr-sh{color:#334155;font-weight:700;width:46px}
+.dr-cum{color:#94a3b8;width:42px;font-size:11px}
+.dr-conc{font-size:11px;color:#64748b;margin-top:7px;padding-top:7px;border-top:1px dashed #eef2f6}
+.dr-conc b{color:#334155;font-weight:800}
 .dr-pend{font-size:11.5px;color:#475569;border-top:1px solid #eef2f6;padding:6px 0;display:flex;justify-content:space-between;gap:8px}
 @media(max-width:680px){.rpt-hero{grid-template-columns:1fr 1fr}.dr-col{grid-template-columns:1fr}.dr-kpi{grid-template-columns:1fr 1fr}}
 @media(max-width:680px){.kpi-card.kpi-dual{flex-direction:column;gap:8px}.kpi-side{border-left:none;border-top:1px dashed #e5e7eb;padding-left:0;padding-top:8px;text-align:left}.tm-wrap{grid-template-columns:1fr}}
@@ -1957,8 +1969,15 @@ function openDrill(dk,_f,_t){
     :'해외영업 · '+item);
   const custTop=Object.entries(seg.custs).sort((a,b)=>b[1]-a[1]).slice(0,8);
   const prodTop=Object.entries(seg.prods).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const cmax=custTop.length?custTop[0][1]:1, pmax=prodTop.length?prodTop[0][1]:1;
-  const bar=(n,v,mx,col)=>'<div class="dr-bar"><span class="n" title="'+esc(n)+'">'+esc(n)+'</span><span class="t"><span class="f" style="width:'+(mx>0?Math.max(v/mx*100,1):0).toFixed(1)+'%;background:'+col+'"></span></span><span class="vv">'+_fM(v)+'</span></div>';
+  const custTotal=Object.values(seg.custs).reduce((s,v)=>s+(Number(v)||0),0), prodTotal=Object.values(seg.prods).reduce((s,v)=>s+(Number(v)||0),0);
+  const custN=Object.keys(seg.custs).length, prodN=Object.keys(seg.prods).length;
+  // 의미 없는 막대 → 비중·누적(집중도/파레토) 분석 테이블
+  const topTbl=(rows,total,lbl)=>{ if(!rows.length) return '<div style="font-size:12px;color:#94a3b8">데이터 없음</div>';
+    let cum=0; const body=rows.map((c,i)=>{ const v=Number(c[1])||0, sh=total>0?v/total*100:0; cum+=sh;
+      return '<tr class="dr-tr"><td class="dr-rk">'+(i+1)+'</td><td class="dr-nm" title="'+esc(c[0])+'">'+esc(c[0])+'</td><td class="dr-vv">'+_fM(v)+'</td><td class="dr-sh">'+sh.toFixed(1)+'%</td><td class="dr-cum">'+cum.toFixed(0)+'%</td></tr>'; }).join('');
+    const c3=total>0?rows.slice(0,3).reduce((s,c)=>s+(Number(c[1])||0),0)/total*100:0, cN=total>0?rows.reduce((s,c)=>s+(Number(c[1])||0),0)/total*100:0;
+    return '<table class="dr-tbl"><thead><tr><th></th><th class="l">'+lbl+'</th><th>실적</th><th>비중</th><th>누적</th></tr></thead><tbody>'+body+'</tbody></table>'+
+      '<div class="dr-conc"><i class="bi bi-pie-chart-fill me-1" style="color:#94a3b8"></i>상위 3 <b>'+c3.toFixed(0)+'%</b> · 표시 '+rows.length+'개 <b>'+cN.toFixed(0)+'%</b> 집중</div>'; };
   const pendTot=seg.pendRows.reduce((s,p)=>s+Number(p.amount||0),0);
   let html='<div class="dr-hd"><div><h3>'+title+'</h3><div style="font-size:11.5px;color:#94a3b8;margin-top:2px">'+(_f!=null?(F+'~'+T+'월'):P.hLbl)+' 누적 · 실적=회계+미반영 · 단위 백만원</div></div><button class="dr-x" onclick="closeDrill()">✕</button></div>';
   html+='<div class="dr-kpi"><div class="dr-k"><div class="l">실적</div><div class="v">'+_fM(act)+'</div></div>'+
@@ -1966,8 +1985,8 @@ function openDrill(dk,_f,_t){
     '<div class="dr-k"><div class="l">달성률</div><div class="v" style="color:'+_achCol(ach)+'">'+(ach==null?'-':ach.toFixed(1)+'%')+'</div></div>'+
     '<div class="dr-k"><div class="l">전년 성장</div><div class="v" style="color:'+(grw==null?'#94a3b8':grw>=0?'#16a34a':'#dc2626')+'">'+(grw==null?'-':(grw>=0?'▲':'▼')+Math.abs(grw).toFixed(1)+'%')+'</div></div></div>';
   html+='<div class="dr-sec-t">월별 추이 <span style="font-weight:500;color:#94a3b8">· 회계+미반영 vs 목표 vs 전년</span></div><div style="position:relative;height:200px"><canvas id="dr-chart"></canvas></div>';
-  html+='<div class="dr-col"><div><div class="dr-sec-t">'+(dept==='국내영업'?'거래처(병원) Top':'거래처 Top')+'</div>'+(custTop.length?custTop.map(c=>bar(c[0],c[1],cmax,'#4f46e5')).join(''):'<div style="font-size:12px;color:#94a3b8">데이터 없음</div>')+'</div>'+
-    '<div><div class="dr-sec-t">제품 Top</div>'+(prodTop.length?prodTop.map(c=>bar(c[0],c[1],pmax,'#0d9488')).join(''):'<div style="font-size:12px;color:#94a3b8">데이터 없음</div>')+'</div></div>';
+  html+='<div class="dr-col"><div><div class="dr-sec-t">'+(dept==='국내영업'?'거래처(병원) Top':'거래처 Top')+' <span style="font-weight:500;color:#94a3b8">· 비중·누적(집중도)</span></div>'+topTbl(custTop,custTotal,(dept==='국내영업'?'거래처':'거래처')+' <span style="color:#cbd5e1;font-weight:400">('+custN+'곳)</span>')+'</div>'+
+    '<div><div class="dr-sec-t">제품 Top <span style="font-weight:500;color:#94a3b8">· 비중·누적</span></div>'+topTbl(prodTop,prodTotal,'제품 <span style="color:#cbd5e1;font-weight:400">('+prodN+'종)</span>')+'</div></div>';
   if(seg.pendRows.length){
     const top=seg.pendRows.slice().sort((a,b)=>Number(b.amount)-Number(a.amount)).slice(0,8);
     html+='<div class="dr-sec-t" style="margin-top:16px">미반영 내역 <span style="font-weight:500;color:#94a3b8">· '+seg.pendRows.length+'건 합 '+_fM(pendTot)+'백만</span></div>'+
