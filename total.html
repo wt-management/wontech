@@ -3249,11 +3249,9 @@ function renderExport(){
   exUpdProv();
   var dsg=document.getElementById('ex-dsg');
   if(dsg){ var _chips=_EXD_LIST.map(function(d){return '<button class="exd-chip'+(d[0]===_exDesign?' on':'')+'" onclick="exSetDesign(\''+d[0]+'\')">'+d[1]+'</button>';}).join('');
-    if(_exDesign==='report'||_exDesign==='brief'){
-      _chips+='<span class="exd-sep"></span>'
-        +'<button class="exd-exp" onclick="exPrintDesign(this)" title="현재 화면을 PDF로 추출">📄 PDF 추출</button>'
-        +'<button class="exd-exp" onclick="exSaveImage(this)" title="휴대폰 화면 구성으로 이미지(PNG) 저장">🖼 모바일 캡처</button>';
-    }
+    _chips+='<span class="exd-sep"></span>';
+    if(_exDesign==='report'||_exDesign==='brief') _chips+='<button class="exd-exp" onclick="exPrintDesign(this)" title="현재 화면을 PDF로 추출">📄 PDF 추출</button>';
+    _chips+='<button class="exd-exp" onclick="exSaveImage(this)" title="모바일 화면 그대로 이미지(PNG) 저장">🖼 모바일 캡처</button>';
     dsg.innerHTML=_chips; }
   var pg=document.getElementById('page-export'); if(pg) pg.setAttribute('data-exd',_exDesign);
   var D=_exData();
@@ -3689,9 +3687,23 @@ function _pngSetDpi(buf,dpi){ try{
   var out=new Uint8Array(b.length+21); out.set(b.subarray(0,ihdrEnd),0); out.set(p,ihdrEnd); out.set(b.subarray(ihdrEnd),ihdrEnd+21);
   return out;
 }catch(e){ return new Uint8Array(buf); } }
+/* 모바일 캡처 전용: 실제 '모바일' 디자인(_exdMobile, .xm)을 그대로 렌더해 캡처 (보고서 강제변환 아님 → 화면과 동일) */
+function _exCaptureMobileDesign(bg,scale){
+  if(typeof html2canvas==='undefined') return Promise.reject(new Error('이미지 모듈을 불러오는 중입니다. 잠시 후 다시 시도해주세요.'));
+  var W=360, holder=document.createElement('div');
+  holder.className='exp-cap';   // 자간·그림자 캡처 정상화만, 레이아웃 강제 없음
+  holder.style.cssText='position:fixed;left:-99999px;top:0;width:'+W+'px;background:'+bg+';padding:14px;box-sizing:border-box';
+  try{ holder.innerHTML=_exdMobile(_exData()); }catch(e){ return Promise.reject(e); }
+  document.body.appendChild(holder);
+  return new Promise(function(resolve,reject){ setTimeout(function(){
+    html2canvas(holder,{scale:(scale||3),backgroundColor:bg,width:W,windowWidth:W,scrollX:0,scrollY:0,logging:false})
+      .then(function(cv){ holder.remove(); resolve(cv); })
+      .catch(function(e){ holder.remove(); reject(e); });
+  },80); });
+}
 function exSaveImage(btn){
   var ob=btn?btn.innerHTML:''; _exBusy(btn,true);
-  _exCapture(360,'exp-mobile','#eef1f6',3).then(function(cv){
+  _exCaptureMobileDesign('#eef1f6',3).then(function(cv){
     // 360px 고정 출력(3배 렌더→고품질 축소=슈퍼샘플링) — 편집기가 픽셀=화면크기로 넣으므로 크기 맞는 360으로. 넣고 크기 건드리지 말 것
     var TW=360, out=cv;
     if(cv.width>TW){ var c2=document.createElement('canvas'); c2.width=TW; c2.height=Math.round(cv.height*TW/cv.width); var cx=c2.getContext('2d'); cx.imageSmoothingEnabled=true; cx.imageSmoothingQuality='high'; cx.drawImage(cv,0,0,c2.width,c2.height); out=c2; }
