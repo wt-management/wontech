@@ -1257,6 +1257,7 @@ try{
 
 const fmtW = v => { v=Number(v)||0; return v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만원':Math.round(v).toLocaleString()+'원'; };
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function _jsAttr(s){return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 const sumMo = (o,f,t)=>{ if(!o) return 0; let s=0; for(let m=f;m<=t;m++) s+=Number(o[m]||0); return s; };
 const sumVals = o => o?Object.values(o).reduce((s,v)=>s+(Number(v)||0),0):0;
 const pct = (v,p)=> p>0?(v/p-1)*100:null;
@@ -2395,10 +2396,10 @@ function renderGoals(){
   const card=x=>{ const c=_calc(x);
     const projH=(x.pnd>0&&c.r!=null)?' <span class="gc-sub">→전망 '+c.r.toFixed(0)+'%</span>':'';
     const yoyH=(!x.act25||x.act25<=0)?'<span class="gc-sub">신규</span>':(c.yoy===null?'':badge(c.yoy));
-    return '<div class="gc'+(x.dk?' clk':'')+'"'+(x.dk?(' onclick="openDrill(\''+x.dk+'\',1,'+t+')" title="'+x.label+' 상세 드릴다운"'):'')+'>'+
+    return '<div class="gc'+(x.dk?' clk':'')+'"'+(x.dk?(' onclick="openDrill(\''+_jsAttr(x.dk)+'\',1,'+t+')" title="'+esc(x.label)+' 상세 드릴다운"'):'')+'>'+
       '<div class="gc-pcbox" style="color:'+c.col+'"><div class="gc-pc">'+(c.actC==null?'–':c.actC.toFixed(0)+'%')+'</div><div class="gc-plbl">달성</div></div>'+
       '<div class="gc-body">'+
-        '<div class="gc-r1"><span class="gc-nm"><span class="gc-dot" style="background:'+c.col+'"></span>'+x.label+(x.dk?' <span style="color:#cbd5e1;font-weight:400">›</span>':'')+'</span>'+
+        '<div class="gc-r1"><span class="gc-nm"><span class="gc-dot" style="background:'+c.col+'"></span>'+esc(x.label)+(x.dk?' <span style="color:#cbd5e1;font-weight:400">›</span>':'')+'</span>'+
           '<div class="gc-track"><div class="gc-fill" style="width:'+c.rc.toFixed(1)+'%;background:'+c.bcol+'"></div><div class="gc-fill" style="width:'+c.rg.toFixed(1)+'%;background:'+c.bcol+';opacity:.5"></div></div></div>'+
         '<div class="gc-r2"><span><span class="gc-av">'+fmtW(x.act)+'</span> <span class="gc-tv">/ '+fmtW(x.tgt)+' 목표</span></span>'+
           '<span class="gc-meta"><span class="gc-gap" style="color:'+c.gcol+'">'+c.gapH+'</span>'+projH+' <span class="gc-sub">· 전년</span> '+yoyH+'</span></div>'+
@@ -2532,8 +2533,8 @@ function renderQuarters(){
     {k:'연 환산 전망 <span style="font-weight:500;color:#94a3b8">(run-rate)</span>', v:fmtW(runRate), c:'#0f172a'},
     {k:'연간 목표 진행', v:(yrProg==null?'-':yrProg.toFixed(0)+'%'), c:_achCol(yrProg)}];
   let narr='';
-  if(best&&best.delta>0) narr+='<b class="up">'+best.name+' '+fmtD(best.delta)+' '+(pct(best.val,best.prev)===null?'':arrow(pct(best.val,best.prev)))+'</b> 견인';
-  if(worst&&worst.delta<0) narr+=(narr?' · ':'')+'<b class="dn">'+worst.name+' '+fmtD(worst.delta)+' '+(pct(worst.val,worst.prev)===null?'':arrow(pct(worst.val,worst.prev)))+'</b> 부진';
+  if(best&&best.delta>0) narr+='<b class="up">'+esc(best.name)+' '+fmtD(best.delta)+' '+(pct(best.val,best.prev)===null?'':arrow(pct(best.val,best.prev)))+'</b> 견인';
+  if(worst&&worst.delta<0) narr+=(narr?' · ':'')+'<b class="dn">'+esc(worst.name)+' '+fmtD(worst.delta)+' '+(pct(worst.val,worst.prev)===null?'':arrow(pct(worst.val,worst.prev)))+'</b> 부진';
   document.getElementById('quarters-head').innerHTML=
     '<div class="qh-strip"><div class="qh-main"><div class="qh-k">'+_hLbl+' <span style="font-weight:500;color:#94a3b8">· 1~'+T+'월</span></div>'+
       '<div class="qh-vr"><span class="qh-v" style="color:'+_yoyCol(ytdYoY)+'">'+fmtW(ytdF)+'</span><span class="qh-badge" style="color:'+_yoyCol(ytdYoY)+'">'+(ytdYoY===null?'':arrow(ytdYoY))+'</span></div>'+
@@ -2566,7 +2567,7 @@ function renderQuarters(){
   });
   hm+='</table>';
   document.getElementById('q-seg').innerHTML=hm;
-  document.getElementById('quarters-insight').innerHTML='<i class="bi bi-lightbulb-fill me-1" style="color:#f59e0b"></i>상반기 YoY <b>'+arrow(h1yoy)+'</b>, 2Q 모멘텀 <b style="color:'+_yoyCol(qoq)+'">'+momLbl(qoq)+'</b> · 성장의 <b>'+(best&&best.delta>0?Math.round(best.delta/posSum*100):0)+'%</b>를 <b style="color:#16a34a">'+(best?best.name:'-')+'</b>가 견인'+(worst&&worst.delta<0?(' · <b style="color:#dc2626">'+worst.name+'</b> 잠식 → 회복책 필요'):'');
+  document.getElementById('quarters-insight').innerHTML='<i class="bi bi-lightbulb-fill me-1" style="color:#f59e0b"></i>상반기 YoY <b>'+arrow(h1yoy)+'</b>, 2Q 모멘텀 <b style="color:'+_yoyCol(qoq)+'">'+momLbl(qoq)+'</b> · 성장의 <b>'+(best&&best.delta>0?Math.round(best.delta/posSum*100):0)+'%</b>를 <b style="color:#16a34a">'+(best?esc(best.name):'-')+'</b>가 견인'+(worst&&worst.delta<0?(' · <b style="color:#dc2626">'+esc(worst.name)+'</b> 잠식 → 회복책 필요'):'');
 }
 
 // ── P4 담당자·팀 리더보드 ──
@@ -3375,7 +3376,7 @@ function _exdReport(D){
     h+='<table class="xt"><thead><tr><th>년/월</th><th>금액</th>'+(yoy?'<th>전년동월<br>증감액</th><th>전년동월<br>증감률</th>':'')+'</tr></thead><tbody>';
     var blank=yoy?'<td></td><td></td>':'';
     c.rows.forEach(function(r,i){
-      h+='<tr class="'+(r.prov?'prov':'')+(r.fut?' fut':'')+((!c.isCur&&i===c.rows.length-1)?' last':'')+'"><td>'+r.label+(r.prov?' <i>잠정</i>':'')+'</td><td>'+(r.fut?'':exUsd(r.v))+'</td>'+(yoy?_exYoyTd(r):'')+'</tr>';
+      h+='<tr class="'+(r.prov?'prov':'')+(r.fut?' fut':'')+((!c.isCur&&i===c.rows.length-1)?' last':'')+'"><td>'+esc(r.label)+(r.prov?' <i>잠정</i>':'')+'</td><td>'+(r.fut?'':exUsd(r.v))+'</td>'+(yoy?_exYoyTd(r):'')+'</tr>';
       if(i===5) h+='<tr class="sub"><td>'+c.subH1+'</td><td>'+exUsd(c.h1)+'</td>'+blank+'</tr>';
     });
     h+='<tr class="sub"><td>'+c.subH2+'</td><td>'+exUsd(c.h2)+'</td>'+blank+'</tr>';
