@@ -479,6 +479,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink-2);letter-spac
 .kpi-card,.card,.tm-box,.u-kpi,.g-mini,.q-card,.cust-card,.period-bar,.qfilter-bar,#page-export .ex-kpi{
   border:1px solid var(--line);border-radius:var(--r-md);box-shadow:var(--sh-1)}
 .kpi-card,.card{transition:box-shadow .18s ease,transform .18s ease}
+/* == 디자인 정제(한국영업 톤 이식, 검증용 1차) == */
+.card,.kpi-card{border-radius:16px!important;box-shadow:none!important;border:1px solid #e6e9ef!important}
+.tm-box,.q-card,.cust-card,.qfilter-bar,.g-mini,.gc{border-radius:14px;box-shadow:none}
+.form-control:focus,.form-select:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)!important;outline:none}
+table{font-variant-numeric:tabular-nums}
+.btn{border-radius:8px}
 .kpi-card:hover,.card:hover{box-shadow:var(--sh-2)}
 .kpi-label,.tm-l,.u-kl,.q-lbl,.cc-l{font-size:var(--fs-caption);color:var(--ink-4);font-weight:600}
 .kpi-value{font-size:var(--fs-kpi);font-weight:700;color:var(--ink);line-height:1.1}
