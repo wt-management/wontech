@@ -7308,7 +7308,7 @@ function cduWkPDF(){
   var sheet=document.getElementById('cduwk-sheet'); if(!sheet||!sheet.innerHTML) return;
   var r=_cduWkRange();
   var w=window.open('','_blank'); if(!w){ alert('팝업 차단을 해제해주세요.'); return; }
-  w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>CDU 주간 결과보고 '+r[0]+'</title><style>@page{size:A4 landscape;margin:0}body{margin:0;padding:10mm 12mm;font-family:"Malgun Gothic",sans-serif;background:#fff}table{page-break-inside:auto}tr{page-break-inside:avoid}td,th{border-bottom:1px solid #eef2f7}.cduwk-np{display:none}</style></head><body>'+sheet.innerHTML+'<script>window.onload=function(){setTimeout(function(){window.print();},250);};<\/script></body></html>');
+  w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>CDU 주간 결과보고 '+r[0]+'</title><style>@page{size:A4 landscape;margin:0}body{margin:0;padding:10mm 12mm;font-family:"Malgun Gothic",sans-serif;background:#fff}table{page-break-inside:auto}tr{page-break-inside:avoid}td,th{border-bottom:1px solid #eef2f7}.cduwk-np{display:none}</style></head><body><div id="cduwk-sheet">'+sheet.innerHTML+'</div><script>window.onload=function(){setTimeout(function(){window.print();},250);};<\/script></body></html>');
   w.document.close();
 }
 function cduExportCSV(){
