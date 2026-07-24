@@ -6593,7 +6593,7 @@ function renderCDUReport(vs){
   var allTip=_cduAllTip(); var visShare=allTip?Math.round(visitedRev/allTip*100):0;
   var vipArr=uniqNames.map(n=>({n:n,rev:uniqRev[n]})).filter(x=>x.rev>0).sort((a,b)=>b.rev-a.rev).slice(0,6);
   // 이탈 위험 매출 노출액(연간) + 병원명
-  var churnRev=0, churnNames={}, churnList=[]; churn.forEach(function(v){ var n=(v.custName||'').trim(); var rk=_rk(n); if(n&&churnNames[rk]==null){ churnNames[rk]=1; var rv=_cduRev(n).y2026||0; churnRev+=rv; churnList.push({name:n,risk:(v.churnRisk||'').trim(),rev:rv}); } });
+  var churnRev=0, churnNames={}, churnList=[], churnU=[]; churn.forEach(function(v){ var n=(v.custName||'').trim(); var rk=_rk(n); if(n&&churnNames[rk]==null){ churnNames[rk]=1; var rv=_cduRev(n).y2026||0; churnRev+=rv; churnList.push({name:n,risk:(v.churnRisk||'').trim(),rev:rv}); churnU.push(v); } });
   // 경쟁사 매출가중(경쟁사별 노출 병원의 매출 합)
   var compRev={}, compRevSeen={}; vs.forEach(function(v){ var c=(v.competitor||'').trim(); var n=(v.custName||'').trim(); if(!c||!n)return; var k=c+'|'+_rk(n); if(compRevSeen[k])return; compRevSeen[k]=1; compRev[c]=(compRev[c]||0)+(_cduRev(n).y2026||0); });
   var compRevArr=Object.entries(compRev).sort((a,b)=>b[1]-a[1]);
@@ -6647,7 +6647,7 @@ function renderCDUReport(vs){
     : '<div style="font-size:13px;color:#64748b">아직 기록된 미구매 사유가 없습니다 — 방문 결과 입력에서 <b>[소모품 미구매 사유]</b>를 남기면 여기에 누적됩니다.</div>';
   var _tipOnly2=t=>String(t[2]||'').indexOf('Oligio Tip')===0;
   var _convN=0,_convAmt=0,_convHosp={};
-  Object.keys(firstDate).forEach(function(n){
+  uniqNames.forEach(function(n){
     var f=firstDate[n]; if(!f) return;
     var rv=_cduRev(n); var tx=(rv.txns2026||[]).filter(_tipOnly2).filter(t=>String(t[1]||'')>f);
     var s2=tx.reduce((s,t)=>s+Number(t[3]||0),0);
@@ -6659,12 +6659,12 @@ function renderCDUReport(vs){
   uniqNames.forEach(function(n){ var r=_cduRev(n); var y26=r.y2026||0, y25=r.y2025||0;
     if(y26<=0&&y25>0) _clsDor.push(n);
     else if(y25>0&&(y26*12/_mmC)<y25*0.4) _clsDrop.push(n);
-    if(_cduReasonOf(n)) _rsKnown[n]=1; });
+    var _ro=_cduReasonOf(n); if(_ro&&_ro.reason) _rsKnown[n]=1; });
   var _rsKnownN=Object.keys(_rsKnown).length;
   window._cduDrillCls=function(w){ var set=(w==='dor'?_clsDor:_clsDrop), s4={}; _cduDrill(w==='dor'?'휴면 병원 방문(올해 팁매출 0)':'급감 병원 방문(작년比 60%↓)', _cduRepVs.filter(function(v){ var n=(v.custName||'').trim(); if(set.indexOf(n)<0||s4[n]) return false; s4[n]=1; return true; })); };
   window._cduDrillRsKnown=function(){ var s5={}; _cduDrill('미구매 사유 파악 병원', _cduRepVs.filter(function(v){ var n=(v.custName||'').trim(); if(!_rsKnown[n]||s5[n]) return false; s5[n]=1; return true; })); };
   // 이탈 위험 리스트
-  var churnHtml = churn.length? churn.map(function(v){ return '<div onclick="openCDUHosp(\''+_cduEsc(v.custName).replace(/\x27/g,"\\x27")+'\')" style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f1f5f9;cursor:pointer">'
+  var churnHtml = churnU.length? churnU.map(function(v){ return '<div onclick="openCDUHosp(\''+_cduEsc(v.custName).replace(/\x27/g,"\\x27")+'\')" style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f1f5f9;cursor:pointer">'
       +'<span style="font-size:13px;font-weight:700;flex-shrink:0;min-width:120px;color:#0f172a">'+_cduEsc(v.custName)+'</span>'
       +(v.competitor?'<span style="font-size:11.5px;font-weight:700;color:#dc2626;background:#fef2f2;border-radius:4px;padding:1px 6px;flex-shrink:0">'+_cduEsc(v.competitor)+'</span>':'')
       +'<span style="font-size:12.5px;color:#475569;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_cduEsc(v.churnRisk)+'</span>'
@@ -6689,7 +6689,7 @@ function renderCDUReport(vs){
     +'<div class="cdud-kpis">'
     +'<div class="cdud-hero" onclick="_cduDrillAll()"><span class="l">방문 관리 병원</span><b>'+nHosp+'개처</b><span class="s">방문 <span style="color:var(--acc);font-weight:800">'+nVisit+'건</span> · 영업일수 <span style="color:var(--acc);font-weight:800">'+days.size+'일</span></span></div>'
     +fact('올해 팁매출',_cduWon(visitedRev),(visitedRevPrev>0?'전년 동기 '+_cduWon(visitedRevPrev):'관리처 팁매출'),'','_cduDrillVip()')
-    +fact('리스크 감지',churn.length+'개처',(churn.length?'선제 대응 진행 중':'감지 리스크 없음'),(churn.length?'rd':''),'_cduDrillChurn()')
+    +fact('리스크 감지',churnU.length+'개처',(churnU.length?'선제 대응 진행 중':'감지 리스크 없음'),(churnU.length?'rd':''),'_cduDrillChurn()')
     +fact('이벤트 진행',ev+'건','마케팅 이벤트 방문','',ev?'_cduDrillEvent()':'')
   +'</div>';
   var focusBand='<div class="cdud-bt">집중관리 분석 <u>· 이 기간 방문이 휴면·급감 공략으로 이어졌는가 · 클릭 상세</u></div>'
@@ -7374,7 +7374,7 @@ function renderQuotes() {
   let list=[...DB.d.quotes];
   if(!canAll&&me) list=list.filter(q=>{
     const by=(q.by||'').trim(), sl=(q.sales||'').trim();
-    return (by&&(by===me||by.includes(me)||me.includes(by))) || (!by&&sl&&(sl.includes(me)||me.includes(sl)));
+    return (by&&by===me) || (!by&&sl&&sl===me);
   });
   const sorted=list.reverse();
   if(!sorted.length){el.innerHTML='<tr><td colspan="7" class="text-center text-muted py-3">'+(canAll?'견적서 없음':'내가 작성한 견적서가 없습니다 — [새 견적서]로 작성하세요')+'</td></tr>';return;}
@@ -8221,8 +8221,8 @@ function renderCustomers(){
   const salesF=(salesSel&&salesSel.value)||'';
   const q=(document.getElementById('search-cust').value||'').toLowerCase();
   let f=all.filter(h=>!q||h.name.toLowerCase().includes(q)||h.sido.includes(q)||h.gugun.includes(q)||(h.sales||'').toLowerCase().includes(q)||(h.mgr||'').toLowerCase().includes(q)||(h.topProd||'').toLowerCase().includes(q));
-  if(salesF==='__none__') f=f.filter(h=>!h.mgr);
-  else if(salesF) f=f.filter(h=>(h.mgr||'')===salesF);
+  if(salesF==='__none__') f=f.filter(h=>!(h.mgr||h.sales));
+  else if(salesF) f=f.filter(h=>((h.mgr||h.sales)||'')===salesF);
   document.getElementById('cust-count').textContent=f.filter(h=>h.y2026>0||h.y2025>0).length+'개 거래처'+(salesF?' · 담당 '+_custEsc(salesF==='__none__'?'미배정':salesF):'');
   const body=document.getElementById('cust-body');
   if(_custView==='sales') body.innerHTML=_custSalesView(f);
@@ -8940,7 +8940,7 @@ let _schDoneOnly=false, _schDoneMode='week', _schDoneRef=null, _schNoDim=false;
 let _schRef=null;   // 오늘/이번주 뷰의 기준일(null=오늘)
 function _schShift(d){ const unit=(_schView==='week')?7:1; const p=(_schRef||_schTodayStr()).split('-').map(Number); const dt=new Date(p[0],p[1]-1,p[2]); dt.setDate(dt.getDate()+d*unit); _schRef=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); renderSchedule(); }
 function _schNavBtns(){ return '<button class="btn btn-sm btn-outline-secondary" onclick="_schShift(-1)"><i class="bi bi-chevron-left"></i></button> <button class="btn btn-sm btn-outline-secondary" onclick="_schRef=null;renderSchedule()">오늘</button> <button class="btn btn-sm btn-outline-secondary" onclick="_schShift(1)"><i class="bi bi-chevron-right"></i></button>'; }
-function _schShowDoneOnly(){ _schDoneOnly=true; _schOverdueOnly=false; _schDoneRef=_schTodayStr(); renderSchedule(); }
+function _schShowDoneOnly(){ _schDoneOnly=true; _schOverdueOnly=false; _schDoneRef=(_schView==='week'&&_schRef)?_schRef:_schTodayStr(); renderSchedule(); }
 function _schDoneModeSet(m){ _schDoneMode=m; renderSchedule(); }
 function _schDoneNav(d){ const p=(_schDoneRef||_schTodayStr()).split('-').map(Number); const dt=new Date(p[0],p[1]-1,p[2]); dt.setDate(dt.getDate()+d*(_schDoneMode==='week'?7:1)); _schDoneRef=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); renderSchedule(); }
 const _SCH_COL={'방문':'#2563eb','콜':'#0891b2','데모':'#7c3aed','A/S':'#ea580c','기타':'#64748b','후속':'#64748b','견적발송':'#7c3aed','계약검토':'#7c3aed'};
