@@ -1237,6 +1237,31 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
   <!-- 고객사 (실제 거래 데이터 기반) -->
   <div id="page-customers" class="page">
+<style id="cust-refine">
+/* == 고객사 화면 정제(Apple 감성: 단일 액센트 블루·헤어라인·타이트 타이포) == */
+#page-customers{--acc:#0066cc;--hair:#e0e0e0;--ink:#1d1d1f;--muted:#86868b;--parch:#f5f5f7}
+#page-customers .wt-mast .t{letter-spacing:-.02em}
+/* 뷰 선택 카드 */
+#page-customers .cust-vcard{cursor:pointer;border:1px solid var(--hair);background:#fff;border-radius:14px;padding:13px 15px;transition:border-color .15s,background .15s}
+#page-customers .cust-vcard i{color:var(--muted);font-size:17px}
+#page-customers .cust-vcard .vl{font-weight:600;font-size:14px;color:var(--ink);letter-spacing:-.01em}
+#page-customers .cust-vcard .vs{font-size:11.5px;color:var(--muted);margin-top:5px;font-variant-numeric:tabular-nums}
+#page-customers .cust-vcard.on{border-color:var(--acc);background:rgba(0,102,204,.05)}
+#page-customers .cust-vcard.on i,#page-customers .cust-vcard.on .vl{color:var(--acc)}
+/* 검색·필터·버튼: 알약 */
+#page-customers #search-cust,#page-customers #cust-sales-filter{border-radius:9999px;border:1px solid var(--hair);font-size:13px;padding-left:14px;padding-right:14px}
+#page-customers #search-cust:focus,#page-customers #cust-sales-filter:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(0,102,204,.12)}
+#page-customers #cust-mine-btn{border-radius:9999px;border-color:var(--acc);color:var(--acc);font-weight:600}
+#page-customers #cust-mine-btn:hover{background:var(--acc);color:#fff}
+/* 표: 헤어라인·파치먼트 헤더·타이트 타이포·그림자 제거 */
+#page-customers .card{border:1px solid var(--hair);box-shadow:none;border-radius:14px;overflow:hidden}
+#page-customers .table{font-variant-numeric:tabular-nums;letter-spacing:-.01em;margin-bottom:0}
+#page-customers .table thead th{background:var(--parch);color:var(--muted);font-weight:600;font-size:12px;border-top:none;border-bottom:1px solid var(--hair);text-transform:none;letter-spacing:0;padding-top:10px;padding-bottom:10px}
+#page-customers .table tbody td{border-color:#f0f0f0;padding-top:11px;padding-bottom:11px;vertical-align:middle}
+#page-customers .table-hover tbody tr:hover td{background:var(--parch)}
+#page-customers .table strong{font-weight:600;color:var(--ink)}
+</style>
+
     <div class="wt-mast"><div><div class="kick">WONTECH SALES</div><div class="t">고객사</div></div><span class="text-muted" style="font-size:12px"><i class="bi bi-info-circle me-1"></i>실제 매출 데이터 기반 · 병원 클릭 → 상세·정보수정</span></div>
     <!-- 보기 선택 카드 -->
     <div class="row g-2 mb-3" id="cust-view-cards"></div>
@@ -8060,7 +8085,7 @@ function renderCustomers(){
     {v:'grade',ic:'bi-layers-fill',c:'#9333ea',lab:'등급별',sub:'S '+all.filter(h=>h.grade==='S').length+' · A '+all.filter(h=>h.grade==='A').length},
     {v:'new',ic:'bi-stars',c:'#d97706',lab:'신규·이탈',sub:'신규 '+nw+' · 이탈 '+lost},
   ];
-  document.getElementById('cust-view-cards').innerHTML=cards.map(c=>'<div class="col-6 col-md-3"><div onclick="setCustView(\''+c.v+'\')" style="cursor:pointer;border:2px solid '+(_custView===c.v?c.c:'#e5e7eb')+';background:'+(_custView===c.v?c.c+'0d':'#fff')+';border-radius:12px;padding:12px 14px"><div style="display:flex;align-items:center;gap:8px"><i class="bi '+c.ic+'" style="color:'+c.c+';font-size:18px"></i><span style="font-weight:700;font-size:14px;color:'+(_custView===c.v?c.c:'#374151')+'">'+c.lab+'</span></div><div style="font-size:11px;color:#6b7280;margin-top:4px">'+c.sub+'</div></div></div>').join('');
+  document.getElementById('cust-view-cards').innerHTML=cards.map(function(c){var on=_custView===c.v;return '<div class="col-6 col-md-3"><div onclick="setCustView(\''+c.v+'\')" class="cust-vcard'+(on?' on':'')+'"><div style="display:flex;align-items:center;gap:8px"><i class="bi '+c.ic+'"></i><span class="vl">'+c.lab+'</span></div><div class="vs">'+c.sub+'</div></div></div>';}).join('');
   // 담당영업 드롭다운 채우기(1회) — 콜스케줄용(엑셀 담당영업 기준)
   const salesSel=document.getElementById('cust-sales-filter');
   _fillSalesFilter(salesSel, '<option value="__none__">— 미배정 —</option>');
