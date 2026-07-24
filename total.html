@@ -2617,12 +2617,17 @@ function renderCustomers(){
   const H={};
   const acc=hs=>{ for(const nm in (hs||{})){ const h=hs[nm]; if(!H[nm]) H[nm]={y26:0,y25:0}; H[nm].y26+=Number(h.y2026||0); H[nm].y25+=Number(h.y2025||0); } };
   acc(CONS.hospitals); acc(DEVICE.hospitals);
+  for(const nm in H) H[nm].dom=true;
+  // 전사: 해외 거래처(디스트리뷰터/클리닉) 포함 — 2026 누적 total + 2025 연간 total (단위 원, 국내와 동일)
+  const _cs2=INTL.countries||{}, _cs25=(INTL.data2025||{}).countries||{};
+  for(const cc in _cs2){ const cd=_cs2[cc].clientData||{}; for(const nm in cd){ if(!H[nm])H[nm]={y26:0,y25:0}; H[nm].y26+=Number(cd[nm].total)||0; H[nm].intl=true; if(!H[nm].ctry)H[nm].ctry=cc; } }
+  for(const cc in _cs25){ const cd=_cs25[cc].clientData||{}; for(const nm in cd){ if(!H[nm])H[nm]={y26:0,y25:0}; H[nm].y25+=Number(cd[nm].total)||0; H[nm].intl=true; if(!H[nm].ctry)H[nm].ctry=cc; } }
   // 올해는 1~t월 누적, 전년은 연간 → 공정비교 위해 올해를 연환산(run-rate)
   const t=_execT(), ann=t>0?12/t:1;
-  let active=0,nw=0,nwAmt=0,keep=0,riskN=0; const names=[], rows=[];
-  for(const nm in H){ const h=H[nm]; const rr=h.y26*ann;
-    rows.push({nm,y26:h.y26,y25:h.y25,rr,d:rr-h.y25});
-    if(h.y26>0){active++; names.push({nm,v:h.y26});} if(h.y26>0&&!(h.y25>0)){nw++;nwAmt+=h.y26;} if(h.y26>0&&h.y25>0)keep++; }
+  let active=0,nw=0,nwAmt=0,keep=0,riskN=0,domA=0,intlA=0; const names=[], rows=[];
+  for(const nm in H){ const h=H[nm]; const rr=h.y26*ann, isI=!!h.intl&&!h.dom;
+    rows.push({nm,y26:h.y26,y25:h.y25,rr,d:rr-h.y25,intl:isI,ctry:h.ctry});
+    if(h.y26>0){active++; if(isI)intlA++;else domA++; names.push({nm,v:h.y26,intl:isI,ctry:h.ctry});} if(h.y26>0&&!(h.y25>0)){nw++;nwAmt+=h.y26;} if(h.y26>0&&h.y25>0)keep++; }
   names.sort((a,b)=>b.v-a.v); const totAmt=names.reduce((s,x)=>s+x.v,0)||1;
   const top10=names.slice(0,10).reduce((s,x)=>s+x.v,0), conc=top10/totAmt*100;
   const risk=rows.filter(x=>x.y25>0&&(x.y26<=0||x.d<0)).sort((a,b)=>a.d-b.d); riskN=risk.length;
@@ -2630,28 +2635,29 @@ function renderCustomers(){
   let cn='';
   if(names[0]) cn+='<b class="up">'+esc(names[0].nm)+' '+fmtW(names[0].v)+'</b> 최대 거래처';
   if(risk[0]) cn+=(cn?' · ':'')+'<b class="dn">'+esc(risk[0].nm)+' '+fmtD(risk[0].d)+'</b> '+(risk[0].y26<=0?'올해 미구매':'둔화');
-  document.getElementById('cust-head').innerHTML='<div class="eh-l">국내 거래처 <span style="font-weight:500;color:#94a3b8">· 올해 누적(연환산) vs 전년 연간</span></div>'+
+  document.getElementById('cust-head').innerHTML='<div class="eh-l">전사 거래처 <span style="font-weight:500;color:#94a3b8">· 국내+해외 · 올해 누적(연환산) vs 전년 연간</span></div>'+
     '<div class="eh-v">'+active+'개사 <span style="font-size:1rem;color:#16a34a">신규 +'+nw+'</span></div>'+
-    '<div class="eh-l" style="color:#94a3b8;font-weight:500">유지 '+keep+'개 · 상위10 집중도 '+conc.toFixed(0)+'% · 재구매 필요 '+riskN+'개사</div>'+
+    '<div class="eh-l" style="color:#94a3b8;font-weight:500">국내 '+domA+' · 해외 '+intlA+' · 유지 '+keep+'개 · 상위10 집중도 '+conc.toFixed(0)+'% · 재구매 필요 '+riskN+'개사</div>'+
     (cn?'<div class="exec-narr">'+cn+'</div>':'');
   const card=(lbl,big,sub,col)=>'<div class="cust-card acc-card" style="border-left-color:'+(col||'#cbd5e1')+'"><div class="cc-l">'+lbl+'</div><div class="cc-v" style="color:'+(col||'#0f172a')+'">'+big+'</div><div class="cc-s">'+sub+'</div></div>';
   document.getElementById('cust-cards').innerHTML=
-    card('국내 활성 거래처','<b>'+active+'</b>개','전년에도 거래 '+keep+'개 유지','#2563eb')+
+    card('활성 거래처 <span style="font-size:10px;color:#94a3b8">(전사)</span>','<b>'+active+'</b>개','전년에도 거래 '+keep+'개 유지','#2563eb')+
     card('신규 유입','<b style="color:#16a34a">+'+nw+'</b>개',fmtW(nwAmt)+' 신규 매출','#16a34a')+
     card('재구매 필요','<b style="color:#f59e0b">'+riskN+'</b>개','전년 거래·올해 페이스 둔화','#f59e0b')+
     card('상위10 집중도',conc.toFixed(0)+'%','롱테일 '+(100-conc).toFixed(0)+'% · 이탈 시 충격','#f59e0b')+
-    card('해외 거래처','<b>'+intlActive+'</b>개','국가별 디스트리뷰터/거래처','#0d9488');
+    card('국내 / 해외 구성','<b style="color:#2563eb">'+domA+'</b> <span style="color:#cbd5e1">/</span> <b style="color:#0d9488">'+intlA+'</b>','국내 병원 · 해외 디스트리뷰터','#0d9488');
   const maxRev=names.length?names[0].v:1, maxLoss=Math.max(1,...risk.slice(0,7).map(x=>Math.abs(x.d)));
   _custRows=[];   // 거래처 드릴 캐시(인덱스 onclick)
+  const _oTag=x=>x.intl?' <span style="font-size:9.5px;font-weight:700;color:#0d9488;background:#e6f7f4;border-radius:4px;padding:0 5px">해외'+(x.ctry?'·'+esc(x.ctry):'')+'</span>':'';
   const lrow=x=>{ const gi=_custRows.push(x.nm)-1;
-    return '<div class="dl-row clk" onclick="openCustInfo('+gi+')" title="거래처 상세"><span class="dl-dot" style="background:#2563eb"></span><span class="dl-name">'+esc(x.nm)+' <span style="color:#cbd5e1">›</span></span><div style="width:78px;height:7px;background:#f1f5f9;border-radius:4px;overflow:hidden;flex-shrink:0"><div style="width:'+Math.min(x.v/maxRev*100,100).toFixed(0)+'%;height:100%;background:#2563eb;border-radius:3px"></div></div><span class="dl-d" style="color:#1d4ed8">'+fmtW(x.v)+'</span></div>'; };
+    return '<div class="dl-row clk" onclick="openCustInfo('+gi+')" title="거래처 상세"><span class="dl-dot" style="background:'+(x.intl?'#0d9488':'#2563eb')+'"></span><span class="dl-name">'+esc(x.nm)+_oTag(x)+' <span style="color:#cbd5e1">›</span></span><div style="width:78px;height:7px;background:#f1f5f9;border-radius:4px;overflow:hidden;flex-shrink:0"><div style="width:'+Math.min(x.v/maxRev*100,100).toFixed(0)+'%;height:100%;background:'+(x.intl?'#5eead4':'#93c5fd')+';border-radius:3px"></div></div><span class="dl-d" style="color:'+(x.intl?'#0d9488':'#1d4ed8')+'">'+fmtW(x.v)+'</span></div>'; };
   const rrow=x=>{ const gi=_custRows.push(x.nm)-1;
-    return '<div class="dl-row clk" onclick="openCustInfo('+gi+')" title="거래처 상세"><span class="dl-dot" style="background:#dc2626"></span><span class="dl-name">'+esc(x.nm)+' <span style="color:#cbd5e1">›</span></span>'+divBar(x.d,maxLoss)+'<span class="dl-d" style="color:#dc2626">'+fmtD(x.d)+'</span><span class="dl-sub">'+(x.y26<=0?'올해 미구매':fmtW(x.y26))+'</span></div>'; };
+    return '<div class="dl-row clk" onclick="openCustInfo('+gi+')" title="거래처 상세"><span class="dl-dot" style="background:#dc2626"></span><span class="dl-name">'+esc(x.nm)+_oTag(x)+' <span style="color:#cbd5e1">›</span></span>'+divBar(x.d,maxLoss)+'<span class="dl-d" style="color:#dc2626">'+fmtD(x.d)+'</span><span class="dl-sub">'+(x.y26<=0?'올해 미구매':fmtW(x.y26))+'</span></div>'; };
   const dcol=(title,arr,rfn,c)=>'<div><div class="dl-h" style="color:'+c+'">'+title+'</div>'+(arr.length?arr.map(rfn).join(''):'<div class="muted" style="font-size:12px;padding:10px 4px">해당 없음</div>')+'</div>';
   document.getElementById('cust-churn').innerHTML='<div class="dual-grid">'+dcol('🔵 주력 거래처 Top (올해 매출)',names.slice(0,7),lrow,'#1d4ed8')+dcol('🟠 재구매 필요 (둔화·미구매)',risk.slice(0,7),rrow,'#b45309')+'</div>'+
-    '<div class="muted" style="font-size:10.5px;margin-top:8px">※ ‘재구매 필요’=전년 거래처 중 올해 누적을 연환산(×'+ann.toFixed(1)+')해도 전년 미만이거나 올해 미구매. 올해 1~'+t+'월 누적 기준.</div>';
+    '<div class="muted" style="font-size:10.5px;margin-top:8px">※ 전사(국내 병원 + 해외 디스트리뷰터/거래처). ‘재구매 필요’=전년 거래처 중 올해 누적을 연환산(×'+ann.toFixed(1)+')해도 전년 미만이거나 올해 미구매. 올해 1~'+t+'월 누적 기준.</div>';
   const riskAmt=risk.slice(0,2).reduce((s,x)=>s+Math.abs(x.d),0);
-  document.getElementById('cust-insight').innerHTML='<i class="bi bi-lightbulb-fill me-1" style="color:#f59e0b"></i>활성 <b>'+active+'개사</b> · 신규 <b>+'+nw+'개사</b>('+fmtW(nwAmt)+') · 매출의 <b>'+conc.toFixed(0)+'%</b>가 상위10 집중 → 이탈 시 충격'+(risk[0]?(' · <b style="color:#dc2626">'+risk[0].nm+(risk[1]?'·'+risk[1].nm:'')+'</b> 등 '+fmtW(riskAmt)+' 둔화 → 키어카운트 재방문'):'');
+  document.getElementById('cust-insight').innerHTML='<i class="bi bi-lightbulb-fill me-1" style="color:#f59e0b"></i>전사 활성 <b>'+active+'개사</b> <span style="color:#94a3b8">(국내 '+domA+'·해외 '+intlA+')</span> · 신규 <b>+'+nw+'개사</b>('+fmtW(nwAmt)+') · 매출의 <b>'+conc.toFixed(0)+'%</b>가 상위10 집중 → 이탈 시 충격'+(risk[0]?(' · <b style="color:#dc2626">'+risk[0].nm+(risk[1]?'·'+risk[1].nm:'')+'</b> 등 '+fmtW(riskAmt)+' 둔화 → 키어카운트 재방문'):'');
 }
 
 // ══ "누르면 조회" 공통 인프라: 페이지 점프 + 범용 엔티티 드릴(제품·담당자·거래처) ══
