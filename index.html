@@ -4409,8 +4409,8 @@ async function doLogin() {
   const pw = (document.getElementById('login-pw')?.value||'').trim();
   const errEl = document.getElementById('login-error');
   const {data, error} = await _sb.auth.signInWithPassword({email, password: pw});
-  if(error) { if(errEl) errEl.style.display='block'; return; }
-  if(errEl) errEl.style.display='none';
+  if(error) { if(errEl) errEl.style.display='block'; _loginFailN=(_loginFailN||0)+1; if(_loginFailN>=7) _showLoginHelpPopup(); return; }
+  if(errEl) errEl.style.display='none'; _loginFailN=0;
   sessionStorage.removeItem('wt_app');   // 로그인 시 이전 앱 상태 무시 → 런처부터
   sessionStorage.removeItem('wt_page');  // 이전 계정이 머문 페이지 복원 방지
   document.getElementById('login-screen').style.display='none';
@@ -4418,6 +4418,14 @@ async function doLogin() {
   _applyLoginUI(data.user);   // 좌측하단 사용자 블록 표시(신규 로그인 시 누락되던 버그)
   await _loadSalesTeam();      // 로그인 후 담당자 명단 최신화(자동반영)
   await _showLauncherOrApp(data.user);
+}
+var _loginFailN=0;
+function _showLoginHelpPopup(){
+  if(document.getElementById('login-help-pop')) return;
+  var d=document.createElement('div'); d.id='login-help-pop';
+  d.style.cssText='position:fixed;inset:0;z-index:10001;background:rgba(15,23,42,.6);display:flex;align-items:center;justify-content:center;font-family:inherit;padding:20px';
+  d.innerHTML='<div style="background:#fff;border-radius:18px;padding:30px 26px;width:min(320px,92vw);text-align:center;box-shadow:0 25px 60px rgba(0,0,0,.45)"><div style="font-size:38px;margin-bottom:10px">\uD83D\uDE05</div><div style="font-size:17px;font-weight:800;color:#111827;margin-bottom:8px">\uBE44\uBC00\uBC88\uD638\uAC00 \uAE30\uC5B5\uC774 \uC548 \uB098\uC2DC\uB098\uC694?</div><div style="font-size:13px;color:#475569;line-height:1.6">\uBC8C\uC368 7\uBC88\uC774\uB098 \uD2C0\uB9AC\uC168\uB124\uC694\u00B7\u00B7\u00B7<br><b>\uC601\uC5C5\uC804\uB7B5\uD30C\uD2B8</b>\uC5D0\uC11C \uCE5C\uD55C\uBD84\uD55C\uD14C<br>\uC7AC\uC124\uC815 \uC758\uB8B0\uD558\uC138\uC694~ \uD83D\uDE4F</div><button onclick="var p=document.getElementById(String.fromCharCode(108,111,103,105,110,45,104,101,108,112,45,112,111,112));if(p)p.remove();" style="margin-top:18px;background:#0d9488;color:#fff;border:none;border-radius:8px;padding:10px 22px;font-size:13px;font-weight:700;cursor:pointer">\uC54C\uC558\uC5B4\uC694</button></div>';
+  document.body.appendChild(d);
 }
 
 // 일일 회계파일 업로드 페이지 열기(세션 토큰 전달 → 재로그인 불필요)
