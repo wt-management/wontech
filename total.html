@@ -3249,9 +3249,11 @@ function renderExport(){
   exUpdProv();
   var dsg=document.getElementById('ex-dsg');
   if(dsg){ var _chips=_EXD_LIST.map(function(d){return '<button class="exd-chip'+(d[0]===_exDesign?' on':'')+'" onclick="exSetDesign(\''+d[0]+'\')">'+d[1]+'</button>';}).join('');
-    _chips+='<span class="exd-sep"></span>';
-    if(_exDesign==='report'||_exDesign==='brief') _chips+='<button class="exd-exp" onclick="exPrintDesign(this)" title="현재 화면을 PDF로 추출">📄 PDF 추출</button>';
-    _chips+='<button class="exd-exp" onclick="exSaveImage(this)" title="모바일 화면 그대로 이미지(PNG) 저장">🖼 모바일 캡처</button>';
+    if(_exDesign==='report'||_exDesign==='brief'){
+      _chips+='<span class="exd-sep"></span>'
+        +'<button class="exd-exp" onclick="exPrintDesign(this)" title="현재 화면을 PDF로 추출">📄 PDF 추출</button>'
+        +'<button class="exd-exp" onclick="exSaveImage(this)" title="휴대폰 화면 구성으로 이미지(PNG) 저장">🖼 모바일 캡처</button>';
+    }
     dsg.innerHTML=_chips; }
   var pg=document.getElementById('page-export'); if(pg) pg.setAttribute('data-exd',_exDesign);
   var D=_exData();
@@ -3504,47 +3506,9 @@ function _exdBrief(D){
   return h+'</div>';
 }
 
-/* ══ ③ 모바일 — 스타일 유지 + 내용 보강 ══ */
+/* ══ ③ 모바일 — '모바일 캡처' 출력과 동일: 보고서 디자인을 .exp-mobile 단일열 레이아웃으로 ══ */
 function _exdMobile(D){
-  var c=D.cur; if(!c) return '';
-  var R=50, CIRC=2*Math.PI*R, off=CIRC*(1-Math.min(c.pct,100)/100);
-  var pastRows=c.rows.filter(function(r){return !r.fut;});
-  var prevAvg=D.prev?D.prev.tot/12:0;
-  var vsPrev=prevAvg>0?((D.needAvg/prevAvg-1)*100):null;
-  var h='<div class="xm">';
-  h+='<div class="xm-hero"><div class="xm-ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="'+R+'" class="bg"/><circle cx="60" cy="60" r="'+R+'" class="fg" stroke-dasharray="'+CIRC.toFixed(1)+'" stroke-dashoffset="'+Math.min(off,CIRC-2).toFixed(1)+'"/></svg>'
-    +'<div class="xm-ring-c"><b>'+c.pct.toFixed(1)+'<i>%</i></b><span>달성률</span></div></div>'
-    +'<div class="xm-hd"><div class="xm-t">'+esc(c.title)+'</div><div class="xm-l">'+esc(c.label)+' · 진행중 · '+D.elapsed+'/12개월</div>'
-    +'<div class="xm-big">'+exUsd(c.tot)+'</div><div class="xm-sub">목표 '+exUsdM(c.target)+' · 잔여 '+exUsdM(Math.abs(c.diff))+'</div>'
-    +'<div class="xm-gg"><i style="width:'+Math.max(Math.min(c.pct,100),0.8).toFixed(1)+'%"></i></div></div></div>';
-  h+='<div class="xm-stats">'
-    +'<div class="xm-st"><span>잔여</span><b>'+exUsdM(Math.abs(c.diff))+'</b></div>'
-    +'<div class="xm-st"><span>월평균 필요</span><b>'+exUsdM(D.needAvg)+'</b></div>'
-    +'<div class="xm-st"><span>직전차수 페이스比</span><b>'+(vsPrev!=null?((vsPrev>=0?'+':'')+vsPrev.toFixed(0)+'%'):'-')+'</b></div></div>';
-  if(vsPrev!=null) h+='<div class="xm-note">직전 차수 월평균 '+exUsdM(prevAvg)+' → 이번 차수는 매월 <b>'+exUsdM(D.needAvg)+'</b> 필요'+(vsPrev>0?' (강도 +'+vsPrev.toFixed(0)+'%)':'')+'</div>';
-  h+='<div class="xm-sec">이번 차수 월별 <span>전년동월(직전 차수) 대비</span></div><div class="xm-list">';
-  pastRows.forEach(function(r){
-    var yoy=(r.p!=null&&r.v>0)?('<em class="'+(r.d>=0?'up':'dn')+'">'+(r.d>=0?'▲':'▼')+Math.abs(r.p).toFixed(0)+'%</em>'):'';
-    h+='<div class="xm-row"><span>'+r.label+(r.prov?' <i>잠정</i>':'')+'</span><span class="r">'+yoy+'<b>'+exUsd(r.v)+'</b></span></div>';
-  });
-  if(c.rows.length>pastRows.length) h+='<div class="xm-row mut"><span>이후 '+(c.rows.length-pastRows.length)+'개월</span><b>대기</b></div>';
-  h+='</div>';
-  if(D.prev){
-    var pmax=Math.max.apply(null,D.prev.rows.map(function(r){return r.v;}));
-    h+='<details class="xm-prev"><summary>'+esc(D.prev.title)+' ('+esc(D.prev.label)+') · '+D.prev.pct.toFixed(0)+'% 달성 ✓</summary>'
-      +'<div class="xm-pvsum"><span>총 '+exUsd(D.prev.tot)+'</span><span>월평균 '+exUsdM(D.prev.tot/12)+'</span><span>최고월 '+exUsdM(pmax)+'</span></div><div class="xm-list">';
-    D.prev.rows.forEach(function(r){ h+='<div class="xm-row"><span>'+r.label+(r.v===pmax?' <i class="best">최고</i>':'')+'</span><b>'+exUsd(r.v)+'</b></div>'; });
-    h+='<div class="xm-row tot"><span>총계</span><b>'+exUsd(D.prev.tot)+'</b></div></div></details>';
-  }
-  h+='<div class="xm-sec">최근 3개년</div><div class="xm-caps">';
-  function capRows(rows){ return rows.map(function(r,i){
-    var pv=i>0?rows[i-1].v:null; var g=pv?((r.v/pv-1)*100):null;
-    var yoy=(g!=null)?('<em class="'+(g>=0?'up':'dn')+'">'+(g>=0?'▲':'▼')+Math.abs(g).toFixed(0)+'%</em>'):'';
-    return '<div class="xm-row"><span>'+esc(r.y)+(r.live?' <i>진행</i>':'')+'</span><span class="r">'+yoy+'<b>'+exUsd(r.v)+'</b></span></div>'; }).join(''); }
-  h+='<div class="xm-cap"><div class="t">수출 실적 <span>전년 7월~당해 6월 · KITA</span></div>'+capRows(D.kitaExp)+'</div>';
-  h+='<div class="xm-cap"><div class="t">해외 실적 <span>1~12월 · KITA</span></div>'+capRows(D.kita)+'</div>';
-  h+='</div></div>';
-  return h;
+  return '<div class="exp-mobile" style="max-width:480px;margin:0 auto">'+_exdReport(D)+'</div>';
 }
 
 /* ══ ④ 스코어카드 — 12개월 카드 그리드 ══ */
@@ -3687,23 +3651,9 @@ function _pngSetDpi(buf,dpi){ try{
   var out=new Uint8Array(b.length+21); out.set(b.subarray(0,ihdrEnd),0); out.set(p,ihdrEnd); out.set(b.subarray(ihdrEnd),ihdrEnd+21);
   return out;
 }catch(e){ return new Uint8Array(buf); } }
-/* 모바일 캡처 전용: 실제 '모바일' 디자인(_exdMobile, .xm)을 그대로 렌더해 캡처 (보고서 강제변환 아님 → 화면과 동일) */
-function _exCaptureMobileDesign(bg,scale){
-  if(typeof html2canvas==='undefined') return Promise.reject(new Error('이미지 모듈을 불러오는 중입니다. 잠시 후 다시 시도해주세요.'));
-  var W=360, holder=document.createElement('div');
-  holder.className='exp-cap';   // 자간·그림자 캡처 정상화만, 레이아웃 강제 없음
-  holder.style.cssText='position:fixed;left:-99999px;top:0;width:'+W+'px;background:'+bg+';padding:14px;box-sizing:border-box';
-  try{ holder.innerHTML=_exdMobile(_exData()); }catch(e){ return Promise.reject(e); }
-  document.body.appendChild(holder);
-  return new Promise(function(resolve,reject){ setTimeout(function(){
-    html2canvas(holder,{scale:(scale||3),backgroundColor:bg,width:W,windowWidth:W,scrollX:0,scrollY:0,logging:false})
-      .then(function(cv){ holder.remove(); resolve(cv); })
-      .catch(function(e){ holder.remove(); reject(e); });
-  },80); });
-}
 function exSaveImage(btn){
   var ob=btn?btn.innerHTML:''; _exBusy(btn,true);
-  _exCaptureMobileDesign('#eef1f6',3).then(function(cv){
+  _exCapture(360,'exp-mobile','#eef1f6',3).then(function(cv){
     // 360px 고정 출력(3배 렌더→고품질 축소=슈퍼샘플링) — 편집기가 픽셀=화면크기로 넣으므로 크기 맞는 360으로. 넣고 크기 건드리지 말 것
     var TW=360, out=cv;
     if(cv.width>TW){ var c2=document.createElement('canvas'); c2.width=TW; c2.height=Math.round(cv.height*TW/cv.width); var cx=c2.getContext('2d'); cx.imageSmoothingEnabled=true; cx.imageSmoothingQuality='high'; cx.drawImage(cv,0,0,c2.width,c2.height); out=c2; }
