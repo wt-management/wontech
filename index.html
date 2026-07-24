@@ -505,13 +505,9 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <div class="nav-label mt-3">관리</div>
     <ul class="nav flex-column gap-0">
       <li id="nav-dashboard" style="display:none"><a class="nav-link" onclick="showPage('dashboard',this)"><i class="bi bi-grid-1x2"></i>현황판 <span style="font-size:9px;background:#e8eef6;color:#5b7591;border-radius:4px;padding:1px 5px;margin-left:2px">파트장</span></a></li>
-      <li><a class="nav-link" onclick="showPage('customers',this)"><i class="bi bi-building"></i>고객사</a></li>
-      <li><a class="nav-link" onclick="showPage('equipments',this)"><i class="bi bi-cpu"></i>장비</a></li>
+      <li id="nav-custequip"><a class="nav-link" onclick="showPage('customers',this)"><i class="bi bi-building"></i>고객사·장비</a></li>
 
-      <li><a class="nav-link" onclick="showPage('products',this)"><i class="bi bi-box-seam"></i>제품</a></li>
-      <li id="nav-device-reps" style="display:none"><a class="nav-link" onclick="showPage('device-reps',this)"><i class="bi bi-person-badge"></i>담당자별 분석 <span style="font-size:9px;background:#e8eef6;color:#5b7591;border-radius:4px;padding:1px 5px;margin-left:2px">파트장</span></a></li>
-      <li id="nav-cons-hospitals" style="display:none"><a class="nav-link" onclick="showPage('cons-hospitals',this)"><i class="bi bi-building-check"></i>병원별 분석 <span style="font-size:9px;background:#e8eef6;color:#5b7591;border-radius:4px;padding:1px 5px;margin-left:2px">파트장</span></a></li>
-      <li id="nav-region" style="display:none"><a class="nav-link" onclick="showPage('region',this)"><i class="bi bi-geo-alt"></i>지역별 분석 <span style="font-size:9px;background:#e8eef6;color:#5b7591;border-radius:4px;padding:1px 5px;margin-left:2px">파트장</span></a></li>
+      <li id="nav-analysis" style="display:none"><a class="nav-link" onclick="showPage('device-reps',this)"><i class="bi bi-graph-up-arrow"></i>영업 분석 <span style="font-size:9px;background:#e8eef6;color:#5b7591;border-radius:4px;padding:1px 5px;margin-left:2px">파트장</span></a></li>
     </ul>
   </div>
   <div class="sidebar-footer">
@@ -679,7 +675,13 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   </div></div></div>
 
   <!-- 지역별 분석 -->
+  <style id="ana-css">.ana-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}.ana-tabs .anatab{border:1px solid #e0e0e0;background:#fff;border-radius:9999px;padding:7px 16px;font-size:13px;font-weight:600;color:#4b5563;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:border-color .15s,background .15s,color .15s}.ana-tabs .anatab:hover{border-color:#0066cc;color:#0066cc}.ana-tabs .anatab.on{background:#0066cc;border-color:#0066cc;color:#fff}.ana-tabs .anatab i{font-size:14px}</style>
   <div id="page-region" class="page">
+    <div class="ana-tabs">
+      <button class="anatab" data-sub="device-reps" onclick="showPage('device-reps')"><i class="bi bi-person-badge"></i>담당자별</button>
+      <button class="anatab" data-sub="cons-hospitals" onclick="showPage('cons-hospitals')"><i class="bi bi-building-check"></i>병원별</button>
+      <button class="anatab" data-sub="region" onclick="showPage('region')"><i class="bi bi-geo-alt"></i>지역별</button>
+    </div>
     <div class="wt-mast">
       <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-geo-alt me-2"></i>지역별 매출 분석 <span style="font-size:12px;font-weight:400;color:#64748b">시도 · 구군</span></div></div>
       <div class="btn-group btn-group-sm" role="group">
@@ -1255,6 +1257,10 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
   <!-- 고객사 (실제 거래 데이터 기반) -->
   <div id="page-customers" class="page">
+    <div class="ana-tabs">
+      <button class="anatab" data-sub="customers" onclick="showPage('customers')"><i class="bi bi-building"></i>고객사</button>
+      <button class="anatab" data-sub="equipments" onclick="showPage('equipments')"><i class="bi bi-cpu"></i>장비</button>
+    </div>
 <style id="cust-refine">
 /* == 고객사 화면 정제(Apple 감성: 단일 액센트 블루·헤어라인·타이트 타이포) == */
 #page-customers{--acc:#0066cc;--hair:#e0e0e0;--ink:#1d1d1f;--muted:#86868b;--parch:#f5f5f7}
@@ -1294,6 +1300,10 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
   <!-- 장비 -->
   <div id="page-equipments" class="page">
+    <div class="ana-tabs">
+      <button class="anatab" data-sub="customers" onclick="showPage('customers')"><i class="bi bi-building"></i>고객사</button>
+      <button class="anatab" data-sub="equipments" onclick="showPage('equipments')"><i class="bi bi-cpu"></i>장비</button>
+    </div>
     <div class="wt-mast">
       <div><div class="kick">WONTECH SALES</div><div class="t">장비 관리</div></div>
       <div class="d-flex gap-2 align-items-center">
@@ -1508,6 +1518,11 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
   <!-- 병원별 분석 (통합) -->
   <div id="page-cons-hospitals" class="page">
+    <div class="ana-tabs">
+      <button class="anatab" data-sub="device-reps" onclick="showPage('device-reps')"><i class="bi bi-person-badge"></i>담당자별</button>
+      <button class="anatab" data-sub="cons-hospitals" onclick="showPage('cons-hospitals')"><i class="bi bi-building-check"></i>병원별</button>
+      <button class="anatab" data-sub="region" onclick="showPage('region')"><i class="bi bi-geo-alt"></i>지역별</button>
+    </div>
     <div class="wt-mast">
       <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-building-check me-2"></i>병원별 영업 인텔리전스</div></div>
       <div class="d-flex gap-2 align-items-center">
@@ -1656,6 +1671,11 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
   <!-- 담당자별 제품 분석 -->
   <div id="page-device-reps" class="page">
+    <div class="ana-tabs">
+      <button class="anatab" data-sub="device-reps" onclick="showPage('device-reps')"><i class="bi bi-person-badge"></i>담당자별</button>
+      <button class="anatab" data-sub="cons-hospitals" onclick="showPage('cons-hospitals')"><i class="bi bi-building-check"></i>병원별</button>
+      <button class="anatab" data-sub="region" onclick="showPage('region')"><i class="bi bi-geo-alt"></i>지역별</button>
+    </div>
     <div class="wt-mast">
       <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-person-badge me-2"></i>담당자별 매출 현황</div></div>
       <div class="d-flex gap-2 align-items-center">
@@ -2886,9 +2906,7 @@ async function _bootApp(access) {
   document.getElementById('site-switcher').style.display = (_switchItems.length || _isAdmin) ? 'block' : 'none';
   // 팀장/관리자만 담당자별 분석 메뉴 표시
   if(_isMgr) {
-    const rm = document.getElementById('nav-device-reps');
-    if(rm) rm.style.display='';
-    ['nav-cons-hospitals','nav-region'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display=''; });
+    var _na=document.getElementById('nav-analysis'); if(_na) _na.style.display='';
   }
   if(_isMgr || _isStrat) {   // 현황판 = 파트장/관리자 + 영업전략파트
     const dm = document.getElementById('nav-dashboard'); if(dm) dm.style.display='';
@@ -2966,6 +2984,7 @@ function showPage(name, el, noPush) {
   // 담당자별 분석=파트장/관리자, 현황판=파트장/관리자+영업전략파트 (그 외 팀원 → 종합현황)
   if(name==='device-reps' && typeof _isMgr!=='undefined' && !_isMgr){ name='sales-overview'; el=null; }
   if(name==='dashboard' && typeof _isMgr!=='undefined' && !(_isMgr||_isStrat)){ name='sales-overview'; el=null; }
+  if((name==='cons-hospitals'||name==='region') && typeof _isMgr!=='undefined' && !_isMgr){ name='sales-overview'; el=null; }
   sessionStorage.setItem('wt_page', name);
   if(!noPush && !(history.state && history.state.page===name)) history.pushState({page: name}, '', location.href.split('#')[0] + '#' + name);   // 같은 페이지 중복 push 금지(재클릭 시 엔트리 누적 방지)
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -2978,6 +2997,11 @@ function showPage(name, el, noPush) {
     links.forEach(l=>{ if(l.textContent.trim().includes(
       {'sales-overview':'종합',dashboard:'현황판',sales:'수주관리',quotes:'견적서/ROI',schedule:'일정',cdu:'CDU',roi:'견적서/ROI · ROI 계산기',speech:'Sales Speech',customers:'고객사',equipments:'장비',logs:'상담일지',products:'제품',consumables:'소모품 매출','cons-hospitals':'병원별','device-sales':'제품 매출','device-reps':'담당자별',region:'지역별 분석',pending:'회계 미반영 매출','cons-accounts':'거래처'}[name]||''
     )) l.classList.add('active'); }); }
+  try{ var _GRP={'nav-analysis':['device-reps','cons-hospitals','region'],'nav-custequip':['customers','equipments']};
+    var _gid=null; for(var _k in _GRP){ if(_GRP[_k].indexOf(name)>=0){ _gid=_k; break; } }
+    if(_gid){ document.querySelectorAll('.nav-link').forEach(function(a){a.classList.remove('active');}); var _g=document.getElementById(_gid); if(_g){ var _l=_g.querySelector('.nav-link'); if(_l)_l.classList.add('active'); } }
+    document.querySelectorAll('.anatab').forEach(function(b){ b.classList.toggle('on', b.dataset.sub===name); });
+  }catch(e){}
   try{_mNavSync(name);}catch(e){}
   if(name==='sales-overview') renderSalesOverview();
   else if(name==='dashboard') renderDashboard();
