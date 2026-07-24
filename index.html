@@ -1051,6 +1051,24 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
   <!-- CDU — 소모품파트 주간 영업활동 (보고 + 입력) -->
   <div id="page-cdu" class="page">
+<style id="cdu-refine">
+/* == CDU 화면 정제(Apple 감성: 단일 액센트 블루·헤어라인·알약) — #page-cdu 스코프 == */
+#page-cdu{--acc:#0066cc;--hair:#e0e0e0}
+#page-cdu .page-header h5 i{color:var(--acc)}
+/* 상단 탭: 알약형 분리 */
+#page-cdu .btn-group{gap:6px}
+#page-cdu .btn-group>.btn{border-radius:9999px!important;margin-left:0!important;font-size:13px;padding:6px 15px}
+#page-cdu .btn-primary{background:var(--acc);border-color:var(--acc)}
+#page-cdu .btn-primary:hover{background:#005bb8;border-color:#005bb8}
+#page-cdu .btn-outline-primary{color:var(--acc);border-color:var(--hair)}
+#page-cdu .btn-outline-primary:hover{background:var(--acc);border-color:var(--acc);color:#fff}
+/* 필터바: 헤어라인 카드 + 알약 입력/버튼 */
+#page-cdu #cdu-filterbar{border:1px solid var(--hair);box-shadow:none;border-radius:14px}
+#page-cdu #cdu-filterbar .form-control,#page-cdu #cdu-filterbar .form-select{border-radius:9999px;border:1px solid var(--hair);font-size:12.5px}
+#page-cdu #cdu-filterbar .form-control:focus,#page-cdu #cdu-filterbar .form-select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(0,102,204,.12)}
+#page-cdu #cdu-filterbar .btn{border-radius:9999px}
+</style>
+
     <div class="page-header">
       <h5><i class="bi bi-clipboard-data me-2"></i>CDU <span class="text-muted" style="font-size:12px;font-weight:400">· 소모품파트 주간 영업활동</span></h5>
       <div class="btn-group btn-group-sm" role="group">
@@ -6407,7 +6425,7 @@ function _cduHospAuto(force){
 function _cduEnsureCss(){ if(document.getElementById('cdud-css')) return;
   var st=document.createElement('style'); st.id='cdud-css';
   st.textContent=''
-    +'.cdud{--ink:#182230;--mut:#64748b;--line:#e4e8ef;--navy:#16324f;--rd:#dc2626;--grn:#15803d;background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px 26px 24px}'
+    +'.cdud{--ink:#182230;--mut:#64748b;--line:#e4e8ef;--navy:#16324f;--acc:#0066cc;--rd:#dc2626;--grn:#15803d;background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px 26px 24px;letter-spacing:-.01em}'
     +'.cdud .cdud-kpis{display:flex;align-items:stretch;padding:4px 0 16px;border-bottom:1px solid var(--line)}'
     +'.cdud .cdud-hero{flex:1.4;min-width:0;padding-right:22px;cursor:pointer;display:flex;flex-direction:column;justify-content:center}'
     +'.cdud .cdud-hero .l{display:block;font-size:12.5px;font-weight:700;color:var(--mut)}'
@@ -6422,9 +6440,9 @@ function _cduEnsureCss(){ if(document.getElementById('cdud-css')) return;
     +'.cdud .cdud-fact i{display:block;font-style:normal;font-size:12px;color:#94a3b8;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
     +'.cdud .cdud-band{display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1px solid var(--line);padding:12px 0 14px}'
     +'.cdud .cdud-band .cdud-fact:first-child{border-left:0;padding-left:0}'
-    +'.cdud .cdud-bt{font-size:13px;font-weight:800;color:#334155;padding:14px 0 0}'
+    +'.cdud .cdud-bt{font-size:13px;font-weight:800;color:var(--ink);padding:14px 0 0}'
     +'.cdud .cdud-bt u{text-decoration:none;font-weight:600;color:var(--mut);font-size:12.5px;margin-left:6px}'
-    +'.cdud .cdud-st{font-size:13px;font-weight:800;color:var(--ink);padding-bottom:7px;border-bottom:2px solid var(--navy);margin-bottom:6px}'
+    +'.cdud .cdud-st{font-size:13px;font-weight:800;color:var(--ink);padding-bottom:7px;border-bottom:1px solid var(--line);margin-bottom:6px}'
     +'.cdud .cdud-st u{text-decoration:none;font-size:12.5px;font-weight:600;color:var(--mut);margin-left:4px}'
     +'.cdud .cdud-sec{margin-top:20px}'
     +'.cdud .cdud-two{display:grid;grid-template-columns:1fr 1fr;gap:0 30px}'
