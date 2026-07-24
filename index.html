@@ -3309,17 +3309,22 @@ function renderSalesOverview() {
   const _moVal=incPend?(_moC+_moPend):_moC;
   const _moPrev=(_mCY(CONS,_endY-1)[_endM]||0)+(_mCY(DEVICE,_endY-1)[_endM]||0);
   const _moYoy=_moPrev>0?(_moC/_moPrev-1)*100:null;
-  let _ytdC=0,_ytdPend=0,_ytdPrev=0;
-  for(let _m=1;_m<=_endM;_m++){ _ytdC+=(_mCY(CONS,_endY)[_m]||0)+(_mCY(DEVICE,_endY)[_m]||0); if(_endY===2026) _ytdPend+=_consPendM(_m)+_devPendM(_m); _ytdPrev+=(_mCY(CONS,_endY-1)[_m]||0)+(_mCY(DEVICE,_endY-1)[_m]||0); }
+  const _moDevC=_mCY(DEVICE,_endY)[_endM]||0, _moConsC=_mCY(CONS,_endY)[_endM]||0;
+  const _moDevPend=(_endY===2026)?_devPendM(_endM):0, _moConsPend=(_endY===2026)?_consPendM(_endM):0;
+  const _moDevPrev=_mCY(DEVICE,_endY-1)[_endM]||0, _moConsPrev=_mCY(CONS,_endY-1)[_endM]||0;
+  let _ytdC=0,_ytdPend=0,_ytdPrev=0,_ytdDevC=0,_ytdConsC=0,_ytdDevPend=0,_ytdConsPend=0,_ytdDevPrev=0,_ytdConsPrev=0;
+  for(let _m=1;_m<=_endM;_m++){ var _dv=_mCY(DEVICE,_endY)[_m]||0,_cn=_mCY(CONS,_endY)[_m]||0; _ytdDevC+=_dv;_ytdConsC+=_cn;_ytdC+=_dv+_cn; if(_endY===2026){var _dp=_devPendM(_m),_cp=_consPendM(_m);_ytdDevPend+=_dp;_ytdConsPend+=_cp;_ytdPend+=_dp+_cp;} var _dq=_mCY(DEVICE,_endY-1)[_m]||0,_cq=_mCY(CONS,_endY-1)[_m]||0; _ytdDevPrev+=_dq;_ytdConsPrev+=_cq;_ytdPrev+=_dq+_cq; }
   const _ytdVal=incPend?(_ytdC+_ytdPend):_ytdC;
   const _ytdYoy=_ytdPrev>0?(_ytdC/_ytdPrev-1)*100:null;
   const _ovFact=(lab,repV,accV,prevV,yo,click)=>'<div class="cdud-fact clk" onclick="'+click+'"><span>'+lab+'</span><b>'+repV+'</b><i>회계 '+accV+' · 전년 '+prevV+' '+badge(yo)+'</i></div>';
-  const _ovKpiHtml='<div class="cdud" style="padding:16px 20px;margin:0">'
-    +'<div class="cdud-kpis" style="border-bottom:0;padding:2px 0 4px">'
-      +'<div class="cdud-hero" style="flex:1.15;cursor:pointer" onclick="openOvMonth('+_endM+','+_endY+')"><span class="l">당월 · '+_endM+'월</span><b>'+fmtW(_moVal)+'</b><span class="s">회계반영 '+fmtW(_moC)+(incPend&&_moPend>0?' · 미반영 +'+fmtW(_moPend):'')+' · 전년 '+fmtW(_moPrev)+' '+badge(_moYoy)+'</span></div>'
-      +'<div class="cdud-hero" style="flex:1.15;cursor:pointer;border-left:1px solid #e4e8ef;padding-left:20px" onclick="openOvCategory(\'all\')"><span class="l">누계 · '+_endY+'년 '+_endM+'월까지(YTD)</span><b>'+fmtW(_ytdVal)+'</b><span class="s">회계반영 '+fmtW(_ytdC)+(incPend&&_ytdPend>0?' · 미반영 +'+fmtW(_ytdPend):'')+' · 전년 '+fmtW(_ytdPrev)+' '+badge(_ytdYoy)+'</span></div>'
-      +_ovFact('제품', incPend?fmtW(devYtdI):fmtW(devYtdC), fmtW(devYtdC), fmtW(devPrev), devYoy, "openOvCategory('dev')")
-      +_ovFact('소모품', incPend?fmtW(consYtdI):fmtW(consYtdC), fmtW(consYtdC), fmtW(consPrev), consYoy, "openOvCategory('cons')")
+  const _ovMini=(lab,valC,pend,prev,click)=>{ var v=incPend?(valC+pend):valC; var yo=prev>0?(valC/prev-1)*100:null; return '<div onclick="'+click+'" style="cursor:pointer"><div style="font-size:11px;font-weight:700;color:#64748b">'+lab+'</div><div style="font-size:17px;font-weight:800;color:#182230;font-variant-numeric:tabular-nums;letter-spacing:-.01em;line-height:1.15">'+fmtW(v)+'</div><div style="font-size:10.5px;color:#94a3b8;margin-top:1px">회계 '+fmtW(valC)+' '+badge(yo)+'</div></div>'; };
+  const _ovHalf=(lab,hv,hs,click,dev,cons,brd)=>'<div style="flex:1 1 340px;display:flex;align-items:center;gap:18px;min-width:0;'+(brd?'border-left:1px solid #e4e8ef;padding-left:24px':'padding-right:20px')+'"><div class="cdud-hero" style="flex:1.3;cursor:pointer;padding-right:0" onclick="'+click+'"><span class="l">'+lab+'</span><b>'+hv+'</b><span class="s">'+hs+'</span></div><div style="display:flex;flex-direction:column;gap:11px;min-width:92px;border-left:1px solid #eef2f7;padding-left:14px">'+dev+cons+'</div></div>';
+  const _moSub='회계반영 '+fmtW(_moC)+(incPend&&_moPend>0?' · 미반영 +'+fmtW(_moPend):'')+' · 전년 '+fmtW(_moPrev)+' '+badge(_moYoy);
+  const _ytdSub='회계반영 '+fmtW(_ytdC)+(incPend&&_ytdPend>0?' · 미반영 +'+fmtW(_ytdPend):'')+' · 전년 '+fmtW(_ytdPrev)+' '+badge(_ytdYoy);
+  const _ovKpiHtml='<div class="cdud" style="padding:18px 22px;margin:0">'
+    +'<div style="display:flex;flex-wrap:wrap;align-items:stretch;padding:2px 0 4px">'
+      +_ovHalf('당월 · '+_endM+'월', fmtW(_moVal), _moSub, "openOvMonth("+_endM+","+_endY+")", _ovMini('제품',_moDevC,_moDevPend,_moDevPrev,"openOvMonth("+_endM+","+_endY+")"), _ovMini('소모품',_moConsC,_moConsPend,_moConsPrev,"openOvMonth("+_endM+","+_endY+")"), false)
+      +_ovHalf('누계 · '+_endY+'년 '+_endM+'월까지(YTD)', fmtW(_ytdVal), _ytdSub, "openOvCategory('all')", _ovMini('제품',_ytdDevC,_ytdDevPend,_ytdDevPrev,"openOvCategory('dev')"), _ovMini('소모품',_ytdConsC,_ytdConsPend,_ytdConsPrev,"openOvCategory('cons')"), true)
     +'</div>'
     +(PV2?'<div style="font-size:11px;color:#64748b;padding-top:8px;border-top:1px solid #e4e8ef;margin-top:6px">전월까지 기준 · 합계 <b style="color:#182230">'+fmtW(PV2.tot.v)+'</b> (전년 '+fmtW(PV2.tot.p)+' '+badge(PV2.tot.p>0?(PV2.tot.v/PV2.tot.p-1)*100:null)+') · 제품 '+fmtW(PV2.dev.v)+' · 소모품 '+fmtW(PV2.cons.v)+'</div>':'')
   +'</div>';
