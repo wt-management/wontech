@@ -2294,6 +2294,8 @@ var _EXEC_SEL_PAGES=['goals','units','quarters','corps'];
 function _setExecT(v){ window._execTsel=(v==='auto'||v==='')?null:parseInt(v,10); var ap=document.querySelector('.page.on'); if(!ap)return; var id=ap.id.replace('page-',''); var nav=Array.prototype.slice.call(document.querySelectorAll('.nav-link')).filter(function(a){return (a.getAttribute('onclick')||'').indexOf("'"+id+"'")>=0;})[0]; showPage(id, nav||null); }
 function _paintExecSel(name){ var host=document.getElementById('exec-sel-host'); if(!host)return; if(_EXEC_SEL_PAGES.indexOf(name)<0){ host.innerHTML=''; return; } var cal=_execCalMonth(),auto=(window._execTsel==null),cur=_execT(); var o='<option value="auto"'+(auto?' selected':'')+'>자동 · 당월(1~'+cal+'월)</option>'; for(var m=1;m<=cal;m++)o+='<option value="'+m+'"'+((!auto&&m===cur)?' selected':'')+'>1~'+m+'월</option>'; host.innerHTML='<span class="exec-sel"><i class="bi bi-calendar3 me-1"></i>보고 기간 <select onchange="_setExecT(this.value)">'+o+'</select></span>'; }
 const _achCol=r=> r==null?'#94a3b8' : r>=100?'#16a34a' : r>=80?'#0d9488' : r>=60?'#f59e0b':'#dc2626';
+// 진행바 전용 파스텔 톤(숫자는 _achCol 유지 — 파스텔 숫자는 가독성↓)
+const _achBar=r=> r==null?'#d1d9e2' : r>=100?'#8fe3b0' : r>=80?'#7ad9cc' : r>=60?'#fcd97a':'#f6acac';
 // 성장률 RAG 색 (급성장~급락)
 const _yoyCol=v=> v==null?'#94a3b8' : v>=30?'#15803d' : v>=5?'#16a34a' : v>=-5?'#94a3b8' : v>=-20?'#f59e0b':'#b91c1c';
 // 증감액 포맷(부호+억) — fmtW는 양수만 처리 → 음수는 절대값으로
@@ -2354,14 +2356,14 @@ function renderGoals(){
       '<div class="g-st"><div class="k">미달 / 초과 부문</div><div class="v"><span style="color:#dc2626">'+short.length+'</span> <span style="color:#cbd5e1;font-weight:500">/</span> <span style="color:#16a34a">'+over.length+'</span></div></div>'+
     '</div></div>';
   // 공통 계산
-  const _calc=x=>{ const actC=x.tgt>0?x.act/x.tgt*100:null, a=x.act+x.pnd, r=x.tgt>0?a/x.tgt*100:null, gap=x.tgt>0?x.act-x.tgt:null, col=_achCol(actC);
+  const _calc=x=>{ const actC=x.tgt>0?x.act/x.tgt*100:null, a=x.act+x.pnd, r=x.tgt>0?a/x.tgt*100:null, gap=x.tgt>0?x.act-x.tgt:null, col=_achCol(actC), bcol=_achBar(actC);
     const rc=actC==null?0:Math.min(actC,100), rg=r==null?0:Math.min(Math.max(r-actC,0),100-rc), yoy=(x.act25>0)?pct(x.act,x.act25):null;
-    return {actC,r,gap,col,rc,rg,yoy,gapH:(gap==null?'–':(gap>=0?'초과 +'+fmtW(gap):'미달 '+fmtW(-gap))),gcol:(gap==null?'#94a3b8':gap>=0?'#16a34a':'#dc2626')}; };
+    return {actC,r,gap,col,bcol,rc,rg,yoy,gapH:(gap==null?'–':(gap>=0?'초과 +'+fmtW(gap):'미달 '+fmtW(-gap))),gcol:(gap==null?'#94a3b8':gap>=0?'#16a34a':'#dc2626')}; };
   // 합계 밴드(전폭·지역 카드와 분리) — 바가 중앙 여백을 채움
   const band=(label,x)=>{ const c=_calc(x);
     return '<div class="g-tband"><div class="tb-pc" style="color:'+c.col+'">'+(c.actC==null?'–':c.actC.toFixed(0)+'%')+'</div><div class="tb-lbl">달성</div>'+
       '<div class="tb-nm">'+label+'</div>'+
-      '<div class="tb-track"><div class="tb-fill" style="width:'+c.rc.toFixed(1)+'%;background:'+c.col+'"></div><div class="tb-fill" style="width:'+c.rg.toFixed(1)+'%;background:'+c.col+';opacity:.3"></div></div>'+
+      '<div class="tb-track"><div class="tb-fill" style="width:'+c.rc.toFixed(1)+'%;background:'+c.bcol+'"></div><div class="tb-fill" style="width:'+c.rg.toFixed(1)+'%;background:'+c.bcol+';opacity:.5"></div></div>'+
       '<div class="tb-nums"><b>'+fmtW(x.act)+'</b> / '+fmtW(x.tgt)+' 목표</div>'+
       '<div class="tb-gap" style="color:'+c.gcol+'">'+c.gapH+'</div>'+
       '<div class="tb-yoy">'+(c.yoy===null?'':'전년 '+badge(c.yoy))+'</div></div>'; };
@@ -2373,7 +2375,7 @@ function renderGoals(){
       '<div class="gc-pcbox" style="color:'+c.col+'"><div class="gc-pc">'+(c.actC==null?'–':c.actC.toFixed(0)+'%')+'</div><div class="gc-plbl">달성</div></div>'+
       '<div class="gc-body">'+
         '<div class="gc-r1"><span class="gc-nm"><span class="gc-dot" style="background:'+c.col+'"></span>'+x.label+(x.dk?' <span style="color:#cbd5e1;font-weight:400">›</span>':'')+'</span>'+
-          '<div class="gc-track"><div class="gc-fill" style="width:'+c.rc.toFixed(1)+'%;background:'+c.col+'"></div><div class="gc-fill" style="width:'+c.rg.toFixed(1)+'%;background:'+c.col+';opacity:.3"></div></div></div>'+
+          '<div class="gc-track"><div class="gc-fill" style="width:'+c.rc.toFixed(1)+'%;background:'+c.bcol+'"></div><div class="gc-fill" style="width:'+c.rg.toFixed(1)+'%;background:'+c.bcol+';opacity:.5"></div></div></div>'+
         '<div class="gc-r2"><span><span class="gc-av">'+fmtW(x.act)+'</span> <span class="gc-tv">/ '+fmtW(x.tgt)+' 목표</span></span>'+
           '<span class="gc-meta"><span class="gc-gap" style="color:'+c.gcol+'">'+c.gapH+'</span>'+projH+' <span class="gc-sub">· 전년</span> '+yoyH+'</span></div>'+
       '</div></div>'; };
