@@ -3301,10 +3301,23 @@ function renderSalesOverview() {
   _cduEnsureCss();
   const _ovHeroVal = incPend?fmtW(totalI):fmtW(totalC);
   const _ovHeroSub = '회계반영 '+fmtW(totalC)+(incPend&&totalPend>0?' · 미반영 +'+fmtW(totalPend):'')+' · 전년 '+fmtW(totalPrev)+' '+badge(yoy);
+  // 당월(기간 마지막달) / 누계(YTD: 연초~마지막달) — 히어로 2분할
+  const _lastEl = spanMs[spanMs.length-1] || {y:yr, m:(typeof _dataMaxMonth==='function'?_dataMaxMonth():7)};
+  const _endM=_lastEl.m, _endY=_lastEl.y;
+  const _moC=( _mCY(CONS,_endY)[_endM]||0)+(_mCY(DEVICE,_endY)[_endM]||0);
+  const _moPend=(_endY===2026)?(_consPendM(_endM)+_devPendM(_endM)):0;
+  const _moVal=incPend?(_moC+_moPend):_moC;
+  const _moPrev=(_mCY(CONS,_endY-1)[_endM]||0)+(_mCY(DEVICE,_endY-1)[_endM]||0);
+  const _moYoy=_moPrev>0?(_moC/_moPrev-1)*100:null;
+  let _ytdC=0,_ytdPend=0,_ytdPrev=0;
+  for(let _m=1;_m<=_endM;_m++){ _ytdC+=(_mCY(CONS,_endY)[_m]||0)+(_mCY(DEVICE,_endY)[_m]||0); if(_endY===2026) _ytdPend+=_consPendM(_m)+_devPendM(_m); _ytdPrev+=(_mCY(CONS,_endY-1)[_m]||0)+(_mCY(DEVICE,_endY-1)[_m]||0); }
+  const _ytdVal=incPend?(_ytdC+_ytdPend):_ytdC;
+  const _ytdYoy=_ytdPrev>0?(_ytdC/_ytdPrev-1)*100:null;
   const _ovFact=(lab,repV,accV,prevV,yo,click)=>'<div class="cdud-fact clk" onclick="'+click+'"><span>'+lab+'</span><b>'+repV+'</b><i>회계 '+accV+' · 전년 '+prevV+' '+badge(yo)+'</i></div>';
   const _ovKpiHtml='<div class="cdud" style="padding:16px 20px;margin:0">'
     +'<div class="cdud-kpis" style="border-bottom:0;padding:2px 0 4px">'
-      +'<div class="cdud-hero" style="flex:1.6;cursor:pointer" onclick="openOvCategory(\'all\')"><span class="l">합계 · '+periodLbl+'</span><b>'+_ovHeroVal+'</b><span class="s">'+_ovHeroSub+'</span></div>'
+      +'<div class="cdud-hero" style="flex:1.15;cursor:pointer" onclick="openOvMonth('+_endM+','+_endY+')"><span class="l">당월 · '+_endM+'월</span><b>'+fmtW(_moVal)+'</b><span class="s">회계반영 '+fmtW(_moC)+(incPend&&_moPend>0?' · 미반영 +'+fmtW(_moPend):'')+' · 전년 '+fmtW(_moPrev)+' '+badge(_moYoy)+'</span></div>'
+      +'<div class="cdud-hero" style="flex:1.15;cursor:pointer;border-left:1px solid #e4e8ef;padding-left:20px" onclick="openOvCategory(\'all\')"><span class="l">누계 · '+_endY+'년 '+_endM+'월까지(YTD)</span><b>'+fmtW(_ytdVal)+'</b><span class="s">회계반영 '+fmtW(_ytdC)+(incPend&&_ytdPend>0?' · 미반영 +'+fmtW(_ytdPend):'')+' · 전년 '+fmtW(_ytdPrev)+' '+badge(_ytdYoy)+'</span></div>'
       +_ovFact('제품', incPend?fmtW(devYtdI):fmtW(devYtdC), fmtW(devYtdC), fmtW(devPrev), devYoy, "openOvCategory('dev')")
       +_ovFact('소모품', incPend?fmtW(consYtdI):fmtW(consYtdC), fmtW(consYtdC), fmtW(consPrev), consYoy, "openOvCategory('cons')")
     +'</div>'
