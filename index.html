@@ -7165,7 +7165,7 @@ function renderCDUWeekly(){
               ['non','매출 이력 없음 — 신규·잠재','c-mu2']];
   var rows=grpDef.map(function(g){ var arr=byCls[g[0]]; if(!arr.length) return '';
     var uh={}; arr.forEach(function(v){ uh[(v.custName||'').trim()]=1; });
-    return '<tr class="grp"><td colspan="7"><span class="'+g[2]+'">'+g[1]+'</span><u>'+Object.keys(uh).length+'개처 '+arr.length+'건</u></td></tr>'
+    return '<tr class="grp g-'+g[0]+'"><td colspan="7"><span class="'+g[2]+'">'+g[1]+'</span><u>'+Object.keys(uh).length+'개처 '+arr.length+'건</u></td></tr>'
       +arr.map(rowHtml).join(''); }).join('');
   el.innerHTML=
     '<style>'
@@ -7197,11 +7197,15 @@ function renderCDUWeekly(){
     +'#cduwk-sheet .c-rd{color:var(--rd)}#cduwk-sheet .c-am{color:var(--amb)}#cduwk-sheet .c-gr{color:var(--grn)}#cduwk-sheet .c-mu{color:#94a3b8}#cduwk-sheet .c-mu2{color:#64748b}'
     +'#cduwk-sheet table.wkr-tb{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;font-variant-numeric:tabular-nums}'
     +'#cduwk-sheet .wkr-tb th{border-top:2px solid var(--navy);border-bottom:1px solid var(--line);background:#fafbfc;color:#475569;font-size:12.5px;font-weight:700;padding:8px 7px;text-align:center;vertical-align:middle;letter-spacing:.02em}'
-    +'#cduwk-sheet .wkr-tb td{padding:9px 7px;border-bottom:1px solid #eef1f5;word-break:break-all;line-height:1.55;vertical-align:top}'
-    +'#cduwk-sheet .wkr-tb tr.grp td{border-top:2px solid #dfe5ec;border-bottom:1px solid var(--line);padding:9px 7px 7px;font-size:13px;font-weight:800;background:#fff}'
+    +'#cduwk-sheet .wkr-tb td{padding:12px 11px;border-bottom:1px solid #eef1f5;word-break:break-word;line-height:1.6;vertical-align:top}'
+    +'#cduwk-sheet .wkr-tb tr.grp td{border-top:2px solid #dfe5ec;border-bottom:1px solid var(--line);padding:13px 11px 11px 14px;font-size:13px;font-weight:800;background:#fff}'
+    +'#cduwk-sheet .wkr-tb tr.grp.g-dor td{background:#fdf3f3;box-shadow:inset 3px 0 0 var(--rd)}'
+    +'#cduwk-sheet .wkr-tb tr.grp.g-drop td{background:#fdf8ee;box-shadow:inset 3px 0 0 var(--amb)}'
+    +'#cduwk-sheet .wkr-tb tr.grp.g-ok td{background:#f1f8f3;box-shadow:inset 3px 0 0 var(--grn)}'
+    +'#cduwk-sheet .wkr-tb tr.grp.g-non td{background:#f5f7f9;box-shadow:inset 3px 0 0 #94a3b8}'
     +'#cduwk-sheet .wkr-tb tr.grp td u{text-decoration:none;font-weight:600;color:var(--mut);font-size:12.5px;margin-left:6px}'
     +'#cduwk-sheet .wkr-money{text-align:right;white-space:nowrap;font-weight:700;color:var(--ink)}'
-    +'#cduwk-sheet .wkr-money .yo{display:block;font-size:12px;font-weight:600;margin-top:1px}'
+    +'#cduwk-sheet .wkr-money .yo{display:block;font-size:12px;font-weight:600;margin-top:3px}'
     +'#cduwk-sheet .wkr-money .yo.up{color:var(--grn)}#cduwk-sheet .wkr-money .yo.dn{color:var(--rd)}#cduwk-sheet .wkr-money .yo.no{color:#b6bfca}'
     +'.cduwk-np{white-space:nowrap}'
     +'@media(max-width:768px){'
@@ -7221,7 +7225,7 @@ function renderCDUWeekly(){
     +kpis
     +anaBox
     +(vs.length?'<table class="wkr-tb">'
-      +'<colgroup><col style="width:176px"><col style="width:104px"><col style="width:92px"><col style="width:58px"><col style="width:120px"><col><col style="width:52px"></colgroup>'
+      +'<colgroup><col style="width:220px"><col style="width:140px"><col style="width:100px"><col style="width:64px"><col style="width:132px"><col><col style="width:52px"></colgroup>'
       +'<thead><tr><th>병원명</th><th>팁매출<br>(작년 동기比)</th><th>주력 시술</th><th>수가</th><th>경쟁사</th><th>피드백·결과</th><th class="cduwk-np">수정</th></tr></thead>'
       +'<tbody>'+rows+'</tbody></table>'
       :'<div style="text-align:center;color:#94a3b8;padding:30px 0;font-size:13px">이 주에 완료된 방문이 없습니다.</div>')
