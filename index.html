@@ -2897,7 +2897,7 @@ async function _showLauncherOrApp(user) {
   _isMgr   = _isAdmin || profile?.role === 'manager';
   _isStrat = String(profile?.dept||'').replace(/\s/g,'').includes('영업전략');   // 영업전략파트 → 현황판 열람 허용
   // 새로고침 시 이전 상태 복원
-  if(sessionStorage.getItem('wt_app') === 'admin' && _isAdmin) {
+  if(sessionStorage.getItem('wt_app') === 'admin' && (_isStrat || _isAdmin)) {
     document.getElementById('launcher-screen').style.display='flex';
     showAdminPanel(); _hideLoading(); return;
   }
@@ -2907,7 +2907,7 @@ async function _showLauncherOrApp(user) {
   if(access.length > 1 || _isAdmin) {
     // 여러 법인 접근 가능 or 관리자 → 런처 표시
     document.getElementById('launcher-cards').innerHTML = _buildLauncherCardsHTML(access);
-    if(_isAdmin) document.getElementById('launcher-admin-btn').style.display = '';
+    if(_isStrat || _isAdmin) document.getElementById('launcher-admin-btn').style.display = '';
     document.getElementById('launcher-screen').style.display = 'flex';
     // 위생: 파라미터형 해시(#app=..·#at=..)는 주소창·히스토리에서 제거하며 첫 엔트리에 launcher state를 심음(페이지 딥링크 해시는 보존)
     var _lh=(location.hash||'').replace(/^#/,'');
@@ -2953,9 +2953,9 @@ async function _bootApp(access) {
     </div>`;
   }).join('');
   const _showSw=(id,ok)=>{ const el=document.getElementById(id); if(el) el.style.display=ok?'flex':'none'; };
-  _showSw('switcher-admin-item', _isAdmin);
+  _showSw('switcher-admin-item', _isStrat || _isAdmin);
   // 전환 가능한 '다른' 사이트가 하나도 없으면(=한국 전용) 스위처 자체 숨김
-  document.getElementById('site-switcher').style.display = (_switchItems.length || _isAdmin) ? 'block' : 'none';
+  document.getElementById('site-switcher').style.display = (_switchItems.length || _isStrat || _isAdmin) ? 'block' : 'none';
   // 팀장/관리자만 담당자별 분석 메뉴 표시
   if(_isMgr) {
     var _na=document.getElementById('nav-analysis'); if(_na) _na.style.display='';
@@ -3067,7 +3067,7 @@ function showPage(name, el, noPush) {
   else if(name==='equipments') initEquip();
   else if(name==='logs') { showPage('sales'); const tb=document.getElementById('sales-tab-logs-btn'); salesTab('logs',tb); return; }
   else if(name==='products') renderProducts();
-  else if(name==='users') { if(_isAdmin) renderUsers(); }
+  else if(name==='users') { if(_isAdmin||_isStrat) renderUsers(); }
   else if(name==='consumables') renderConsumables();
   else if(name==='device-sales') renderDeviceSales();
   else if(name==='cons-hospitals') renderConsHospitals();
@@ -9870,6 +9870,7 @@ async function loadUserRole() {
   if(!session) return;
   const {data} = await _sb.from('crm_profiles').select('role,display_name,position,dept').eq('id', session.user.id).single();
   _isAdmin = data?.role === 'admin';
+  _isStrat = String(data?.dept||'').replace(/\s/g,'').includes('영업전략');   // 영업전략파트 → 관리자 페이지 접근 허용
   try{ window.__WT_EMAIL = (session.user.email||''); }catch(e){}   // 요청·신고 작성자 정확 표기용
   setTimeout(function(){ try{ _fbCheckResolved(); }catch(e){} }, 3000);   // 내 요청 완료 알림 팝업
   _isMaster = session.user.email === 'pmw0406@gmail.com';
@@ -9895,6 +9896,7 @@ function _updateSidebarProfile(profile, email) {
 }
 
 function showAdminPanel() {
+  if(!(_isStrat || _isAdmin)){ try{ showToast && showToast('관리자 페이지는 영업전략파트만 접근할 수 있습니다', true, true); }catch(e){ alert('관리자 페이지는 영업전략파트만 접근할 수 있습니다'); } sessionStorage.removeItem('wt_app'); return; }
   document.title = 'wontech - 관리자';
   document.getElementById('launcher-main').style.display = 'none';
   document.getElementById('launcher-admin').style.display = 'block';
@@ -9920,7 +9922,7 @@ function hideAdminPanel() {
 
 function _renderLauncherCards(access) {
   document.getElementById('launcher-cards').innerHTML = _buildLauncherCardsHTML(access);
-  if(_isAdmin) document.getElementById('launcher-admin-btn').style.display = '';
+  if(_isStrat || _isAdmin) document.getElementById('launcher-admin-btn').style.display = '';
 }
 
 async function renderAdminUsers() {
