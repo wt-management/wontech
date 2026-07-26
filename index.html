@@ -1893,10 +1893,10 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   </div>
 </div></div></div>
 
-<!-- CDU 주간 결과 요약서 모달 -->
+<!-- CDU 주간 요약서 모달 -->
 <div class="modal fade" id="cduWkModal" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable" style="max-width:min(1720px,96vw)"><div class="modal-content">
   <div class="modal-header">
-    <h5 class="modal-title"><i class="bi bi-file-earmark-text me-1" style="color:#0066cc"></i>CDU 주간 결과 요약 <span class="text-muted" style="font-size:11px;font-weight:400">· 완료 방문 기준</span></h5>
+    <h5 class="modal-title"><i class="bi bi-file-earmark-text me-1" style="color:#0066cc"></i>CDU 주간 요약 <span class="text-muted" style="font-size:11px;font-weight:400">· 완료 방문 기준</span></h5>
     <div class="d-flex align-items-center flex-wrap" style="gap:8px">
       <button class="btn btn-outline-secondary btn-sm" type="button" onclick="_cduWkNav(-1)"><i class="bi bi-chevron-left"></i></button>
       <button class="btn btn-outline-secondary btn-sm" type="button" onclick="_cduWkRef=null;renderCDUWeekly()">이번주</button>
@@ -7176,7 +7176,7 @@ function openCDUHosp(name){
   new bootstrap.Modal(document.getElementById('cduHospModal')).show();
 }
 // ── CDU CSV 내보내기 ──
-// ── CDU 주간 결과 요약서: 한 주 완료 방문·결과 한 장 요약 ──
+// ── CDU 주간 요약서: 한 주 완료 방문·결과 한 장 요약 ──
 var _cduWkRef=null, _cduWkExcl={}, _cduWkExclOpen=false;
 function _cduWkExclAdd(id){ _cduWkExcl[id]=1; renderCDUWeekly(); }
 function _cduWkExclReset(){ _cduWkExcl={}; _cduWkExclOpen=false; renderCDUWeekly(); }
@@ -7354,7 +7354,7 @@ function renderCDUWeekly(){
       +'#cduwk-sheet .wkr-two{grid-template-columns:1fr;gap:16px}'
     +'}'
     +'</style>'
-    +'<div class="wkr-hd"><div><div class="wkr-kick">WONTECH · CDU WEEKLY REPORT</div><div class="wkr-t">CDU 주간 결과 요약</div></div>'
+    +'<div class="wkr-hd"><div><div class="wkr-kick">WONTECH · CDU WEEKLY REPORT</div><div class="wkr-t">CDU 주간 요약</div></div>'
     +'<div class="wkr-meta">집계 기간 <b>'+from+' ~ '+to+'</b><br>완료 방문 기준 · 소모품파트</div></div>'
     +kpis
     +anaBox
@@ -7377,7 +7377,7 @@ function cduWkPDF(){
   var sheet=document.getElementById('cduwk-sheet'); if(!sheet||!sheet.innerHTML) return;
   var r=_cduWkRange();
   var w=window.open('','_blank'); if(!w){ alert('팝업 차단을 해제해주세요.'); return; }
-  w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>CDU 주간 결과 요약 '+r[0]+'</title><style>@page{size:A4 landscape;margin:0}body{margin:0;padding:7mm 9mm;font-family:"Malgun Gothic",sans-serif;background:#fff}table{page-break-inside:auto}tr{page-break-inside:avoid}thead{display:table-header-group}tr.grp{page-break-after:avoid}td,th{border-bottom:1px solid #eef2f7}.cduwk-np{display:none}/* 인쇄 전용 압축(화면과 별도) */#cduwk-sheet .wkr-hd{padding-bottom:6px!important}#cduwk-sheet .wkr-t{font-size:17px!important}#cduwk-sheet .wkr-kick{font-size:10px!important;margin-bottom:2px!important}#cduwk-sheet .wkr-meta{font-size:10.5px!important;line-height:1.4!important}#cduwk-sheet .wkr-kpis{padding:5px 0 6px!important;margin-bottom:5px!important}#cduwk-sheet .wkr-hero b{font-size:21px!important;line-height:1.1!important}#cduwk-sheet .wkr-hero .l,#cduwk-sheet .wkr-hero .s{font-size:10px!important}#cduwk-sheet .wkr-fact b{font-size:15px!important;line-height:1.15!important}#cduwk-sheet .wkr-fact span,#cduwk-sheet .wkr-fact i{font-size:9.5px!important}#cduwk-sheet .wkr-two{margin-bottom:5px!important;gap:2px 22px!important}#cduwk-sheet .wkr-st{font-size:11px!important;padding-bottom:3px!important;margin-bottom:2px!important}#cduwk-sheet .wkr-r{padding:1.5px 0!important;font-size:11px!important;line-height:1.4!important}#cduwk-sheet .wkr-tb th{padding:5px 6px!important;font-size:10.5px!important}#cduwk-sheet .wkr-tb td{padding:4px 6px!important;font-size:11px!important;line-height:1.4!important}#cduwk-sheet .wkr-tb tr.grp td{padding:5px 6px 3px!important;font-size:11px!important}#cduwk-sheet .wkr-money .yo{font-size:10px!important;margin-top:1px!important}</style></head><body><div id="cduwk-sheet">'+sheet.innerHTML+'</div><script>window.onload=function(){setTimeout(function(){window.print();},250);};<\/script></body></html>');
+  w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>CDU 주간 요약 '+r[0]+'</title><style>@page{size:A4 landscape;margin:0}body{margin:0;padding:7mm 9mm;font-family:"Malgun Gothic",sans-serif;background:#fff}table{page-break-inside:auto}tr{page-break-inside:avoid}thead{display:table-header-group}tr.grp{page-break-after:avoid}td,th{border-bottom:1px solid #eef2f7}.cduwk-np{display:none}/* 인쇄 전용 압축(화면과 별도) */#cduwk-sheet .wkr-hd{padding-bottom:6px!important}#cduwk-sheet .wkr-t{font-size:17px!important}#cduwk-sheet .wkr-kick{font-size:10px!important;margin-bottom:2px!important}#cduwk-sheet .wkr-meta{font-size:10.5px!important;line-height:1.4!important}#cduwk-sheet .wkr-kpis{padding:5px 0 6px!important;margin-bottom:5px!important}#cduwk-sheet .wkr-hero b{font-size:21px!important;line-height:1.1!important}#cduwk-sheet .wkr-hero .l,#cduwk-sheet .wkr-hero .s{font-size:10px!important}#cduwk-sheet .wkr-fact b{font-size:15px!important;line-height:1.15!important}#cduwk-sheet .wkr-fact span,#cduwk-sheet .wkr-fact i{font-size:9.5px!important}#cduwk-sheet .wkr-two{margin-bottom:5px!important;gap:2px 22px!important}#cduwk-sheet .wkr-st{font-size:11px!important;padding-bottom:3px!important;margin-bottom:2px!important}#cduwk-sheet .wkr-r{padding:1.5px 0!important;font-size:11px!important;line-height:1.4!important}#cduwk-sheet .wkr-tb th{padding:5px 6px!important;font-size:10.5px!important}#cduwk-sheet .wkr-tb td{padding:4px 6px!important;font-size:11px!important;line-height:1.4!important}#cduwk-sheet .wkr-tb tr.grp td{padding:5px 6px 3px!important;font-size:11px!important}#cduwk-sheet .wkr-money .yo{font-size:10px!important;margin-top:1px!important}</style></head><body><div id="cduwk-sheet">'+sheet.innerHTML+'</div><script>window.onload=function(){setTimeout(function(){window.print();},250);};<\/script></body></html>');
   w.document.close();
 }
 function cduExportCSV(){
