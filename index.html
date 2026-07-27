@@ -3448,10 +3448,10 @@ function renderSalesOverview() {
   };
 
   const mergeProd = (base, add) => { const o={...base}; if(add) for(const k in add) o[k]=(o[k]||0)+add[k]; return o; };
-  const consProds2026 = (CONS.products2026||{});
-  const devProds2026  = (DEVICE.products2026||{});
-  document.getElementById('ov-cons-prods').innerHTML = renderProdList(yr===2026?consProds2026:CONS.products2025||{}, yr===2026?CONS.products2025||{}:{}, COLS, 'cons');
-  document.getElementById('ov-dev-prods').innerHTML  = renderProdList(yr===2026?devProds2026:DEVICE.products2025||{}, yr===2026?DEVICE.products2025||{}:{}, COLSD, 'dev');
+  // 기간별 제품 재집계 — 선택 기간(spanMs)·전년동기(prevMs)를 거래내역에서 직접 합산(누계 고정 버그 수정)
+  const _ovSpanProds=(src,isCons,rng)=>{ const ks={}; rng.forEach(x=>ks[x.y+'-'+x.m]=1); const out={}; Object.values(src.hospitals||{}).forEach(obj=>{ [['txns2026',2026],['txns2025',2025]].forEach(function(pr){ (obj[pr[0]]||[]).forEach(t=>{ if(!ks[pr[1]+'-'+(+t[0])])return; const prod=isCons?t[2]:t[3]; const amt=Number((isCons?t[3]:t[4])||0); if(prod) out[prod]=(out[prod]||0)+amt; }); }); }); return out; };
+  document.getElementById('ov-cons-prods').innerHTML = renderProdList(_ovSpanProds(CONS,true,spanMs), _ovSpanProds(CONS,true,prevMs), COLS, 'cons');
+  document.getElementById('ov-dev-prods').innerHTML  = renderProdList(_ovSpanProds(DEVICE,false,spanMs), _ovSpanProds(DEVICE,false,prevMs), COLSD, 'dev');
 }
 
 // ── 종합 화면 드릴다운(클릭 상세조회) ──────────────────────────────
