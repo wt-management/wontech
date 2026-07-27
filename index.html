@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light">
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <title>wontech - 한국</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%230891b2'/><g transform='translate(13,36) scale(0.144)' fill='%23fff'><rect width='110' height='110' rx='28'/><rect x='204' width='110' height='110' rx='28'/><rect x='408' width='110' height='110' rx='28'/><rect x='102' y='97' width='110' height='110' rx='28'/><rect x='306' y='97' width='110' height='110' rx='28'/></g></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2773,6 +2774,11 @@ async function _loadConsCacheCached(key, target) {
   }
 }
 
+// 제품명 정규화 규칙 (표기 통일) — 업로드 파서·로드 양쪽 공용
+function _canonProd(n){ n=String(n==null?'':n).trim(); if(n==='Oligio ES'||n==='OLIGIO ES'||n==='Oligio Es') return 'Oligio'; return n; }
+function _canonMap(m){ if(!m||typeof m!=='object'||Array.isArray(m)) return m; var o={}; for(var k in m){ var c=_canonProd(k); if(o[c]==null){ o[c]=m[k]; } else if(typeof m[k]==='number'){ o[c]+=m[k]; } else if(m[k]&&typeof m[k]==='object'&&!Array.isArray(m[k])){ o[c]=(o[c]&&typeof o[c]==='object')?o[c]:{}; for(var mm in m[k]) o[c][mm]=(o[c][mm]||0)+m[k][mm]; } } return o; }
+function _normProds(src, isCons){ if(!src) return; ['products2026','products2025','prodQty2026','prodQty2025','prodMo2026','prodMo2025','prodMoQty2026','prodMoQty2025'].forEach(function(k){ if(src[k]) src[k]=_canonMap(src[k]); }); var pi=isCons?2:3; Object.values(src.hospitals||{}).forEach(function(obj){ if(!obj) return; ['txns2026','txns2025'].forEach(function(tk){ (obj[tk]||[]).forEach(function(t){ if(t&&t[pi]!=null) t[pi]=_canonProd(t[pi]); }); }); ['prods2026','prods2025','prods'].forEach(function(k){ if(obj[k]) obj[k]=_canonMap(obj[k]); }); }); if(src.reps) Object.values(src.reps).forEach(function(rp){ if(!rp) return; ['prods2026','prods2025'].forEach(function(k){ if(rp[k]) rp[k]=_canonMap(rp[k]); }); }); }
+
 async function init() {
   // 비밀번호 재설정 링크 클릭 시 (URL 해시에 type=recovery 포함)
   const hashParams = new URLSearchParams(location.hash.replace('#',''));
@@ -2797,6 +2803,7 @@ async function init() {
     _loadConsCacheCached('device', DEVICE),
     _loadSalesTeam(),
   ]);
+  try{ _normProds(CONS,true); _normProds(DEVICE,false); }catch(e){ console.warn('제품명 정규화 실패', e); }
   purgeForeignHospitals();
   _stripSalesPrefixes();
   // 견적서 공개 링크 처리 (?q=견적번호)
@@ -4855,6 +4862,9 @@ function consParseExcel(input) {
       CONS.oligioMo2026 = a26.oligioMo;
       CONS.hospitals = hospMap;
       CONS.updatedAt = updatedAt;
+
+      // 제품명 정규화(Oligio ES→Oligio 등) — 저장 전 적용
+      try{ _normProds(CONS,true); _normProds(DEVICE,false); }catch(e){ console.warn('제품명 정규화 실패', e); }
 
       // Supabase에 저장 (팀 전체 공유)
       setMsg('저장 중...', '팀 전체에 반영 중입니다');
@@ -11570,5 +11580,18 @@ window.addEventListener('pageshow', function(e){
 })();
 function printPDF(){var t=document.title;var r=function(){document.title=t;window.removeEventListener('afterprint',r);};window.addEventListener('afterprint',r);window.print();}</script>
 <button id="pdf-fab" onclick="printPDF()" title="이 페이지를 PDF로 추출"><i class="bi bi-filetype-pdf"></i>PDF</button>
-</body>
+<script>
+/* 앱 자동 업데이트 감지: 새 배포를 감지하면 하단 배너로 안내(하드리프레시 불필요) */
+(function(){
+  var _tag=null, _done=false;
+  function _get(cb){ try{ fetch(location.pathname+'?_v='+Date.now(),{method:'HEAD',cache:'no-store'}).then(function(r){ cb(r.headers.get('etag')||r.headers.get('last-modified')||''); }).catch(function(){ cb(null); }); }catch(e){ cb(null); } }
+  function _bar(){ if(document.getElementById('wt-update-bar')||!document.body) return; var b=document.createElement('div'); b.id='wt-update-bar'; b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#0f172a;color:#fff;padding:11px 16px;display:flex;align-items:center;justify-content:center;gap:14px;font-size:13.5px;box-shadow:0 -2px 14px rgba(0,0,0,.2)'; b.innerHTML='<span><i class="bi bi-arrow-repeat" style="margin-right:6px"></i>새 버전이 배포되었습니다.</span><button onclick="_wtApplyUpdate()" style="background:#0891b2;color:#fff;border:0;border-radius:8px;padding:6px 16px;font-weight:700;font-size:13px;cursor:pointer">지금 업데이트</button><button onclick="var e=document.getElementById(\'wt-update-bar\');if(e)e.remove()" style="background:transparent;color:#94a3b8;border:0;font-size:13px;cursor:pointer">나중에</button>'; document.body.appendChild(b); }
+  window._wtApplyUpdate=function(){ location.replace(location.pathname+'?_v='+Date.now()+location.hash); };
+  function _check(){ if(_done) return; _get(function(t){ if(t&&_tag&&t!==_tag){ _done=true; _bar(); } }); }
+  _get(function(t){ _tag=t; });
+  setInterval(_check, 3*60*1000);
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') _check(); });
+})();
+</script>
+<!--WTEND--></body>
 </html>
