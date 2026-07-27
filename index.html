@@ -5603,8 +5603,10 @@ function renderHospRank() {
   const salesF= document.getElementById('hosp-sales-filter')?.value||'';
   const gradeF= document.getElementById('hosp-grade-filter')?.value||'';
   const sortKey=document.getElementById('hosp-sort')?.value||'ytd26';
-  const ytdMonths=Object.keys(CONS.monthly2026||{}).map(Number).filter(m=>m>=1&&m<=12);
-  const ytd25est=h=>ytdMonths.reduce((s,m)=>s+(h.m2025?.[m]||0),0);
+  const _P=_getPeriod('hosp'), _hcur=_spanMonths(_P), _hprev=_spanMonths(_yoyShift(_P));
+  const _hmY=(h,y)=>y===2026?(h.m2026||{}):(y===2025?(h.m2025||{}):{});
+  const cur26=h=>_hcur.reduce((s,x)=>s+(_hmY(h,x.y)[x.m]||0),0);
+  const ytd25est=h=>_hprev.reduce((s,x)=>s+(_hmY(h,x.y)[x.m]||0),0);
   const GRADE=h=>{const v=h.y2026||0;if(v>=5e7)return{g:'S',c:'#9333ea',bg:'#f3e8ff'};if(v>=1e7)return{g:'A',c:'#dc2626',bg:'#fee2e2'};if(v>=3e6)return{g:'B',c:'#d97706',bg:'#fef3c7'};if(v>=5e5)return{g:'C',c:'#2563eb',bg:'#eff6ff'};return{g:'-',c:'#64748b',bg:'#f3f4f6'};};
   const daysSince=ds=>ds?Math.floor((Date.now()-new Date(ds))/864e5):null;
 
@@ -5615,10 +5617,10 @@ function renderHospRank() {
     return true;
   });
 
-  if(sortKey==='ytd26')      list.sort((a,b)=>b[1].y2026-a[1].y2026);
+  if(sortKey==='ytd26')      list.sort((a,b)=>cur26(b[1])-cur26(a[1]));
   else if(sortKey==='ytd25') list.sort((a,b)=>ytd25est(b[1])-ytd25est(a[1]));
   else if(sortKey==='yoy')   list.sort((a,b)=>{
-    const ra=ytd25est(a[1])>0?a[1].y2026/ytd25est(a[1]):0,rb=ytd25est(b[1])>0?b[1].y2026/ytd25est(b[1]):0;return rb-ra;});
+    const ra=ytd25est(a[1])>0?cur26(a[1])/ytd25est(a[1]):0,rb=ytd25est(b[1])>0?cur26(b[1])/ytd25est(b[1]):0;return rb-ra;});
   else list.sort((a,b)=>b[1].total-a[1].total);
 
   const tbody=document.getElementById('hosp-rank-table');
@@ -5627,8 +5629,9 @@ function renderHospRank() {
   const rankClr=['#f59e0b','#64748b','#cd7f32'];
   tbody.innerHTML=list.map(([name,h],i)=>{
     const est25=ytd25est(h);
-    const chg=est25>0&&h.y2026>0?(h.y2026/est25-1)*100:null;
-    const isNew=h.y2025<=0&&h.y2026>0;
+    const c26=cur26(h);
+    const chg=est25>0&&c26>0?(c26/est25-1)*100:null;
+    const isNew=est25<=0&&c26>0;
     const {g,c,bg}=GRADE(h);
     const vip=h.total>=3e8?'<span class="vip-badge vip-gold">VVIP</span>':h.total>=1e8?'<span class="vip-badge vip-silver">VIP</span>':'';
     const ds=daysSince(h.lastDate);
@@ -5637,7 +5640,7 @@ function renderHospRank() {
       <td style="font-size:11px;color:${i<3?rankClr[i]:'#64748b'};font-weight:${i<3?800:400}">${i+1}</td>
       <td><span style="font-size:9px;font-weight:800;color:${c};background:${bg};border-radius:3px;padding:0 4px;margin-right:4px">${g}</span><span style="font-size:12px;font-weight:600;cursor:pointer;color:#2563eb;text-decoration:underline dotted" data-name="${name.replace(/"/g,'&quot;')}" onclick="showHospitalDetail(this.dataset.name)">${name}</span>${vip}${isNew?'<span style="font-size:9px;background:#dcfce7;color:#16a34a;border-radius:4px;padding:1px 4px;margin-left:3px">NEW</span>':''}</td>
       <td class="text-end" style="font-size:12px">${fmtS(est25)}</td>
-      <td class="text-end" style="font-size:12px;font-weight:${h.y2026?700:400};color:${h.y2026?'#ff4500':'inherit'}">${fmtS(h.y2026)}</td>
+      <td class="text-end" style="font-size:12px;font-weight:${c26?700:400};color:${c26?'#ff4500':'inherit'}">${fmtS(c26)}</td>
       <td class="text-end">${chg!==null?`<span style="font-size:11px;font-weight:700;color:${chg>=0?'#16a34a':'#dc2626'}">${chg>=0?'+':''}${chg.toFixed(0)}%</span>`:'<span style="color:#d1d5db;font-size:11px">-</span>'}</td>
       <td style="font-size:11px;color:#6b7280;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${h.topProd||'-'}</td>
       <td style="font-size:11px;color:${dc}">${ds!==null?ds+'일전':'-'}</td>
