@@ -18,7 +18,7 @@ function sortTop(o,n){ return topN(o,n); }
 function maxKey(o){ var bk=null,bv=-Infinity; for(var k in o){ if(o[k]>bv){bv=o[k];bk=k;} } return bk; }
 function addInto(dst,src){ for(var k in src){ dst[k]=(dst[k]||0)+src[k]; } return dst; }
 
-var FOR=/^[가-힣A-Za-z]+\s*\//, SUB=/^\s*\[/, USD=/\$\s*([\d,]+)/;
+var FOR=/^[가-힣A-Za-z]+\s*\//, SUB=/^\s*\[\s*(전\s*기\s*이\s*월|월\s*계|누\s*계|합\s*계|당\s*기\s*누\s*계)\s*\]/, USD=/\$\s*([\d,]+)/;   /* 소계행만 제외([결산] 반품충당부채 등 실제 조정분은 포함) */
 // ── 데이터 오분류 보정(회계 원본 라벨 오류) — 사이트 딜러뷰/파트 override와 동일 ──
 var INTL_COUNTRY_FIX={'더마케이':'러시아'};  // 국내법인 라벨이나 실제 러시아 수출(간접수출) → 러시아(region_map 러시아=유럽=유럽·중아파트)
 var INTL_EXCLUDE=['에스준의원'];             // 국내 병원이 해외로 오분류 → 국내로 되돌림(해외집계 제외)
