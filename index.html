@@ -3062,12 +3062,12 @@ function showPage(name, el, noPush) {
   else if(name==='sales'||name==='pipeline'||name==='performance') renderSalesPage(name);
   else if(name==='quotes') renderQuotes();
   else if(name==='schedule'){ renderSchedule(); _loadDemoSched().then(renderSchedule); }
-  else if(name==='cdu') renderCDU();
+  else if(name==='cdu') _cduTab(_cduView);
   else if(name==='roi'){ if(!window._roiInit){ roiInit(); window._roiInit=1; } }
   else if(name==='speech'){ if(!window._speechInit){ buildSpeechGrid(); window._speechInit=1; } var _sd=document.getElementById('speech-detail-view'),_sg=document.getElementById('speech-grid-view'); if(_sd&&_sg){_sd.style.display='none';_sg.style.display='';} }
   else if(name==='customers') renderCustomers();
   else if(name==='equipments') initEquip();
-  else if(name==='logs') { showPage('sales'); const tb=document.getElementById('sales-tab-logs-btn'); salesTab('logs',tb); return; }
+  else if(name==='logs') { showPage('sales', null, true); const tb=document.getElementById('sales-tab-logs-btn'); salesTab('logs',tb); return; }
   else if(name==='products') renderProducts();
   else if(name==='users') { if(_isAdmin||_isStrat) renderUsers(); }
   else if(name==='consumables') renderConsumables();
@@ -6258,7 +6258,7 @@ function openDealFromWarranty(custName, model) {
 }
 
 // ══ CDU — 소모품파트 주간 영업활동 (보고 + 방문기록 입력) ══
-let _cduView='report';
+let _cduView=(function(){try{return sessionStorage.getItem('cdu_view')||'report';}catch(e){return 'report';}})();
 var _cduDetailOpen=false;
 function _cduToggleDetail(){ _cduDetailOpen=!_cduDetailOpen; renderCDU(); }
 function _cduEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -6384,7 +6384,7 @@ function renderCDUTarget(){
     +'</div>'
   +'</div>';
 }
-function _cduTab(t){ _cduView=t;
+function _cduTab(t){ _cduView=t; try{ sessionStorage.setItem('cdu_view', t); }catch(e){}
   ['report','input','target','plan','keyman'].forEach(function(x){ var b=document.getElementById('cdu-tab-'+x); if(b) b.className='btn btn-'+(x===t?'primary':'outline-primary'); });
   document.getElementById('cdu-report').style.display=t==='report'?'':'none';
   document.getElementById('cdu-input').style.display=t==='input'?'':'none';
@@ -11053,6 +11053,7 @@ document.addEventListener('click', function(e) {
   if(dd && btn && !btn.contains(e.target)) dd.style.display = 'none';
 });
 
+function _wtAppShell(){ try{ var ls=document.getElementById('launcher-screen'); if(ls)ls.style.display='none'; var la=document.getElementById('launcher-admin'); if(la)la.style.display='none'; var lm=document.getElementById('launcher-main'); if(lm)lm.style.display='flex'; var mc=document.getElementById('main-content'); if(mc)mc.style.display='block'; }catch(e){} }
 window.addEventListener('popstate', function(e) {
   // 0) 열려있는 오버레이(모달/사이드 드로어)가 있으면 오버레이만 닫고, 소모된 엔트리를 복구 — 모바일 '뒤로가기=닫기'
   const _openModal = document.querySelector('.modal.show');
@@ -11070,11 +11071,14 @@ window.addEventListener('popstate', function(e) {
     sessionStorage.removeItem('wt_page');
     document.getElementById('main-content').style.display = 'none';
     if(!document.getElementById('launcher-cards').innerHTML.trim()) { try{ _renderLauncherCards(_currentAccess); }catch(err){} }   // 새로고침으로 앱 직행 부팅한 세션은 카드 미렌더 상태 — 빈 런처 방지
+    try{ var _la=document.getElementById('launcher-admin'), _lm=document.getElementById('launcher-main'); if(_la)_la.style.display='none'; if(_lm)_lm.style.display='flex'; document.title='wontech'; }catch(err){}   // 관리자에서 뒤로가기 복귀 시 관리자 패널 갇힘 방지
     document.getElementById('launcher-screen').style.display = 'flex';
   } else if(e.state?.page === 'speech' && e.state?.sd) {
+    _wtAppShell();
     showPage('speech', null, true);
     if(typeof showSpeechDetail==='function') showSpeechDetail(e.state.sd, true);
   } else if(e.state?.page) {
+    _wtAppShell();
     showPage(e.state.page, null, true);   // showPage 내부에서 권한 게이트(device-reps 등) 재검증됨
   } else {
     // state 없는 엔트리(사이트 밖/시드 이전) — 아무것도 하지 않음. pushState로 되밀면 forward 파괴 + 무한 트랩.
