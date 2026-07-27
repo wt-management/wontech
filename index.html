@@ -3703,6 +3703,7 @@ function _todayStr() {
 
 // ── 예정분 관리 화면 ──
 function renderPending() {
+  if(!document.getElementById('pending-summary')) return;   // 현재 페이지는 _loadIlboPending 사용 — DOM 없으면 무동작(널참조 에러 방지)
   const view = _pendingView(2026), agg = view.agg;
   const active = (PENDING||[]).filter(p=>p.status!=='취소');
   const totAll = active.reduce((s,p)=>s+Number(p.amount||0),0);
@@ -9126,8 +9127,8 @@ function _schItemRow(i){
 }
 // 요약 통계바 + 유형 범례
 function _schStatsBar(all){
-  const today=_schTodayStr(), _navWk=(_schView==='week'&&!!_schRef), wk=_schWeekRange(_navWk?_schRef:null), _wkLbl=(_navWk?(wk.start.slice(5).replace('-','.')+'~'+wk.end.slice(5).replace('-','.')+' 일정'):'이번주 일정');
-  const tArr=all.filter(i=>i.date===today);
+  const today=_schTodayStr(), _dayRef=(_schView==='today'&&_schRef)?_schRef:today, _navWk=(!!_schRef&&(_schView==='week'||_schView==='today')), wk=_schWeekRange(_navWk?_schRef:null), _wkLbl=(_navWk?(wk.start.slice(5).replace('-','.')+'~'+wk.end.slice(5).replace('-','.')+' 일정'):'이번주 일정');
+  const tArr=all.filter(i=>i.date===_dayRef);
   const t=tArr.length, tDone=tArr.filter(i=>i.kind==='sched'&&i.done).length, tVisit=tArr.filter(i=>i.type==='방문').length;
   const wArr=all.filter(i=>i.date>=wk.start&&i.date<=wk.end);
   const w=wArr.length, wDone=wArr.filter(i=>i.kind==='sched'&&i.done).length, wVisit=wArr.filter(i=>i.type==='방문').length;
@@ -9146,7 +9147,7 @@ function _schStatsBar(all){
   return '<div class="cdud" style="padding:16px 20px;margin:0 0 12px">'
     +'<div class="cdud-kpis" style="border-bottom:0;padding:2px 0 4px">'
       +'<div class="cdud-hero" style="flex:1.4;cursor:pointer" onclick="setSchView(\'week\',document.getElementById(\'sch-v-week\'))"><span class="l">'+_wkLbl+'</span><b>'+w+'건</b><span class="s">방문 '+wVisit+' · 완료 '+wDone+'/'+w+(nextUp?' · 다음 예정 '+nextUp.slice(5).replace('-','/'):'')+'</span></div>'
-      +sf('오늘',t+'건','방문 '+tVisit+' · 완료 '+tDone,'',"setSchView('today',document.getElementById('sch-v-today'))")
+      +sf((_dayRef===today?'오늘':_dayRef.slice(5).replace('-','/')),t+'건','방문 '+tVisit+' · 완료 '+tDone,'',"setSchView('today',document.getElementById('sch-v-today'))")
       +sf('놓친 일정',overdue+'건',(overdue?'눌러서 결과 입력':'없음 👍'),(overdue?'rd':''),overdue?'_schShowOverdueOnly()':'')
       +sf('예정',pend+'건',(nextUp?'다음 '+nextUp.slice(5).replace('-','/'):'오늘 이후'),'',"setSchView('week',document.getElementById('sch-v-week'))")
       +sf('완료',done+'건',(_navWk?'선택 주':'이번주')+(noResAll?' · 결과누락 '+noResAll:''),(noResAll?'':'gr'),'_schShowDoneOnly()')
