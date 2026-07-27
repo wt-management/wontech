@@ -6563,11 +6563,11 @@ function _cduEnsureCss(){ if(document.getElementById('cdud-css')) return;
     +'.cdud .cdud-st u{text-decoration:none;font-size:12.5px;font-weight:600;color:var(--mut);margin-left:4px}'
     +'.cdud .cdud-sec{margin-top:30px}'
     +'.cdud .cdud-two{display:grid;grid-template-columns:1fr 1fr;gap:0 30px}'
-    +'.cdud .cdud-grid2{column-count:2;column-gap:32px;margin-top:16px}.cdud .cdud-grid2>div{-webkit-column-break-inside:avoid;break-inside:avoid;margin-bottom:16px}'
+    +'.cdud .cdud-grid2{margin-top:16px}.cdud .cdud-grid2>div{margin-bottom:18px}.cdud .cdud-2col{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;align-items:start}'
     +'.cdud .cdud-tgl{display:block;width:100%;margin-top:22px;padding:9px 0;background:none;border:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);color:var(--mut);font-size:13px;font-weight:700;cursor:pointer;text-align:center}'
     +'.cdud .cdud-tgl:hover{color:var(--ink)}'
     +'.cdud .cdud-tgl u{text-decoration:none;font-weight:400;color:#94a3b8;margin-left:6px}'
-    +'@media(max-width:720px){.cdud{padding:16px 14px}.cdud .cdud-kpis{display:grid!important;grid-template-columns:1fr 1fr;gap:14px 12px;border-bottom:0!important;align-items:start}.cdud .cdud-hero{grid-column:1/-1;padding-right:0!important;padding-bottom:12px;border-bottom:1px solid var(--line)}.cdud .cdud-hero b{font-size:27px}.cdud .cdud-kpis .cdud-fact,.cdud .cdud-band .cdud-fact{border-left:0!important;padding:0!important}.cdud .cdud-band{grid-template-columns:1fr 1fr;gap:14px 12px}.cdud .cdud-fact b{font-size:18px}.cdud .cdud-fact i{white-space:normal}.cdud .cdud-two{grid-template-columns:1fr}.cdud .cdud-grid2{column-count:1}.cdud .cdud-tx{display:none}.cdud .cdud-trend-row{flex-wrap:wrap}}'
+    +'@media(max-width:720px){.cdud{padding:16px 14px}.cdud .cdud-kpis{display:grid!important;grid-template-columns:1fr 1fr;gap:14px 12px;border-bottom:0!important;align-items:start}.cdud .cdud-hero{grid-column:1/-1;padding-right:0!important;padding-bottom:12px;border-bottom:1px solid var(--line)}.cdud .cdud-hero b{font-size:27px}.cdud .cdud-kpis .cdud-fact,.cdud .cdud-band .cdud-fact{border-left:0!important;padding:0!important}.cdud .cdud-band{grid-template-columns:1fr 1fr;gap:14px 12px}.cdud .cdud-fact b{font-size:18px}.cdud .cdud-fact i{white-space:normal}.cdud .cdud-two{grid-template-columns:1fr}.cdud .cdud-2col{grid-template-columns:1fr}.cdud .cdud-tx{display:none}.cdud .cdud-trend-row{flex-wrap:wrap}}'
     ;
   document.head.appendChild(st); }
 function renderCDUReport(vs){
@@ -6716,7 +6716,7 @@ function renderCDUReport(vs){
     +fact('평균 시술수가',(avg?avg+'천':'-'),'저가(350↓) '+lowP+'개처 — 인상 여지','',prices.length?'_cduDrillPrice()':'')
   +'</div>';
   var sec=(title,sub,inner)=>'<div class="cdud-sec"><div class="cdud-st">'+title+(sub?'<u>· '+sub+'</u>':'')+'</div>'+inner+'</div>';
-  var dsec=(title,sub,inner)=>'<div><div class="cdud-st">'+title+(sub?'<u>· '+sub+'</u>':'')+'</div>'+inner+'</div>';
+  var dsec=(title,sub,inner)=>'<div><div class="cdud-st">'+title+(sub?'<u>· '+sub+'</u>':'')+'</div><div class="cdud-2col">'+inner+'</div></div>';
   var _noD=t=>'<div style="font-size:13px;color:#94a3b8;padding:4px 0">'+t+'</div>';
   var detailSec='<div class="cdud-grid2">'
     +dsec('시술 수가 밴드','올리지오 300샷 · 클릭 상세',
