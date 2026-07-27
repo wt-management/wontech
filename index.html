@@ -6720,6 +6720,7 @@ function renderCDUReport(vs){
   var procArr=Object.entries(proc).sort((a,b)=>b[1]-a[1]).slice(0,8); var procTot=procArr.reduce((s,x)=>s+x[1],0)||1;
   var regArr=Object.entries(reg).sort((a,b)=>b[1]-a[1]);
   var docArr=Object.entries(docB).filter(x=>x[1]>0);
+  var regTot=regArr.reduce((s,x)=>s+x[1],0)||1, docTot=docArr.reduce((s,x)=>s+x[1],0)||1;
   // ── 빌더 ──
   var barRow=(name,cnt,pct,col,suffix,click)=>'<div'+(click?' onclick="'+click+'" style="display:flex;align-items:center;gap:10px;padding:5px 2px;cursor:pointer;border-bottom:1px solid #f5f7fa"':' style="display:flex;align-items:center;gap:10px;padding:5px 2px;border-bottom:1px solid #f5f7fa"')+'><span style="width:9px;height:9px;border-radius:2px;background:'+col+';flex-shrink:0"></span><span style="font-size:13.5px;flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_cduEsc(name)+'</span><span style="font-size:13.5px;font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums">'+cnt+(suffix||'개')+' <span style="color:#94a3b8;font-weight:600;font-size:12.5px">'+Math.round(pct)+'%</span></span>'+(click?'<i class="bi bi-chevron-right" style="font-size:11.5px;color:#cbd5e1;flex-shrink:0"></i>':'')+'</div>';
   var card=(title,ic,iccol,inner)=>'<div class="card p-3 h-100"><div class="fw-bold mb-2" style="font-size:13px"><i class="bi '+ic+' me-1" style="color:'+iccol+'"></i>'+title+'</div>'+inner+'</div>';
@@ -6795,22 +6796,22 @@ function renderCDUReport(vs){
     +fact('급감 병원 방문',_clsDrop.length+'개처','작년比 60%↓ — 이탈 방어',(_clsDrop.length?'rd':''),_clsDrop.length?"_cduDrillCls('drop')":'')
     +fact('미구매 사유 파악',_rsKnownN+'/'+nHosp,'왜 안 사는지 확인된 방문처','',_rsKnownN?'_cduDrillRsKnown()':'')
     +fact('방문 후 재구매 전환',_convN+'개처','전환 매출 '+_cduWon(_convAmt),(_convN?'gr':''),_convN?'_cduDrillConv()':'')
-    +fact('경쟁 노출 수집',compVis+'건',(compArr[0]?'최다 '+_cduEsc(compArr[0][0])+' '+compArr[0][1]+'건':'수집 없음'),'',compVis?"_cduDrillCompAll()":'')
-    +fact('평균 시술수가',(avg?avg+'천':'-'),'저가(350↓) '+lowP+'개처 — 인상 여지','',prices.length?'_cduDrillPrice()':'')
+    +fact('경쟁 노출 수집',compVis+'건',(compArr[0]?'최다 '+_cduEsc(compArr[0][0])+' '+compArr[0][1]+'개처':'수집 없음'),'',compVis?"_cduDrillCompAll()":'')
+    +fact('평균 시술수가',(avg?avg+'천':'-'),'저가(350↓) '+lowP+'건 — 인상 여지','',prices.length?'_cduDrillPrice()':'')
   +'</div>';
   var sec=(title,sub,inner)=>'<div class="cdud-sec"><div class="cdud-st">'+title+(sub?'<u>· '+sub+'</u>':'')+'</div>'+inner+'</div>';
   var dsec=(title,sub,inner)=>'<div><div class="cdud-st">'+title+(sub?'<u>· '+sub+'</u>':'')+'</div><div class="cdud-2col">'+inner+'</div></div>';
   var _noD=t=>'<div style="font-size:13px;color:#94a3b8;padding:4px 0">'+t+'</div>';
   var detailSec='<div class="cdud-grid2">'
     +dsec('시술 수가 밴드','올리지오 300샷 · 클릭 상세',
-        (prices.length? bands.map((b,i)=>barRow(b[0].replace('천원','')+'천원',bandCnt[i],bandCnt[i]/prices.length*100,'#2563eb','개처','_cduDrillBand('+i+')')).join('')+'<div style="font-size:12.5px;color:#64748b;margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9">평균 <b>'+avg+'</b> · 최고 '+mx+' · 최저 '+mn+' · '+prices.length+'개처 파악</div>'
+        (prices.length? bands.map((b,i)=>barRow(b[0].replace('천원','')+'천원',bandCnt[i],bandCnt[i]/prices.length*100,'#2563eb','건','_cduDrillBand('+i+')')).join('')+'<div style="font-size:12.5px;color:#64748b;margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9">평균 <b>'+avg+'</b> · 최고 '+mx+' · 최저 '+mn+' · '+prices.length+'건 파악</div>'
           : _noD('수가 파악 병원 없음')))
     +dsec('경쟁사 노출 현황','클릭 상세',(compArr.length?compArr.map(([n,c])=>barRow(n,c,c/compTot*100,'#ef4444','개처',"_cduDrillComp('"+_cduEsc(n).replace(/\x27/g,"\\x27")+"')")).join(''):_noD('경쟁사 정보 없음')))
     +dsec('주요 마케팅 채널 활용','클릭 상세',(chanArr.length?chanArr.map(([n,c])=>barRow(n,c,c/nHosp*100,'#2563eb','개처',"_cduDrillChan('"+_cduEsc(n).replace(/\x27/g,"\\x27")+"')")).join(''):_noD('채널 정보 없음'))+'<div style="font-size:12px;color:#64748b;margin-top:6px">※ 방문 병원 대비 활용률(복수 선택)</div>')
     +dsec('담당자별 방문 커버리지','클릭 상세',salesArr.map(([n,c])=>barRow(n,c,c/nHosp*100,'#2563eb','개처',"_cduDrillSales('"+_cduEsc(n).replace(/\x27/g,"\\x27")+"')")).join(''))
     +dsec('주력 시술','방문처가 미는 시술',(procArr.length?procArr.map(([n,c])=>barRow(n,c,c/procTot*100,'#2563eb','건')).join(''):_noD('시술 정보 입력 없음')))
-    +dsec('병원 규모','원장 수 기준',(docArr.length?docArr.map(([n,c])=>barRow(n,c,c/nHosp*100,'#2563eb','개처')).join(''):_noD('규모 정보 없음')))
-    +dsec('국내 / 해외 마케팅','',(regArr.length?regArr.map(([n,c])=>barRow(n,c,c/nHosp*100,'#2563eb','개처')).join(''):_noD('구분 정보 없음')))
+    +dsec('병원 규모','원장 수 기준',(docArr.length?docArr.map(([n,c])=>barRow(n,c,c/docTot*100,'#2563eb','건')).join(''):_noD('규모 정보 없음')))
+    +dsec('국내 / 해외 마케팅','',(regArr.length?regArr.map(([n,c])=>barRow(n,c,c/regTot*100,'#2563eb','건')).join(''):_noD('구분 정보 없음')))
     +dsec('매출 상위 방문 병원','올해 팁매출 기준 · 클릭 이력',
         (vipArr.length? vipArr.map(function(x,i){ return '<div onclick="openCDUHosp(\''+_cduEsc(x.n).replace(/\x27/g,"\\x27")+'\')" style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f1f5f9;cursor:pointer">'
             +'<span style="font-size:12.5px;font-weight:800;color:#64748b;min-width:20px">'+(i+1)+'</span>'
@@ -8324,16 +8325,7 @@ function _custNewView(list){
 function renderCustomers(){
   if(!document.getElementById('cust-view-cards')) return;
   const all=_custHosps();
-  const tot26=all.reduce((s,h)=>s+h.y2026,0);
-  const nw=all.filter(h=>h.y2026>0&&!h.y2025).length, lost=all.filter(h=>!h.y2026&&h.y2025>0).length;
-  const cards=[
-    {v:'sales',ic:'bi-trophy-fill',c:'#2563eb',lab:'매출순',sub:all.filter(h=>h.y2026>0).length+'개 · '+_custFmt(tot26)},
-    {v:'region',ic:'bi-geo-alt-fill',c:'#059669',lab:'지역별',sub:new Set(all.filter(h=>h.y2026>0&&h.sido!=='미분류').map(h=>h.sido)).size+'개 시도'},
-    {v:'grade',ic:'bi-layers-fill',c:'#9333ea',lab:'등급별',sub:'S '+all.filter(h=>h.grade==='S').length+' · A '+all.filter(h=>h.grade==='A').length},
-    {v:'new',ic:'bi-stars',c:'#d97706',lab:'신규·이탈',sub:'신규 '+nw+' · 이탈 '+lost},
-  ];
-  document.getElementById('cust-view-cards').innerHTML=cards.map(function(c){var on=_custView===c.v;return '<div class="col-6 col-md-3"><div onclick="setCustView(\''+c.v+'\')" class="cust-vcard'+(on?' on':'')+'"><div style="display:flex;align-items:center;gap:8px"><i class="bi '+c.ic+'"></i><span class="vl">'+c.lab+'</span></div><div class="vs">'+c.sub+'</div></div></div>';}).join('');
-  // 담당영업 드롭다운 채우기(1회) — 콜스케줄용(엑셀 담당영업 기준)
+  // 검색·담당 필터를 먼저 계산 → 상단 타일 숫자도 필터를 반영(하단 표와 일치)
   const salesSel=document.getElementById('cust-sales-filter');
   _fillSalesFilter(salesSel, '<option value="__none__">— 미배정 —</option>');
   const salesF=(salesSel&&salesSel.value)||'';
@@ -8341,6 +8333,15 @@ function renderCustomers(){
   let f=all.filter(h=>!q||h.name.toLowerCase().includes(q)||h.sido.includes(q)||h.gugun.includes(q)||(h.sales||'').toLowerCase().includes(q)||(h.mgr||'').toLowerCase().includes(q)||(h.topProd||'').toLowerCase().includes(q));
   if(salesF==='__none__') f=f.filter(h=>!(h.mgr||h.sales));
   else if(salesF) f=f.filter(h=>((h.mgr||h.sales)||'')===salesF);
+  const tot26=f.reduce((s,h)=>s+h.y2026,0);
+  const nw=f.filter(h=>h.y2026>0&&!h.y2025).length, lost=f.filter(h=>!h.y2026&&h.y2025>0).length;
+  const cards=[
+    {v:'sales',ic:'bi-trophy-fill',c:'#2563eb',lab:'매출순',sub:f.filter(h=>h.y2026>0).length+'개 · '+_custFmt(tot26)},
+    {v:'region',ic:'bi-geo-alt-fill',c:'#059669',lab:'지역별',sub:new Set(f.filter(h=>h.y2026>0&&h.sido!=='미분류').map(h=>h.sido)).size+'개 시도'},
+    {v:'grade',ic:'bi-layers-fill',c:'#9333ea',lab:'등급별',sub:'S '+f.filter(h=>h.grade==='S').length+' · A '+f.filter(h=>h.grade==='A').length},
+    {v:'new',ic:'bi-stars',c:'#d97706',lab:'신규·이탈',sub:'신규 '+nw+' · 이탈 '+lost},
+  ];
+  document.getElementById('cust-view-cards').innerHTML=cards.map(function(c){var on=_custView===c.v;return '<div class="col-6 col-md-3"><div onclick="setCustView(\''+c.v+'\')" class="cust-vcard'+(on?' on':'')+'"><div style="display:flex;align-items:center;gap:8px"><i class="bi '+c.ic+'"></i><span class="vl">'+c.lab+'</span></div><div class="vs">'+c.sub+'</div></div></div>';}).join('');
   document.getElementById('cust-count').textContent=f.filter(h=>h.y2026>0||h.y2025>0).length+'개 거래처'+(salesF?' · 담당 '+_custEsc(salesF==='__none__'?'미배정':salesF):'');
   const body=document.getElementById('cust-body');
   if(_custView==='sales') body.innerHTML=_custSalesView(f);
