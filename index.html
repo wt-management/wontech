@@ -1154,7 +1154,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <div class="col-12"><label class="form-label" style="font-size:12px">마케팅 채널 <span class="text-muted">(복수 선택)</span></label><input id="cd-chan" class="form-control form-control-sm" placeholder="직접 입력 가능" oninput="_cduChipSync()">
           <div><span class="cdu-chip" data-for="cd-chan" data-v="리얼모델" onclick="_cduChip(this)">리얼모델</span><span class="cdu-chip" data-for="cd-chan" data-v="블로그" onclick="_cduChip(this)">블로그</span><span class="cdu-chip" data-for="cd-chan" data-v="앱" onclick="_cduChip(this)">앱</span><span class="cdu-chip" data-for="cd-chan" data-v="유튜브" onclick="_cduChip(this)">유튜브</span><span class="cdu-chip" data-for="cd-chan" data-v="인스타그램" onclick="_cduChip(this)">인스타그램</span><span class="cdu-chip" data-for="cd-chan" data-v="카페" onclick="_cduChip(this)">카페</span><span class="cdu-chip" data-for="cd-chan" data-v="페이스북" onclick="_cduChip(this)">페이스북</span><span class="cdu-chip" data-for="cd-chan" data-v="N/A" onclick="_cduChip(this)">N/A</span></div></div>
         <div class="col-md-2 col-6"><label class="form-label" style="font-size:12px">이벤트</label><select id="cd-event" class="form-select form-select-sm"><option value="">-</option><option>원내</option><option>외부</option><option>X</option></select></div>
-        <div class="col-md-2 col-6"><label class="form-label" style="font-size:12px">릴스 촬영</label><select id="cd-reels" class="form-select form-select-sm"><option value="">-</option><option>O</option><option>X</option></select></div>
+        <div class="col-md-2 col-6"><label class="form-label" style="font-size:12px">릴스 촬영</label><select id="cd-reels" class="form-select form-select-sm"><option value="">-</option><option>제안</option><option>촬영완료</option><option>X</option></select></div>
 
         <div class="col-12 cdu-sec">영업 코멘트</div>
         <div class="col-12"><label class="form-label" style="font-size:12px">병원 피드백</label><textarea id="cd-fb" class="form-control form-control-sm" rows="2"></textarea></div>
@@ -1245,7 +1245,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   </div></div></div>
 
   <!-- CDU 지표 드릴다운(목록) 모달 -->
-  <div class="modal fade" id="cduDrillModal" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content">
+  <div class="modal fade" id="cduDrillModal" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-width:min(1400px,96vw)"><div class="modal-content">
     <div class="modal-header"><h5 class="modal-title" id="cduDrillTitle">상세</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body" id="cduDrillBody"></div>
   </div></div></div>
@@ -6439,7 +6439,7 @@ function _cduDrillChan(c){ _cduDrill('마케팅 채널: '+c, _cduRepVs.filter(v=
 function _cduDrillSales(s){ _cduDrill('담당자 방문: '+s, _cduRepVs.filter(v=>((v.sales||'').trim()||'미지정')===s)); }
 function _cduDrillBand(i){ var b=_CDU_BANDS[i]; if(!b)return; _cduDrill('시술 수가 '+b[0], _cduRepVs.filter(v=>{var p=Number(v.price)||0; return p>0&&b[1](p);}), 'price'); }
 function _cduDrillEvent(){ _cduDrill('이벤트 진행 병원', _cduRepVs.filter(v=>/^(원내|외부|O)$/i.test((v.event||'').trim())), 'event'); }
-function _cduDrillReels(){ _cduDrill('릴스 촬영 병원', _cduRepVs.filter(v=>String(v.reels||'').toUpperCase()==='O'), 'reels'); }
+function _cduDrillReels(){ _cduDrill('릴스 촬영 병원', _cduRepVs.filter(v=>/^(촬영완료|O)$/i.test((v.reels||'').trim())), 'reels'); }
 function _cduDrillAll(){ _cduDrill('전체 방문 병원', _cduRepVs.slice()); }
 function _cduDrillWeek(w){ var _t=_cduTodayStr(); _cduDrill(w+' 방문 상세', _cduBaseFiltered().filter(function(v){ return v.status!=='planned' && String(v.date||'').slice(0,10)<=_t && _cduWeekLabel(v.date)===w; })); }
 function _cduDrillChurn(){ _cduDrill('선제 감지 · 집중 대응 병원', _cduRepVs.filter(v=>(v.churnRisk||'').trim()), 'churn'); }
@@ -6557,24 +6557,22 @@ function _cduDrill(title, arr, kind){
   else if(kind==='reels'){ _sortLbl='최근 촬영 순'; _cmp=_byDate; }
   else { _sortLbl='최근 방문 순'; _cmp=_byDate; }
   var rows=arr.slice().sort(_cmp);
-  var list=rows.map(function(v){ var rev=_cduRev(v.custName); var p=Number(v.price)||0;
-    var priceTag='';
-    if(p>0){
-      var dv=(kind==='price'&&avg)?(p-avg):null;
-      priceTag='<span style="font-size:12px;color:#64748b;flex-shrink:0">수가 <b style="color:#7c3aed">'+p+'천</b>'+(dv!==null&&dv!==0?' <span style="color:'+(dv>0?'#16a34a':'#dc2626')+';font-weight:700">'+(dv>0?'+':'')+dv+'</span>':'')+'</span>';
-    }
+  var list='<div style="column-count:2;column-gap:26px">'+rows.map(function(v){ var rev=_cduRev(v.custName); var p=Number(v.price)||0;
+    var dv=(kind==='price'&&avg&&p>0)?(p-avg):null;
+    var priceTag=p>0?('수가 <b style="color:#7c3aed">'+p+'천</b>'+(dv!==null&&dv!==0?' <span style="color:'+(dv>0?'#16a34a':'#dc2626')+';font-weight:700">'+(dv>0?'+':'')+dv+'</span>':'')):'';
     var _rsn=_cduReasonDisp((v.noBuyReason||'').trim()), _act=(v.action||'').trim(), _fb=(v.feedback||'').trim();
-    return '<div onclick="bootstrap.Modal.getInstance(document.getElementById(\'cduDrillModal\')).hide();openCDUHosp(\''+_cduEsc(v.custName||'').replace(/\x27/g,"\\x27")+'\')" style="padding:8px 4px;border-bottom:1px solid #f1f5f9;cursor:pointer">'
-      +'<div style="display:flex;align-items:center;gap:8px">'
-      +'<span style="font-size:12.5px;color:#94a3b8;min-width:42px">'+_cduEsc(String(v.date||'').slice(5,10))+'</span>'
-      +'<span style="font-size:13.5px;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_cduEsc(v.custName||'')+(v.churnRisk?' <i class="bi bi-exclamation-triangle-fill" style="color:#ea580c;font-size:11.5px"></i>':'')+'</span>'
-      +(rev.y2026?'<span style="font-size:12.5px;color:#0891b2;font-weight:700;flex-shrink:0">'+_cduWon(rev.y2026)+'</span>':'<span style="font-size:11.5px;color:#cbd5e1;flex-shrink:0">매출無</span>')
-      +(v.competitor?'<span style="font-size:11.5px;font-weight:700;color:#dc2626;background:#fef2f2;border-radius:4px;padding:1px 6px;flex-shrink:0">'+_cduEsc(v.competitor)+'</span>':'')
-      +priceTag
-      +(v.sales?'<span style="font-size:11.5px;color:#94a3b8;flex-shrink:0;min-width:44px;text-align:right">'+_cduEsc(v.sales)+'</span>':'')
+    var _person=''; if(_fb){ var _fl=_fb.split(/\r?\n/); var _f0=_fl[0].trim(); if(_fl.length>1&&_f0.length<=22&&!/^[-·•*]/.test(_f0)){ _person=_f0; _fb=_fl.slice(1).join('\n').trim(); } }
+    var meta=[]; if(v.competitor) meta.push('<span style="color:#dc2626;font-weight:700">'+_cduEsc(v.competitor)+'</span>'); if(priceTag) meta.push('<span style="color:#64748b">'+priceTag+'</span>'); if(v.sales) meta.push('<span style="color:#94a3b8">'+_cduEsc(v.sales)+'</span>');
+    return '<div onclick="bootstrap.Modal.getInstance(document.getElementById(\'cduDrillModal\')).hide();openCDUHosp(\''+_cduEsc(v.custName||'').replace(/\x27/g,"\\x27")+'\')" style="padding:7px 3px;border-bottom:1px solid #f1f5f9;cursor:pointer;-webkit-column-break-inside:avoid;break-inside:avoid;overflow:hidden">'
+      +'<div style="display:flex;align-items:baseline;gap:7px">'
+      +'<span style="font-size:12px;color:#94a3b8;flex-shrink:0">'+_cduEsc(String(v.date||'').slice(5,10))+'</span>'
+      +'<span style="font-size:13.5px;font-weight:700;flex-shrink:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_cduEsc(v.custName||'')+(v.churnRisk?' <i class="bi bi-exclamation-triangle-fill" style="color:#ea580c;font-size:11px"></i>':'')+'</span>'
+      +(_person?'<span style="font-size:11.5px;color:#94a3b8;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">· '+_cduEsc(_person)+'</span>':'<span style="flex:1"></span>')
+      +(rev.y2026?'<span style="font-size:12.5px;color:#0891b2;font-weight:700;flex-shrink:0">'+_cduWon(rev.y2026)+'</span>':'<span style="font-size:11px;color:#cbd5e1;flex-shrink:0">매출無</span>')
       +'</div>'
-      +((_rsn||_fb||_act)?'<div style="margin-top:3px;padding-left:42px;font-size:12.5px;line-height:1.55;color:#374151;white-space:pre-wrap">'+(_rsn?'<span style="font-weight:700;color:#7c3aed;background:#f5f3ff;border-radius:4px;padding:1px 7px;margin-right:6px">'+_cduEsc(_rsn)+'</span>':'')+(_fb?_cduEsc(_fb):'')+(_act?' <span style="color:#1d4ed8;font-weight:600">→ '+_cduEsc(_act)+'</span>':'')+'</div>':'')
-      +'</div>'; }).join('');
+      +(meta.length?'<div style="margin-top:2px;font-size:11.5px;display:flex;flex-wrap:wrap;gap:4px 10px">'+meta.join('')+'</div>':'')
+      +((_rsn||_fb||_act)?'<div style="margin-top:3px;font-size:12px;line-height:1.5;color:#374151;white-space:pre-wrap">'+(_rsn?'<span style="font-weight:700;color:#7c3aed;background:#f5f3ff;border-radius:4px;padding:1px 6px;margin-right:5px">'+_cduEsc(_rsn)+'</span>':'')+(_fb?_cduEsc(_fb):'')+(_act?' <span style="color:#1d4ed8;font-weight:600">→ '+_cduEsc(_act)+'</span>':'')+'</div>':'')
+      +'</div>'; }).join('')+'</div>';
   var _listHdr='<div style="display:flex;align-items:center;justify-content:space-between;margin:4px 2px 6px;padding-bottom:5px;border-bottom:1px solid #eef2f7;font-size:12px;color:#94a3b8"><span><b style="color:#475569;font-size:12.5px">방문 상세</b> '+rows.length+'건</span><span><i class="bi bi-sort-down" style="margin-right:3px"></i>정렬 · '+_sortLbl+'</span></div>';
   body.innerHTML=_glance+mini+_listHdr+list;
   new bootstrap.Modal(document.getElementById('cduDrillModal')).show();
@@ -6645,7 +6643,7 @@ function renderCDUReport(vs){
     (v.channels||'').split(/[\/,·]/).map(s=>s.trim()).filter(function(x){return x&&!/^(n|a|na|없음|해당없음|미정|-)$/i.test(x);}).forEach(ch=>{ if(hn){(chan[ch]=chan[ch]||{})[hn]=1;} });
     var p=num(v.price); if(p>0) prices.push(p);
     if(/^(원내|외부|O)$/i.test((v.event||'').trim())) ev++;
-    if(String(v.reels||'').toUpperCase()==='O'){ rl++; var _rn=(v.custName||'').trim(); if(_rn) _reelsHset[_rn]=1; }
+    if(/^(촬영완료|O)$/i.test((v.reels||'').trim())){ rl++; var _rn=(v.custName||'').trim(); if(_rn) _reelsHset[_rn]=1; }
     if((v.churnRisk||'').trim()) churn.push(v);
     if(v.date) days.add(String(v.date).slice(0,10));
     var s=((v.sales||'').trim())||'미지정'; if(hn){(bySales[s]=bySales[s]||{})[hn]=1;}
@@ -6767,7 +6765,7 @@ function renderCDUReport(vs){
     +fact('올해 팁매출',_cduWon(visitedRev),(visitedRevPrev>0?'전년 동기 '+_cduWon(visitedRevPrev):'관리처 팁매출'),'','_cduDrillVip()')
     +fact('리스크 감지',churnU.length+'개처',(churnU.length?'선제 대응 진행 중':'감지 리스크 없음'),(churnU.length?'rd':''),'_cduDrillChurn()')
     +fact('이벤트 진행',ev+'건','마케팅 이벤트 방문','',ev?'_cduDrillEvent()':'')
-    +(function(){window._cduDrillReelsCum=function(){_cduDrill('릴스 촬영 병원(누계)',_cduVisits().filter(function(v){return v.status!=='planned'&&String(v.reels||'').toUpperCase()==='O'&&(v.custName||'').trim();}), 'reels');};var c=_cduVisits().filter(function(v){return v.status!=='planned'&&String(v.reels||'').toUpperCase()==='O';}).length;return fact('릴스 이벤트',c+'갯수','누계 · 릴스 촬영 갯수','',c?'_cduDrillReelsCum()':'');})()
+    +(function(){window._cduDrillReelsCum=function(){_cduDrill('릴스 촬영 병원(누계)',_cduVisits().filter(function(v){return v.status!=='planned'&&/^(촬영완료|O)$/i.test((v.reels||'').trim())&&(v.custName||'').trim();}), 'reels');};var c=_cduVisits().filter(function(v){return v.status!=='planned'&&/^(촬영완료|O)$/i.test((v.reels||'').trim());}).length;return fact('릴스 이벤트',c+'갯수','누계 · 촬영완료 갯수','',c?'_cduDrillReelsCum()':'');})()
   +'</div>';
   var focusBand='<div class="cdud-bt">집중관리 분석 <u>· 이 기간 방문이 휴면·급감 공략으로 이어졌는가 · 클릭 상세</u></div>'
     +'<div class="cdud-band">'
@@ -6987,7 +6985,7 @@ function _cduInputList(vs){
       +'<td style="font-size:12.5px;color:#dc2626" '+oc(v.id)+'>'+_cduEsc(v.competitor||'')+'</td>'
       +'<td style="font-size:12px;color:#2563eb;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" '+oc(v.id)+'>'+_cduEsc(v.channels||'')+'</td>'
       +'<td class="text-end" style="font-size:12.5px" '+oc(v.id)+'>'+(v.price?_cduEsc(v.price)+'천':'-')+'</td>'
-      +'<td class="text-center" style="font-size:12.5px" '+oc(v.id)+'>'+(/^(원내|외부|O)$/i.test((v.event||'').trim())?'<span style="color:#7c3aed;font-weight:700">이벤트</span> ':'')+(String(v.reels||'').toUpperCase()==='O'?'<span style="color:#db2777;font-weight:700">릴스</span>':'')+'</td>'
+      +'<td class="text-center" style="font-size:12.5px" '+oc(v.id)+'>'+(/^(원내|외부|O)$/i.test((v.event||'').trim())?'<span style="color:#7c3aed;font-weight:700">이벤트</span> ':'')+(/^(촬영완료|O)$/i.test((v.reels||'').trim())?'<span style="color:#db2777;font-weight:700">릴스</span>':(/^제안$/.test((v.reels||'').trim())?'<span style="color:#f472b6;font-weight:700">릴스제안</span>':''))+'</td>'
       +'<td style="font-size:12px;color:#64748b" '+oc(v.id)+'>'+_cduEsc(v.sales||'')+'</td>'
       +'<td class="text-end" style="white-space:nowrap"><button class="btn btn-link btn-sm p-0 me-2" title="병원 이력" onclick="openCDUHosp(\''+_cduEsc(v.custName||'').replace(/\x27/g,"\\x27")+'\')"><i class="bi bi-clock-history" style="font-size:12.5px;color:#94a3b8"></i></button><button class="btn btn-link btn-sm p-0 me-2" title="복사(재방문)" onclick="openCDUVisit(\''+v.id+'\',true)"><i class="bi bi-files" style="font-size:12.5px;color:#94a3b8"></i></button><i class="bi bi-pencil" '+oc(v.id)+' style="color:#94a3b8;font-size:13px;cursor:pointer"></i></td></tr>';
     }).join('');
@@ -7047,7 +7045,7 @@ function openCDUVisit(id, copy){
   sv('cd-proc', v?v.mainProc:''); sv('cd-comp', v?v.competitor:''); sv('cd-fb', copy?'':(v?v.feedback:'')); sv('cd-chan', v?v.channels:'');
   document.getElementById('cdv-region').value = v&&v.region?v.region:'국내';
   sv('cd-sales', v?v.sales:(typeof currentUserName==='function'?currentUserName():''));
-  document.getElementById('cd-event').value=(v&&!copy)?(v.event||''):''; document.getElementById('cd-reels').value=(v&&!copy)?(v.reels||''):'';
+  document.getElementById('cd-event').value=(v&&!copy)?(v.event||''):''; document.getElementById('cd-reels').value=(v&&!copy)?((v.reels||'')==='O'?'촬영완료':(v.reels||'')):'';
   sv('cd-shots', v?(v.shots||'300'):'300'); sv('cd-price', v?v.price:''); sv('cd-pcount', copy?'':(v?v.procCount:'')); sv('cd-stock', v?v.stock:''); sv('cd-churn', copy?'':(v?v.churnRisk:''));
   sv('cd-reason', copy?'':(v?(v.noBuyReason||''):''));
   sv('cd-contact-profile', copy?'':(v?(v.contactProfile||''):'')); sv('cd-oli-basic', v?(v.oliBasic||''):'1'); sv('cd-oli-x', v?(v.oliX||''):''); sv('cd-oli-kiss', v?(v.oliKiss||''):'');
@@ -7207,7 +7205,7 @@ function openCDUHosp(name){
     +keys.map(k=>'<div style="font-size:13px;padding:3px 0"><b>'+_cduEsc(k.contactName||'')+'</b> <span style="color:#94a3b8">'+_cduEsc(k.title||'')+'</span> · <span style="font-family:monospace">'+_cduEsc(k.phone||'')+'</span>'+(k.note?' <span style="color:#94a3b8">('+_cduEsc(k.note)+')</span>':'')+'</div>').join('')+'</div>':'';
   var timeline=vs.slice().reverse().map(function(v){
     var badges=[]; if(/^(원내|외부|O)$/i.test((v.event||'').trim()))badges.push('<span style="font-size:11.5px;font-weight:700;color:#7c3aed;background:#f5f3ff;border-radius:4px;padding:1px 6px">이벤트</span>');
-    if(String(v.reels||'').toUpperCase()==='O')badges.push('<span style="font-size:11.5px;font-weight:700;color:#db2777;background:#fdf2f8;border-radius:4px;padding:1px 6px">릴스</span>');
+    if(/^(촬영완료|O)$/i.test((v.reels||'').trim()))badges.push('<span style="font-size:11.5px;font-weight:700;color:#db2777;background:#fdf2f8;border-radius:4px;padding:1px 6px">릴스</span>');else if(/^제안$/.test((v.reels||'').trim()))badges.push('<span style="font-size:11.5px;font-weight:700;color:#f472b6;background:#fdf2f8;border-radius:4px;padding:1px 6px">릴스제안</span>');
     if(v.competitor)badges.push('<span style="font-size:11.5px;font-weight:700;color:#dc2626;background:#fef2f2;border-radius:4px;padding:1px 6px">'+_cduEsc(v.competitor)+'</span>');
     return '<div style="border-left:2px solid #e2e8f0;padding:0 0 14px 14px;position:relative">'
       +'<span style="position:absolute;left:-5px;top:2px;width:8px;height:8px;border-radius:50%;background:#2563eb"></span>'
@@ -7275,7 +7273,7 @@ function renderCDUWeekly(){
   var prices=vs.map(v=>Number(v.price)||0).filter(p=>p>0);
   var comp=vs.filter(v=>(v.competitor||'').trim()).length;
   var ev=vs.filter(v=>/^(원내|외부|O)$/i.test((v.event||'').trim())).length;
-  var rl=vs.filter(v=>String(v.reels||'').toUpperCase()==='O').length;
+  var rl=vs.filter(v=>/^(촬영완료|O)$/i.test((v.reels||'').trim())).length;
   var churn=vs.filter(v=>(v.churnRisk||'').trim());
   var reps=[...new Set(vs.map(v=>(v.sales||'').trim()).filter(Boolean))];
   var avg=prices.length?Math.round(prices.reduce((s,p)=>s+p,0)/prices.length):0;
