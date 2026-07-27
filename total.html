@@ -2803,7 +2803,7 @@ function corpLedToggle(){ _corpLedFold=!_corpLedFold; renderCorps(); }
 // 제품 드릴 — 현재 선택 법인 범위로만 (전세계 아님)
 function openCorpProdInfo(gi){
   const p=_corpProdN[gi]; if(!p) return;
-  const cp=_CORPS.find(x=>x.n===_corpSel)||_CORPS[0], t=_rptPeriods().mo;
+  const cp=_CORPS.find(x=>x.n===_corpSel)||_CORPS[0], t=_execT();
   const mo26={}, byClient={}, ledger=[]; let tot=0,usd=0,qty=0;
   const own2025={};   // 이 법인이 온전히 점유한 국가 → 전년 제품값 귀속
   Object.entries(INTL.countries||{}).forEach(([cc,c])=>Object.entries(c.clientData||{}).forEach(([nm,cd])=>{
@@ -2866,7 +2866,7 @@ function corpMonthDetail(m){
 // 거래처 전체 목록 모달 (2026vs2025 YoY·주문·최근거래, 행 클릭=거래처 드릴)
 function corpClientsAll(){
   const cp=_CORPS.find(x=>x.n===_corpSel)||_CORPS[0];
-  const _t=_rptPeriods().mo;   // 전년은 동기간(1~t월) — YTD vs 연간 착시 방지
+  const _t=_execT();   // 전년은 동기간(1~t월) — YTD vs 연간 착시 방지
   const map={};
   const scan=(src,yr)=>Object.entries((src&&src.countries)||{}).forEach(([cc,c])=>Object.entries(c.clientData||{}).forEach(([nm,cd])=>{
     if(_regionOf(cc,nm)!==cp.n) return; const k=_rnorm(nm); const o=map[k]||(map[k]={n:nm,v26:0,v25:0,cnt:0,last:''});
@@ -2896,7 +2896,7 @@ function corpClientsAll(){
 }
 function renderCorps(){
   try{ _rptBuildCache(); }catch(e){ return; }
-  const P=_rptPeriods(), f=1, t=P.mo;
+  const P=_rptPeriods(), f=1, t=_execT();
   const sm=(o,a,b)=>{let s=0;for(let m=a;m<=b;m++)s+=Number((o||{})[m]||0);return s;};
   const pendAll=_pendingAgg(2026);
   const intlDen=sm(INTL.monthly,f,t)+sm(pendAll.intlMonthly,f,t)||1;   // 해외 전체(회계+미반영) — 비중 분모
@@ -3784,5 +3784,9 @@ window.addEventListener('popstate', function(e){
 });
 </script>
 <button id="pdf-fab" onclick="printPDF()" title="이 페이지를 PDF로 추출"><i class="bi bi-filetype-pdf me-1"></i>PDF</button>
+<script>
+/* 서비스워커 등록: 일반 새로고침(F5)에도 항상 최신 HTML(network-first) — 하드리프레시 불필요 */
+if('serviceWorker' in navigator){ window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
+</script>
 </body>
 </html>
