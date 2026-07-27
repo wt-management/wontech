@@ -6544,10 +6544,19 @@ function _cduDrill(title, arr, kind){
     else if(_pArr.length){ var mxP3=_mx(_pArr.map(x=>x[1])); cells.push(col(box('주력 시술',_pArr.slice(0,6).map(x=>barLine(x[0],x[1],mxP3,'#0d9488')).join('')))); }
   }
   if(cells.length) mini='<div class="row g-2 mb-2">'+cells.join('')+'</div>';
-  // ── 목록(수가 드릴=수가순+평균편차, 그 외=매출순) ──
-  var rows=arr.slice().sort(kind==='price'
-    ? function(a,b){ return (Number(b.price)||0)-(Number(a.price)||0); }
-    : function(a,b){ return (_cduRev(b.custName).y2026||0)-(_cduRev(a.custName).y2026||0); });
+  // ── 목록: 카드 성격에 맞는 정렬 + 기준 명시 ──
+  var _rvY26=function(v){return _cduRev(v.custName).y2026||0;};
+  var _rvY25=function(v){return _cduRev(v.custName).y2025||0;};
+  var _dt=function(v){return String(v.date||'');};
+  var _byDate=function(a,b){return _dt(b)<_dt(a)?-1:(_dt(b)>_dt(a)?1:0);};
+  var _sortLbl, _cmp;
+  if(kind==='price'){ _sortLbl='수가 높은 순'; _cmp=function(a,b){return (Number(b.price)||0)-(Number(a.price)||0);}; }
+  else if(kind==='rev'||kind==='conv'){ _sortLbl='올해 팁매출 높은 순'; _cmp=function(a,b){return _rvY26(b)-_rvY26(a);}; }
+  else if(kind==='dormant'){ _sortLbl='작년 팁매출 높은 순 · 회복 잠재'; _cmp=function(a,b){return _rvY25(b)-_rvY25(a);}; }
+  else if(kind==='drop'){ _sortLbl='감소액 큰 순'; _cmp=function(a,b){return (_rvY25(b)-_rvY26(b))-(_rvY25(a)-_rvY26(a));}; }
+  else if(kind==='reels'){ _sortLbl='최근 촬영 순'; _cmp=_byDate; }
+  else { _sortLbl='최근 방문 순'; _cmp=_byDate; }
+  var rows=arr.slice().sort(_cmp);
   var list=rows.map(function(v){ var rev=_cduRev(v.custName); var p=Number(v.price)||0;
     var priceTag='';
     if(p>0){
@@ -6566,7 +6575,8 @@ function _cduDrill(title, arr, kind){
       +'</div>'
       +((_rsn||_fb||_act)?'<div style="margin-top:3px;padding-left:42px;font-size:12.5px;line-height:1.55;color:#374151;white-space:pre-wrap">'+(_rsn?'<span style="font-weight:700;color:#7c3aed;background:#f5f3ff;border-radius:4px;padding:1px 7px;margin-right:6px">'+_cduEsc(_rsn)+'</span>':'')+(_fb?_cduEsc(_fb):'')+(_act?' <span style="color:#1d4ed8;font-weight:600">→ '+_cduEsc(_act)+'</span>':'')+'</div>':'')
       +'</div>'; }).join('');
-  body.innerHTML=_glance+mini+list;
+  var _listHdr='<div style="display:flex;align-items:center;justify-content:space-between;margin:4px 2px 6px;padding-bottom:5px;border-bottom:1px solid #eef2f7;font-size:12px;color:#94a3b8"><span><b style="color:#475569;font-size:12.5px">방문 상세</b> '+rows.length+'건</span><span><i class="bi bi-sort-down" style="margin-right:3px"></i>정렬 · '+_sortLbl+'</span></div>';
+  body.innerHTML=_glance+mini+_listHdr+list;
   new bootstrap.Modal(document.getElementById('cduDrillModal')).show();
 }
 // ── 방문 입력 자동채움(한국영업 CRM 공유정보) ──
