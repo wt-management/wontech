@@ -6549,13 +6549,7 @@ function _cduDrill(title, arr, kind){
   var _rvY25=function(v){return _cduRev(v.custName).y2025||0;};
   var _dt=function(v){return String(v.date||'');};
   var _byDate=function(a,b){return _dt(b)<_dt(a)?-1:(_dt(b)>_dt(a)?1:0);};
-  var _sortLbl, _cmp;
-  if(kind==='price'){ _sortLbl='수가 높은 순'; _cmp=function(a,b){return (Number(b.price)||0)-(Number(a.price)||0);}; }
-  else if(kind==='rev'||kind==='conv'){ _sortLbl='올해 팁매출 높은 순'; _cmp=function(a,b){return _rvY26(b)-_rvY26(a);}; }
-  else if(kind==='dormant'){ _sortLbl='작년 팁매출 높은 순 · 회복 잠재'; _cmp=function(a,b){return _rvY25(b)-_rvY25(a);}; }
-  else if(kind==='drop'){ _sortLbl='감소액 큰 순'; _cmp=function(a,b){return (_rvY25(b)-_rvY26(b))-(_rvY25(a)-_rvY26(a));}; }
-  else if(kind==='reels'){ _sortLbl='최근 촬영 순'; _cmp=_byDate; }
-  else { _sortLbl='최근 방문 순'; _cmp=_byDate; }
+  var _sortLbl=(kind==='reels'?'최근 촬영 순':'최근순'), _cmp=_byDate;
   var rows=arr.slice().sort(_cmp);
   var list='<div style="column-count:2;column-gap:26px">'+rows.map(function(v){ var rev=_cduRev(v.custName); var p=Number(v.price)||0;
     var dv=(kind==='price'&&avg&&p>0)?(p-avg):null;
