@@ -6433,7 +6433,7 @@ function _cduAllTip(){ if(_cduAllTipCache!=null) return _cduAllTipCache; var s=0
 var _CDU_BANDS=[['~349천원',p=>p<350],['350~399',p=>p>=350&&p<400],['400~449',p=>p>=400&&p<450],['450~',p=>p>=450]];
 var _cduRepVs=[];
 // ── 지표 드릴다운(목록) ──
-function _cduDrillComp(c){ _cduDrill('경쟁사 노출: '+c, _cduRepVs.filter(v=>(v.competitor||'').trim()===c)); }
+function _cduDrillComp(c){ var _s={}; _cduDrill('경쟁사 노출: '+c, _cduRepVs.filter(function(v){ if((v.competitor||'').split(/[\/,·]/).map(function(x){return x.trim();}).indexOf(c)<0) return false; var n=(v.custName||'').trim(); if(_s[n]) return false; _s[n]=1; return true; })); }
 function _cduDrillCompAll(){ _cduDrill('경쟁사 노출 전체', _cduRepVs.filter(function(v){ return (v.competitor||'').trim(); })); }
 function _cduDrillChan(c){ _cduDrill('마케팅 채널: '+c, _cduRepVs.filter(v=>(v.channels||'').split(/[\/,·]/).map(s=>s.trim()).indexOf(c)>=0)); }
 function _cduDrillSales(s){ _cduDrill('담당자 방문: '+s, _cduRepVs.filter(v=>((v.sales||'').trim()||'미지정')===s)); }
@@ -6578,7 +6578,7 @@ function renderCDUReport(vs){
   var num=v=>Number(v)||0, pctf=(a,b)=>b?Math.round(a/b*100):0;
   var comp={},chan={},prices=[],ev=0,rl=0,_reelsHset={},churn=[],days=new Set(),bySales={};
   vs.forEach(function(v){
-    var hn=(v.custName||'').trim(); var c=(v.competitor||'').trim(); if(c&&hn){ (comp[c]=comp[c]||{})[hn]=1; }
+    var hn=(v.custName||'').trim(); if(hn) (v.competitor||'').split(/[\/,·]/).map(function(x){return x.trim();}).filter(Boolean).forEach(function(cc){ (comp[cc]=comp[cc]||{})[hn]=1; });
     (v.channels||'').split(/[\/,·]/).map(s=>s.trim()).filter(Boolean).forEach(ch=>{ if(hn){(chan[ch]=chan[ch]||{})[hn]=1;} });
     var p=num(v.price); if(p>0) prices.push(p);
     if(String(v.event||'').toUpperCase()==='O') ev++;
