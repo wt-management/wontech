@@ -1044,6 +1044,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <select id="ov-from" class="form-select form-select-sm" onchange="renderOverview()"></select>
       <span class="text-muted">~</span>
       <select id="ov-to" class="form-select form-select-sm" onchange="renderOverview()"></select>
+      <span style="margin-left:10px;display:inline-flex;gap:4px;flex-wrap:wrap"><button type="button" class="btn btn-outline-secondary btn-sm" onclick="ovSetPeriod(1,'ytd')">올해 YTD</button><button type="button" class="btn btn-outline-secondary btn-sm" onclick="ovSetPeriod(1,6)">상반기</button><button type="button" class="btn btn-outline-secondary btn-sm" onclick="ovSetPeriod(7,12)">하반기</button><button type="button" class="btn btn-outline-secondary btn-sm" onclick="ovSetPeriod(1,12)">연간</button></span>
     </div>
 
     <section class="scoreboard" id="ov-hero" aria-label="전사 스코어보드"></section>
@@ -1545,6 +1546,7 @@ function showPage(name,el,push){
 }
 
 // ── 전사 종합 ────────────────────────────────────────────
+function ovSetPeriod(f,t){ if(t==='ytd')t=(typeof _lastDataMonth==='function'?_lastDataMonth():12); var a=document.getElementById('ov-from'),b=document.getElementById('ov-to'); if(a)a.value=f; if(b)b.value=t; renderOverview(); }
 function renderOverview(){
   const f=+document.getElementById('ov-from').value, t=+document.getElementById('ov-to').value;
   const pend=_pendingAgg(2026);   // 예정분(국내+해외 미반영) — 항상 계산
