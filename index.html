@@ -1245,7 +1245,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   </div></div></div>
 
   <!-- CDU 지표 드릴다운(목록) 모달 -->
-  <div class="modal fade" id="cduDrillModal" tabindex="-1"><div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
+  <div class="modal fade" id="cduDrillModal" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content">
     <div class="modal-header"><h5 class="modal-title" id="cduDrillTitle">상세</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body" id="cduDrillBody"></div>
   </div></div></div>
@@ -6452,12 +6452,14 @@ function _cduDrill(title, arr, kind){
   var body=document.getElementById('cduDrillBody'); if(!body) return;
   if(!arr.length){ body.innerHTML='<div class="text-muted" style="font-size:13px">해당 항목이 없습니다.</div>'; new bootstrap.Modal(document.getElementById('cduDrillModal')).show(); return; }
   // ── 분석 요약 집계 ──
-  var uniq={}, totRev=0, prices=[], compHosp={}, bySales={}, byProc={};
+  var uniq={}, totRev=0, prices=[], compHosp={}, bySales={}, byProc={}, compDev={}, reasonCnt={};
   arr.forEach(function(v){
     var n=(v.custName||'').trim();
     if(n&&!uniq[n]){ uniq[n]=1; totRev+=(_cduRev(n).y2026||0); }
     var p=Number(v.price)||0; if(p>0) prices.push(p);
     if((v.competitor||'').trim()&&n) compHosp[n]=1;
+    if(n) (v.competitor||'').split(/[\/,·]/).map(function(x){return x.trim();}).filter(function(x){return x&&!/^(n|a|na|없음|해당없음|미정|-)$/i.test(x);}).forEach(function(cc){ (compDev[cc]=compDev[cc]||{})[n]=1; });
+    var _rz=_cduReasonDisp((v.noBuyReason||'').trim()); if(_rz) reasonCnt[_rz]=(reasonCnt[_rz]||0)+1;
     var s=(v.sales||'').trim()||'미지정'; bySales[s]=(bySales[s]||0)+1;
     (v.mainProc||'').split(/[\/,·]/).map(x=>x.trim()).filter(Boolean).forEach(pc=>byProc[pc]=(byProc[pc]||0)+1);
   });
@@ -6473,6 +6475,9 @@ function _cduDrill(title, arr, kind){
   // ── 분포 미니 차트 ──
   var barLine=(name,cnt,max,col,suf)=>'<div style="display:flex;align-items:center;gap:8px;padding:3px 0"><span style="font-size:12.5px;min-width:86px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">'+_cduEsc(name)+'</span>'+_cduBar(cnt/max*100,col)+'<span style="font-size:12.5px;font-weight:700;min-width:34px;text-align:right">'+cnt+(suf||'건')+'</span></div>';
   var box=(tt,inner)=>'<div style="background:#f8fafc;border-radius:10px;padding:10px 12px;height:100%"><div style="font-size:12.5px;font-weight:700;color:#475569;margin-bottom:4px">'+tt+'</div>'+inner+'</div>';
+  var _cDist=Object.entries(compDev).map(function(e){return [e[0],Object.keys(e[1]).length];}).sort((a,b)=>b[1]-a[1]);
+  var _rDist=Object.entries(reasonCnt).sort((a,b)=>b[1]-a[1]);
+  var _glance='<div style="background:#eff6ff;border:1px solid #dbeafe;border-radius:9px;padding:8px 12px;margin-bottom:10px;font-size:12.5px;color:#1e40af;line-height:1.6"><b>한눈에</b> · '+nH+'개처 방문'+(arr.length!==nH?'('+arr.length+'회)':'')+(totRev?' · 올해 팁매출 '+_cduWon(totRev):'')+(prices.length?' · 평균수가 '+avg+'천':'')+(_cDist.length?' · 최다 경쟁 <b>'+_cduEsc(_cDist[0][0])+'</b> '+_cDist[0][1]+'개처':'')+(_rDist.length?' · 주요 미구매 <b>'+_cduEsc(_rDist[0][0])+'</b> '+_rDist[0][1]+'건':'')+'</div>';
   var mini='';
   if(kind==='price'&&prices.length){
     var bands=_CDU_BANDS.map(b=>[b[0],prices.filter(b[1]).length]);
@@ -6489,6 +6494,8 @@ function _cduDrill(title, arr, kind){
     var cells=[];
     if(sArr.length>1) cells.push('<div class="col-md-6">'+box('담당자별 방문',sArr.map(x=>barLine(x[0],x[1],mxS,'#2563eb')).join(''))+'</div>');
     if(pArr.length)   cells.push('<div class="col-md-6">'+box('주력 시술 TOP5',pArr.map(x=>barLine(x[0],x[1],mxP,'#0d9488')).join(''))+'</div>');
+    if(_cDist.length){ var mxC=Math.max.apply(null,_cDist.map(x=>x[1]).concat([1])); cells.push('<div class="col-md-6">'+box('경쟁사 노출 분포 <span style="font-weight:400;color:#94a3b8">장비별 개처</span>',_cDist.slice(0,6).map(x=>barLine(x[0],x[1],mxC,'#dc2626','개처')).join(''))+'</div>'); }
+    if(_rDist.length){ var mxR=Math.max.apply(null,_rDist.map(x=>x[1]).concat([1])); cells.push('<div class="col-md-6">'+box('미구매 사유 분포',_rDist.slice(0,6).map(x=>barLine(x[0],x[1],mxR,'#ea580c')).join(''))+'</div>'); }
     if(cells.length) mini='<div class="row g-2 mb-2">'+cells.join('')+'</div>';
   }
   // ── 목록(수가 드릴=수가순+평균편차, 그 외=매출순) ──
@@ -6513,7 +6520,7 @@ function _cduDrill(title, arr, kind){
       +'</div>'
       +((_rsn||_fb||_act)?'<div style="margin-top:3px;padding-left:42px;font-size:12.5px;line-height:1.55;color:#374151;white-space:pre-wrap">'+(_rsn?'<span style="font-weight:700;color:#7c3aed;background:#f5f3ff;border-radius:4px;padding:1px 7px;margin-right:6px">'+_cduEsc(_rsn)+'</span>':'')+(_fb?_cduEsc(_fb):'')+(_act?' <span style="color:#1d4ed8;font-weight:600">→ '+_cduEsc(_act)+'</span>':'')+'</div>':'')
       +'</div>'; }).join('');
-  body.innerHTML=head+mini+list;
+  body.innerHTML=head+_glance+mini+list;
   new bootstrap.Modal(document.getElementById('cduDrillModal')).show();
 }
 // ── 방문 입력 자동채움(한국영업 CRM 공유정보) ──
