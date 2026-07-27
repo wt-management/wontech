@@ -11096,6 +11096,18 @@ function showDevRepDetail(repName) {
       </table>`
     : '<div class="text-muted p-2" style="font-size:12px">해당 기간 거래처 없음</div>';
 
+  // ── 월별 매출 전년 비교표(요청) ──
+  const _cM = rep.m2026||{}, _pM = rep.m2025||{};
+  const _monList = _cur.map(x=>x.m);
+  const _repCur = _monList.reduce((s2,m)=>s2+(_cM[m]||0),0);
+  const _repPre = _prev.map(x=>x.m).reduce((s2,m)=>s2+(_pM[m]||0),0);
+  const _monTotYoy = _repPre>0?((_repCur/_repPre-1)*100):null;
+  const _fmtY=(cv,pv)=>pv>0?(((cv/pv-1)*100>=0?'▲':'▼')+Math.abs((cv/pv-1)*100).toFixed(0)+'%'):(cv>0?'신규':'-');
+  const _colY=(cv,pv)=>pv>0?((cv/pv-1)*100>=0?'#16a34a':'#dc2626'):(cv>0?'#16a34a':'#cbd5e1');
+  const monHtml = _monList.length ? `<table class="table table-sm mb-0"><thead class="table-light"><tr><th style="font-size:11px">월</th><th class="text-end" style="font-size:11px">${yr-1}년</th><th class="text-end" style="font-size:11px">${yr}년</th><th class="text-end" style="font-size:11px">YoY</th></tr></thead><tbody>`
+    + _monList.map(m=>{ const cv=_cM[m]||0, pv=_pM[m]||0; return `<tr><td style="font-size:12px">${m}월</td><td class="text-end" style="font-size:11px;color:#64748b">${fmtW(pv)}</td><td class="text-end" style="font-size:12px;font-weight:600;color:#1d4ed8">${fmtW(cv)}</td><td class="text-end" style="font-size:11px;font-weight:600;color:${_colY(cv,pv)}">${_fmtY(cv,pv)}</td></tr>`; }).join('')
+    + `<tr style="background:#f8fafc;font-weight:700"><td style="font-size:12px">합계</td><td class="text-end" style="font-size:11px;color:#64748b">${fmtW(_repPre)}</td><td class="text-end" style="font-size:12px;color:#1d4ed8">${fmtW(_repCur)}</td><td class="text-end" style="font-size:11px;font-weight:700;color:${_monTotYoy===null?'#64748b':(_monTotYoy>=0?'#16a34a':'#dc2626')}">${_monTotYoy===null?'-':((_monTotYoy>=0?'▲':'▼')+Math.abs(_monTotYoy).toFixed(0)+'%')}</td></tr>`
+    + `</tbody></table>` : '<div class="text-muted" style="font-size:12px">데이터 없음</div>';
   const mLabel = P.label;
   const chartId = 'devrep-modal-chart-'+Date.now();
 
@@ -11118,6 +11130,8 @@ function showDevRepDetail(repName) {
           <div style="position:relative;height:200px"><canvas id="${chartId}"></canvas></div>
         </div>
       </div>
+      <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:8px"><i class="bi bi-calendar3 me-1"></i>월별 매출 · 전년 비교 <span style="font-size:10px;font-weight:400;color:#94a3b8">(선택 기간)</span></div>
+      <div style="max-height:280px;overflow-y:auto;margin-bottom:18px;border:1px solid #eef2f7;border-radius:10px">${monHtml}</div>
       <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:8px"><i class="bi bi-list-ul me-1"></i>거래처 목록 (${hospList.length}개사)</div>
       <div style="max-height:320px;overflow-y:auto">${hospHtml}</div>
     </div>
