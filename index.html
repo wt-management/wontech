@@ -4080,7 +4080,7 @@ function _showOverdue(){
 // ── 현황판: 다음 액션 상세(화면 이동 대신 팝업) ──
 function _dashActionDetail(i){
   const l=(window._dashActions||[])[i]; if(!l) return;
-  const isOverdue=l.date<new Date().toISOString().split('T')[0];
+  const isOverdue=l.date<_schTodayStr();
   const kindLbl=l.kind==='deal'?'수주 딜':l.kind==='sched'?'놓친 일정':'상담 후속';
   var b='<div style="font-size:13px;line-height:1.95">'
     +'<div><b style="color:#111827;font-size:16px">'+_escH(l.custName||'-')+'</b> <span style="color:#94a3b8">'+_escH(l.sales||'')+'</span></div>'
@@ -4242,14 +4242,14 @@ function renderDashboard() {
 
 
   // 다음 액션 — 상담일지 후속조치 + 수주관리 딜의 다음액션을 함께 모음(유기적 연동)
-  const todayStr=now.toISOString().split('T')[0];
+  const _ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); const todayStr=_ymd(now);
   const fromLogs=DB.d.logs.filter(l=>l.nextDate&&l.nextAction).map(l=>({date:l.nextDate,action:l.nextAction,custName:l.custName,sales:l.sales,kind:'log',dealId:''}));
   const fromDeals=DB.d.pipeline.filter(d=>d.stage!=='계약완료'&&d.nextDate&&d.nextAction).map(d=>({date:d.nextDate,action:'[딜] '+d.nextAction,custName:d.custName,sales:d.sales,kind:'deal',dealId:d.id}));
   const fromMissedVisits=DB.d.logs.filter(l=>l.kind==='schedule'&&!l.done&&l.date&&l.date<todayStr).map(l=>({date:l.date,action:'['+(l.type||'방문')+'] 완료 처리가 안 된 놓친 일정',custName:l.custName,sales:l.sales,kind:'sched',dealId:l.dealId||''}));
   const actionItems=[...fromLogs,...fromDeals,...fromMissedVisits].sort((a,b)=>a.date.localeCompare(b.date));
   const overdueItems=actionItems.filter(l=>l.date<todayStr);
   const todayItems=actionItems.filter(l=>l.date===todayStr);
-  const weekItems=actionItems.filter(l=>l.date>todayStr&&l.date<=new Date(now.getTime()+7*864e5).toISOString().split('T')[0]);
+  const weekItems=actionItems.filter(l=>l.date>todayStr&&l.date<=_ymd(new Date(now.getTime()+7*864e5)));
   document.getElementById('action-overdue-cnt').textContent=overdueItems.length?`지연 ${overdueItems.length}건`:'';
   document.getElementById('action-today-cnt').textContent=todayItems.length?`오늘 ${todayItems.length}건`:'';
   document.getElementById('action-week-cnt').textContent=weekItems.length?`이번주 ${weekItems.length}건`:'';
@@ -8092,6 +8092,7 @@ function renderPerformance(){
     const daysSince=lastLog?Math.floor((Date.now()-new Date(lastLog.date))/864e5):null;
     return{s,wonAmt,wonCnt:wonDeals.length,pipeW,pipeCnt:pipeDeals.length,logCnt:logs.length,allLogCnt:allLogs.length,daysSince};
   }).sort((a,b)=>b.wonAmt-a.wonAmt);
+  const _ymsJ="["+yms.map(m=>"'"+m+"'").join(",")+"]";
   const maxWon=Math.max(...salesData.map(x=>x.wonAmt),1);
 
   // KPI — 파이프라인 액션 중심 (대시보드와 중복 없이)
@@ -8147,11 +8148,11 @@ function renderPerformance(){
           <div style="font-size:20px;font-weight:800;color:#1e40af;margin-bottom:4px">${fmtAmt(x.wonAmt)}</div>
           <div style="height:6px;background:#e5e7eb;border-radius:4px;margin-bottom:10px"><div style="height:6px;width:${barW}%;background:#2563eb;border-radius:4px"></div></div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;text-align:center">
-            <div style="background:#fff;border-radius:8px;padding:7px 4px;border:1px solid #e5e7eb;cursor:pointer" onclick="showPerfDrill('deals','${x.s} — 계약완료',d=>d.stage==='계약완료'&&(d.sales||'')==='${x.s.replace(/'/g,"\\'")}')">
+            <div style="background:#fff;border-radius:8px;padding:7px 4px;border:1px solid #e5e7eb;cursor:pointer" onclick="showPerfDrill('deals','${x.s} — 계약완료',d=>d.stage==='계약완료'&&(d.sales||'')==='${x.s.replace(/'/g,"\\'")}'&&${_ymsJ}.some(ym=>(d.stageUpdatedAt||'').startsWith(ym)))">
               <div style="font-size:16px;font-weight:700;color:#2563eb">${x.wonCnt}</div>
               <div style="font-size:9px;color:#6b7280">계약건</div>
             </div>
-            <div style="background:#fff;border-radius:8px;padding:7px 4px;border:1px solid #e5e7eb;cursor:pointer" onclick="showPerfDrill('logs','${x.s} — 상담일지(기간)',l=>(l.sales||'')==='${x.s.replace(/'/g,"\\'")}')">
+            <div style="background:#fff;border-radius:8px;padding:7px 4px;border:1px solid #e5e7eb;cursor:pointer" onclick="showPerfDrill('logs','${x.s} — 상담일지(기간)',l=>(l.sales||'')==='${x.s.replace(/'/g,"\\'")}'&&${_ymsJ}.some(ym=>(l.date||'').startsWith(ym)))">
               <div style="font-size:16px;font-weight:700;color:#f59e0b">${x.logCnt}</div>
               <div style="font-size:9px;color:#6b7280">상담(기간)</div>
             </div>
