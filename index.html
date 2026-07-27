@@ -10991,13 +10991,19 @@ function renderDevReps() {
   const _emptyRep={total:0,y2025:0,y2026:0,cust2025:0,cust2026:0,prods2025:{},prods2026:{},m2025:{},m2026:{},qty2025:0,qty2026:0};
   const _allNames=[...new Set([...KOR_SALES_TEAM, ...Object.keys(reps)])];
   const _flt=(typeof _devFilter!=='undefined'?_devFilter:'all');
+  // 대수·거래처수·주력제품도 선택 기간(_cur)으로 재집계 — 연간 누계 고정 버그 수정
+  const _spanKeys={}; _cur.forEach(x=>{_spanKeys[x.y+'-'+x.m]=1;});
+  const _repSpan={};
+  Object.entries(DEVICE.hospitals||{}).forEach(([hn,h])=>{ const r=_repOf(hn); if(!r) return; let o=_repSpan[r]; if(!o) o=_repSpan[r]={qty:0,prods:{},cust:{}};
+    [["txns2026",2026],["txns2025",2025]].forEach(([tk,y])=>{ (h[tk]||[]).forEach(t=>{ if(!_spanKeys[y+'-'+(+t[0])]) return; const amt=Number(t[4]||0), q=Number(t[5]||0), prod=t[3]; o.qty+=q; if(prod) o.prods[prod]=(o.prods[prod]||0)+amt; if(amt>0||q>0) o.cust[hn]=1; }); }); });
   const entries = _allNames.map((name) => {
     const rep = reps[name] || _emptyRep;
     const cur  = _spanV(rep,_cur);
     const pre  = _spanV(rep,_prev);
-    const qty  = _endY===2026 ? rep.qty2026 : rep.qty2025;
-    const cust = _endY===2026 ? rep.cust2026 : rep.cust2025;
-    const topProd = Object.entries((_endY===2026?rep.prods2026:rep.prods2025)||{}).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
+    const _rs=_repSpan[name];
+    const qty  = _rs?_rs.qty:0;
+    const cust = _rs?Object.keys(_rs.cust).length:0;
+    const topProd = _rs?(Object.entries(_rs.prods).sort((a,b)=>b[1]-a[1])[0]?.[0]||''):'';
     return {name, rep, cur, pre, qty, cust, topProd, yoy: pre>0?(cur/pre-1)*100:null, isTeam:_isKorSales(name)};
   }).filter(e=> _flt==='team'?e.isTeam : _flt==='dealer'?!e.isTeam : true)
     .sort((a,b)=>b.cur-a.cur);
@@ -11040,7 +11046,10 @@ function showDevRepDetail(repName) {
     document.body.appendChild(modal);
   }
 
-  const prods = yr===2026?rep.prods2026:rep.prods2025||{};
+  // 제품별 실적도 선택 기간으로 재집계(연간 누계 고정 버그 수정)
+  const _spanKeysR={}; _cur.forEach(x=>{_spanKeysR[x.y+"-"+x.m]=1;});
+  const prods={};
+  Object.entries(DEVICE.hospitals||{}).forEach(([hn,h])=>{ if(_repOf(hn)!==repName) return; [["txns2026",2026],["txns2025",2025]].forEach(([tk,y])=>{ (h[tk]||[]).forEach(t=>{ if(!_spanKeysR[y+"-"+(+t[0])]) return; const prod=t[3], amt=Number(t[4]||0); if(prod) prods[prod]=(prods[prod]||0)+amt; }); }); });
   const maxP  = Math.max(...Object.values(prods))||1;
   const COLS  = ['#16a34a'];  // 장비 단일색(무지개 제거)
   const prodsHtml = Object.entries(prods).sort((a,b)=>b[1]-a[1]).map(([p,v],i)=>`
