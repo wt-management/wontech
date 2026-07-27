@@ -1461,14 +1461,14 @@ function _pendEff(p){
   return {eff:'pending'};
 }
 function _pendingAgg(yr){
-  const agg={consMonthly:{},devMonthly:{},intlMonthly:{},consProducts:{},devProducts:{},total:0,count:0,intlTotal:0,intlCount:0};
+  const agg={consMonthly:{},devMonthly:{},intlMonthly:{},consProducts:{},devProducts:{},total:0,count:0,intlTotal:0,intlCount:0,countMo:{},intlCountMo:{}};
   (PENDING||[]).forEach(p=>{
     const d=p.expected_date?new Date(p.expected_date+'T00:00:00'):null;
     if(!(d&&!isNaN(d)&&d.getFullYear()===yr)) return;
     const mo=d.getMonth()+1,amt=Number(p.amount||0);
     if((p.channel||'korea')==='intl'){            // 해외 예정분 — 상태만으로 판정(회계 txn 자동매칭 없음)
       if(p.status==='취소'||p.status==='반영됨') return;
-      agg.intlMonthly[mo]=(agg.intlMonthly[mo]||0)+amt; agg.intlTotal+=amt; agg.intlCount++;
+      agg.intlMonthly[mo]=(agg.intlMonthly[mo]||0)+amt; agg.intlTotal+=amt; agg.intlCount++; agg.intlCountMo[mo]=(agg.intlCountMo[mo]||0)+1;
       return;
     }
     const e=_pendEff(p);                            // 국내 — 기존 회계 자동매칭
@@ -1476,14 +1476,14 @@ function _pendingAgg(yr){
     const isCons=p.category==='소모품';
     if(isCons){agg.consMonthly[mo]=(agg.consMonthly[mo]||0)+amt; if(p.product) agg.consProducts[p.product]=(agg.consProducts[p.product]||0)+amt;}
     else {agg.devMonthly[mo]=(agg.devMonthly[mo]||0)+amt; if(p.product) agg.devProducts[p.product]=(agg.devProducts[p.product]||0)+amt;}
-    agg.total+=amt; agg.count++;
+    agg.total+=amt; agg.count++; agg.countMo[mo]=(agg.countMo[mo]||0)+1;
   });
   (ILBO_PEND||[]).forEach(function(p){
     var ds=p.expectedDate||p.expected_date||''; var d=ds?new Date(ds+'T00:00:00'):null;
     if(!(d&&!isNaN(d)&&d.getFullYear()===yr)) return;
     var mo=d.getMonth()+1, amt=Number(p.amount||0);
-    if(p.region==='해외'){ agg.intlMonthly[mo]=(agg.intlMonthly[mo]||0)+amt; agg.intlTotal+=amt; agg.intlCount++; }
-    else { var it=_pendKrItem(p.product); if(it==='소모품'){ agg.consMonthly[mo]=(agg.consMonthly[mo]||0)+amt; if(p.product) agg.consProducts[p.product]=(agg.consProducts[p.product]||0)+amt; } else { agg.devMonthly[mo]=(agg.devMonthly[mo]||0)+amt; if(p.product) agg.devProducts[p.product]=(agg.devProducts[p.product]||0)+amt; } agg.total+=amt; agg.count++; }
+    if(p.region==='해외'){ agg.intlMonthly[mo]=(agg.intlMonthly[mo]||0)+amt; agg.intlTotal+=amt; agg.intlCount++; agg.intlCountMo[mo]=(agg.intlCountMo[mo]||0)+1; }
+    else { var it=_pendKrItem(p.product); if(it==='소모품'){ agg.consMonthly[mo]=(agg.consMonthly[mo]||0)+amt; if(p.product) agg.consProducts[p.product]=(agg.consProducts[p.product]||0)+amt; } else { agg.devMonthly[mo]=(agg.devMonthly[mo]||0)+amt; if(p.product) agg.devProducts[p.product]=(agg.devProducts[p.product]||0)+amt; } agg.total+=amt; agg.count++; agg.countMo[mo]=(agg.countMo[mo]||0)+1; }
   });
   return agg;
 }
@@ -2097,7 +2097,7 @@ function renderThisMonth(){
   document.getElementById('tm-target').textContent=tgt>0?(tmo+'월 국내목표 '+fmtW(tgt)):'';
   document.getElementById('tm-cards').innerHTML=[
     '<div class="tm-box clk" onclick="openOvDetail('+tmo+',\'total\')" title="'+tmo+'월 내역 조회"><div class="tm-l"><i class="bi bi-check-circle me-1" style="color:#0f172a"></i>회계 확정 (전사) <span style="color:#cbd5e1">›</span></div><div class="tm-v" style="color:#0f172a">'+fmtW(conf)+'</div><div class="tm-s">국내 '+fmtW(domConf)+' · 해외 '+fmtW(intlConf)+'</div></div>',
-    '<div class="tm-box clk" onclick="openOvDetail('+tmo+',\'total\')" title="'+tmo+'월 내역 조회(미반영 포함)"><div class="tm-l"><i class="bi bi-hourglass-split me-1" style="color:#0891b2"></i>예정분 (미반영) <span style="color:#cbd5e1">›</span></div><div class="tm-v" style="color:#0891b2">+'+fmtW(pendMo)+'</div><div class="tm-s">국내 '+pend.count+'건 · 해외 '+pend.intlCount+'건</div></div>',
+    '<div class="tm-box clk" onclick="openOvDetail('+tmo+',\'total\')" title="'+tmo+'월 내역 조회(미반영 포함)"><div class="tm-l"><i class="bi bi-hourglass-split me-1" style="color:#0891b2"></i>예정분 (미반영) <span style="color:#cbd5e1">›</span></div><div class="tm-v" style="color:#0891b2">+'+fmtW(pendMo)+'</div><div class="tm-s">국내 '+(pend.countMo[tmo]||0)+'건 · 해외 '+(pend.intlCountMo[tmo]||0)+'건</div></div>',
     '<div class="tm-box accent clk" onclick="showPage(\'goals\',document.getElementById(\'nav-goals\'))" title="목표 달성률 상세"><div class="tm-l"><i class="bi bi-bullseye me-1" style="color:#0f766e"></i>관리 합계 (확정+예정) <span style="color:#cbd5e1">›</span></div><div class="tm-v" style="color:#0f766e">'+fmtW(manage)+'</div>'+(tgt>0?('<div class="tm-s">국내목표 대비 '+rate+'%</div><div class="tm-prog"><div style="width:'+Math.min(100,rate)+'%"></div></div>'):'<div class="tm-s">확정+예정</div>')+'</div>',
   ].join('');
 }
@@ -2557,8 +2557,9 @@ function renderQuarters(){
   document.getElementById('q-cards').innerHTML='<div class="q-grid">'+qs.map(_qc).join('')+'</div>'+(hs.length?'<div class="q-grid">'+hs.map(_qc).join('')+'</div>':'');
   // 채널×분기 모멘텀 히트맵
   const hc=v=>'<span class="heat-cell" style="background:'+_yoyCol(v)+'1f;color:'+_yoyCol(v)+'">'+(v===null?'-':arrow(v))+'</span>';
-  let hm='<table style="width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums"><tr style="color:#94a3b8;font-size:12px;text-align:right"><th style="text-align:left;padding:6px 8px">채널</th><th>1Q</th><th>2Q(전망)</th><th style="text-align:center;padding:6px 10px">QoQ</th><th style="text-align:center">YoY</th></tr>';
-  chs.forEach(c=>{ const c1=sumMo(c.m26,1,3), c2=sumMo(c.m26,4,6)+sumMo(c.pnd,4,6), c1p=sumMo(c.m25,1,3), c2p=sumMo(c.m25,4,6);
+  const _hmB=Math.max(1,curQ), _hmA=Math.max(1,curQ-1), _af=(_hmA-1)*3+1,_at=_hmA*3,_bf=(_hmB-1)*3+1,_bt=_hmB*3, _bProg=cur<_bt;
+  let hm='<table style="width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums"><tr style="color:#94a3b8;font-size:12px;text-align:right"><th style="text-align:left;padding:6px 8px">채널</th><th>'+_hmA+'Q</th><th>'+_hmB+'Q'+(_bProg?'(전망)':'')+'</th><th style="text-align:center;padding:6px 10px">QoQ</th><th style="text-align:center">YoY</th></tr>';
+  chs.forEach(c=>{ const c1=sumMo(c.m26,_af,_at), c2=sumMo(c.m26,_bf,_bt)+(_bProg?sumMo(c.pnd,_bf,_bt):0), c1p=sumMo(c.m25,_af,_at), c2p=sumMo(c.m25,_bf,_bt);
     const qq=pct(c2,c1), yy=pct(c2,c2p);
     const _qsClk=c.n==='국내 제품'?"openDrill('국내영업|제품')":c.n==='국내 소모품'?"openDrill('국내영업|소모품')":"qGo('intl','all')";
     hm+='<tr class="qs-clk" style="border-top:1px solid #f1f5f9;cursor:pointer" onclick="'+_qsClk+'" title="채널 상세"><td style="padding:10px 8px;font-weight:700"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:'+c.col+';margin-right:7px"></span>'+c.n+' <span style="color:#cbd5e1">›</span></td>'+
