@@ -11581,17 +11581,8 @@ window.addEventListener('pageshow', function(e){
 function printPDF(){var t=document.title;var r=function(){document.title=t;window.removeEventListener('afterprint',r);};window.addEventListener('afterprint',r);window.print();}</script>
 <button id="pdf-fab" onclick="printPDF()" title="이 페이지를 PDF로 추출"><i class="bi bi-filetype-pdf"></i>PDF</button>
 <script>
-/* 앱 자동 업데이트 감지: 새 배포를 감지하면 하단 배너로 안내(하드리프레시 불필요) */
-(function(){
-  var _tag=null, _done=false;
-  function _get(cb){ try{ fetch(location.pathname+'?_v='+Date.now(),{method:'HEAD',cache:'no-store'}).then(function(r){ cb(r.headers.get('etag')||r.headers.get('last-modified')||''); }).catch(function(){ cb(null); }); }catch(e){ cb(null); } }
-  function _bar(){ if(document.getElementById('wt-update-bar')||!document.body) return; var b=document.createElement('div'); b.id='wt-update-bar'; b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#0f172a;color:#fff;padding:11px 16px;display:flex;align-items:center;justify-content:center;gap:14px;font-size:13.5px;box-shadow:0 -2px 14px rgba(0,0,0,.2)'; b.innerHTML='<span><i class="bi bi-arrow-repeat" style="margin-right:6px"></i>새 버전이 배포되었습니다.</span><button onclick="_wtApplyUpdate()" style="background:#0891b2;color:#fff;border:0;border-radius:8px;padding:6px 16px;font-weight:700;font-size:13px;cursor:pointer">지금 업데이트</button><button onclick="var e=document.getElementById(\'wt-update-bar\');if(e)e.remove()" style="background:transparent;color:#94a3b8;border:0;font-size:13px;cursor:pointer">나중에</button>'; document.body.appendChild(b); }
-  window._wtApplyUpdate=function(){ location.replace(location.pathname+'?_v='+Date.now()+location.hash); };
-  function _check(){ if(_done) return; _get(function(t){ if(t&&_tag&&t!==_tag){ _done=true; _bar(); } }); }
-  _get(function(t){ _tag=t; });
-  setInterval(_check, 3*60*1000);
-  document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') _check(); });
-})();
+/* 서비스워커 등록: 일반 새로고침(F5)에도 항상 최신 HTML(network-first) — 하드리프레시 불필요 */
+if('serviceWorker' in navigator){ window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
 </script>
 <!--WTEND--></body>
 </html>
