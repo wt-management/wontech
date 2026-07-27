@@ -3163,14 +3163,14 @@ function _dashPeriodYMs() {
   const curY=new Date().getFullYear(), curM=new Date().getMonth()+1;
   if(p === 'year') {
     const maxM = (y===curY) ? curM : 12;
-    return { yms:Array.from({length:maxM},(_,i)=>ym(y,i+1)), label:`${y}년` };
+    return { yms:Array.from({length:maxM},(_,i)=>ym(y,i+1)), ymsFull:Array.from({length:12},(_,i)=>ym(y,i+1)), label:`${y}년` };
   }
   if(p.startsWith('Q')) {
     const q=Number(p[1]), start=(q-1)*3+1;
-    return { yms:[0,1,2].map(i=>ym(y,start+i)), label:`${y}년 ${q}분기` };
+    return { yms:[0,1,2].map(i=>ym(y,start+i)), ymsFull:[0,1,2].map(i=>ym(y,start+i)), label:`${y}년 ${q}분기` };
   }
   const mo=Number(p);
-  return { yms:[ym(y,mo)], label:`${y}년 ${mo}월` };
+  return { yms:[ym(y,mo)], ymsFull:[ym(y,mo)], label:`${y}년 ${mo}월` };
 }
 
 
@@ -4117,7 +4117,7 @@ function openWarrantyDetail(){
 function renderDashboard() {
   const now = new Date();
   _initDashPeriodUI();
-  const { yms, label } = _dashPeriodYMs();
+  const { yms, ymsFull, label } = _dashPeriodYMs();
   const hour = now.getHours();
   const greet = hour<12?'좋은 아침이에요 ☀️':hour<18?'안녕하세요 👋':'수고하셨어요 🌙';
   document.getElementById('dash-greeting').textContent = greet;
@@ -4142,7 +4142,7 @@ function renderDashboard() {
   const wonPeriod=DB.d.pipeline.filter(d=>d.stage==='계약완료'&&yms.some(ym=>(d.stageUpdatedAt||'').startsWith(ym)));
   const wonAmt=wonPeriod.reduce((s,d)=>s+Number(d.amount||0),0);
   // KPI 2: 기간 내 마감 예정 파이프라인 금액(전액 합계)
-  const closingPeriod=DB.d.pipeline.filter(d=>d.stage!=='계약완료'&&yms.some(ym=>(d.expectedDate||'').startsWith(ym)));
+  const closingPeriod=DB.d.pipeline.filter(d=>d.stage!=='계약완료'&&ymsFull.some(ym=>(d.expectedDate||'').startsWith(ym)));
   const expectedAmt=Math.round(closingPeriod.reduce((s,d)=>s+Number(d.amount||0),0));
   const totalForecast=wonAmt+expectedAmt;
   // 전월 대비 (월 단위일 때만)
@@ -5467,11 +5467,11 @@ function renderConsHospitals() {
     const pd=h.lastDate?Math.floor((TODAY-new Date(h.lastDate))/864e5):null;
     const p25=calcPat(h.txns2025||[]);
     let mult=1; const reasons=[];
-    if(h.y2025>=3e7) reasons.push('고매출');
+    if(ytd25est(h)>=3e7) reasons.push('고매출');
     if(lc===0){ mult*=1.4; reasons.push('미연락'); }
     if(pd!=null){ if(pd>=60&&pd<=240) mult*=1.3; else if(pd>365){ mult*=0.55; } else if(pd<60) mult*=0.8; }
     if(p25&&p25.avgGap&&pd!=null&&pd>p25.avgGap*1.2){ mult*=1.2; reasons.push('재구매주기 도래'); }
-    return {name,h,lc,ldDays,pd,p25,score:(h.y2025||0)*mult,reason:reasons.slice(0,2).join(' · ')||'관리필요'};
+    return {name,h,lc,ldDays,pd,p25,score:(ytd25est(h)||0)*mult,reason:reasons.slice(0,2).join(' · ')||'관리필요'};
   }).sort((a,b)=>b.score-a.score);
   // 담당자별 조회 (담당영업 mgr 우선, 없으면 거래담당)
   const _riskDut=x=>((HOSP_INFO[x.name]||{}).mgr)||x.h.sales||'';
@@ -5492,7 +5492,7 @@ function renderConsHospitals() {
           ${_mgr?`<span style="font-size:10px;font-weight:700;color:#2563eb;margin-left:5px;white-space:nowrap"><i class="bi bi-person-badge"></i> ${_mgr}</span>`:'<span style="font-size:10px;color:#d1d5db;margin-left:5px">담당 미배정</span>'}${h.sales&&h.sales!==_mgr?`<span style="font-size:9px;color:#cbd5e1;margin-left:4px">${h.sales}</span>`:''}
           <span style="font-size:10px;color:#9a3412;margin-left:4px">· ${reason}</span>
         </div>
-        <span style="font-size:12px;font-weight:800;color:#dc2626;flex-shrink:0">${fmtW(h.y2025)}</span>
+        <span style="font-size:12px;font-weight:800;color:#dc2626;flex-shrink:0">${fmtW(ytd25est(h))}</span>
         <button class="btn btn-sm btn-outline-primary" style="font-size:10px;padding:1px 6px;flex-shrink:0" data-name="${safeN}" onclick="openLogFromHosp(this.dataset.name)" title="상담일지 작성"><i class="bi bi-journal-plus"></i></button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">
@@ -10836,22 +10836,26 @@ function _devRepPeriodChange() {
 }
 
 function devRepExport() {
-  const yr = parseInt(document.getElementById('devrep-year-sel')?.value||'2026');
-  const fromM = parseInt(document.getElementById('devrep-from-sel')?.value||'1');
-  const toM   = parseInt(document.getElementById('devrep-to-sel')?.value||'6');
-  const YTD   = Array.from({length:toM-fromM+1},(_,i)=>fromM+i);
+  const P=_getPeriod('devrep'), yr=P.ey, _cur=_spanMonths(P), _prev=_spanMonths(_yoyShift(P));   // 화면 기간엔진과 통일(숨은 옛 셀렉터 제거)
+  const _mY=(o,y)=>y===2026?(o.m2026||{}):(y===2025?(o.m2025||{}):{});
+  const _spanV=(o,rng)=>rng.reduce((s,x)=>s+(_mY(o,x.y)[x.m]||0),0);
+  const _spanKeys={}; _cur.forEach(x=>{_spanKeys[x.y+'-'+x.m]=1;});
+  const _repSpan={};
+  Object.entries(DEVICE.hospitals||{}).forEach(([hn,h])=>{ const r=_repOf(hn); if(!r) return; let o=_repSpan[r]; if(!o) o=_repSpan[r]={qty:0,prods:{},cust:{}};
+    [['txns2026',2026],['txns2025',2025]].forEach(([tk,y])=>{ (h[tk]||[]).forEach(t=>{ if(!_spanKeys[y+'-'+(+t[0])]) return; const amt=Number(t[4]||0), q=Number(t[5]||0), prod=t[3]; o.qty+=q; if(prod) o.prods[prod]=(o.prods[prod]||0)+amt; if(amt>0||q>0) o.cust[hn]=1; }); }); });
   const reps  = _repsByMgr(DEVICE.hospitals);   // 화면과 동일하게 담당자(mgr) 기준
-  const rows  = [['구분','소속','담당자','직급',`${yr-1}년YTD(만원)`,`${yr}년YTD(만원)`,'YoY(%)','대수(당해)','거래처수','주력제품']];
-  const _emptyRep={m2025:{},m2026:{},prods2025:{},prods2026:{},qty2025:0,qty2026:0,cust2025:0,cust2026:0};
+  const rows  = [['구분','소속','담당자','직급','전년동기(만원)',`${P.label}(만원)`,'YoY(%)','대수','거래처수','주력제품']];
+  const _emptyRep={m2025:{},m2026:{}};
   const _allNames=[...new Set([...KOR_SALES_TEAM, ...Object.keys(reps)])];
   const _flt=(typeof _devFilter!=='undefined'?_devFilter:'all');
   _allNames.map((name) => { const rep=reps[name]||_emptyRep; const isTeam=_isKorSales(name); const inf=(KOR_TEAM_INFO[name]||{});
-    const cur  = YTD.reduce((s,m)=>s+((yr===2026?rep.m2026:rep.m2025)||{})[m]||0, 0);
-    const pre  = YTD.reduce((s,m)=>s+((yr===2026?rep.m2025:{})||{})[m]||0, 0);
+    const cur  = _spanV(rep,_cur);
+    const pre  = _spanV(rep,_prev);
     const yoy  = pre>0?((cur/pre-1)*100).toFixed(1):'';
-    const qty  = yr===2026?rep.qty2026:rep.qty2025;
-    const cust = yr===2026?rep.cust2026:rep.cust2025;
-    const top  = Object.entries(yr===2026?rep.prods2026:rep.prods2025||{}).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
+    const _rs  = _repSpan[name];
+    const qty  = _rs?_rs.qty:0;
+    const cust = _rs?Object.keys(_rs.cust).length:0;
+    const top  = _rs?(Object.entries(_rs.prods).sort((a,b)=>b[1]-a[1])[0]?.[0]||''):'';
     return [isTeam?'영업사원':'대리점', isTeam?(inf.dept||''):'', name, isTeam?(inf.pos||''):'', Math.round(pre/1e4), Math.round(cur/1e4), yoy, qty, cust, top, isTeam];
   }).filter(r=> _flt==='team'?r[10] : _flt==='dealer'?!r[10] : true)
     .sort((a,b)=>b[5]-a[5]).forEach(r=>rows.push(r.slice(0,10)));
