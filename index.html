@@ -6903,8 +6903,28 @@ function renderCDUInput(vs){
   var doneHosp={}; base.forEach(function(v){ if(v.status!=='planned'){ var n=(v.custName||'').trim(); if(n) doneHosp[n]=1; } });
   var stat=(lbl,n,s,cl)=>'<div class="cdud-fact"><span>'+lbl+'</span><b'+(cl?' class="'+cl+'"':'')+'>'+n+'</b>'+(s?'<i>'+s+'</i>':'')+'</div>';
   var wowTxt=(cLastWeek===0&&cWeek===0)?'':(wow===0?' · 변동 없음':' · <em style="color:'+(wow>0?'#15803d':'#dc2626')+'">'+(wow>0?'▲':'▼')+Math.abs(wow)+'건</em>');
+  // 히어로 KPI는 캘린더가 실제로 보여주는 범위(주 네비/월 이동)를 따라감 — 라벨도 동적
+  var _hS,_hE,_heroLbl,_pS,_pE,_prevLbl;
+  if(_cduInputView==='month'){
+    var _mn=new Date(todayS+'T00:00:00'); var _my=(_cduCalMonth?_cduCalMonth.y:_mn.getFullYear()), _mm=(_cduCalMonth?_cduCalMonth.m:(_mn.getMonth()+1));
+    _hS=_cduFmtD(new Date(_my,_mm-1,1)); _hE=_cduFmtD(new Date(_my,_mm,0)); _heroLbl=_mm+'월 방문';
+    var _pmm=_mm-1,_pmy=_my; if(_pmm<1){_pmm=12;_pmy--;} _pS=_cduFmtD(new Date(_pmy,_pmm-1,1)); _pE=_cduFmtD(new Date(_pmy,_pmm,0)); _prevLbl='지난달';
+  } else if(_cduInputView==='today'){
+    _hS=_hE=todayS; _heroLbl='오늘 방문';
+    var _yd=new Date(todayS+'T00:00:00'); _yd.setDate(_yd.getDate()-1); _pS=_pE=_cduFmtD(_yd); _prevLbl='어제';
+  } else {
+    var _wt=new Date(todayS+'T00:00:00'); var _wdow=(_wt.getDay()+6)%7; var _wmon=new Date(_wt); _wmon.setDate(_wt.getDate()-_wdow+_cduWeekOff*7); var _wsun=new Date(_wmon); _wsun.setDate(_wmon.getDate()+6);
+    _hS=_cduFmtD(_wmon); _hE=_cduFmtD(_wsun);
+    _heroLbl=(_cduWeekOff===0?'이번주 방문':(_cduWeekOff===-1?'지난주 방문':(_hS.slice(5).replace('-','/')+'~'+_hE.slice(5).replace('-','/')+' 방문')));
+    var _pmon=new Date(_wmon); _pmon.setDate(_wmon.getDate()-7); var _psun=new Date(_wmon); _psun.setDate(_wmon.getDate()-1);
+    _pS=_cduFmtD(_pmon); _pE=_cduFmtD(_psun); _prevLbl=(_cduWeekOff===0?'지난주':'직전');
+  }
+  var _heroN=base.filter(function(v){var d=dOf(v); return d>=_hS&&d<=_hE;}).length;
+  var _prevN=base.filter(function(v){var d=dOf(v); return d>=_pS&&d<=_pE;}).length;
+  var _hwow=_heroN-_prevN;
+  var _heroWowTxt=(_prevN===0&&_heroN===0)?'':(_hwow===0?' · 변동 없음':' · <em style="color:'+(_hwow>0?'#15803d':'#dc2626')+'">'+(_hwow>0?'▲':'▼')+Math.abs(_hwow)+'건</em>');
   var statsBar='<div class="cdud-kpis" style="padding:2px 0 14px">'
-    +'<div class="cdud-hero" style="cursor:default"><span class="l">이번주 방문</span><b>'+cWeek+'건</b><span class="s">지난주 '+cLastWeek+'건'+wowTxt+'</span></div>'
+    +'<div class="cdud-hero" style="cursor:default"><span class="l">'+_heroLbl+'</span><b>'+_heroN+'건</b><span class="s">'+_prevLbl+' '+_prevN+'건'+_heroWowTxt+'</span></div>'
     +stat('오늘 방문',cToday+'건',(cToday?('완료 '+todayDone+' · 예정 '+todayPlan):'오늘 등록된 방문 없음'))
     +stat('결과 미입력',pend.length+'건',(pend.length?('최장 '+pendDays+'일 경과 — 입력 필요'):'밀린 입력 없음'),(pend.length?'rd':''))
     +stat('예정',cPlan+'건',(nextPlan?('가장 가까운 '+nextPlan.slice(5).replace('-','/')):'등록된 예정 없음'))
