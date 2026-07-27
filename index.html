@@ -9918,7 +9918,9 @@ function showAdminPanel() {
   // 패널이 화면보다 길어도 위쪽이 잘리지 않도록 상단 정렬 + 맨 위로 스크롤
   const ls = document.getElementById('launcher-screen');
   if(ls){ ls.style.justifyContent = 'flex-start'; ls.scrollTop = 0; }
+  try{ sessionStorage.setItem('wt_app','admin'); }catch(e){}
   renderAdminUsers(); _fbLoadBadge();
+  try{ if(sessionStorage.getItem('wt_admtab')==='fb') adminTab('fb'); }catch(e){}
 }
 
 function hideAdminPanel() {
@@ -10137,6 +10139,7 @@ async function renderUsers() { renderAdminUsers(); }
 // ── 요청·신고함 (site_feedback / site_errors 조회, 관리자 전용) ──
 let _fbSub='feedback';
 function adminTab(t){
+  try{ sessionStorage.setItem('wt_admtab', t==='fb'?'fb':'users'); }catch(e){}
   var u=document.getElementById('admin-tab-users'), f=document.getElementById('admin-tab-fb');
   if(u) u.style.display=(t==='fb')?'none':''; if(f) f.style.display=(t==='fb')?'':'none';
   var bu=document.getElementById('admtab-users'), bf=document.getElementById('admtab-fb');
