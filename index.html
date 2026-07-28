@@ -862,6 +862,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
           <span class="pipe-chip" onclick="setPipeChip('계약완료',this)">계약완료</span>
         </div>
       </div>
+      <div class="row g-2 mb-3" id="pipe-forecast"></div>
       <div class="pipeline-board" id="kanban-board" style="align-items:stretch"></div>
       <div id="deal-drawer-bg" onclick="closeDealDrawer()" style="position:fixed;inset:0;background:rgba(15,23,42,.4);display:none;z-index:1059"></div>
       <div id="deal-drawer" style="position:fixed;top:0;right:0;bottom:0;width:560px;max-width:96vw;background:#fff;box-shadow:-12px 0 40px rgba(0,0,0,.2);transform:translateX(100%);transition:transform .25s;z-index:1060;display:flex;flex-direction:column"></div>
@@ -2081,6 +2082,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <div class="col-6"><label class="form-label">성공확률 (%)</label><input type="number" id="p-prob" class="form-control form-control-sm" value="50"></div>
       <div class="col-6"><label class="form-label">예상마감일</label><input type="date" id="p-date" class="form-control form-control-sm"></div>
       <div class="col-12"><label class="form-label">담당영업사원</label><input type="text" id="p-sales" class="form-control form-control-sm"></div>
+      <div class="col-6"><label class="form-label">확약 구분</label><select id="p-commit" class="form-select form-select-sm"><option value="Pipeline">Pipeline (일반)</option><option value="Best Case">Best Case (유력)</option><option value="Commit">Commit (확약)</option></select></div>
+      <div class="col-6"><label class="form-label">유입 경로</label><select id="p-source" class="form-select form-select-sm"><option value="">-</option><option>재구매</option><option>학회/전시</option><option>병원소개</option><option>웹/문의</option><option>콜드콜</option><option>기타</option></select></div>
       <div class="col-12"><label class="form-label">메모</label><textarea id="p-note" class="form-control form-control-sm" rows="2"></textarea></div>
       <div class="col-12"><label class="form-label">다음 액션</label><input type="text" id="p-next-action" class="form-control form-control-sm" placeholder="예) 견적서 발송, 원장 미팅 요청..."></div>
       <div class="col-6"><label class="form-label">다음 액션 일자</label><input type="date" id="p-next-date" class="form-control form-control-sm"></div>
@@ -5837,7 +5840,9 @@ function dealDrawerHtml(d){
   const logs=DB.d.logs.filter(l=>l.custName===d.custName).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   const days=d.stageUpdatedAt?Math.floor((Date.now()-new Date(d.stageUpdatedAt))/864e5):null;
   const stageBtns=STAGES.map(s=>`<button onclick="setDealStage('${d.id}','${s}')" style="flex:1;min-width:0;padding:7px 3px;border-radius:7px;border:1px solid ${d.stage===s?SC[s]:'#e5e7eb'};background:${d.stage===s?SC[s]:'#fff'};color:${d.stage===s?'#fff':'#6b7280'};font-size:11px;font-weight:700;cursor:pointer">${s}</button>`).join('');
-  const info=[['제품',esc(d.model)||'-'],['예상 금액',fmtAmt(Number(d.amount||0))],['성공확률',(d.prob||0)+'%'],['담당',esc(d.sales)||'-'],['마감 예정',d.expectedDate?fmtDate(d.expectedDate):'-'],['단계 경과',days!=null?days+'일째':'-']];
+  const _cmC={'Commit':'#15803d','Best Case':'#2563eb','Pipeline':'#94a3b8'};
+  const _cmTxt=d.commit==='Commit'?'✓ 확약(Commit)':d.commit==='Best Case'?'유력(Best Case)':'일반(Pipeline)';
+  const info=[['제품',esc(d.model)||'-'],['예상 금액',fmtAmt(Number(d.amount||0))],['성공확률',(d.prob||0)+'%'],['담당',esc(d.sales)||'-'],['마감 예정',d.expectedDate?fmtDate(d.expectedDate):'-'],['단계 경과',days!=null?days+'일째':'-'],['확약 구분',`<span style="color:${_cmC[d.commit]||'#94a3b8'};font-weight:700">${_cmTxt}</span>`],['유입 경로',esc(d.source)||'-']];
   const events=[];
   (d.history||[]).forEach(h=>events.push({date:h.at,kind:'stage',from:h.from,to:h.to}));
   logs.forEach(l=>events.push({date:l.date,kind:'log',sales:l.sales,type:l.type,content:l.content,nextAction:l.nextAction,nextDate:l.nextDate}));
@@ -6148,9 +6153,24 @@ function renderPipeline() {
   const thisYm=new Date().toISOString().substring(0,7);
   const today=new Date().toISOString().split('T')[0];
   const activeRaw=allRaw.filter(d=>d.stage!=='계약완료');
-  const weightedRaw=activeRaw.reduce((s,d)=>s+Number(d.amount||0),0);
+  const openTotal=activeRaw.reduce((s,d)=>s+Number(d.amount||0),0);
+  const weighted=activeRaw.reduce((s,d)=>s+Number(d.amount||0)*(Number(d.prob||0)/100),0);
+  const commitAmt=activeRaw.filter(d=>d.commit==='Commit').reduce((s,d)=>s+Number(d.amount||0),0);
+  const bestAmt=activeRaw.filter(d=>d.commit==='Best Case').reduce((s,d)=>s+Number(d.amount||0),0);
   const closingRaw=activeRaw.filter(d=>d.expectedDate&&d.expectedDate.startsWith(thisYm));
+  const closingAmt=closingRaw.reduce((s,d)=>s+Number(d.amount||0),0);
+  const stalledCnt=activeRaw.filter(d=>{const dd=d.stageUpdatedAt?Math.floor((Date.now()-new Date(d.stageUpdatedAt))/864e5):null;return dd!==null&&dd>=30;}).length;
   const wonRaw=allRaw.filter(d=>d.stage==='계약완료').reduce((s,d)=>s+Number(d.amount||0),0);
+  const _fcKpi=[
+    ['확약(Commit)',fmtAmt(commitAmt),'#15803d','거의 확정'],
+    ['유력(Best Case)',fmtAmt(bestAmt),'#2563eb','상위 시나리오'],
+    ['가중 예측',fmtAmt(weighted),'#7c3aed','금액×확률'],
+    ['진행 파이프라인',fmtAmt(openTotal),'#0891b2',activeRaw.length+'건'],
+    ['이달 마감예정',fmtAmt(closingAmt),closingRaw.length?'#d97706':'#94a3b8',closingRaw.length+'건'],
+    ['정체 딜(30일+)',stalledCnt+'건',stalledCnt?'#dc2626':'#94a3b8','활동 필요']
+  ];
+  var _fcEl=document.getElementById('pipe-forecast');
+  if(_fcEl)_fcEl.innerHTML=_fcKpi.map(c=>`<div class="col-6 col-md-4 col-xl-2"><div style="background:#fff;border:1px solid #eef0f4;border-top:2px solid ${c[2]};border-radius:10px;padding:9px 12px"><div style="font-size:10.5px;color:#6b7280;font-weight:600">${c[0]}</div><div style="font-size:1.02rem;font-weight:800;color:${c[2]};font-variant-numeric:tabular-nums">${c[1]}</div><div style="font-size:9.5px;color:#9ca3af;margin-top:1px">${c[3]}</div></div></div>`).join('');
 
 
   // 필터 적용
@@ -6190,6 +6210,7 @@ function renderPipeline() {
             <span style="background:${probColor(d.prob)};color:#fff;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:700;flex-shrink:0">${d.prob||0}%</span>
             ${daysBadge}
           </div>
+          ${(d.commit==='Commit'||d.commit==='Best Case'||d.source)?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">${d.commit==='Commit'?'<span style="font-size:9.5px;font-weight:700;color:#15803d;background:#dcfce7;border-radius:4px;padding:1px 6px">✓ 확약</span>':d.commit==='Best Case'?'<span style="font-size:9.5px;font-weight:700;color:#2563eb;background:#dbeafe;border-radius:4px;padding:1px 6px">유력</span>':''}${d.source?'<span style="font-size:9.5px;color:#64748b;background:#f1f5f9;border-radius:4px;padding:1px 6px">'+_escH(d.source)+'</span>':''}</div>`:''}
           ${d.nextAction?`<div style="font-size:10px;color:#059669;margin-top:3px;background:#ecfdf5;border-radius:4px;padding:2px 6px;display:flex;gap:4px;align-items:center"><i class="bi bi-arrow-right-circle-fill"></i><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escH(d.nextAction)}${d.nextDate?' · '+fmtDate(d.nextDate):''}</span></div>`:''}
         </div>`;
       }).join('')}
@@ -6205,6 +6226,8 @@ function openModal(type,data={}) {
     document.getElementById('p-prob').value='50';
     document.getElementById('p-date').value='';
     document.getElementById('p-next-type').value='';
+    document.getElementById('p-commit').value='Pipeline';
+    document.getElementById('p-source').value='';
     document.getElementById('p-del-btn').style.display='none';
     new bootstrap.Modal(document.getElementById('pipelineModal')).show();
   } else if(type==='quote'){
@@ -6247,6 +6270,8 @@ function editPipeline(id) {
   document.getElementById('p-stage').value=(d.stage==='리드'?'상담중':d.stage)||'상담중';
   document.getElementById('p-prob').value=d.prob||50;
   setV('p-date',d.expectedDate||'');
+  document.getElementById('p-commit').value=d.commit||'Pipeline';
+  document.getElementById('p-source').value=d.source||'';
   document.getElementById('p-del-btn').style.display='inline-block';
   new bootstrap.Modal(document.getElementById('pipelineModal')).show();
 }
@@ -6261,6 +6286,7 @@ function savePipeline() {
     prob: Number(gV('p-prob'))||0, expectedDate: gV('p-date'),
     sales: gV('p-sales'), note: gV('p-note'),
     nextAction: gV('p-next-action'), nextDate: gV('p-next-date'), nextType: document.getElementById('p-next-type').value,
+    commit: document.getElementById('p-commit').value, source: document.getElementById('p-source').value,
     createdAt: prev ? (prev.createdAt || prev.stageUpdatedAt) : new Date().toISOString(),
     stageUpdatedAt: (prev && prev.stage===newStage) ? (prev.stageUpdatedAt||new Date().toISOString()) : new Date().toISOString()
   };
