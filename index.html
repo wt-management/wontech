@@ -10996,7 +10996,7 @@ var _dvEsc=function(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replac
 var _dvJoin=function(nm){ try{ return (typeof KOR_TEAM_INFO!=='undefined'&&KOR_TEAM_INFO[nm]&&KOR_TEAM_INFO[nm].join)||''; }catch(e){ return ''; } };
 // 최근입사(전년 비교기간에 재직 전이라 baseline 왜곡) 판정 → '입사 YYYY.M', 아니면 ''
 var _dvRecentHire=function(nm){ var j=_dvJoin(nm); if(!j)return ''; try{ var jy=parseInt(String(j).slice(0,4),10); var py=(_dvIdx&&_dvIdx.P&&_dvIdx.P.ey)?(_dvIdx.P.ey-1):jy; return (jy>=py)?('입사 '+String(j).slice(0,7).replace('-','.')):''; }catch(e){ return ''; } };
-var _dvRows=function(map){ return Object.keys(map||{}).map(function(k){ return {name:k,a:map[k].a,b:map[k].b,d:map[k].a-map[k].b,qa:map[k].qa||0,qb:map[k].qb||0}; }).sort(function(x,y){return y.d-x.d;}); };
+var _dvRows=function(map){ return Object.keys(map||{}).map(function(k){ return {name:k,a:map[k].a,b:map[k].b,d:map[k].a-map[k].b,qa:map[k].qa||0,qb:map[k].qb||0,pa:map[k].pa||0}; }).sort(function(x,y){return y.d-x.d;}); };
 function _setDevVarMode(m){ _devVarMode=m; renderDevVariance(); }
 function _dvBuild(){
   var Hs=(typeof DEVICE!=='undefined'&&DEVICE.hospitals)||{};
@@ -11004,16 +11004,27 @@ function _dvBuild(){
   var curM=_cur.map(function(x){return x.m;}), preM=_prev.map(function(x){return x.m;});
   var sN=function(s){ return String(s==null?'':s).replace(/^\s*\d+\s*[.\-]\s*/,''); };
   var repOf=function(hn,h){ var r=(typeof _repOf==='function')?_repOf(hn):sN((h.sales||'').trim()); return r||'미지정'; };
-  var prod={},dealer={},pByD={},dByP={},pMon={},dMon={},mProd={},mDealer={},mQty={a:{},b:{}}; var asOf='';
-  var acc=function(bag,k,side,v,q){ var o=bag[k]=bag[k]||{a:0,b:0,qa:0,qb:0}; o[side]+=v; o['q'+side]+=q; };
-  var acc2=function(bag,k1,k2,side,v,q){ var o=bag[k1]=bag[k1]||{}; var e=o[k2]=o[k2]||{a:0,b:0,qa:0,qb:0}; e[side]+=v; e['q'+side]+=q; };
+  var prod={},dealer={},pByD={},dByP={},pMon={},dMon={},mProd={},mDealer={},mQty={a:{},b:{}}; var asOf='', pendTot=0;
+  var acc=function(bag,k,side,v,q){ var o=bag[k]=bag[k]||{a:0,b:0,qa:0,qb:0,pa:0}; o[side]+=v; o['q'+side]+=q; };
+  var acc2=function(bag,k1,k2,side,v,q){ var o=bag[k1]=bag[k1]||{}; var e=o[k2]=o[k2]||{a:0,b:0,qa:0,qb:0,pa:0}; e[side]+=v; e['q'+side]+=q; };
+  var accP=function(bag,k,v,q){ var o=bag[k]=bag[k]||{a:0,b:0,qa:0,qb:0,pa:0}; o.a+=v; o.pa+=v; o.qa+=q; };
+  var acc2P=function(bag,k1,k2,v,q){ var o=bag[k1]=bag[k1]||{}; var e=o[k2]=o[k2]||{a:0,b:0,qa:0,qb:0,pa:0}; e.a+=v; e.pa+=v; e.qa+=q; };
   var scan=function(txns,inM,side,dl){ (txns||[]).forEach(function(t){ var mo=+t[0]; if(inM.indexOf(mo)<0)return; var p=t[3]||'기타', v=Number(t[4]||0), q=Number(t[5]||0); if(side==='a'&&t[1]&&t[1]>asOf)asOf=t[1];
     acc(prod,p,side,v,q); acc(dealer,dl,side,v,q); acc2(pByD,p,dl,side,v,q); acc2(dByP,dl,p,side,v,q);
     acc2(pMon,p,mo,side,v,q); acc2(dMon,dl,mo,side,v,q); acc2(mProd,mo,p,side,v,q); acc2(mDealer,mo,dl,side,v,q);
     mQty[side][mo]=(mQty[side][mo]||0)+q; }); };
   Object.keys(Hs).forEach(function(hn){ var h=Hs[hn]||{}; var dl=repOf(hn,h); scan(h.txns2026,curM,'a',dl); scan(h.txns2025,preM,'b',dl); });
+  // ── 회계 미반영(국내 device) 2026 'a'측 가산 + pa(미반영분) 별도 추적 ──
+  var _pend=(typeof ILBO_PEND!=='undefined'&&ILBO_PEND)||[];
+  var _devset={}; try{ ['products2026','products2025','prods_dev'].forEach(function(k){ Object.keys((DEVICE&&DEVICE[k])||{}).forEach(function(n){_devset[n]=1;}); }); }catch(e){}
+  var _canon=function(p){ return (typeof _canonProd==='function')?_canonProd(p):p; };
+  var _isDevP=function(p){ if(/tip|팁|cartridge|카트리지|소모품|face ?tip/i.test(String(p)))return false; return !!(_devset[p]||prod[p]); };
+  _pend.forEach(function(r){ if(!r||(r.region&&r.region!=='국내'))return; var p=_canon(r.product||''); if(!p||!_isDevP(p))return; var ed=String(r.expectedDate||r.date||''); var mo=parseInt(ed.slice(5,7),10); if(!mo||curM.indexOf(mo)<0)return;
+    var dl=((typeof _repOf==='function'&&_repOf(r.customer))||'')||'미배정'; var v=Number(r.amount||0), q=Number(r.qty||0); if(!v)return;
+    accP(prod,p,v,q); accP(dealer,dl,v,q); acc2P(pByD,p,dl,v,q); acc2P(dByP,dl,p,v,q); acc2P(pMon,p,mo,v,q); acc2P(dMon,dl,mo,v,q); acc2P(mProd,mo,p,v,q); acc2P(mDealer,mo,dl,v,q);
+    mQty.a[mo]=(mQty.a[mo]||0)+q; pendTot+=v; });
   var incMonth=0, asOfDay=0; if(asOf){ var _ad=String(asOf).split('-'); asOfDay=parseInt(_ad[2],10)||0; if(asOfDay&&asOfDay<28) incMonth=parseInt(_ad[1],10)||0; }
-  _dvIdx={P:P,curM:curM,preM:preM,prod:prod,dealer:dealer,pByD:pByD,dByP:dByP,pMon:pMon,dMon:dMon,mProd:mProd,mDealer:mDealer,mQty:mQty,asOf:asOf,incMonth:incMonth,asOfDay:asOfDay};
+  _dvIdx={P:P,curM:curM,preM:preM,prod:prod,dealer:dealer,pByD:pByD,dByP:dByP,pMon:pMon,dMon:dMon,mProd:mProd,mDealer:mDealer,mQty:mQty,asOf:asOf,incMonth:incMonth,asOfDay:asOfDay,pendTot:pendTot};
   return _dvIdx;
 }
 function _dvCTable(rows,label,drill){
@@ -11028,7 +11039,7 @@ function _dvCTable(rows,label,drill){
       var qStr=(r.qb||0).toLocaleString()+'→'+(r.qa||0).toLocaleString()+'대';
       var tr=drill?('<tr onclick="_dvDrill(\''+drill+'\',this.dataset.k)" data-k="'+_dvEsc(r.name)+'" title="클릭 → 상세 분해" style="border-top:1px solid #f4f6f9;cursor:pointer">'):('<tr style="border-top:1px solid #f4f6f9">');
       return tr+'<td style="padding:4px 6px">'+_dvEsc(r.name)+tag+(drill?' <i class="bi bi-search" style="font-size:8px;color:#cbd5e1"></i>':'')+'</td>'
-        +'<td style="text-align:right;color:#94a3b8;font-size:10.5px;white-space:nowrap;padding:0 8px">'+_dvFmtW(r.b)+'→'+_dvFmtW(r.a)+'</td>'
+        +'<td style="text-align:right;color:#94a3b8;font-size:10.5px;white-space:nowrap;padding:0 8px">'+_dvFmtW(r.b)+'→'+_dvFmtW(r.a)+((r.pa||0)>0?' <span style="color:#0891b2">(미반 '+_dvFmtW(r.pa)+')</span>':'')+'</td>'
         +'<td style="text-align:right;color:#64748b;font-size:10px;white-space:nowrap;padding:0 8px">'+qStr+'</td>'
         +'<td style="width:22%;padding:0 6px"><div style="display:flex;align-items:center;gap:5px"><div style="flex:1;height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden"><div style="width:'+w+'%;height:100%;background:'+_dvCol(r.d)+'"></div></div><span style="width:62px;text-align:right;font-weight:700;color:'+_dvCol(r.d)+'">'+_dvSgn(r.d)+'</span></div></td></tr>'; }).join('')
     +'</table></div>';
@@ -11094,10 +11105,10 @@ function _dvExec(idx){
     +kv('이탈', churnAll.length?('<b style="color:#991b1b">'+churnAll.length+'곳 '+_dvSgn(-churnSum)+'</b> <span style="color:#64748b">· '+churnAll.slice(0,3).map(_nm).join(', ')+(churnAll.length>3?' 외':'')+'</span>'):'')+'</div>';
   return '<div style="border:1px solid #e0e7ff;border-radius:12px;overflow:hidden;margin-bottom:12px">'
     +'<div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:11px 16px;background:linear-gradient(135deg,#eff6ff,#faf5ff)">'
-    +'<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;color:#334155"><i class="bi bi-clipboard-data" style="color:#2563eb"></i>Summary · '+idx.P.label+' 장비</span>'
+    +'<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;color:#334155"><i class="bi bi-clipboard-data" style="color:#2563eb"></i>Summary · '+idx.P.label+' 장비'+(idx.pendTot>0?' <span style="font-size:9px;font-weight:700;color:#0891b2;background:#ecfeff;border-radius:4px;padding:0 5px">회계+미반영</span>':'')+'</span>'
     +'<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:'+st[0]+'"><span style="width:9px;height:9px;border-radius:50%;background:'+st[0]+'"></span>'+st[1]+'</span>'
     +'<span style="margin-left:auto;font-size:22px;font-weight:800;color:'+_dvCol(dTot)+'">'+_dvSgn(dTot)+' <span style="font-size:12px">('+yoyStr+')</span></span>'
-    +'<span style="font-size:12px;color:#64748b">'+_dvFmtW(t25)+' → <b>'+_dvFmtW(t26)+'</b></span></div>'
+    +'<span style="font-size:12px;color:#64748b">'+_dvFmtW(t25)+' → <b>'+_dvFmtW(t26)+'</b>'+(idx.pendTot>0?' <span style="font-size:11px;color:#94a3b8">(회계 '+_dvFmtW(t26-idx.pendTot)+' + 미반영 '+_dvFmtW(idx.pendTot)+')</span>':'')+'</span></div>'
     +'<div style="display:flex;gap:10px;flex-wrap:wrap;padding:10px 12px 4px">'+growCol+riskCol+'</div>'
     +'<div style="padding:2px 14px 11px"><div style="font-size:11px;font-weight:800;color:#64748b;margin-bottom:3px">☑ 권장 조치</div><div style="display:flex;flex-wrap:wrap;gap:2px 20px;font-size:11.5px;color:#334155">'+actH2+'</div></div></div>';
 }
@@ -11116,11 +11127,11 @@ function renderDevVariance(){
       +'<div style="display:flex;flex-wrap:wrap;gap:18px">'+_dvCTable(pAll,'제품별 기여','product')+_dvCTable(gainers.concat(losers),'대리점·담당별 기여 (증가·감소 상위)','dealer')+'</div>';
   } else {
     var run=0;
-    var rowsH=curM.map(function(m){ var mp=idx.mProd[m]||{}; var a=0,b=0; Object.keys(mp).forEach(function(p){a+=mp[p].a;b+=mp[p].b;}); var dd=a-b; run+=dd;
+    var rowsH=curM.map(function(m){ var mp=idx.mProd[m]||{}; var a=0,b=0,pm=0; Object.keys(mp).forEach(function(p){a+=mp[p].a;b+=mp[p].b;pm+=mp[p].pa||0;}); var dd=a-b; run+=dd;
       var mv=_dvRows(mp); var mg=mv[0], ml=mv[mv.length-1]; var q=(idx.mQty.a[m]||0); var yy=b>0?((a/b-1)*100):null;
       return '<tr onclick="_dvDrill(\'month\','+m+')" style="cursor:pointer;border-top:1px solid #f4f6f9" title="클릭 → '+m+'월 전체 상세" onmouseover="this.style.background=\'#fafafa\'" onmouseout="this.style.background=\'\'">'
         +'<td style="padding:5px 10px;font-weight:600">'+m+'월'+(m===idx.incMonth?' <span style="font-size:9px;font-weight:700;color:#f59e0b;background:#fffbeb;border-radius:4px;padding:0 4px">집계중</span>':'')+' <i class="bi bi-search" style="font-size:8px;color:#cbd5e1"></i></td>'
-        +'<td style="text-align:right;color:#94a3b8">'+_dvFmtW(b)+'</td><td style="text-align:right;font-weight:600">'+_dvFmtW(a)+'</td>'
+        +'<td style="text-align:right;color:#94a3b8">'+_dvFmtW(b)+'</td><td style="text-align:right;font-weight:600">'+_dvFmtW(a)+(pm>0?' <span style="font-size:9px;font-weight:400;color:#0891b2">(미반 '+_dvFmtW(pm)+')</span>':'')+'</td>'
         +'<td style="text-align:right;font-weight:700;color:'+_dvCol(dd)+'">'+_dvSgn(dd)+'</td>'
         +'<td style="text-align:right;font-size:11px;color:'+(yy==null?'#94a3b8':_dvCol(yy))+'">'+(yy==null?'-':(yy>=0?'+':'')+yy.toFixed(0)+'%')+'</td>'
         +'<td style="text-align:right;font-size:11px;font-weight:600;color:'+_dvCol(run)+'">'+_dvSgn(run)+'</td>'
