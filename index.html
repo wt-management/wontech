@@ -5228,7 +5228,7 @@ function renderConsumables() {
       const gChg=gv25>0?(gv26/gv25-1)*100:null;
       return `<div style="margin-bottom:14px">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:${g.col}14;border-radius:8px;margin-bottom:6px">
-          <span style="font-size:13px;font-weight:800;color:${g.col}">${g.name}</span>
+          <span style="font-size:13px;font-weight:800;color:${g.col}">${_escH(g.name)}</span>
           <span style="display:flex;align-items:center;gap:6px">
             <span style="font-size:14px;font-weight:800;font-variant-numeric:tabular-nums">${fmtW(gv26)}</span>
             ${chgBadge(gChg,false)}
@@ -5588,8 +5588,8 @@ function renderConsHospitals() {
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
         ${pri?'<span style="flex-shrink:0;font-size:9px;font-weight:800;color:#c2410c;background:#ffedd5;border-radius:4px;padding:1px 5px">우선</span>':''}
         <div style="flex:1;min-width:0;cursor:pointer" data-name="${safeN}" onclick="showHospitalDetail(this.dataset.name)">
-          <span style="font-size:12px;font-weight:700">${gradeBadge(h)}<span style="color:#dc2626;text-decoration:underline dotted">${name}</span></span>
-          ${_mgr?`<span style="font-size:10px;font-weight:700;color:#2563eb;margin-left:5px;white-space:nowrap"><i class="bi bi-person-badge"></i> ${_mgr}</span>`:'<span style="font-size:10px;color:#d1d5db;margin-left:5px">담당 미배정</span>'}${h.sales&&h.sales!==_mgr?`<span style="font-size:9px;color:#cbd5e1;margin-left:4px">${h.sales}</span>`:''}
+          <span style="font-size:12px;font-weight:700">${gradeBadge(h)}<span style="color:#dc2626;text-decoration:underline dotted">${_escH(name)}</span></span>
+          ${_mgr?`<span style="font-size:10px;font-weight:700;color:#2563eb;margin-left:5px;white-space:nowrap"><i class="bi bi-person-badge"></i> ${_escH(_mgr)}</span>`:'<span style="font-size:10px;color:#d1d5db;margin-left:5px">담당 미배정</span>'}${h.sales&&h.sales!==_mgr?`<span style="font-size:9px;color:#cbd5e1;margin-left:4px">${_escH(h.sales)}</span>`:''}
           <span style="font-size:10px;color:#9a3412;margin-left:4px">· ${reason}</span>
         </div>
         <span style="font-size:12px;font-weight:800;color:#dc2626;flex-shrink:0">${fmtW(ytd25est(h))}</span>
@@ -5631,8 +5631,8 @@ function renderConsHospitals() {
     return`<div style="padding:8px 0;border-bottom:1px solid #fef3c7">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
         <div style="flex:1;min-width:0;cursor:pointer" data-name="${safeN}" onclick="showHospitalDetail(this.dataset.name)">
-          <span style="font-size:12px;font-weight:700">${gradeBadge(h)}<span style="color:#b45309;text-decoration:underline dotted">${name}</span></span>
-          ${_mgr?`<span style="font-size:10px;font-weight:700;color:#2563eb;margin-left:5px;white-space:nowrap"><i class="bi bi-person-badge"></i> ${_mgr}</span>`:'<span style="font-size:10px;color:#d1d5db;margin-left:5px">담당 미배정</span>'}${h.sales&&h.sales!==_mgr?`<span style="font-size:9px;color:#cbd5e1;margin-left:4px">${h.sales}</span>`:''}
+          <span style="font-size:12px;font-weight:700">${gradeBadge(h)}<span style="color:#b45309;text-decoration:underline dotted">${_escH(name)}</span></span>
+          ${_mgr?`<span style="font-size:10px;font-weight:700;color:#2563eb;margin-left:5px;white-space:nowrap"><i class="bi bi-person-badge"></i> ${_escH(_mgr)}</span>`:'<span style="font-size:10px;color:#d1d5db;margin-left:5px">담당 미배정</span>'}${h.sales&&h.sales!==_mgr?`<span style="font-size:9px;color:#cbd5e1;margin-left:4px">${_escH(h.sales)}</span>`:''}
         </div>
         <span style="font-size:11px;color:#6b7280;flex-shrink:0">${fmtS(cur26)} <span style="color:#64748b">vs</span> ${fmtS(est25)}</span>
         ${pctBadge(chg)}
@@ -5659,7 +5659,7 @@ function renderConsHospitals() {
       return`<div style="padding:8px 0;border-bottom:1px solid #dcfce7">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
           <div style="flex:1;min-width:0;cursor:pointer" data-name="${safeN}" onclick="showHospitalDetail(this.dataset.name)">
-            <span style="font-size:12px;font-weight:700">${gradeBadge(h)}<span style="color:#15803d;text-decoration:underline dotted">${name}</span>${h.sales?`<span style="font-size:10px;color:#64748b;margin-left:5px">${h.sales}</span>`:''}</span>
+            <span style="font-size:12px;font-weight:700">${gradeBadge(h)}<span style="color:#15803d;text-decoration:underline dotted">${_escH(name)}</span>${h.sales?`<span style="font-size:10px;color:#64748b;margin-left:5px">${_escH(h.sales)}</span>`:''}</span>
           </div>
           <span style="font-size:11px;color:#6b7280;flex-shrink:0">${fmtS(cur26)} <span style="color:#64748b">vs</span> ${fmtS(est25)}</span>
           ${pctBadge(chg)}
@@ -5682,7 +5682,7 @@ function renderConsHospitals() {
       return`<div style="padding:8px 0;border-bottom:1px solid #ede9fe">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
           <div style="flex:1;min-width:0;cursor:pointer" data-name="${safeN}" onclick="showHospitalDetail(this.dataset.name)">
-            <span style="font-size:12px;font-weight:700">${gradeBadge(h)}<span style="text-decoration:underline dotted">${name}</span><span style="font-size:9px;background:#dcfce7;color:#16a34a;border-radius:4px;padding:1px 5px;margin-left:4px">NEW</span>${h.sales?`<span style="font-size:10px;color:#64748b;margin-left:5px">${h.sales}</span>`:''}</span>
+            <span style="font-size:12px;font-weight:700">${gradeBadge(h)}<span style="text-decoration:underline dotted">${_escH(name)}</span><span style="font-size:9px;background:#dcfce7;color:#16a34a;border-radius:4px;padding:1px 5px;margin-left:4px">NEW</span>${h.sales?`<span style="font-size:10px;color:#64748b;margin-left:5px">${_escH(h.sales)}</span>`:''}</span>
           </div>
           <span style="font-size:12px;font-weight:800;color:#7c3aed;flex-shrink:0">${fmtW(ytd26cur(h))}</span>
         </div>
@@ -9296,9 +9296,9 @@ function showHospitalDetail(name){
         const pct26 = barMax>0?Math.round(v26/barMax*100):0;
         const pct25 = barMax>0?Math.round(v25/barMax*100):0;
         return `<tr>
-          <td style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p}</td>
-          <td class="text-end" style="font-size:11px;color:#6b7280">${v25?`<span style="cursor:pointer;text-decoration:underline dotted" onclick="_hospTxnDetail(2025,'prod',${JSON.stringify(p)})">${fmtM(v25)}</span>`:'-'}</td>
-          <td class="text-end fw-bold" style="font-size:11px;color:${v26?'#1d4ed8':'#64748b'}">${v26?`<span style="cursor:pointer;text-decoration:underline dotted" onclick="_hospTxnDetail(2026,'prod',${JSON.stringify(p)})">${fmtM(v26)}</span>`:'-'}</td>
+          <td style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escH(p)}</td>
+          <td class="text-end" style="font-size:11px;color:#6b7280">${v25?`<span style="cursor:pointer;text-decoration:underline dotted" onclick="_hospTxnDetail(2025,'prod',${_escH(JSON.stringify(p))})">${fmtM(v25)}</span>`:'-'}</td>
+          <td class="text-end fw-bold" style="font-size:11px;color:${v26?'#1d4ed8':'#64748b'}">${v26?`<span style="cursor:pointer;text-decoration:underline dotted" onclick="_hospTxnDetail(2026,'prod',${_escH(JSON.stringify(p))})">${fmtM(v26)}</span>`:'-'}</td>
           <td style="width:80px">
             <div style="height:3px;background:#e0e7ff;border-radius:2px;margin-bottom:2px"><div style="height:3px;width:${pct26}%;background:${c};border-radius:2px"></div></div>
             <div style="height:3px;background:#f3f4f6;border-radius:2px"><div style="height:3px;width:${pct25}%;background:#d1d5db;border-radius:2px"></div></div>
@@ -11329,8 +11329,8 @@ function showDevTxnModal(prod, rngStr) {
         </tr></thead>
         <tbody>${txns.map(t=>`<tr>
           <td style="font-size:12px;white-space:nowrap;color:#6b7280">${t.date||t.mo+'월'}</td>
-          <td style="font-size:12px;font-weight:600;cursor:pointer;color:#0f172a" onclick="_drillHospOver('${String(t.name).replace(/'/g,"\\'")}')" title="클릭하면 병원 상세">${t.name} <i class="bi bi-search" style="font-size:8px;color:#cbd5e1"></i></td>
-          <td style="font-size:11px;color:#6b7280">${t.sales}</td>
+          <td style="font-size:12px;font-weight:600;cursor:pointer;color:#0f172a" onclick="_drillHospOver('${String(t.name).replace(/'/g,"\\'")}')" title="클릭하면 병원 상세">${_escH(t.name)} <i class="bi bi-search" style="font-size:8px;color:#cbd5e1"></i></td>
+          <td style="font-size:11px;color:#6b7280">${_escH(t.sales)}</td>
           <td class="text-end" style="font-size:12px;font-weight:600">${t.qty?t.qty+'대':''}</td>
           <td class="text-end" style="font-size:12px;font-weight:700;color:${t.amt<0?'#dc2626':'#1d4ed8'}">${t.amt<0?'−':''}${fmtW(Math.abs(t.amt))}${t.amt<0?' <span style=\"font-size:10px;font-weight:600\">보상</span>':''}</td>
         </tr>`).join('')}</tbody>
