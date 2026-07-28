@@ -1139,7 +1139,6 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <input id="cdu-search" class="form-control form-control-sm" style="width:auto;min-width:150px" placeholder="🔍 병원·경쟁사·피드백" oninput="renderCDU()">
         <span id="cdu-count" class="text-muted" style="font-size:12px"></span>
         <button class="btn btn-outline-primary btn-sm ms-auto" onclick="openCDUWeekly()"><i class="bi bi-file-earmark-text me-1"></i>주간 요약</button>
-        <button id="cdu-csv-btn" class="btn btn-outline-secondary btn-sm" onclick="cduExportCSV()"><i class="bi bi-download me-1"></i>CSV</button>
         <button id="cdu-add-btn" class="btn btn-primary btn-sm" onclick="openCDUQuick()"><i class="bi bi-plus-lg me-1"></i>일정 추가</button>
       </div>
     </div>
@@ -1885,6 +1884,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <button class="btn btn-outline-warning btn-sm" style="white-space:nowrap" onclick="openPromoFor(document.getElementById('hosp-modal-name').textContent)"><i class="bi bi-megaphone me-1"></i>프로모션</button>
     <button class="btn btn-outline-primary btn-sm ms-1" style="white-space:nowrap" onclick="openScheduleFromHospModal()"><i class="bi bi-calendar-plus me-1"></i>일정</button>
     <button class="btn btn-primary btn-sm ms-1" style="white-space:nowrap" onclick="openLogFromHospModal()"><i class="bi bi-journal-plus me-1"></i>상담일지 작성</button>
+    <button class="btn btn-outline-secondary btn-sm ms-1" style="white-space:nowrap" onclick="var n=document.getElementById('hosp-modal-name').textContent;try{bootstrap.Modal.getInstance(document.getElementById('hospitalModal')).hide();}catch(e){}openCDUVisitFor(n);"><i class="bi bi-clipboard-plus me-1"></i>CDU 방문</button>
+    <button class="btn btn-outline-secondary btn-sm ms-1" style="white-space:nowrap;color:#be185d;border-color:#f9a8d4" onclick="var n=document.getElementById('hosp-modal-name').textContent;try{bootstrap.Modal.getInstance(document.getElementById('hospitalModal')).hide();}catch(e){}openCDUReel(null,{hosp:n});"><i class="bi bi-camera-reels me-1"></i>릴스</button>
     <button type="button" class="btn-close ms-2" data-bs-dismiss="modal"></button>
   </div>
   <div class="modal-body p-0">
@@ -6968,12 +6969,15 @@ function _cduHospAuto(force){
   var info=document.getElementById('cd-hosp-info');
   if(!name){ if(info){info.style.display='none';info.innerHTML='';} return; }
   var curId=(document.getElementById('cd-id')||{}).value||'';
-  var prev=_cduVisits().filter(v=>(v.custName||'').trim()===name && v.id!==curId).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))[0];
+  var _hist=_cduVisits().filter(function(v){return (v.custName||'').trim()===name && v.id!==curId && v.status!=='planned';}).sort(function(a,b){return String(b.date||'').localeCompare(String(a.date||''));});
+  var prev=_hist[0]; var pv=function(f){ for(var i=0;i<_hist.length;i++){ var x=_hist[i][f]; if(x!=null && String(x).trim()!=='') return x; } return ''; };
   var rep=(typeof _repOf==='function')?_repOf(name):''; var hi=(typeof HOSP_INFO!=='undefined'&&HOSP_INFO[name])||{}; var rev=_cduRev(name);
   var setIf=(id,val)=>{ var e=document.getElementById(id); if(e&&(force||!e.value)&&val!=null&&val!=='') e.value=val; };
+  var setP=(id,val,def)=>{ var e=document.getElementById(id); if(e&&val!=null&&val!==''&&(force||!e.value||e.value===def)) e.value=val; };
   if(rep) setIf('cd-sales',rep);
-  setIf('cdv-doctor', hi.doctor||(prev&&prev.doctor));
-  if(prev){ setIf('cd-dealer',prev.dealer); setIf('cd-dcount',prev.doctorCount); setIf('cd-proc',prev.mainProc); setIf('cd-comp',prev.competitor); setIf('cd-chan',prev.channels); setIf('cd-price',prev.price); }
+  setIf('cdv-doctor', hi.doctor||pv('doctor'));
+  if(_hist.length){ setIf('cd-dealer',pv('dealer')); setIf('cd-dcount',pv('doctorCount')); setIf('cd-proc',pv('mainProc')); setIf('cd-comp',pv('competitor')); setIf('cd-chan',pv('channels')); setIf('cd-price',pv('price')); setIf('cd-contact-profile',pv('contactProfile'));
+    setP('cd-shots',pv('shots'),'300'); setP('cd-oli-basic',pv('oliBasic'),'1'); setIf('cd-oli-x',pv('oliX')); setIf('cd-oli-kiss',pv('oliKiss')); setP('cdv-region',pv('region'),'국내'); }
   if(info){ var b=[];
     if(rep) b.push('담당 <b>'+_cduEsc(rep)+'</b>');
     if(rev.y2026) b.push('올해 팁매출 <b>'+_cduWon(rev.y2026)+'원</b>'); else if(rev.y2025) b.push('작년 팁매출 <b>'+_cduWon(rev.y2025)+'원</b>');
@@ -6982,6 +6986,10 @@ function _cduHospAuto(force){
     if(hi.tel) b.push('☎ '+_cduEsc(hi.tel));
     if(prev) b.push('<span style="color:#0891b2">이전방문('+_cduEsc(String(prev.date).slice(5,10))+') 자동참조</span>');
     info.style.display=''; info.innerHTML = b.length? '<i class="bi bi-magic me-1"></i>'+b.join(' · ') : '<span style="color:#94a3b8">한국영업 DB에 매출 이력이 없는 신규/미등록 병원입니다.</span>';
+    var hist=_hist;
+    if(hist.length){ info.innerHTML+='<details style="margin-top:7px"><summary style="cursor:pointer;font-size:11.5px;color:#0891b2;font-weight:700"><i class="bi bi-clock-history me-1"></i>지난 방문 '+hist.length+'회 보기</summary><div style="margin-top:4px">'
+      +hist.slice(0,8).map(function(v){ return '<div style="font-size:11.5px;color:#475569;padding:3px 0;border-top:1px dashed #cbe8ed"><b style="color:#0f766e">'+_cduEsc(String(v.date||'').slice(0,10))+'</b>'+(v.sales?' · '+_cduEsc(v.sales):'')+(v.price?' · 수가 '+_cduEsc(v.price)+'천':'')+(v.competitor?' · <span style="color:#dc2626">'+_cduEsc(v.competitor)+'</span>':'')+((v.reels&&/^(촬영완료|O)$/i.test(v.reels))?' · <span style="color:#db2777">릴스</span>':'')+((v.feedback||'').trim()?'<div style="color:#64748b;margin-top:1px">'+_cduEsc(v.feedback.slice(0,55))+'</div>':'')+'</div>'; }).join('')
+      +'</div></details>'; }
   }
   try{ _cduChipSync(); }catch(e){}
 }
