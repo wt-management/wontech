@@ -11411,7 +11411,11 @@ function _renderDevInsight(){
   var esc=(typeof _escH==='function')?_escH:function(x){return String(x==null?'':x);};
   var chg=function(c){ return c==null?'':' <b style="color:'+(c>=0?'#16a34a':'#dc2626')+'">'+(c>=0?'▲':'▼')+Math.abs(c).toFixed(0)+'%</b>'; };
   var tile=function(l,v,s,accent,kind){ return '<div onclick="_devInsightDrill(\''+kind+'\')" style="flex:1;min-width:155px;background:#f8fafc;border-radius:13px;padding:16px 20px;cursor:pointer;transition:background .12s" onmouseover="this.style.background=\'#eef2f7\'" onmouseout="this.style.background=\'#f8fafc\'"><div style="font-size:12.5px;color:#64748b;font-weight:700">'+l+' <i class="bi bi-chevron-right" style="font-size:10px;color:#cbd5e1"></i></div><div style="font-size:26px;font-weight:800;color:'+(accent||'#111827')+';line-height:1.15;margin-top:5px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+v+'</div>'+(s?'<div style="font-size:12.5px;color:#64748b;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+s+'</div>':'')+'</div>'; };
-  box.innerHTML=tile('합계 매출',fw(totCur),'전년 '+fw(totPre)+chg(yoy),null,'total')
+  var _flt2=(typeof _devFilter!=='undefined'?_devFilter:'all');
+  var _dviP; try{ _dviP=(_flt2==='all'&&typeof _dvBuild==='function')?_dvBuild():null; }catch(_e){ _dviP=null; }
+  var _pendP=(_dviP&&_dviP.pendTot>0)?_dviP.pendTot:0;   // 선택기간 장비 미반영(일보 예정분) — '전체' 필터에서만 병기(스코프 일치)
+  var _totSub='전년 '+fw(totPre)+chg(yoy)+(_pendP>0?'<br><span style="color:#0891b2;font-weight:600">회계 '+fw(totCur)+' + 미반영 '+fw(_pendP)+'</span> <span style="color:#94a3b8">= 보고기준 '+fw(totCur+_pendP)+'</span>':'');
+  box.innerHTML=tile('합계 매출',fw(totCur),_totSub,null,'total')
     +tile('1위 담당',esc(top?top.name:'-'),top?fw(top.cur)+' · 비중 '+(top.cur/totCur*100).toFixed(0)+'%':'',null,'top')
     +(g1?tile('성장 1위',esc(g1.name),'전년비 ▲'+g1.g.toFixed(0)+'%','#16a34a','grow'):'')
     +tile('상위 3 집중도',conc.toFixed(0)+'%','상위 3인 매출 비중',null,'conc')
