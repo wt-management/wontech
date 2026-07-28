@@ -1075,6 +1075,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 <style id="cdu-refine">
 /* == CDU 화면 정제(Apple 감성: 단일 액센트 블루·헤어라인·알약) — #page-cdu 스코프 == */
 #page-cdu{--acc:#0066cc;--hair:#e0e0e0}
+#page-cdu .cdu-mon-item:hover{box-shadow:inset 0 0 0 1px rgba(15,23,42,.1)}
 #page-cdu .page-header h5 i{color:var(--acc)}
 /* 상단 탭: 알약형 분리 */
 #page-cdu .btn-group{gap:6px}
@@ -6425,67 +6426,71 @@ function renderCDUReels(){
   var css='<style>'
     +'#cdu-reels .rl-head{font-size:13.5px;font-weight:800;color:#111827;padding:2px 0 12px}'
     +'#cdu-reels .rl-head span{font-size:11.5px;font-weight:600;color:#94a3b8;margin-left:6px}'
-    +'#cdu-reels .rl-fun{background:#fff;border:1px solid #eef0f4;border-radius:12px;padding:14px 16px;margin-bottom:14px}'
-    +'#cdu-reels .rl-fun-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px}'
-    +'#cdu-reels .rl-fun-hd b{font-size:12.5px;color:#111827}'
-    +'#cdu-reels .rl-fun-hd span{font-size:12px;color:#6b7280}'
-    +'#cdu-reels .rl-fun-hd em{font-style:normal;font-weight:800;color:#16a34a}'
-    +'#cdu-reels .rl-fn{display:flex;align-items:center;gap:9px;margin-bottom:8px}'
-    +'#cdu-reels .rl-fn:last-child{margin-bottom:0}'
-    +'#cdu-reels .rl-fn-nm{width:44px;font-size:12px;font-weight:700;flex-shrink:0}'
-    +'#cdu-reels .rl-fn-tk{flex:1;height:18px;background:#f1f5f9;border-radius:9px;overflow:hidden}'
-    +'#cdu-reels .rl-fn-bar{height:100%;border-radius:9px;min-width:4px}'
-    +'#cdu-reels .rl-fn-c{width:26px;text-align:right;font-size:13.5px;font-weight:800;font-variant-numeric:tabular-nums}'
-    +'#cdu-reels .rl-fn-cv{width:44px;text-align:right;font-size:10.5px;color:#94a3b8}'
-    +'#cdu-reels .rl-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}'
-    +'#cdu-reels .rl-chip{border:1px solid #e5e7eb;background:#fff;color:#64748b;border-radius:16px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;min-height:34px}'
-    +'#cdu-reels .rl-chip.on{background:#0066cc;border-color:#0066cc;color:#fff}'
-    +'#cdu-reels .rl-chip b{font-weight:800;margin-left:3px}'
-    +'#cdu-reels .rl-card{background:#fff;border:1px solid #eef0f4;border-radius:12px;padding:13px 15px;margin-bottom:10px}'
-    +'#cdu-reels .rl-top{display:flex;align-items:center;gap:8px}'
-    +'#cdu-reels .rl-hosp{font-size:14px;font-weight:800;color:#111827}'
-    +'#cdu-reels .rl-date{font-size:11.5px;color:#94a3b8;white-space:nowrap}'
-    +'#cdu-reels .rl-meta{font-size:12px;color:#6b7280;margin-top:3px}'
-    +'#cdu-reels .rl-step{display:flex;align-items:center;gap:3px;margin-top:9px;flex-wrap:wrap}'
-    +'#cdu-reels .rl-sp{border:1px solid #e5e7eb;background:#fff;color:#94a3b8;border-radius:8px;padding:6px 10px;font-size:11.5px;font-weight:700;cursor:pointer;min-height:34px}'
-    +'#cdu-reels .rl-ar{color:#cbd5e1;font-size:13px}'
-    +'#cdu-reels .rl-url{display:flex;align-items:center;gap:6px;margin-top:9px}'
-    +'#cdu-reels .rl-in{flex:1;min-width:0;border:1px solid #e5e7eb;border-radius:8px;padding:7px 10px;font-size:12.5px;min-height:38px}'
-    +'#cdu-reels .rl-open{flex-shrink:0;background:#db2777;color:#fff;border-radius:8px;min-width:40px;min-height:38px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:15px}'
-    +'#cdu-reels .rl-copy{flex-shrink:0;border:1px solid #e5e7eb;background:#fff;border-radius:8px;min-width:40px;min-height:38px;cursor:pointer;color:#475569;font-size:14px}'
-    +'#cdu-reels .rl-perf{display:flex;align-items:center;gap:7px;margin-top:8px;font-size:12px;color:#475569}'
-    +'#cdu-reels .rl-perf .rl-views{flex:0 0 120px;max-width:140px}'
-    +'#cdu-reels .rl-fb{font-size:12.5px;color:#374151;margin-top:8px;line-height:1.5;white-space:pre-line;background:#f8fafc;border-radius:8px;padding:8px 10px}'
-    +'#cdu-reels .rl-add{border:1px solid #e5e7eb;background:#fff;color:#475569;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;min-height:34px}'
-    +'@media(max-width:640px){#cdu-reels .rl-chips{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}#cdu-reels .rl-chip{white-space:nowrap}}'
+    +'#cdu-reels .rlb-strip{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;background:#fff;border:1px solid #eef0f4;border-radius:12px;padding:11px 16px;margin-bottom:14px}'
+    +'#cdu-reels .rlb-st{display:flex;align-items:baseline;gap:5px}'
+    +'#cdu-reels .rlb-st b{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}'
+    +'#cdu-reels .rlb-st span{font-size:11.5px;color:#6b7280;font-weight:600}'
+    +'#cdu-reels .rlb-aw{color:#cbd5e1;font-size:13px;display:flex;flex-direction:column;align-items:center;line-height:1}'
+    +'#cdu-reels .rlb-aw i{font-size:9px;color:#94a3b8;font-style:normal;margin-top:1px}'
+    +'#cdu-reels .rlb-board{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:start}'
+    +'#cdu-reels .rlb-col{background:#f8fafc;border:1px solid #eef0f4;border-radius:12px;padding:8px;min-height:110px}'
+    +'#cdu-reels .rlb-col.drop{outline:2px dashed #93c5fd;outline-offset:-2px;background:#eff6ff}'
+    +'#cdu-reels .rlb-ch{display:flex;align-items:center;justify-content:space-between;padding:3px 6px 9px;font-size:12.5px;font-weight:800}'
+    +'#cdu-reels .rlb-ch .c{font-size:11px;font-weight:800;color:#fff;border-radius:10px;padding:1px 8px}'
+    +'#cdu-reels .rlb-card{background:#fff;border:1px solid #eef0f4;border-radius:10px;padding:9px 11px;margin-bottom:8px;cursor:pointer;box-shadow:0 1px 2px rgba(2,6,23,.04)}'
+    +'#cdu-reels .rlb-card:hover{border-color:#c7d2fe}'
+    +'#cdu-reels .rlb-hs{display:flex;justify-content:space-between;gap:6px;align-items:baseline}'
+    +'#cdu-reels .rlb-hs b{font-size:12.5px;font-weight:800;color:#111827;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+    +'#cdu-reels .rlb-hs .dt{font-size:10.5px;color:#94a3b8;font-weight:600;flex-shrink:0}'
+    +'#cdu-reels .rlb-sub{font-size:11px;color:#6b7280;margin-top:2px;display:flex;justify-content:space-between;gap:6px}'
+    +'#cdu-reels .rlb-fb{font-size:11px;color:#475569;margin-top:6px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}'
+    +'#cdu-reels .rlb-acts{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}'
+    +'#cdu-reels .rlb-b{border:1px solid #e5e7eb;background:#fff;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;cursor:pointer;min-height:30px;display:inline-flex;align-items:center;gap:4px;color:#475569;text-decoration:none}'
+    +'#cdu-reels .rlb-b.play{background:#db2777;color:#fff;border-color:#db2777}'
+    +'#cdu-reels .rlb-b.vw{color:#15803d;border-color:#bbf7d0;background:#f0fdf4}'
+    +'#cdu-reels .rlb-empty{font-size:11px;color:#cbd5e1;text-align:center;padding:16px 0}'
+    +'@media(max-width:900px){#cdu-reels .rlb-board{grid-template-columns:1fr 1fr}}'
+    +'@media(max-width:560px){#cdu-reels .rlb-board{grid-template-columns:1fr}}'
     +'</style>';
-  var headH='<div class="rl-head"><i class="bi bi-camera-reels me-1" style="color:#db2777"></i>릴스 관리 <span>촬영→게시→성과, 릴스가 어떻게 됐는지 단계로 추적</span></div>';
+  var headH='<div class="rl-head"><i class="bi bi-camera-reels me-1" style="color:#db2777"></i>릴스 관리 <span>제안→촬영완료→게시완료→성과확인 · 카드를 끌어 단계 이동, 버튼으로 진행</span></div>';
   if(!all.length){ el.innerHTML=css+headH+'<div class="card p-5 text-center text-muted" style="font-size:14px"><i class="bi bi-camera-reels" style="font-size:28px;color:#f9a8d4"></i><div class="mt-2">이 기간 등록된 릴스가 없습니다.<br><b>일정 관리</b> 탭 → 방문 기록에서 <b>릴스 촬영</b>·<b>URL</b>을 입력하면 여기서 단계별로 관리됩니다.</div></div>'; return; }
+  window._cduReelDrop=function(e,st){ e.preventDefault(); var id=window._cduReelDrag; window._cduReelDrag=null; document.querySelectorAll('#cdu-reels .rlb-col.drop').forEach(function(c){c.classList.remove('drop');}); if(id) _cduReelSetStage(id,st); };
+  window._cduReelPromptUrl=function(id,e){ if(e)e.stopPropagation(); var v=(DB.d.logs||[]).find(function(l){return l.id===id;}); if(!v)return; var u=prompt('릴스 URL 입력 (인스타/유튜브 링크)', v.reelsUrl||''); if(u===null)return; _cduReelSetUrl(id,{value:u}); };
+  window._cduReelPromptViews=function(id,e){ if(e)e.stopPropagation(); var v=(DB.d.logs||[]).find(function(l){return l.id===id;}); if(!v)return; var n=prompt('조회수 입력 (숫자만)', v.reelsViews||''); if(n===null)return; _cduReelSetViews(id,{value:n}); };
   var reached=CDU_REEL_STAGES.map(function(s,i){ return all.filter(function(v){ return _cduReelIdx(_cduReelStageOf(v))>=i; }).length; });
-  var fmax=Math.max(1,reached[0]);
-  var funnel='<div class="rl-fun"><div class="rl-fun-hd"><b>릴스 파이프라인</b><span>총 조회수 <em>'+_cduViewsFmt(totViews)+'</em> · '+nHosp+'개처</span></div>'
-    +CDU_REEL_STAGES.map(function(s,i){ var c=reached[i]; var conv=(i>0&&reached[i-1]>0)?Math.round(reached[i]/reached[i-1]*100):null;
-      return '<div class="rl-fn"><span class="rl-fn-nm" style="color:'+s[1]+'">'+s[2]+'</span><div class="rl-fn-tk"><div class="rl-fn-bar" style="width:'+Math.round(c/fmax*100)+'%;background:'+s[1]+'"></div></div><b class="rl-fn-c">'+c+'</b><span class="rl-fn-cv">'+(conv!=null?'↓'+conv+'%':'')+'</span></div>';
-    }).join('')+'</div>';
-  var chipDefs=[['all','전체',all.length]].concat(CDU_REEL_STAGES.map(function(s){return [s[0],s[2],cnt[s[0]]];}));
-  var chipH='<div class="rl-chips">'+chipDefs.map(function(c){ var on=_cduReelFilter===c[0]; return '<button class="rl-chip'+(on?' on':'')+'" onclick="_cduReelFilterSet(\''+c[0]+'\')">'+c[1]+'<b>'+c[2]+'</b></button>'; }).join('')+'</div>';
-  var list=(_cduReelFilter==='all'?all:all.filter(function(v){return _cduReelStageOf(v)===_cduReelFilter;})).sort(function(a,b){return String(b.date||'').localeCompare(String(a.date||''));});
-  var rows=list.map(function(v){
-    var cur=_cduReelStageOf(v), ci=_cduReelIdx(cur);
-    var stepper='<div class="rl-step">'+CDU_REEL_STAGES.map(function(s,i){ var st=(i===ci)?'background:'+s[1]+';border-color:'+s[1]+';color:#fff':(i<ci?'color:'+s[1]+';border-color:'+s[1]:''); return (i>0?'<span class="rl-ar">›</span>':'')+'<button class="rl-sp" style="'+st+'" onclick="_cduReelSetStage(\''+v.id+'\',\''+s[0]+'\')">'+s[2]+'</button>'; }).join('')+'</div>';
+  var strip='<div class="rlb-strip">'+CDU_REEL_STAGES.map(function(s,i){ var conv=(i>0&&reached[i-1]>0)?Math.round(reached[i]/reached[i-1]*100):null;
+      return (i>0?'<span class="rlb-aw">›<i>'+(conv!=null?conv+'%':'')+'</i></span>':'')+'<div class="rlb-st"><b style="color:'+s[1]+'">'+cnt[s[0]]+'</b><span>'+s[2]+'</span></div>';
+    }).join('')
+    +'<div class="rlb-st" style="margin-left:auto"><b style="color:#16a34a">'+_cduViewsFmt(totViews)+'</b><span>총 조회수</span></div>'
+    +'<div class="rlb-st"><b>'+nHosp+'</b><span>개처</span></div></div>';
+  var byStage={}; CDU_REEL_STAGES.forEach(function(s){ byStage[s[0]]=[]; });
+  all.forEach(function(v){ byStage[_cduReelStageOf(v)].push(v); });
+  Object.keys(byStage).forEach(function(k){ byStage[k].sort(function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')); }); });
+  var cardHtml=function(v){
+    var ci=_cduReelIdx(_cduReelStageOf(v));
     var url1=(v.reelsUrl||'').trim().split(/\s+/).filter(Boolean)[0]||'';
     var isHttp=/^https?:\/\//i.test(url1);
-    var urlBtns=isHttp?'<a class="rl-open" href="'+_cduEsc(url1)+'" target="_blank" rel="noopener" title="열기"><i class="bi bi-play-circle-fill"></i></a><button class="rl-copy" title="복사" onclick="_cduCopyReel(decodeURIComponent(\''+encodeURIComponent(url1)+'\'))"><i class="bi bi-clipboard"></i></button>':'';
-    var urlRow='<div class="rl-url"><input class="rl-in" type="url" inputmode="url" value="'+_cduEsc(v.reelsUrl||'')+'" placeholder="릴스 URL 붙여넣기 →" onchange="_cduReelSetUrl(\''+v.id+'\',this)">'+urlBtns+'</div>';
-    var perfRow=(ci>=2)?'<div class="rl-perf"><i class="bi bi-eye"></i><span>조회수</span><input class="rl-in rl-views" type="number" inputmode="numeric" value="'+_cduEsc((v.reelsViews||'')+'')+'" placeholder="예: 12000" onchange="_cduReelSetViews(\''+v.id+'\',this)"><span>회</span></div>':'';
+    var acts=[];
+    if(ci===0){ acts.push('<button class="rlb-b" onclick="event.stopPropagation();_cduReelSetStage(\''+v.id+'\',\'촬영완료\')"><i class="bi bi-camera"></i>촬영완료</button>'); }
+    if(isHttp){ acts.push('<a class="rlb-b play" href="'+_cduEsc(url1)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i class="bi bi-play-fill"></i>열기</a>'); acts.push('<button class="rlb-b" title="URL 복사" onclick="event.stopPropagation();_cduCopyReel(decodeURIComponent(\''+encodeURIComponent(url1)+'\'))"><i class="bi bi-clipboard"></i></button>'); }
+    else if(ci>=1){ acts.push('<button class="rlb-b" onclick="_cduReelPromptUrl(\''+v.id+'\',event)"><i class="bi bi-link-45deg"></i>URL 추가</button>'); }
+    if(ci>=2){ if((Number(v.reelsViews)||0)>0) acts.push('<button class="rlb-b vw" onclick="_cduReelPromptViews(\''+v.id+'\',event)">▶ '+_cduViewsFmt(v.reelsViews)+'회</button>'); else acts.push('<button class="rlb-b" onclick="_cduReelPromptViews(\''+v.id+'\',event)"><i class="bi bi-eye"></i>조회수</button>'); }
     var fb=(v.feedback||'').trim();
-    return '<div class="rl-card"><div class="rl-top"><span class="rl-hosp">'+_cduEsc(v.custName||'-')+'</span><span style="flex:1"></span><span class="rl-date">'+_cduEsc(v.date||'')+'</span></div>'
-      +'<div class="rl-meta">'+(v.sales?'<i class="bi bi-person me-1"></i>'+_cduEsc(v.sales):'')+(v.mainProc?' · '+_cduEsc(v.mainProc):'')+((Number(v.reelsViews)||0)>0?' · <b style="color:#16a34a">▶ '+_cduViewsFmt(v.reelsViews)+'회</b>':'')+'</div>'
-      +stepper+urlRow+perfRow
-      +(fb?'<div class="rl-fb">'+_cduEsc(fb.slice(0,140))+(fb.length>140?'…':'')+'</div>':'')
-      +'<div style="text-align:right;margin-top:8px"><button class="rl-add" onclick="openCDUVisit(\''+v.id+'\')"><i class="bi bi-pencil me-1"></i>방문 기록</button></div></div>';
-  }).join('');
-  el.innerHTML=css+headH+funnel+chipH+rows;
+    return '<div class="rlb-card" draggable="true" ondragstart="window._cduReelDrag=\''+v.id+'\'" onclick="openCDUVisit(\''+v.id+'\')">'
+      +'<div class="rlb-hs"><b>'+_cduEsc(v.custName||'-')+'</b><span class="dt">'+_cduEsc((v.date||'').slice(5))+'</span></div>'
+      +'<div class="rlb-sub"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(v.mainProc?_cduEsc(v.mainProc):'')+'</span>'+(v.sales?'<span style="flex-shrink:0;color:#475569;font-weight:600">'+_cduEsc(v.sales)+'</span>':'')+'</div>'
+      +(fb?'<div class="rlb-fb">'+_cduEsc(fb)+'</div>':'')
+      +(acts.length?'<div class="rlb-acts">'+acts.join('')+'</div>':'')
+      +'</div>';
+  };
+  var board='<div class="rlb-board">'+CDU_REEL_STAGES.map(function(s){
+    var items=byStage[s[0]];
+    return '<div class="rlb-col" ondragover="event.preventDefault();this.classList.add(\'drop\')" ondragleave="this.classList.remove(\'drop\')" ondrop="_cduReelDrop(event,\''+s[0]+'\')">'
+      +'<div class="rlb-ch"><span style="color:'+s[1]+'">'+s[2]+'</span><span class="c" style="background:'+s[1]+'">'+items.length+'</span></div>'
+      +(items.length?items.map(cardHtml).join(''):'<div class="rlb-empty">비어 있음</div>')
+      +'</div>';
+  }).join('')+'</div>';
+  el.innerHTML=css+headH+strip+board;
 }
 // ── 타깃 병원: 데이터가 찍어주는 다음 방문지 (재구매 도래 + 휴면 장비) ──
 function renderCDUTarget(){
@@ -7111,7 +7116,7 @@ function _cduInputMonth(){
       +'<div onclick="openCDUQuickFor(\''+ds+'\')" title="이 날짜에 방문 예정 추가" style="font-size:12.5px;color:'+(isT?'#2563eb':'#64748b')+';font-weight:'+(isT?'800':'400')+';padding:3px 5px 2px;cursor:pointer;flex-shrink:0;display:flex;justify-content:space-between;align-items:center">'+'<span>'+d+(isT?' ●':'')+'</span>'+(its.length?'<span style="font-size:10px;color:#94a3b8;font-weight:600;background:#eef2f7;border-radius:8px;padding:0 5px">'+its.length+'</span>':'')+'</div>'
       +'<div class="cdu-mon-cell" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 4px 4px">'
       +its.map(function(v){ var planned=(v.status==='planned'); var c=planned?'#2563eb':((v.churnRisk||'').trim()?'#ea580c':'#16a34a'); var rc=(typeof _schRepColor==='function')?_schRepColor((v.sales||'').trim()):'#64748b';
-        return '<div onclick="event.stopPropagation();openCDUVisit(\''+v.id+'\')" style="font-size:11.5px;margin-top:1px;padding:1px 4px;border-radius:3px;background:'+c+'22;color:'+c+';cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+_cduEsc((v.custName||'')+(planned?' · 예정':' · 완료'))+'">'+_cduEsc(v.custName||'')+((v.sales||'').trim()?' <span style="color:'+rc+';background:'+rc+'22;font-weight:700;border-radius:5px;padding:0 4px">'+_cduEsc(v.sales)+'</span>':'')+'</div>'; }).join('')
+        return '<div class="cdu-mon-item" onclick="event.stopPropagation();openCDUVisit(\''+v.id+'\')" title="'+_cduEsc(v.custName||'')+'" style="display:flex;align-items:center;gap:5px;font-size:11.5px;margin-top:2px;padding:2px 7px;border-radius:6px;background:'+c+'14;cursor:pointer"><span style="width:6px;height:6px;border-radius:50%;background:'+c+';flex-shrink:0"></span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#334155;font-weight:500">'+_cduEsc(v.custName||'')+'</span>'+((v.sales||'').trim()?'<span style="flex-shrink:0;color:'+rc+';font-size:10.5px;font-weight:700;opacity:.85">'+_cduEsc(v.sales)+'</span>':'')+'</div>'; }).join('')
       +'</div>'
     +'</div>';
   }
