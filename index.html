@@ -6528,8 +6528,8 @@ function renderCDUReels(){
     +'#cdu-reels .rlb-col.drop{outline:2px dashed #93c5fd;outline-offset:-2px;background:#eff6ff}'
     +'#cdu-reels .rlb-ch{display:flex;align-items:center;justify-content:space-between;padding:3px 6px 9px;font-size:12.5px;font-weight:800;flex-shrink:0}'
     +'#cdu-reels .rlb-ch .c{font-size:11px;font-weight:800;color:#fff;border-radius:10px;padding:1px 8px}'
-    +'#cdu-reels .rlb-body{max-height:58vh;overflow-y:auto;padding-right:2px}'
-    +'#cdu-reels .rlb-card{background:#fff;border:1px solid #eef0f4;border-radius:8px;padding:7px 10px;margin-bottom:6px;cursor:grab}'
+    +'#cdu-reels .rlb-body{display:grid;grid-template-columns:1fr 1fr;gap:6px;align-items:start;max-height:58vh;overflow-y:auto;padding-right:2px}'
+    +'#cdu-reels .rlb-card{background:#fff;border:1px solid #eef0f4;border-radius:8px;padding:7px 10px;cursor:pointer}'
     +'#cdu-reels .rlb-card:hover{border-color:#c7d2fe}'
     +'#cdu-reels .rlb-hs{display:flex;align-items:center;gap:8px}'
     +'#cdu-reels .rlb-hs b{flex:1;min-width:0;font-size:12.5px;font-weight:700;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
@@ -6588,9 +6588,9 @@ function renderCDUReels(){
         +'<i class="bi bi-pencil" style="color:#cbd5e1;font-size:11px"></i></div>';
     }).join('')
     +'<div class="rlb-dr" style="color:#2563eb;font-weight:700" onclick="event.stopPropagation();openCDUReel(null,window._cduReelGroups['+g+'])"><span class="dt"><i class="bi bi-plus-lg"></i></span><span class="sl">이 병원 릴스 추가</span></div>';
-    return '<div class="rlb-card" draggable="true" ondragstart="window._cduReelDragIds=window._cduReelGroups['+g+'].ids">'
+    return '<div class="rlb-card" draggable="true" ondragstart="window._cduReelDragIds=window._cduReelGroups['+g+'].ids" onclick="var d=this.querySelector(\'.rlb-detail\');if(d)d.style.display=(d.style.display===\'none\'?\'block\':\'none\')" title="클릭하면 개별 릴스 히스토리">'
       +'<div class="rlb-hs"><b>'+_cduEsc(hosp||'-')+'</b>'
-        +'<span class="rlb-cnt" title="클릭하면 개별 릴스" onclick="event.stopPropagation();var d=this.closest(\'.rlb-card\').querySelector(\'.rlb-detail\');d.style.display=(d.style.display===\'none\'?\'block\':\'none\')">'+n+'회</span></div>'
+        +'<span class="rlb-cnt">'+n+'회</span></div>'
       +'<div class="rlb-detail" style="display:none">'+rows+'</div>'
       +'</div>';
   };
