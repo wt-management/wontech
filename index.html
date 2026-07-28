@@ -11401,7 +11401,8 @@ function _renderDevInsight(){
   if(!E.length){ box.innerHTML=''; return; }
   var fw=function(v){ v=Number(v||0); return v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만':Math.round(v).toLocaleString(); };
   var totCur=E.reduce(function(s,e){return s+e.cur;},0), totPre=E.reduce(function(s,e){return s+e.pre;},0);
-  var yoy=totPre>0?((totCur/totPre-1)*100):null;
+  var _prevFull=true; try{ _prevFull=(_yoyShift(_getPeriod('devrep')).sy>=2025); }catch(_e){ _prevFull=true; }  // 전년창이 2024로 넘어가면(최근12개월·2025~현재) 데이터 없어 YoY 부풀려짐 → 표시 보류
+  var yoy=(totPre>0&&_prevFull)?((totCur/totPre-1)*100):null;
   var byCur=E.slice().sort(function(a,b){return b.cur-a.cur;});
   var top=byCur[0], top3=byCur.slice(0,3).reduce(function(s,e){return s+e.cur;},0);
   var conc=totCur>0?(top3/totCur*100):0;
@@ -11704,6 +11705,7 @@ function renderDevReps() {
   const fmtW = v => (v=Number(v||0))>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만원':Math.round(v).toLocaleString()+'원';
   _injectPeriodCtrl('devrep');
   const P=_getPeriod('devrep'), _cur=_spanMonths(P), _prev=_spanMonths(_yoyShift(P));
+  const _devPrevFull = _yoyShift(P).sy>=2025;   // 전년창이 2024로 넘어가면 데이터 없어 YoY 부풀려짐 → '-' 처리
   const _mY=(o,y)=>y===2026?(o.m2026||{}):(y===2025?(o.m2025||{}):{});
   const _spanV=(o,rng)=>rng.reduce((s,x)=>s+(_mY(o,x.y)[x.m]||0),0);
   const _endY=P.ey;   // 대수/거래처수/주력제품은 연단위 지표 → 종료연도 기준
@@ -11729,7 +11731,7 @@ function renderDevReps() {
     const qty  = _rs?_rs.qty:0;
     const cust = _rs?Object.keys(_rs.cust).length:0;
     const topProd = _rs?(Object.entries(_rs.prods).sort((a,b)=>b[1]-a[1])[0]?.[0]||''):'';
-    return {name, rep, cur, pre, qty, cust, topProd, yoy: pre>0?(cur/pre-1)*100:null, isTeam:_isKorSales(name)};
+    return {name, rep, cur, pre, qty, cust, topProd, yoy: (pre>0&&_devPrevFull)?(cur/pre-1)*100:null, isTeam:_isKorSales(name)};
   }).filter(e=> _flt==='team'?e.isTeam : _flt==='dealer'?!e.isTeam : true)
     .sort((a,b)=>b.cur-a.cur);
 
