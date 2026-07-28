@@ -1076,6 +1076,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 /* == CDU 화면 정제(Apple 감성: 단일 액센트 블루·헤어라인·알약) — #page-cdu 스코프 == */
 #page-cdu{--acc:#0066cc;--hair:#e0e0e0}
 #page-cdu .cdu-mon-item:hover{box-shadow:inset 0 0 0 1px rgba(15,23,42,.1)}
+#page-cdu .cdu-mon-item{cursor:grab}
+#page-cdu .cdu-mon-day.dragover{outline:2px dashed #2563eb;outline-offset:-2px;background:#dbeafe!important}
 #page-cdu .page-header h5 i{color:var(--acc)}
 /* 상단 탭: 알약형 분리 */
 #page-cdu .btn-group{gap:6px}
@@ -7155,6 +7157,9 @@ function renderCDUInput(vs){
   _cduEnsureCss();
   el.innerHTML='<div class="cdud">'+_cduTodayCard()+toolbar+pendHtml+statsBar+(_cduInputView==='week'?'':legend)+_cduRevisitBox()+body+'</div>';
 }
+// 월간 달력 드래그 재일정
+window._cduSchDrag=null;
+window._cduSchDrop=function(e,ds){ e.preventDefault(); var id=window._cduSchDrag; window._cduSchDrag=null; document.querySelectorAll('#cdu-input .cdu-mon-day.dragover').forEach(function(c){c.classList.remove('dragover');}); if(!id)return; var v=(DB.d.logs||[]).find(function(l){return l.id===id;}); if(!v||String(v.date||'').slice(0,10)===ds)return; v.date=ds; renderCDU(); DB.save('logs').then(function(){ showToast('방문일 변경 → '+ds.slice(5).replace('-','/'),true); }); };
 // 월간 달력(일정 메뉴 양식)
 function _cduInputMonth(){
   var base=_cduBaseFiltered();
@@ -7167,11 +7172,11 @@ function _cduInputMonth(){
   for(var d=1;d<=days;d++){ var ds=mp+'-'+String(d).padStart(2,'0');
     var its=(byd[ds]||[]).sort(function(a,b){ return String(a.sales||'').localeCompare(String(b.sales||''),'ko')||String(a.custName||'').localeCompare(String(b.custName||''),'ko'); });
     var isT=ds===todayS;
-    cells+='<div style="min-height:92px;max-height:172px;display:flex;flex-direction:column;border:1px solid #f1f3f7;background:'+(isT?'#eff6ff':'')+'">'
+    cells+='<div class="cdu-mon-day" ondragover="event.preventDefault();this.classList.add(\'dragover\')" ondragleave="this.classList.remove(\'dragover\')" ondrop="_cduSchDrop(event,\''+ds+'\')" style="min-height:92px;max-height:172px;display:flex;flex-direction:column;border:1px solid #f1f3f7;background:'+(isT?'#eff6ff':'')+'">'
       +'<div onclick="openCDUQuickFor(\''+ds+'\')" title="이 날짜에 방문 예정 추가" style="font-size:12.5px;color:'+(isT?'#2563eb':'#64748b')+';font-weight:'+(isT?'800':'400')+';padding:3px 5px 2px;cursor:pointer;flex-shrink:0;display:flex;justify-content:space-between;align-items:center">'+'<span>'+d+(isT?' ●':'')+'</span>'+(its.length?'<span style="font-size:10px;color:#94a3b8;font-weight:600;background:#eef2f7;border-radius:8px;padding:0 5px">'+its.length+'</span>':'')+'</div>'
       +'<div class="cdu-mon-cell" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 4px 4px">'
       +its.map(function(v){ var planned=(v.status==='planned'); var c=planned?'#2563eb':((v.churnRisk||'').trim()?'#ea580c':'#16a34a'); var rc=(typeof _schRepColor==='function')?_schRepColor((v.sales||'').trim()):'#64748b';
-        return '<div class="cdu-mon-item" onclick="event.stopPropagation();openCDUVisit(\''+v.id+'\')" title="'+_cduEsc(v.custName||'')+'" style="display:flex;align-items:center;gap:5px;font-size:11.5px;margin-top:2px;padding:2px 7px;border-radius:6px;background:'+c+'14;cursor:pointer"><span style="width:6px;height:6px;border-radius:50%;background:'+c+';flex-shrink:0"></span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#334155;font-weight:500">'+_cduEsc(v.custName||'')+'</span>'+((v.sales||'').trim()?'<span style="flex-shrink:0;color:'+rc+';font-size:10.5px;font-weight:700;opacity:.85">'+_cduEsc(v.sales)+'</span>':'')+'</div>'; }).join('')
+        return '<div class="cdu-mon-item" draggable="true" ondragstart="event.stopPropagation();window._cduSchDrag=\''+v.id+'\'" onclick="event.stopPropagation();openCDUVisit(\''+v.id+'\')" title="'+_cduEsc(v.custName||'')+' · 드래그해 날짜 변경" style="display:flex;align-items:center;gap:5px;font-size:11.5px;margin-top:2px;padding:2px 7px;border-radius:6px;background:'+c+'14;cursor:pointer"><span style="width:6px;height:6px;border-radius:50%;background:'+c+';flex-shrink:0"></span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#334155;font-weight:500">'+_cduEsc(v.custName||'')+'</span>'+((v.sales||'').trim()?'<span style="flex-shrink:0;color:'+rc+';font-size:10.5px;font-weight:700;opacity:.85">'+_cduEsc(v.sales)+'</span>':'')+'</div>'; }).join('')
       +'</div>'
     +'</div>';
   }
