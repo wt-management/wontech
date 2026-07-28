@@ -11412,11 +11412,16 @@ function _renderDevInsight(){
   var chg=function(c){ return c==null?'':' <b style="color:'+(c>=0?'#16a34a':'#dc2626')+'">'+(c>=0?'▲':'▼')+Math.abs(c).toFixed(0)+'%</b>'; };
   var tile=function(l,v,s,accent,kind){ return '<div onclick="_devInsightDrill(\''+kind+'\')" style="flex:1;min-width:155px;background:#f8fafc;border-radius:13px;padding:16px 20px;cursor:pointer;transition:background .12s" onmouseover="this.style.background=\'#eef2f7\'" onmouseout="this.style.background=\'#f8fafc\'"><div style="font-size:12.5px;color:#64748b;font-weight:700">'+l+' <i class="bi bi-chevron-right" style="font-size:10px;color:#cbd5e1"></i></div><div style="font-size:26px;font-weight:800;color:'+(accent||'#111827')+';line-height:1.15;margin-top:5px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+v+'</div>'+(s?'<div style="font-size:12.5px;color:#64748b;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+s+'</div>':'')+'</div>'; };
   var _flt2=(typeof _devFilter!=='undefined'?_devFilter:'all');
-  var _dviP; try{ _dviP=(_flt2==='all'&&typeof _dvBuild==='function')?_dvBuild():null; }catch(_e){ _dviP=null; }
-  var _pendP=(_dviP&&_dviP.pendTot>0)?_dviP.pendTot:0;   // 선택기간 장비 미반영(일보 예정분) — '전체' 필터에서만 병기(스코프 일치)
-  var _totSub='전년 '+fw(totPre)+chg(yoy)+(_pendP>0?'<br><span style="color:#0891b2;font-weight:600">회계 '+fw(totCur)+' + 미반영 '+fw(_pendP)+'</span> <span style="color:#94a3b8">= 보고기준 '+fw(totCur+_pendP)+'</span>':'');
+  var _pendP=0;   // 선택기간 장비 미반영 — 종합/제품매출과 100% 동일 소스(_pendingView.devMonthly + _ilboMonthMaps.devMo). '전체' 필터에서만 병기(스코프 일치)
+  try{ if(_flt2==='all'){ var _P2=_getPeriod('devrep'), _sm=_spanMonths(_P2);
+      var _pvD=(typeof _pendingView==='function')?(_pendingView(2026).agg||{}):{};
+      var _imD=(typeof _ilboMonthMaps==='function')?(_ilboMonthMaps()||{}):{};
+      var _pvDm=_pvD.devMonthly||{}, _imDm=_imD.devMo||{};
+      _pendP=_sm.reduce(function(s,x){return s+(x.y===2026?((_pvDm[x.m]||0)+(_imDm[x.m]||0)):0);},0);
+  } }catch(_e){ _pendP=0; }
+  var _totSub='전년 '+fw(totPre)+chg(yoy)+(_pendP>0?'<br><span style="color:#0891b2;font-weight:600">회계 '+fw(totCur)+' + 미반영 '+fw(_pendP)+'</span> <span style="color:#94a3b8">= 보고기준 '+fw(totCur+_pendP)+' · 종합과 동일 기준</span>':'');
   box.innerHTML=tile('합계 매출',fw(totCur),_totSub,null,'total')
-    +tile('1위 담당',esc(top?top.name:'-'),top?fw(top.cur)+' · 비중 '+(top.cur/totCur*100).toFixed(0)+'%':'',null,'top')
+    +tile('1위 담당',esc(top?top.name:'-'),top?fw(top.cur)+' · 비중 '+(totCur>0?(top.cur/totCur*100):0).toFixed(0)+'%':'',null,'top')
     +(g1?tile('성장 1위',esc(g1.name),'전년비 ▲'+g1.g.toFixed(0)+'%','#16a34a','grow'):'')
     +tile('상위 3 집중도',conc.toFixed(0)+'%','상위 3인 매출 비중',null,'conc')
     +tile('신규 / 이탈',nw+' / '+lost,'담당 기준',null,'newlost');
@@ -11522,11 +11527,17 @@ function _dvBuild(){
   var acc2=function(bag,k1,k2,side,v,q){ var o=bag[k1]=bag[k1]||{}; var e=o[k2]=o[k2]||{a:0,b:0,qa:0,qb:0,pa:0}; e[side]+=v; e['q'+side]+=q; };
   var accP=function(bag,k,v,q){ var o=bag[k]=bag[k]||{a:0,b:0,qa:0,qb:0,pa:0}; o.a+=v; o.pa+=v; o.qa+=q; };
   var acc2P=function(bag,k1,k2,v,q){ var o=bag[k1]=bag[k1]||{}; var e=o[k2]=o[k2]||{a:0,b:0,qa:0,qb:0,pa:0}; e.a+=v; e.pa+=v; e.qa+=q; };
-  var scan=function(txns,inM,side,dl){ (txns||[]).forEach(function(t){ var mo=+t[0]; if(inM.indexOf(mo)<0)return; var p=t[3]||'기타', v=Number(t[4]||0), q=Number(t[5]||0); if(side==='a'&&t[1]&&t[1]>asOf)asOf=t[1];
+  // 연도-인지 스캔: 선택기간의 (연-월) 키에 맞는 거래만 집계. txns2025/2026 양쪽을 모두 훑어
+  // '2025년'단독·'최근 12개월'·'2025~현재' 등 연도경계/비-2026 선택도 정확(전엔 txns2026을 무조건 올해로 봄).
+  var curK={}; _cur.forEach(function(x){curK[x.y+'-'+x.m]=1;});
+  var preK={}; _prev.forEach(function(x){preK[x.y+'-'+x.m]=1;});
+  var scan=function(txns,yr,keys,side,dl){ (txns||[]).forEach(function(t){ var mo=+t[0]; if(!keys[yr+'-'+mo])return; var p=t[3]||'기타', v=Number(t[4]||0), q=Number(t[5]||0); if(side==='a'&&t[1]&&t[1]>asOf)asOf=t[1];
     acc(prod,p,side,v,q); acc(dealer,dl,side,v,q); acc2(pByD,p,dl,side,v,q); acc2(dByP,dl,p,side,v,q);
     acc2(pMon,p,mo,side,v,q); acc2(dMon,dl,mo,side,v,q); acc2(mProd,mo,p,side,v,q); acc2(mDealer,mo,dl,side,v,q);
     mQty[side][mo]=(mQty[side][mo]||0)+q; }); };
-  Object.keys(Hs).forEach(function(hn){ var h=Hs[hn]||{}; var dl=repOf(hn,h); scan(h.txns2026,curM,'a',dl); scan(h.txns2025,preM,'b',dl); });
+  Object.keys(Hs).forEach(function(hn){ var h=Hs[hn]||{}; var dl=repOf(hn,h);
+    scan(h.txns2026,2026,curK,'a',dl); scan(h.txns2025,2025,curK,'a',dl);
+    scan(h.txns2026,2026,preK,'b',dl); scan(h.txns2025,2025,preK,'b',dl); });
   // ── 회계 미반영(국내 device) 2026 'a'측 가산 + pa(미반영분) 별도 추적 ──
   var _pend=(typeof ILBO_PEND!=='undefined'&&ILBO_PEND)||[];
   var _devset={}; try{ ['products2026','products2025','prods_dev'].forEach(function(k){ Object.keys((DEVICE&&DEVICE[k])||{}).forEach(function(n){_devset[n]=1;}); }); }catch(e){}
