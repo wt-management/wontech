@@ -6396,72 +6396,96 @@ function renderCDU(){
   var cc=document.getElementById('cdu-count'); if(cc) cc.textContent='· '+vs.length+'건 · '+_cduPeriodLabel();
   if(_cduView==='report') renderCDUReport(vs); else renderCDUInput(vs);
 }
-// ── 릴스 관리: 촬영·제안·게시 추적 + URL 모음(열기/복사) ──
+// ── 릴스 관리: 라이프사이클(제안→촬영→게시→성과) 추적 + 인라인 관리 ──
+var _cduReelFilter='all';
+var CDU_REEL_STAGES=[['제안','#ec4899','제안'],['촬영완료','#db2777','촬영'],['게시완료','#7c3aed','게시'],['성과확인','#16a34a','성과']];
+function _cduReelIdx(st){ for(var i=0;i<CDU_REEL_STAGES.length;i++){ if(CDU_REEL_STAGES[i][0]===st) return i; } return 0; }
+function _cduReelStageOf(v){
+  if(v.reelsStage && CDU_REEL_STAGES.some(function(s){return s[0]===v.reelsStage;})) return v.reelsStage;
+  if((Number(v.reelsViews)||0)>0) return '성과확인';
+  if((v.reelsUrl||'').trim()) return '게시완료';
+  if(/^(촬영완료|O)$/i.test((v.reels||'').trim())) return '촬영완료';
+  return '제안';
+}
+function _cduViewsFmt(n){ n=Number(n)||0; return n>=10000?(n/10000).toFixed(n%10000===0?0:1)+'만':n.toLocaleString(); }
+window._cduCopyReel=function(u){ try{ navigator.clipboard.writeText(u).then(function(){ showToast('URL 복사됨',true); }); }catch(e){ showToast('복사 실패',true,true); } };
+window._cduReelSetStage=function(id,st){ var v=(DB.d.logs||[]).find(function(l){return l.id===id;}); if(!v)return; v.reelsStage=st; v.reels=(st==='제안')?'제안':'촬영완료'; renderCDU(); DB.save('logs').then(function(){ showToast('릴스 단계 → '+st, true); }); };
+window._cduReelSetUrl=function(id,el){ var v=(DB.d.logs||[]).find(function(l){return l.id===id;}); if(!v)return; v.reelsUrl=(el.value||'').trim(); if(v.reelsUrl && _cduReelIdx(v.reelsStage||_cduReelStageOf(v))<_cduReelIdx('게시완료')){ v.reelsStage='게시완료'; v.reels='촬영완료'; } DB.save('logs').then(function(){ showToast('URL 저장',true); renderCDU(); }); };
+window._cduReelSetViews=function(id,el){ var v=(DB.d.logs||[]).find(function(l){return l.id===id;}); if(!v)return; v.reelsViews=(el.value||'').replace(/[^0-9]/g,''); if(v.reelsViews && _cduReelIdx(v.reelsStage||_cduReelStageOf(v))<_cduReelIdx('성과확인')){ v.reelsStage='성과확인'; v.reels='촬영완료'; } DB.save('logs').then(function(){ showToast('조회수 저장',true); renderCDU(); }); };
+window._cduReelFilterSet=function(f){ _cduReelFilter=f; renderCDUReels(); };
 function renderCDUReels(){
   var el=document.getElementById('cdu-reels'); if(!el) return;
   var vs=_cduFiltered();
   var reelRe=/^(촬영완료|제안|O)$/i;
-  var list=vs.filter(function(v){ return v.status!=='planned' && ( reelRe.test((v.reels||'').trim()) || (v.reelsUrl||'').trim() ); })
-             .sort(function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')); });
-  var cc=document.getElementById('cdu-count'); if(cc) cc.textContent='· 릴스 '+list.length+'건 · '+_cduPeriodLabel();
-  window._cduCopyReel=function(u){ try{ navigator.clipboard.writeText(u).then(function(){ showToast('URL 복사됨',true); }); }catch(e){ showToast('복사 실패',true,true); } };
-  var nDone=list.filter(function(v){return /^(촬영완료|O)$/i.test((v.reels||'').trim());}).length;
-  var nProp=list.filter(function(v){return /^제안$/.test((v.reels||'').trim());}).length;
-  var nUrl=list.filter(function(v){return (v.reelsUrl||'').trim();}).length;
-  var nHosp=new Set(list.map(function(v){return (v.custName||'').trim();}).filter(Boolean)).size;
-  var css='<style>#cdu-reels .rl-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}'
-    +'#cdu-reels .rl-k{background:#fff;border:1px solid #eef0f4;border-radius:12px;padding:12px 14px}'
-    +'#cdu-reels .rl-k b{display:block;font-size:22px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}'
-    +'#cdu-reels .rl-k span{display:block;font-size:11.5px;color:#6b7280;margin-top:3px;font-weight:600}'
+  var all=vs.filter(function(v){ return v.status!=='planned' && ( reelRe.test((v.reels||'').trim()) || (v.reelsUrl||'').trim() || v.reelsStage ); });
+  var cnt={'제안':0,'촬영완료':0,'게시완료':0,'성과확인':0}, totViews=0;
+  all.forEach(function(v){ cnt[_cduReelStageOf(v)]++; totViews+=Number(v.reelsViews)||0; });
+  var nHosp=new Set(all.map(function(v){return (v.custName||'').trim();}).filter(Boolean)).size;
+  var cc=document.getElementById('cdu-count'); if(cc) cc.textContent='· 릴스 '+all.length+'건 · '+_cduPeriodLabel();
+  var css='<style>'
+    +'#cdu-reels .rl-head{font-size:13.5px;font-weight:800;color:#111827;padding:2px 0 12px}'
+    +'#cdu-reels .rl-head span{font-size:11.5px;font-weight:600;color:#94a3b8;margin-left:6px}'
+    +'#cdu-reels .rl-fun{background:#fff;border:1px solid #eef0f4;border-radius:12px;padding:14px 16px;margin-bottom:14px}'
+    +'#cdu-reels .rl-fun-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px}'
+    +'#cdu-reels .rl-fun-hd b{font-size:12.5px;color:#111827}'
+    +'#cdu-reels .rl-fun-hd span{font-size:12px;color:#6b7280}'
+    +'#cdu-reels .rl-fun-hd em{font-style:normal;font-weight:800;color:#16a34a}'
+    +'#cdu-reels .rl-fn{display:flex;align-items:center;gap:9px;margin-bottom:8px}'
+    +'#cdu-reels .rl-fn:last-child{margin-bottom:0}'
+    +'#cdu-reels .rl-fn-nm{width:44px;font-size:12px;font-weight:700;flex-shrink:0}'
+    +'#cdu-reels .rl-fn-tk{flex:1;height:18px;background:#f1f5f9;border-radius:9px;overflow:hidden}'
+    +'#cdu-reels .rl-fn-bar{height:100%;border-radius:9px;min-width:4px}'
+    +'#cdu-reels .rl-fn-c{width:26px;text-align:right;font-size:13.5px;font-weight:800;font-variant-numeric:tabular-nums}'
+    +'#cdu-reels .rl-fn-cv{width:44px;text-align:right;font-size:10.5px;color:#94a3b8}'
+    +'#cdu-reels .rl-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}'
+    +'#cdu-reels .rl-chip{border:1px solid #e5e7eb;background:#fff;color:#64748b;border-radius:16px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;min-height:34px}'
+    +'#cdu-reels .rl-chip.on{background:#0066cc;border-color:#0066cc;color:#fff}'
+    +'#cdu-reels .rl-chip b{font-weight:800;margin-left:3px}'
     +'#cdu-reels .rl-card{background:#fff;border:1px solid #eef0f4;border-radius:12px;padding:13px 15px;margin-bottom:10px}'
-    +'#cdu-reels .rl-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}'
+    +'#cdu-reels .rl-top{display:flex;align-items:center;gap:8px}'
     +'#cdu-reels .rl-hosp{font-size:14px;font-weight:800;color:#111827}'
-    +'#cdu-reels .rl-badge{font-size:10.5px;font-weight:800;border-radius:5px;padding:2px 7px;white-space:nowrap}'
+    +'#cdu-reels .rl-date{font-size:11.5px;color:#94a3b8;white-space:nowrap}'
     +'#cdu-reels .rl-meta{font-size:12px;color:#6b7280;margin-top:3px}'
-    +'#cdu-reels .rl-fb{font-size:12.5px;color:#374151;margin-top:6px;line-height:1.5;white-space:pre-line}'
-    +'#cdu-reels .rl-url{display:flex;align-items:center;gap:8px;margin-top:8px;background:#fafbfc;border:1px solid #eef0f4;border-radius:9px;padding:7px 10px}'
-    +'#cdu-reels .rl-open{flex-shrink:0;font-size:12.5px;font-weight:700;color:#fff;background:#db2777;border-radius:7px;padding:6px 12px;text-decoration:none;white-space:nowrap;min-height:36px;display:inline-flex;align-items:center;gap:4px}'
-    +'#cdu-reels .rl-link{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:#64748b}'
-    +'#cdu-reels .rl-copy{flex-shrink:0;border:1px solid #e5e7eb;background:#fff;border-radius:7px;min-width:38px;min-height:36px;cursor:pointer;color:#475569;font-size:14px}'
-    +'#cdu-reels .rl-nourl{margin-top:8px;font-size:12px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:7px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px}'
-    +'#cdu-reels .rl-add{border:0;background:#0066cc;color:#fff;border-radius:7px;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;min-height:34px}'
-    +'@media(max-width:640px){#cdu-reels .rl-kpis{grid-template-columns:1fr 1fr}#cdu-reels .rl-url{flex-wrap:wrap}#cdu-reels .rl-link{flex-basis:100%;order:3}}'
+    +'#cdu-reels .rl-step{display:flex;align-items:center;gap:3px;margin-top:9px;flex-wrap:wrap}'
+    +'#cdu-reels .rl-sp{border:1px solid #e5e7eb;background:#fff;color:#94a3b8;border-radius:8px;padding:6px 10px;font-size:11.5px;font-weight:700;cursor:pointer;min-height:34px}'
+    +'#cdu-reels .rl-ar{color:#cbd5e1;font-size:13px}'
+    +'#cdu-reels .rl-url{display:flex;align-items:center;gap:6px;margin-top:9px}'
+    +'#cdu-reels .rl-in{flex:1;min-width:0;border:1px solid #e5e7eb;border-radius:8px;padding:7px 10px;font-size:12.5px;min-height:38px}'
+    +'#cdu-reels .rl-open{flex-shrink:0;background:#db2777;color:#fff;border-radius:8px;min-width:40px;min-height:38px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:15px}'
+    +'#cdu-reels .rl-copy{flex-shrink:0;border:1px solid #e5e7eb;background:#fff;border-radius:8px;min-width:40px;min-height:38px;cursor:pointer;color:#475569;font-size:14px}'
+    +'#cdu-reels .rl-perf{display:flex;align-items:center;gap:7px;margin-top:8px;font-size:12px;color:#475569}'
+    +'#cdu-reels .rl-perf .rl-views{flex:0 0 120px;max-width:140px}'
+    +'#cdu-reels .rl-fb{font-size:12.5px;color:#374151;margin-top:8px;line-height:1.5;white-space:pre-line;background:#f8fafc;border-radius:8px;padding:8px 10px}'
+    +'#cdu-reels .rl-add{border:1px solid #e5e7eb;background:#fff;color:#475569;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;min-height:34px}'
+    +'@media(max-width:640px){#cdu-reels .rl-chips{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}#cdu-reels .rl-chip{white-space:nowrap}}'
     +'</style>';
-  if(!list.length){ el.innerHTML=css+'<div class="card p-5 text-center text-muted" style="font-size:14px"><i class="bi bi-camera-reels" style="font-size:28px;color:#f9a8d4"></i><div class="mt-2">이 기간 등록된 릴스가 없습니다.<br><b>일정 관리</b> 탭 → 방문 기록에서 <b>릴스 촬영</b> 상태와 <b>릴스 URL</b>을 입력하면 여기 모입니다.</div></div>'; return; }
-  var kpis='<div class="rl-kpis">'
-    +'<div class="rl-k"><b style="color:#111827">'+list.length+'</b><span>릴스 활동 · '+nHosp+'개처</span></div>'
-    +'<div class="rl-k"><b style="color:#db2777">'+nDone+'</b><span>촬영 완료</span></div>'
-    +'<div class="rl-k"><b style="color:#f472b6">'+nProp+'</b><span>촬영 제안</span></div>'
-    +'<div class="rl-k"><b style="color:#16a34a">'+nUrl+'</b><span>URL 게시</span></div></div>';
+  var headH='<div class="rl-head"><i class="bi bi-camera-reels me-1" style="color:#db2777"></i>릴스 관리 <span>촬영→게시→성과, 릴스가 어떻게 됐는지 단계로 추적</span></div>';
+  if(!all.length){ el.innerHTML=css+headH+'<div class="card p-5 text-center text-muted" style="font-size:14px"><i class="bi bi-camera-reels" style="font-size:28px;color:#f9a8d4"></i><div class="mt-2">이 기간 등록된 릴스가 없습니다.<br><b>일정 관리</b> 탭 → 방문 기록에서 <b>릴스 촬영</b>·<b>URL</b>을 입력하면 여기서 단계별로 관리됩니다.</div></div>'; return; }
+  var reached=CDU_REEL_STAGES.map(function(s,i){ return all.filter(function(v){ return _cduReelIdx(_cduReelStageOf(v))>=i; }).length; });
+  var fmax=Math.max(1,reached[0]);
+  var funnel='<div class="rl-fun"><div class="rl-fun-hd"><b>릴스 파이프라인</b><span>총 조회수 <em>'+_cduViewsFmt(totViews)+'</em> · '+nHosp+'개처</span></div>'
+    +CDU_REEL_STAGES.map(function(s,i){ var c=reached[i]; var conv=(i>0&&reached[i-1]>0)?Math.round(reached[i]/reached[i-1]*100):null;
+      return '<div class="rl-fn"><span class="rl-fn-nm" style="color:'+s[1]+'">'+s[2]+'</span><div class="rl-fn-tk"><div class="rl-fn-bar" style="width:'+Math.round(c/fmax*100)+'%;background:'+s[1]+'"></div></div><b class="rl-fn-c">'+c+'</b><span class="rl-fn-cv">'+(conv!=null?'↓'+conv+'%':'')+'</span></div>';
+    }).join('')+'</div>';
+  var chipDefs=[['all','전체',all.length]].concat(CDU_REEL_STAGES.map(function(s){return [s[0],s[2],cnt[s[0]]];}));
+  var chipH='<div class="rl-chips">'+chipDefs.map(function(c){ var on=_cduReelFilter===c[0]; return '<button class="rl-chip'+(on?' on':'')+'" onclick="_cduReelFilterSet(\''+c[0]+'\')">'+c[1]+'<b>'+c[2]+'</b></button>'; }).join('')+'</div>';
+  var list=(_cduReelFilter==='all'?all:all.filter(function(v){return _cduReelStageOf(v)===_cduReelFilter;})).sort(function(a,b){return String(b.date||'').localeCompare(String(a.date||''));});
   var rows=list.map(function(v){
-    var done=/^(촬영완료|O)$/i.test((v.reels||'').trim());
-    var prop=/^제안$/.test((v.reels||'').trim());
-    var badge=done?'<span class="rl-badge" style="color:#db2777;background:#fce7f3">✓ 촬영완료</span>'
-      :prop?'<span class="rl-badge" style="color:#be185d;background:#fbcfe8">제안</span>':'';
-    var urls=(v.reelsUrl||'').trim().split(/\s+/).filter(Boolean);
-    var urlHtml=urls.map(function(u){
-      var isHttp=/^https?:\/\//i.test(u);
-      var safe=encodeURIComponent(u);
-      var disp=_cduEsc(u.replace(/^https?:\/\//i,'').slice(0,60));
-      return '<div class="rl-url">'
-        +(isHttp?'<a class="rl-open" href="'+_cduEsc(u)+'" target="_blank" rel="noopener"><i class="bi bi-play-circle-fill"></i>열기</a>':'<span class="rl-open" style="background:#94a3b8">링크</span>')
-        +'<span class="rl-link" title="'+_cduEsc(u)+'">'+disp+'</span>'
-        +'<button class="rl-copy" title="URL 복사" onclick="_cduCopyReel(decodeURIComponent(\''+safe+'\'))"><i class="bi bi-clipboard"></i></button></div>';
-    }).join('');
-    if(!urls.length && done){ urlHtml='<div class="rl-nourl"><span><i class="bi bi-exclamation-circle me-1"></i>촬영은 완료됐지만 URL 미등록</span><button class="rl-add" onclick="openCDUVisit(\''+v.id+'\')">URL 추가</button></div>'; }
+    var cur=_cduReelStageOf(v), ci=_cduReelIdx(cur);
+    var stepper='<div class="rl-step">'+CDU_REEL_STAGES.map(function(s,i){ var st=(i===ci)?'background:'+s[1]+';border-color:'+s[1]+';color:#fff':(i<ci?'color:'+s[1]+';border-color:'+s[1]:''); return (i>0?'<span class="rl-ar">›</span>':'')+'<button class="rl-sp" style="'+st+'" onclick="_cduReelSetStage(\''+v.id+'\',\''+s[0]+'\')">'+s[2]+'</button>'; }).join('')+'</div>';
+    var url1=(v.reelsUrl||'').trim().split(/\s+/).filter(Boolean)[0]||'';
+    var isHttp=/^https?:\/\//i.test(url1);
+    var urlBtns=isHttp?'<a class="rl-open" href="'+_cduEsc(url1)+'" target="_blank" rel="noopener" title="열기"><i class="bi bi-play-circle-fill"></i></a><button class="rl-copy" title="복사" onclick="_cduCopyReel(decodeURIComponent(\''+encodeURIComponent(url1)+'\'))"><i class="bi bi-clipboard"></i></button>':'';
+    var urlRow='<div class="rl-url"><input class="rl-in" type="url" inputmode="url" value="'+_cduEsc(v.reelsUrl||'')+'" placeholder="릴스 URL 붙여넣기 →" onchange="_cduReelSetUrl(\''+v.id+'\',this)">'+urlBtns+'</div>';
+    var perfRow=(ci>=2)?'<div class="rl-perf"><i class="bi bi-eye"></i><span>조회수</span><input class="rl-in rl-views" type="number" inputmode="numeric" value="'+_cduEsc((v.reelsViews||'')+'')+'" placeholder="예: 12000" onchange="_cduReelSetViews(\''+v.id+'\',this)"><span>회</span></div>':'';
     var fb=(v.feedback||'').trim();
-    return '<div class="rl-card">'
-      +'<div class="rl-top"><span class="rl-hosp">'+_cduEsc(v.custName||'-')+'</span>'+badge
-      +'<span style="flex:1"></span><span style="font-size:11.5px;color:#94a3b8;white-space:nowrap">'+_cduEsc(v.date||'')+'</span></div>'
-      +'<div class="rl-meta">'+(v.sales?'<i class="bi bi-person me-1"></i>'+_cduEsc(v.sales):'')+(v.mainProc?' · '+_cduEsc(v.mainProc):'')+'</div>'
-      +(fb?'<div class="rl-fb">'+_cduEsc(fb.slice(0,160))+(fb.length>160?'…':'')+'</div>':'')
-      +urlHtml
-      +'<div style="text-align:right;margin-top:8px"><button class="rl-add" style="background:#eef2f7;color:#334155" onclick="openCDUVisit(\''+v.id+'\')"><i class="bi bi-pencil me-1"></i>방문 기록 열기</button></div>'
-      +'</div>';
+    return '<div class="rl-card"><div class="rl-top"><span class="rl-hosp">'+_cduEsc(v.custName||'-')+'</span><span style="flex:1"></span><span class="rl-date">'+_cduEsc(v.date||'')+'</span></div>'
+      +'<div class="rl-meta">'+(v.sales?'<i class="bi bi-person me-1"></i>'+_cduEsc(v.sales):'')+(v.mainProc?' · '+_cduEsc(v.mainProc):'')+((Number(v.reelsViews)||0)>0?' · <b style="color:#16a34a">▶ '+_cduViewsFmt(v.reelsViews)+'회</b>':'')+'</div>'
+      +stepper+urlRow+perfRow
+      +(fb?'<div class="rl-fb">'+_cduEsc(fb.slice(0,140))+(fb.length>140?'…':'')+'</div>':'')
+      +'<div style="text-align:right;margin-top:8px"><button class="rl-add" onclick="openCDUVisit(\''+v.id+'\')"><i class="bi bi-pencil me-1"></i>방문 기록</button></div></div>';
   }).join('');
-  el.innerHTML=css
-    +'<div style="font-size:13.5px;font-weight:800;color:#111827;padding:2px 0 12px"><i class="bi bi-camera-reels me-1" style="color:#db2777"></i>릴스 촬영·게시 추적 <span style="font-size:11.5px;font-weight:600;color:#94a3b8;margin-left:4px">촬영한 릴스가 어디에 게시됐는지 링크로 관리</span></div>'
-    +kpis+rows;
+  el.innerHTML=css+headH+funnel+chipH+rows;
 }
 // ── 타깃 병원: 데이터가 찍어주는 다음 방문지 (재구매 도래 + 휴면 장비) ──
 function renderCDUTarget(){
@@ -7083,11 +7107,12 @@ function _cduInputMonth(){
   for(var d=1;d<=days;d++){ var ds=mp+'-'+String(d).padStart(2,'0');
     var its=(byd[ds]||[]).sort(function(a,b){ return String(a.sales||'').localeCompare(String(b.sales||''),'ko')||String(a.custName||'').localeCompare(String(b.custName||''),'ko'); });
     var isT=ds===todayS;
-    cells+='<div onclick="openCDUQuickFor(\''+ds+'\')" title="이 날짜에 방문 예정 추가" style="min-height:84px;border:1px solid #f1f3f7;padding:3px 4px;overflow:hidden;cursor:pointer;background:'+(isT?'#eff6ff':'')+'">'
-      +'<div style="font-size:12.5px;color:'+(isT?'#2563eb':'#64748b')+';font-weight:'+(isT?'800':'400')+'">'+d+(isT?' ●':'')+'</div>'
-      +its.slice(0,3).map(function(v){ var planned=(v.status==='planned'); var c=planned?'#2563eb':((v.churnRisk||'').trim()?'#ea580c':'#16a34a'); var rc=(typeof _schRepColor==='function')?_schRepColor((v.sales||'').trim()):'#64748b';
+    cells+='<div style="min-height:92px;max-height:172px;display:flex;flex-direction:column;border:1px solid #f1f3f7;background:'+(isT?'#eff6ff':'')+'">'
+      +'<div onclick="openCDUQuickFor(\''+ds+'\')" title="이 날짜에 방문 예정 추가" style="font-size:12.5px;color:'+(isT?'#2563eb':'#64748b')+';font-weight:'+(isT?'800':'400')+';padding:3px 5px 2px;cursor:pointer;flex-shrink:0;display:flex;justify-content:space-between;align-items:center">'+'<span>'+d+(isT?' ●':'')+'</span>'+(its.length?'<span style="font-size:10px;color:#94a3b8;font-weight:600;background:#eef2f7;border-radius:8px;padding:0 5px">'+its.length+'</span>':'')+'</div>'
+      +'<div class="cdu-mon-cell" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 4px 4px">'
+      +its.map(function(v){ var planned=(v.status==='planned'); var c=planned?'#2563eb':((v.churnRisk||'').trim()?'#ea580c':'#16a34a'); var rc=(typeof _schRepColor==='function')?_schRepColor((v.sales||'').trim()):'#64748b';
         return '<div onclick="event.stopPropagation();openCDUVisit(\''+v.id+'\')" style="font-size:11.5px;margin-top:1px;padding:1px 4px;border-radius:3px;background:'+c+'22;color:'+c+';cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+_cduEsc((v.custName||'')+(planned?' · 예정':' · 완료'))+'">'+_cduEsc(v.custName||'')+((v.sales||'').trim()?' <span style="color:'+rc+';background:'+rc+'22;font-weight:700;border-radius:5px;padding:0 4px">'+_cduEsc(v.sales)+'</span>':'')+'</div>'; }).join('')
-      +(its.length>3?'<div style="font-size:11px;color:#64748b;margin-top:1px">+'+(its.length-3)+' 더</div>':'')
+      +'</div>'
     +'</div>';
   }
   var head=['일','월','화','수','목','금','토'].map(function(w,i){return '<div style="text-align:center;font-size:12.5px;padding:4px;color:'+(i===0?'#dc2626':i===6?'#2563eb':'#6b7280')+'">'+w+'</div>';}).join('');
@@ -7235,9 +7260,11 @@ function saveCDUVisit(){
   var date=g('cd-date'), hosp=g('cd-hosp').trim();
   if(!date||!hosp){ alert('방문일과 병원명을 입력하세요.'); return; }
   var id=g('cd-id')||uid();
+  var _pv=(DB.d.logs||[]).find(function(l){return l.id===id;});
+  var _reelsActive=(/^(제안|촬영완료|O)$/i.test(g('cd-reels').trim())||g('cd-reels-url').trim());
   var rec={id:id, kind:'cdu', status:'done', date:date, custName:hosp, dealer:g('cd-dealer').trim(), doctor:g('cdv-doctor').trim(), doctorCount:g('cd-dcount'),
     mainProc:g('cd-proc').trim(), competitor:g('cd-comp').trim(), feedback:g('cd-fb').trim(), channels:g('cd-chan').trim(), region:g('cdv-region'),
-    sales:g('cd-sales').trim(), event:g('cd-event'), reels:g('cd-reels'), reelsUrl:g('cd-reels-url').trim(), shots:g('cd-shots'), price:g('cd-price'), procCount:g('cd-pcount'), stock:g('cd-stock').trim(), churnRisk:g('cd-churn').trim(),
+    sales:g('cd-sales').trim(), event:g('cd-event'), reels:g('cd-reels'), reelsUrl:g('cd-reels-url').trim(), reelsStage:(_reelsActive?((_pv&&_pv.reelsStage)||''):''), reelsViews:(_pv&&_pv.reelsViews)||'', shots:g('cd-shots'), price:g('cd-price'), procCount:g('cd-pcount'), stock:g('cd-stock').trim(), churnRisk:g('cd-churn').trim(),
     noBuyReason:g('cd-reason'), action:g('cd-action').trim(),
     contactProfile:g('cd-contact-profile').trim(), oliBasic:g('cd-oli-basic'), oliX:g('cd-oli-x'), oliKiss:g('cd-oli-kiss'),
     by:(typeof currentUserName==='function'?currentUserName():'')};
