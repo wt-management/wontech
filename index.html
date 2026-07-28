@@ -11004,15 +11004,16 @@ function _dvBuild(){
   var curM=_cur.map(function(x){return x.m;}), preM=_prev.map(function(x){return x.m;});
   var sN=function(s){ return String(s==null?'':s).replace(/^\s*\d+\s*[.\-]\s*/,''); };
   var repOf=function(hn,h){ var r=(typeof _repOf==='function')?_repOf(hn):sN((h.sales||'').trim()); return r||'미지정'; };
-  var prod={},dealer={},pByD={},dByP={},pMon={},dMon={},mProd={},mDealer={},mQty={a:{},b:{}};
+  var prod={},dealer={},pByD={},dByP={},pMon={},dMon={},mProd={},mDealer={},mQty={a:{},b:{}}; var asOf='';
   var acc=function(bag,k,side,v,q){ var o=bag[k]=bag[k]||{a:0,b:0,qa:0,qb:0}; o[side]+=v; o['q'+side]+=q; };
   var acc2=function(bag,k1,k2,side,v,q){ var o=bag[k1]=bag[k1]||{}; var e=o[k2]=o[k2]||{a:0,b:0,qa:0,qb:0}; e[side]+=v; e['q'+side]+=q; };
-  var scan=function(txns,inM,side,dl){ (txns||[]).forEach(function(t){ var mo=+t[0]; if(inM.indexOf(mo)<0)return; var p=t[3]||'기타', v=Number(t[4]||0), q=Number(t[5]||0);
+  var scan=function(txns,inM,side,dl){ (txns||[]).forEach(function(t){ var mo=+t[0]; if(inM.indexOf(mo)<0)return; var p=t[3]||'기타', v=Number(t[4]||0), q=Number(t[5]||0); if(side==='a'&&t[1]&&t[1]>asOf)asOf=t[1];
     acc(prod,p,side,v,q); acc(dealer,dl,side,v,q); acc2(pByD,p,dl,side,v,q); acc2(dByP,dl,p,side,v,q);
     acc2(pMon,p,mo,side,v,q); acc2(dMon,dl,mo,side,v,q); acc2(mProd,mo,p,side,v,q); acc2(mDealer,mo,dl,side,v,q);
     mQty[side][mo]=(mQty[side][mo]||0)+q; }); };
   Object.keys(Hs).forEach(function(hn){ var h=Hs[hn]||{}; var dl=repOf(hn,h); scan(h.txns2026,curM,'a',dl); scan(h.txns2025,preM,'b',dl); });
-  _dvIdx={P:P,curM:curM,preM:preM,prod:prod,dealer:dealer,pByD:pByD,dByP:dByP,pMon:pMon,dMon:dMon,mProd:mProd,mDealer:mDealer,mQty:mQty};
+  var incMonth=0, asOfDay=0; if(asOf){ var _ad=String(asOf).split('-'); asOfDay=parseInt(_ad[2],10)||0; if(asOfDay&&asOfDay<28) incMonth=parseInt(_ad[1],10)||0; }
+  _dvIdx={P:P,curM:curM,preM:preM,prod:prod,dealer:dealer,pByD:pByD,dByP:dByP,pMon:pMon,dMon:dMon,mProd:mProd,mDealer:mDealer,mQty:mQty,asOf:asOf,incMonth:incMonth,asOfDay:asOfDay};
   return _dvIdx;
 }
 function _dvCTable(rows,label,drill){
@@ -11064,29 +11065,41 @@ function _dvExec(idx){
   var gP=pAll.filter(function(r){return r.d>0;}), lP=pAll.filter(function(r){return r.d<0;}).sort(function(a,b){return a.d-b.d;});
   var gD=dAll.filter(function(r){return r.d>0;}), lD=dAll.filter(function(r){return r.d<0;}).sort(function(a,b){return a.d-b.d;});
   var churn=dAll.filter(function(r){return r.a===0&&r.b>=TH;}).sort(function(a,b){return b.b-a.b;});
-  var neu=dAll.filter(function(r){return r.b===0&&r.a>=TH;}).sort(function(a,b){return b.a-a.a;});
+  var _isEmp=function(n){ return typeof _isKorSales==='function'&&_isKorSales(n); };
+  var neu=dAll.filter(function(r){return r.b===0&&r.a>=TH&&!_isEmp(r.name);}).sort(function(a,b){return b.a-a.a;});
   var mArr=idx.curM.map(function(m){ var mp=idx.mProd[m]||{}, a=0,b=0; Object.keys(mp).forEach(function(p){a+=mp[p].a;b+=mp[p].b;}); return {m:m,d:a-b}; });
-  var worst=mArr.slice().sort(function(a,b){return a.d-b.d;})[0];
+  var worst=mArr.filter(function(m){return m.m!==idx.incMonth;}).sort(function(a,b){return a.d-b.d;})[0];
   var st=yoy===null?['#64748b','—']:(yoy>=8?['#16a34a','성장']:(yoy>=-2?['#f59e0b','보합']:['#dc2626','감소']));
-  var chip=function(r,pos){ var isEmp=(typeof _isKorSales==='function'&&_isKorSales(r.name)); var lbl=(r.a===0&&r.b!==0)?'이탈':(isEmp?(_dvRecentHire(r.name)||((r.b===0&&r.a!==0)?'신규입사?':'')):((r.b===0&&r.a!==0)?'신규':'')); var t=lbl?('('+lbl+')'):''; return '<span style="display:inline-block;background:'+(pos?'#f0fdf4':'#fef2f2')+';color:'+(pos?'#166534':'#991b1b')+';border-radius:6px;padding:1px 8px;margin:0 4px 4px 0;font-size:11.5px;font-weight:600">'+_dvEsc(r.name)+' '+_dvSgn(r.d)+t+'</span>'; };
-  var line=function(icon,lab,html){ return '<div style="display:flex;gap:9px;padding:5px 0;border-top:1px solid #eef2f7"><span style="flex:0 0 74px;font-size:11px;font-weight:700;color:#64748b">'+icon+' '+lab+'</span><span style="flex:1;font-size:12px;color:#334155;line-height:1.7">'+html+'</span></div>'; };
+  var totalUp=gP.reduce(function(s,r){return s+r.d;},0);
+  var churnAll=dAll.filter(function(r){return r.a===0&&r.b>0;}).sort(function(a,b){return b.b-a.b;});
+  var churnSum=churnAll.reduce(function(s,r){return s+r.b;},0), newSum=neu.reduce(function(s,r){return s+r.a;},0);
+  var lDreal=lD.filter(function(r){return r.a>0;});
+  var _nm=function(r){return _dvEsc(r.name);};
+  var namt=function(r){ var hire=(_isEmp(r.name)?_dvRecentHire(r.name):''); return '<span style="white-space:nowrap;margin-right:9px"><b>'+_dvEsc(r.name)+'</b> <span style="color:'+_dvCol(r.d)+'">'+_dvSgn(r.d)+'</span>'+(hire?(' <span style="color:#7c3aed;font-size:9px">'+hire+'</span>'):'')+'</span>'; };
+  var kv=function(lab,html){ return '<div style="display:flex;gap:7px;font-size:12px;padding:2px 0;line-height:1.65"><span style="flex:0 0 40px;color:#94a3b8;font-size:11px;font-weight:600">'+lab+'</span><span style="flex:1">'+(html||'<span style="color:#cbd5e1">-</span>')+'</span></div>'; };
   var acts=[];
   if(churn.length) acts.push('<b>'+_dvEsc(churn[0].name)+'</b> 이탈(전년 '+_dvFmtW(churn[0].b)+') 원인 점검·회복');
   if(lP.length&&Math.abs(lP[0].d)>=TH){ var comp=(gP[0]&&gP[0].d>Math.abs(lP[0].d))?(' → '+_dvEsc(gP[0].name)+' 전환으로 상쇄 중, 가속'):''; acts.push('<b>'+_dvEsc(lP[0].name)+'</b> 하락('+_dvSgn(lP[0].d)+')'+comp); }
-  if(neu.length) acts.push('신규 <b>'+_dvEsc(neu[0].name)+'</b>(+'+_dvFmtW(neu[0].a)+') 성장 지속 지원');
+  if(neu.length) acts.push('신규 대리점 <b>'+_dvEsc(neu[0].name)+'</b>(+'+_dvFmtW(neu[0].a)+') 진입 — 성장 지속 지원');
   if(worst&&worst.d<0) acts.push('<b>'+worst.m+'월</b> 부진('+_dvSgn(worst.d)+') 요인 분석');
-  var actH=acts.length?acts.map(function(a,i){return '<div style="padding:1px 0">'+(i+1)+'. '+a+'</div>';}).join(''):'특이 리스크 없음 — 현 성장세 유지';
-  var driveH=(gP.slice(0,2).map(function(r){return chip(r,true);}).join('')||'-')+' <span style="color:#cbd5e1">|</span> '+(gD.slice(0,2).map(function(r){return chip(r,true);}).join('')||'-');
-  var riskArr=lP.slice(0,2).concat(churn.slice(0,1)).concat(lD.filter(function(r){return r.a>0;}).slice(0,1));
-  var riskH=riskArr.length?riskArr.map(function(r){return chip(r,false);}).join(''):'<span style="color:#94a3b8">유의미한 리스크 없음</span>';
-  var oppH=neu.length?neu.slice(0,3).map(function(r){return chip(r,true);}).join(''):'<span style="color:#94a3b8">신규 진입 없음</span>';
+  if(idx.incMonth) acts.push('<b>'+idx.incMonth+'월</b>은 아직 집계 중('+String(idx.asOf||'').slice(5)+'까지) — 월말 마감 후 재판단');
+  var actH2=acts.length?acts.map(function(a,i){return '<div style="flex:0 1 auto;min-width:250px;padding:1px 0">'+(i+1)+'. '+a+'</div>';}).join(''):'<div>특이 리스크 없음 — 현 성장세 유지</div>';
+  var growCol='<div style="flex:1;min-width:300px;background:#f0fdf4;border-radius:10px;padding:9px 13px"><div style="font-size:11.5px;font-weight:800;color:#166534;margin-bottom:4px">▲ 성장 동력</div>'
+    +kv('제품', gP.slice(0,3).map(function(r,i){return namt(r)+((i===0&&totalUp>0)?'<span style="color:#16a34a;font-size:10px;margin-right:9px">증가의 '+Math.round(r.d/totalUp*100)+'%</span>':'');}).join(''))
+    +kv('대리점', gD.slice(0,3).map(namt).join(''))
+    +kv('신규', neu.length?('<b style="color:#166534">'+neu.length+'곳 +'+_dvFmtW(newSum)+'</b> <span style="color:#64748b">· '+neu.slice(0,3).map(_nm).join(', ')+(neu.length>3?' 외':'')+'</span>'):'')+'</div>';
+  var riskCol='<div style="flex:1;min-width:300px;background:#fef2f2;border-radius:10px;padding:9px 13px"><div style="font-size:11.5px;font-weight:800;color:#991b1b;margin-bottom:4px">⚠ 리스크</div>'
+    +kv('제품', lP.slice(0,3).map(namt).join(''))
+    +kv('대리점', lDreal.slice(0,3).map(namt).join(''))
+    +kv('이탈', churnAll.length?('<b style="color:#991b1b">'+churnAll.length+'곳 '+_dvSgn(-churnSum)+'</b> <span style="color:#64748b">· '+churnAll.slice(0,3).map(_nm).join(', ')+(churnAll.length>3?' 외':'')+'</span>'):'')+'</div>';
   return '<div style="border:1px solid #e0e7ff;border-radius:12px;overflow:hidden;margin-bottom:12px">'
     +'<div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:11px 16px;background:linear-gradient(135deg,#eff6ff,#faf5ff)">'
-    +'<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:#334155"><i class="bi bi-clipboard-data" style="color:#2563eb"></i>임원 요약 · '+idx.P.label+' 장비</span>'
+    +'<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;color:#334155"><i class="bi bi-clipboard-data" style="color:#2563eb"></i>Summary · '+idx.P.label+' 장비</span>'
     +'<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:'+st[0]+'"><span style="width:9px;height:9px;border-radius:50%;background:'+st[0]+'"></span>'+st[1]+'</span>'
     +'<span style="margin-left:auto;font-size:22px;font-weight:800;color:'+_dvCol(dTot)+'">'+_dvSgn(dTot)+' <span style="font-size:12px">('+yoyStr+')</span></span>'
     +'<span style="font-size:12px;color:#64748b">'+_dvFmtW(t25)+' → <b>'+_dvFmtW(t26)+'</b></span></div>'
-    +'<div style="padding:8px 16px 10px">'+line('▲','성장 동력',driveH)+line('⚠','리스크',riskH)+line('◆','기회',oppH)+line('☑','권장 조치','<div style="font-size:11.5px">'+actH+'</div>')+'</div></div>';
+    +'<div style="display:flex;gap:10px;flex-wrap:wrap;padding:10px 12px 4px">'+growCol+riskCol+'</div>'
+    +'<div style="padding:2px 14px 11px"><div style="font-size:11px;font-weight:800;color:#64748b;margin-bottom:3px">☑ 권장 조치</div><div style="display:flex;flex-wrap:wrap;gap:2px 20px;font-size:11.5px;color:#334155">'+actH2+'</div></div></div>';
 }
 function renderDevVariance(){
   var host=document.getElementById('dev-variance'); if(!host) return;
@@ -11106,7 +11119,7 @@ function renderDevVariance(){
     var rowsH=curM.map(function(m){ var mp=idx.mProd[m]||{}; var a=0,b=0; Object.keys(mp).forEach(function(p){a+=mp[p].a;b+=mp[p].b;}); var dd=a-b; run+=dd;
       var mv=_dvRows(mp); var mg=mv[0], ml=mv[mv.length-1]; var q=(idx.mQty.a[m]||0); var yy=b>0?((a/b-1)*100):null;
       return '<tr onclick="_dvDrill(\'month\','+m+')" style="cursor:pointer;border-top:1px solid #f4f6f9" title="클릭 → '+m+'월 전체 상세" onmouseover="this.style.background=\'#fafafa\'" onmouseout="this.style.background=\'\'">'
-        +'<td style="padding:5px 10px;font-weight:600">'+m+'월 <i class="bi bi-search" style="font-size:8px;color:#cbd5e1"></i></td>'
+        +'<td style="padding:5px 10px;font-weight:600">'+m+'월'+(m===idx.incMonth?' <span style="font-size:9px;font-weight:700;color:#f59e0b;background:#fffbeb;border-radius:4px;padding:0 4px">집계중</span>':'')+' <i class="bi bi-search" style="font-size:8px;color:#cbd5e1"></i></td>'
         +'<td style="text-align:right;color:#94a3b8">'+_dvFmtW(b)+'</td><td style="text-align:right;font-weight:600">'+_dvFmtW(a)+'</td>'
         +'<td style="text-align:right;font-weight:700;color:'+_dvCol(dd)+'">'+_dvSgn(dd)+'</td>'
         +'<td style="text-align:right;font-size:11px;color:'+(yy==null?'#94a3b8':_dvCol(yy))+'">'+(yy==null?'-':(yy>=0?'+':'')+yy.toFixed(0)+'%')+'</td>'
