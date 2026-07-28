@@ -11570,6 +11570,23 @@ function _dvBuild(){
     var dl=((typeof _repOf==='function'&&_repOf(r.customer))||'')||'미배정'; var v=Number(r.amount||0), q=Number(r.qty||0); if(!v)return;
     accP(prod,p,v,q); accP(dealer,dl,v,q); acc2P(pByD,p,dl,v,q); acc2P(dByP,dl,p,v,q); acc2P(pMon,p,mo,v,q); acc2P(dMon,dl,mo,v,q); acc2P(mProd,mo,p,v,q); acc2P(mDealer,mo,dl,v,q);
     mQty.a[mo]=(mQty.a[mo]||0)+q; pendTot+=v; });
+  // ── 소모품(담당자 없음)을 '소모품' 단일 라인으로 제품·월추이 양축에 가산 → 증감분해가 장비+소모품 (담당자 행엔 미포함) ──
+  try{ var _consY=(typeof CONS!=='undefined'&&CONS)||{};
+    var _addCons=function(spanArr, side){ spanArr.forEach(function(x){ var v=((_consY['monthly'+x.y]||{})[x.m]||0); if(!v) return;
+      acc(prod,'소모품',side,v,0); acc(dealer,'소모품',side,v,0);
+      acc2(pByD,'소모품','(담당 없음)',side,v,0); acc2(dByP,'소모품','소모품',side,v,0);
+      acc2(pMon,'소모품',x.m,side,v,0); acc2(dMon,'소모품',x.m,side,v,0);
+      acc2(mProd,x.m,'소모품',side,v,0); acc2(mDealer,x.m,'소모품',side,v,0); }); };
+    _addCons(_cur,'a'); _addCons(_prev,'b');
+    var _cyv=_curYear();
+    var _pvA=(typeof _pendingView==='function')?(_pendingView(_cyv).agg||{}):{}, _imA=(typeof _ilboMonthMaps==='function')?(_ilboMonthMaps()||{}):{};
+    var _pvCm=_pvA.consMonthly||{}, _imCm=_imA.consMo||{};
+    _cur.forEach(function(x){ if(x.y!==_cyv) return; var v=(_pvCm[x.m]||0)+(_imCm[x.m]||0); if(!v) return;
+      accP(prod,'소모품',v,0); accP(dealer,'소모품',v,0);
+      acc2P(pByD,'소모품','(담당 없음)',v,0); acc2P(dByP,'소모품','소모품',v,0);
+      acc2P(pMon,'소모품',x.m,v,0); acc2P(dMon,'소모품',x.m,v,0); acc2P(mProd,x.m,'소모품',v,0); acc2P(mDealer,x.m,'소모품',v,0);
+      pendTot+=v; });
+  }catch(e){}
   var incMonth=0, asOfDay=0; if(asOf){ var _ad=String(asOf).split('-'); asOfDay=parseInt(_ad[2],10)||0; var _n=new Date(); if(parseInt(_ad[0],10)===_n.getFullYear() && parseInt(_ad[1],10)===(_n.getMonth()+1) && _n.getDate()<28) incMonth=parseInt(_ad[1],10)||0; }  // 실제 현재月만 집계중(과거 완결월 오판 방지)
   _dvIdx={P:P,curM:curM,preM:preM,prod:prod,dealer:dealer,pByD:pByD,dByP:dByP,pMon:pMon,dMon:dMon,mProd:mProd,mDealer:mDealer,mQty:mQty,asOf:asOf,incMonth:incMonth,asOfDay:asOfDay,pendTot:pendTot};
   return _dvIdx;
@@ -11684,7 +11701,7 @@ function _dvExec(idx,mode){
     +kv('이탈', churnAll.length?('<b style="color:#991b1b">'+churnAll.length+'곳 '+_dvSgn(-churnSum)+'</b> <span style="color:#64748b">· '+churnAll.slice(0,3).map(_nm).join(', ')+(churnAll.length>3?' 외':'')+'</span>'):'')+'</div>';
   return '<div style="border:1px solid #e0e7ff;border-radius:12px;overflow:hidden;margin-bottom:12px">'
     +'<div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:11px 16px;background:linear-gradient(135deg,#eff6ff,#faf5ff)">'
-    +'<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;color:#334155"><i class="bi bi-clipboard-data" style="color:#2563eb"></i>Summary · '+idx.P.label+' 장비 <span style="font-size:10px;font-weight:500;color:#94a3b8">전년동기비교</span>'+(idx.pendTot>0?' <span style="font-size:9px;font-weight:700;color:#0891b2;background:#ecfeff;border-radius:4px;padding:0 5px">회계+미반영</span>':'')+'</span>'
+    +'<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;color:#334155"><i class="bi bi-clipboard-data" style="color:#2563eb"></i>Summary · '+idx.P.label+' 장비+소모품 <span style="font-size:10px;font-weight:500;color:#94a3b8">전년동기비교</span>'+(idx.pendTot>0?' <span style="font-size:9px;font-weight:700;color:#0891b2;background:#ecfeff;border-radius:4px;padding:0 5px">회계+미반영</span>':'')+'</span>'
     +'<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:'+st[0]+'"><span style="width:9px;height:9px;border-radius:50%;background:'+st[0]+'"></span>'+st[1]+'</span>'
     +'<span style="margin-left:auto;font-size:22px;font-weight:800;color:'+_dvCol(dTot)+'">'+_dvSgn(dTot)+' <span style="font-size:12px">('+yoyStr+')</span></span>'
     +'<span style="font-size:12px;color:#64748b">'+_dvFmtW(t25)+' → <b>'+_dvFmtW(t26)+'</b>'+(idx.pendTot>0?' <span style="font-size:11px;color:#94a3b8">(회계 '+_dvFmtW(t26-idx.pendTot)+' + 미반영 '+_dvFmtW(idx.pendTot)+')</span>':'')+'</span></div>'
