@@ -6482,12 +6482,11 @@ function renderCDUReels(){
     +'#cdu-reels .rlb-ch{display:flex;align-items:center;justify-content:space-between;padding:3px 6px 9px;font-size:12.5px;font-weight:800;flex-shrink:0}'
     +'#cdu-reels .rlb-ch .c{font-size:11px;font-weight:800;color:#fff;border-radius:10px;padding:1px 8px}'
     +'#cdu-reels .rlb-body{max-height:56vh;overflow-y:auto;padding-right:2px}'
-    +'#cdu-reels .rlb-card{background:#fff;border:1px solid #eef0f4;border-radius:9px;padding:6px 10px;margin-bottom:6px;cursor:pointer}'
+    +'#cdu-reels .rlb-card{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #eef0f4;border-radius:8px;padding:5px 9px;margin-bottom:5px;cursor:pointer}'
     +'#cdu-reels .rlb-card:hover{border-color:#c7d2fe}'
-    +'#cdu-reels .rlb-hs{display:flex;justify-content:space-between;gap:6px;align-items:center}'
-    +'#cdu-reels .rlb-hs b{font-size:12.5px;font-weight:800;color:#111827;min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+    +'#cdu-reels .rlb-rn{flex:1;min-width:0;font-size:12.5px;font-weight:700;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+    +'#cdu-reels .rlb-rmeta{flex-shrink:0;font-size:10.5px;color:#94a3b8;white-space:nowrap}'
     +'#cdu-reels .rlb-a2{display:flex;gap:4px;flex-shrink:0}'
-    +'#cdu-reels .rlb-m2{font-size:10.5px;color:#94a3b8;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
     +'#cdu-reels .rlb-fb{font-size:11px;color:#475569;margin-top:6px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}'
     +'#cdu-reels .rlb-b{border:1px solid #e5e7eb;background:#fff;border-radius:7px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer;min-height:28px;display:inline-flex;align-items:center;gap:3px;color:#475569;text-decoration:none}'
     +'#cdu-reels .rlb-b.play{background:#db2777;color:#fff;border-color:#db2777}'
@@ -6526,11 +6525,11 @@ function renderCDUReels(){
     if(isHttp){ acts.push('<a class="rlb-b play" title="열기" href="'+_cduEsc(it.url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i class="bi bi-play-fill"></i></a>'); acts.push('<button class="rlb-b" title="URL 복사" onclick="event.stopPropagation();_cduCopyReel(decodeURIComponent(\''+encodeURIComponent(it.url)+'\'))"><i class="bi bi-clipboard"></i></button>'); }
     else if(ci>=1){ acts.push('<button class="rlb-b" title="URL 추가" onclick="_cduReelPromptUrl(\''+it.vid+'\',event)"><i class="bi bi-link-45deg"></i>URL</button>'); }
     if(it.stage==='게시완료'){ if((Number(it.views)||0)>0) acts.push('<button class="rlb-b vw" title="조회수 수정" onclick="_cduReelPromptViews(\''+it.vid+'\',event)">▶'+_cduViewsFmt(it.views)+'</button>'); else acts.push('<button class="rlb-b" title="조회수 입력" onclick="_cduReelPromptViews(\''+it.vid+'\',event)"><i class="bi bi-eye"></i></button>'); }
-    var domain=isHttp?it.url.replace(/^https?:\/\/(www\.)?/i,'').slice(0,24):'';
-    var meta=[(it.date||'').slice(5)]; if(it.sales)meta.push(it.sales); if(domain)meta.push(domain);
+    var meta=[(it.date||'').slice(5)]; if(it.sales)meta.push(it.sales);
     return '<div class="rlb-card" draggable="true" ondragstart="window._cduReelDrag=\''+it.vid+'\'" onclick="openCDUVisit(\''+it.vid+'\')" title="클릭 시 방문 상세">'
-      +'<div class="rlb-hs"><b>'+_cduEsc(it.custName||'-')+'</b>'+(acts.length?'<span class="rlb-a2">'+acts.join('')+'</span>':'')+'</div>'
-      +'<div class="rlb-m2">'+_cduEsc(meta.join(' · '))+'</div>'
+      +'<span class="rlb-rn">'+_cduEsc(it.custName||'-')+'</span>'
+      +'<span class="rlb-rmeta">'+_cduEsc(meta.join(' · '))+'</span>'
+      +(acts.length?'<span class="rlb-a2">'+acts.join('')+'</span>':'')
       +'</div>';
   };
   var board='<div class="rlb-board">'+CDU_REEL_STAGES.map(function(s){
