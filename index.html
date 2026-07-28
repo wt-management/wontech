@@ -533,7 +533,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <ul class="nav flex-column gap-0">
       <li><a class="nav-link" onclick="showPage('sales',this)"><i class="bi bi-kanban"></i>수주관리</a></li>
       <li><a class="nav-link" onclick="showPage('schedule',this)"><i class="bi bi-calendar-week"></i>일정</a></li>
-      <li><a class="nav-link" onclick="showPage('cdu',this)"><i class="bi bi-clipboard-data"></i>CDU</a></li>
+      <li><a class="nav-link" onclick="showPage('cdu',this)"><i class="bi bi-clipboard-data"></i>CDU<span id="cdu-pend-badge" style="display:none;background:#dc2626;color:#fff;font-size:9.5px;font-weight:800;border-radius:9px;padding:1px 6px;margin-left:6px" title="결과 미입력 방문"></span></a></li>
       <li><a class="nav-link" onclick="showPage('quotes',this)"><i class="bi bi-file-earmark-text"></i>견적서/ROI</a></li>
       <li><a class="nav-link" onclick="showPage('speech',this)"><i class="bi bi-chat-quote"></i>Sales Speech</a></li>
     </ul>
@@ -1153,7 +1153,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   </div>
 
   <!-- CDU 방문 기록 입력 모달 -->
-  <div class="modal fade" id="cduVisitModal" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content">
+  <div class="modal fade" id="cduVisitModal" tabindex="-1" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();saveCDUVisit();}"><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content">
     <div class="modal-header"><h5 class="modal-title">방문 기록</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body"><input type="hidden" id="cd-id">
       <div class="row g-2">
@@ -3120,6 +3120,7 @@ function _mNavSync(n){ document.querySelectorAll('#m-bottomnav button[data-p]').
 
 function showPage(name, el, noPush) {
   _closeSidebar();
+  try{ if(typeof _cduUpdatePendBadge==='function') _cduUpdatePendBadge(); }catch(e){}
   // 담당자별 분석=파트장/관리자, 현황판=파트장/관리자+영업전략파트 (그 외 팀원 → 종합현황)
   if(name==='device-reps' && typeof _isMgr!=='undefined' && !_isMgr){ name='sales-overview'; el=null; }
   if(name==='dashboard' && typeof _isMgr!=='undefined' && !(_isMgr||_isStrat)){ name='sales-overview'; el=null; }
@@ -6427,7 +6428,10 @@ function _cduBaseFiltered(){ // 담당·검색만(기간 제외) — 추이·재
   });
 }
 function _cduFiltered(){ var r=_cduPeriodRange(); var vs=_cduBaseFiltered(); if(!r) return vs; return vs.filter(function(v){ var d=String(v.date||'').slice(0,10); return d>=r.start&&d<=r.end; }); }
+function _cduPendCount(){ var t=_cduTodayStr(); return (DB.d.logs||[]).filter(function(l){return l.kind==='cdu'&&l.status==='planned'&&String(l.date||'').slice(0,10)<t;}).length; }
+function _cduUpdatePendBadge(){ var b=document.getElementById('cdu-pend-badge'); if(!b)return; var n=_cduPendCount(); if(n>0){ b.textContent=n; b.style.display='inline-block'; } else { b.style.display='none'; } }
 function renderCDU(){
+  try{ _cduUpdatePendBadge(); }catch(e){}
   _cduFillSales(); _cduFillPeriodChips();
   var dl=document.getElementById('cdu-hosp-list'); if(dl && CONS.hospitals){ dl.innerHTML=Object.keys(CONS.hospitals).slice(0,800).map(n=>'<option value="'+_cduEsc(n)+'">').join(''); }
   var fb=document.getElementById('cdu-filterbar'); if(fb) fb.style.display=(_cduView==='keyman'||_cduView==='plan'||_cduView==='target')?'none':'';
@@ -7472,11 +7476,14 @@ var CDU_CHIP_DEFAULTS={
 };
 var _cduChipData=null, _cduChipEditMode={proc:false,comp:false,chan:false}, _cduChipField={proc:'cd-proc',comp:'cd-comp',chan:'cd-chan'};
 function _cduLoadChips(){ if(_cduChipData)return _cduChipData; var r=(DB.d.logs||[]).find(function(l){return l.kind==='cdu_chips';}); _cduChipData={proc:(r&&r.proc&&r.proc.length?r.proc.slice():CDU_CHIP_DEFAULTS.proc.slice()),comp:(r&&r.comp&&r.comp.length?r.comp.slice():CDU_CHIP_DEFAULTS.comp.slice()),chan:(r&&r.chan&&r.chan.length?r.chan.slice():CDU_CHIP_DEFAULTS.chan.slice())}; return _cduChipData; }
+function _cduChipFreq(g){ var field=g==='proc'?'mainProc':g==='comp'?'competitor':'channels'; var f={}; _cduVisits().forEach(function(v){ String(v[field]||'').split('/').map(function(s){return s.trim();}).filter(Boolean).forEach(function(x){ f[x]=(f[x]||0)+1; }); }); return f; }
 function _cduRenderChips(){
   var c=_cduLoadChips();
   ['proc','comp','chan'].forEach(function(g){
     var fid=_cduChipField[g], box=document.getElementById(fid+'-chips'); if(!box)return; var ed=_cduChipEditMode[g];
-    box.innerHTML=c[g].map(function(v){ var vv=_cduEsc(v).replace(/'/g,"\\'");
+    var arr=c[g];
+    if(!ed){ var fq=_cduChipFreq(g); arr=c[g].map(function(v,i){return {v:v,i:i,n:fq[v]||0};}).sort(function(a,b){ return (b.n-a.n)||(a.i-b.i); }).map(function(x){return x.v;}); }
+    box.innerHTML=arr.map(function(v){ var vv=_cduEsc(v).replace(/'/g,"\\'");
       return '<span class="cdu-chip" data-for="'+fid+'" data-v="'+_cduEsc(v)+'" onclick="'+(ed?'_cduChipDel(\''+g+'\',\''+vv+'\')':'_cduChip(this)')+'">'+_cduEsc(v)+(ed?' <b style="color:#dc2626">×</b>':'')+'</span>'; }).join('')
       +(ed?'<span class="cdu-chip" style="border-style:dashed;color:#2563eb;font-weight:700" onclick="_cduChipAdd(\''+g+'\')">+ 추가</span>':'');
   });
@@ -7599,7 +7606,9 @@ function saveCDUVisit(){
   if(idx>=0) DB.d.logs[idx]=rec; else DB.d.logs.push(rec);
   try{ bootstrap.Modal.getInstance(document.getElementById('cduVisitModal')).hide(); }catch(e){}
   renderCDU(); try{ renderCDUWeekly(); }catch(e){}
-  DB.save('logs').then(()=>showToast('방문 기록 저장 완료', true));
+  DB.save('logs').then(function(){ showToast('방문 기록 저장 완료', true);
+    var t=_cduTodayStr(); var pend=(DB.d.logs||[]).filter(function(l){return l.kind==='cdu'&&l.status==='planned'&&String(l.date||'').slice(0,10)<t;}).sort(function(a,b){return String(a.date||'').localeCompare(String(b.date||''));});
+    if(pend.length){ setTimeout(function(){ if(confirm('결과 미입력 방문 '+pend.length+'건이 남았습니다. 다음 건을 이어서 입력할까요?\n('+_cduEsc(pend[0].custName||'')+' · '+String(pend[0].date||'').slice(5)+')')) openCDUVisit(pend[0].id); },350); } });
 }
 function delCDUVisit(){
   var id=(document.getElementById('cd-id')||{}).value; if(!id) return;
