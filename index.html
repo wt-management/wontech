@@ -6431,7 +6431,8 @@ function _cduReelStageOf(v){
 }
 function _cduViewsFmt(n){ n=Number(n)||0; return n>=10000?(n/10000).toFixed(n%10000===0?0:1)+'만':n.toLocaleString(); }
 function _cduReelItems(){
-  var items=[], seenUrl={}, seenHS={};
+  // 촬영 1회 = 릴스 1건. URL이 있으면 URL 기준(같은 URL만 중복 제거), 없으면 촬영/제안 방문 1건 = 1건.
+  var items=[], seenUrl={};
   _cduFiltered().filter(function(v){return v.status!=='planned';}).forEach(function(v){
     var stg=_cduReelStageOf(v);
     var urls=(v.reelsUrl||'').trim().split(/\s+/).filter(Boolean);
@@ -6440,8 +6441,6 @@ function _cduReelItems(){
       urls.forEach(function(u){ var k=u.toLowerCase(); if(seenUrl[k])return; seenUrl[k]=1;
         items.push({vid:v.id,custName:(v.custName||'').trim(),sales:v.sales,date:v.date,url:u,views:vFirst?v.reelsViews:'',stage:(stg==='제안'||stg==='촬영완료')?'게시완료':stg,note:v.feedback,hasUrl:true}); vFirst=false; });
     } else if(/^(촬영완료|제안|O)$/i.test((v.reels||'').trim()) || v.reelsStage){
-      var key=(v.custName||'').trim()+'|'+stg;
-      if(seenHS[key])return; seenHS[key]=1;
       items.push({vid:v.id,custName:(v.custName||'').trim(),sales:v.sales,date:v.date,url:'',views:v.reelsViews,stage:stg,note:v.feedback,hasUrl:false});
     }
   });
@@ -6496,7 +6495,7 @@ function renderCDUReels(){
     +'@media(max-width:900px){#cdu-reels .rlb-board{grid-template-columns:1fr}#cdu-reels .rl-ins{grid-template-columns:1fr}#cdu-reels .rlb-body{max-height:none}}'
     +'@media(max-width:560px){#cdu-reels .rlb-body{grid-template-columns:1fr}}'
     +'</style>';
-  var headH='<div class="rl-head"><i class="bi bi-camera-reels me-1" style="color:#db2777"></i>릴스 관리 <span>URL 1개=1건 · 병원당 여러 릴스 관리 · 카드를 끌어 단계 이동</span></div>';
+  var headH='<div class="rl-head"><i class="bi bi-camera-reels me-1" style="color:#db2777"></i>릴스 관리 <span>촬영 1회=1건(같은 URL만 중복 제거) · 카드를 끌어 단계 이동</span></div>';
   if(!items.length){ el.innerHTML=css+headH+'<div class="card p-5 text-center text-muted" style="font-size:14px"><i class="bi bi-camera-reels" style="font-size:28px;color:#f9a8d4"></i><div class="mt-2">이 기간 등록된 릴스가 없습니다.<br><b>일정 관리</b> 탭 → 방문 기록에서 <b>릴스 촬영</b>·<b>URL</b>을 입력하면 여기서 건별로 관리됩니다.</div></div>'; return; }
   var shotTotal=cnt['촬영완료']+cnt['게시완료'];
   var convPost=shotTotal>0?Math.round(cnt['게시완료']/shotTotal*100):0;
