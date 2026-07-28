@@ -1160,7 +1160,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <div class="row g-2">
         <div class="col-12 cdu-sec">방문 정보</div>
         <div class="col-md-3 col-6"><label class="form-label" style="font-size:12px">방문일 *</label><input type="date" id="cd-date" class="form-control form-control-sm"></div>
-        <div class="col-md-5 col-6"><label class="form-label" style="font-size:12px">병원명 *</label><input id="cd-hosp" class="form-control form-control-sm" list="cdu-hosp-list" autocomplete="off" onchange="_cduHospAuto()" onblur="_cduHospAuto()"></div>
+        <div class="col-md-5 col-6"><label class="form-label" style="font-size:12px">병원명 * <button type="button" onclick="var h=(document.getElementById('cd-hosp')||{}).value;if((h||'').trim())_drillHospOver(h.trim());else alert('병원명을 먼저 입력하세요.');" style="font-size:10.5px;color:#2563eb;background:none;border:0;padding:0 3px;cursor:pointer;font-weight:600">병원 상세 ↗</button></label><input id="cd-hosp" class="form-control form-control-sm" list="cdu-hosp-list" autocomplete="off" onchange="_cduHospAuto()" onblur="_cduHospAuto()"></div>
         <div class="col-md-4 col-12"><label class="form-label" style="font-size:12px">담당(영업사원)</label><input id="cd-sales" class="form-control form-control-sm" list="cdu-sales-list" autocomplete="off"></div>
         <div class="col-12"><div id="cd-hosp-info" style="font-size:11.5px;color:#0f766e;background:#f0fdfa;border:1px solid #ccfbf1;border-radius:8px;padding:7px 10px;display:none"></div></div>
 
@@ -6505,7 +6505,7 @@ var _crlHosp=null;
 function openCDUReelList(hosp){
   _crlHosp=hosp;
   var reels=_cduReels().filter(function(r){return (r.custName||'').trim()===hosp;}).sort(function(a,b){return String(b.date||'').localeCompare(String(a.date||''));});
-  document.getElementById('crl-title').innerHTML='<i class="bi bi-camera-reels me-1" style="color:#db2777"></i>'+_cduEsc(hosp)+' <span class="text-muted" style="font-size:12px;font-weight:400">· 릴스 '+reels.length+'건</span>';
+  document.getElementById('crl-title').innerHTML='<i class="bi bi-camera-reels me-1" style="color:#db2777"></i>'+_cduEsc(hosp)+' <span class="text-muted" style="font-size:12px;font-weight:400">· 릴스 '+reels.length+'건</span> <a onclick="_drillHospOver(_crlHosp)" style="font-size:12px;color:#2563eb;cursor:pointer;font-weight:600;margin-left:6px">병원 상세 ↗</a>';
   var stC={'제안':'#ec4899','촬영완료':'#db2777','게시완료':'#7c3aed'};
   document.getElementById('crl-body').innerHTML=reels.map(function(r){ var st=_cduReelStageOf(r); var url=(r.reelsUrl||'').trim(); var isHttp=/^https?:\/\//i.test(url);
     return '<div onclick="openCDUReel(\''+r.id+'\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #eef0f4;border-radius:9px;margin-bottom:7px;cursor:pointer">'
@@ -9863,17 +9863,17 @@ function _schHospCardHtml(name){  // 병원 정보 카드(데이터 있는 병�
   const rlog=(DB.d.logs||[]).filter(l=>l.custName===name&&l.kind!=='schedule').sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))[0];
   const y26=(dh&&dh.y2026||0)+(ch&&ch.y2026||0);
   const nm=_schEsc(name).replace(/&#39;/g,"\\x27");
-  const cell=(l,v)=>'<div><span style="color:#94a3b8">'+l+'</span> <b style="color:#334155">'+v+'</b></div>';
-  return '<div style="background:#f8fafc;border:1px solid #eef2f7;border-radius:12px;padding:12px 14px">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-      +'<b style="font-size:13px;color:#0f172a"><i class="bi bi-hospital me-1" style="color:#0891b2"></i>'+_schEsc(name)+'</b>'
-      +'<span onclick="_schToHosp(\''+nm+'\')" style="font-size:11px;color:#2563eb;cursor:pointer;font-weight:600">병원 상세 ↗</span></div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px 14px;font-size:11.5px">'
+  const cell=(l,v)=>'<div style="display:flex;gap:7px;align-items:baseline"><span style="color:#94a3b8;flex-shrink:0;min-width:52px">'+l+'</span> <b style="color:#1f2937">'+v+'</b></div>';
+  return '<div style="background:#f8fafc;border:1px solid #e5eaf0;border-radius:12px;padding:14px 17px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px">'
+      +'<b style="font-size:14.5px;color:#0f172a"><i class="bi bi-hospital me-1" style="color:#0891b2"></i>'+_schEsc(name)+'</b>'
+      +'<span onclick="_schToHosp(\''+nm+'\')" style="font-size:12.5px;color:#2563eb;cursor:pointer;font-weight:700">병원 상세 ↗</span></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px 22px;font-size:13px;line-height:1.4">'
       +cell('담당영업',_schEsc(mgr))+cell('지역',_schEsc(regStr))
       +cell('올해매출',y26?( (y26/1e8).toFixed(1)+'억'):'-')+cell('납품장비',equipCnt+'대')
       +cell('최근거래',_schEsc(last)+(topProd?' ('+_schEsc(topProd)+')':''))+cell('연락처',_schEsc(tel))
     +'</div>'
-    +(rlog?'<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;font-size:11px;color:#64748b"><i class="bi bi-chat-left-text me-1"></i>최근 상담 <b>'+_schEsc(rlog.date||'')+'</b> · '+_schEsc((rlog.content||'').slice(0,40))+(rlog.sales?' <span style="color:#2563eb">('+_schEsc(rlog.sales)+')</span>':'')+'</div>':'')
+    +(rlog?'<div style="margin-top:11px;padding-top:10px;border-top:1px dashed #e2e8f0;font-size:12.5px;color:#64748b"><i class="bi bi-chat-left-text me-1"></i>최근 상담 <b>'+_schEsc(rlog.date||'')+'</b> · '+_schEsc((rlog.content||'').slice(0,40))+(rlog.sales?' <span style="color:#2563eb">('+_schEsc(rlog.sales)+')</span>':'')+'</div>':'')
     +_schDealsBox(name)
   +'</div>';
 }
