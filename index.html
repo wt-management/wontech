@@ -11423,7 +11423,7 @@ function _renderDevInsight(){
   var nw=E.filter(function(e){return e.pre<=0&&e.cur>0;}).length, lost=E.filter(function(e){return e.cur<=0&&e.pre>0;}).length;
   var esc=(typeof _escH==='function')?_escH:function(x){return String(x==null?'':x);};
   var chg=function(c){ return c==null?'':' <b style="color:'+(c>=0?'#16a34a':'#dc2626')+'">'+(c>=0?'▲':'▼')+Math.abs(c).toFixed(0)+'%</b>'; };
-  var tile=function(l,v,s,accent,kind){ return '<div onclick="_devInsightDrill(\''+kind+'\')" style="flex:1;min-width:155px;background:#f8fafc;border-radius:13px;padding:16px 20px;cursor:pointer;transition:background .12s" onmouseover="this.style.background=\'#eef2f7\'" onmouseout="this.style.background=\'#f8fafc\'"><div style="font-size:12.5px;color:#64748b;font-weight:700">'+l+' <i class="bi bi-chevron-right" style="font-size:10px;color:#cbd5e1"></i></div><div style="font-size:26px;font-weight:800;color:'+(accent||'#111827')+';line-height:1.15;margin-top:5px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+v+'</div>'+(s?'<div style="font-size:12.5px;color:#64748b;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+s+'</div>':'')+'</div>'; };
+  var tile=function(l,v,s,accent,kind){ return '<div onclick="_devInsightDrill(\''+kind+'\')" style="flex:1;min-width:155px;background:#f8fafc;border-radius:13px;padding:16px 20px;cursor:pointer;transition:background .12s" onmouseover="this.style.background=\'#eef2f7\'" onmouseout="this.style.background=\'#f8fafc\'"><div style="font-size:12.5px;color:#64748b;font-weight:700">'+l+' <i class="bi bi-chevron-right" style="font-size:10px;color:#cbd5e1"></i></div><div style="font-size:26px;font-weight:800;color:'+(accent||'#111827')+';line-height:1.15;margin-top:5px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+v+'</div>'+(s?'<div style="font-size:12.5px;color:#64748b;margin-top:3px;white-space:normal;line-height:1.4">'+s+'</div>':'')+'</div>'; };
   // 합계 매출 = 장비(담당자별, totCur) + 소모품(담당자 없음, 합계에만 반영) → 종합 전체와 일치. '전체' 필터에서만 소모품·미반영 합산.
   var _flt2=(typeof _devFilter!=='undefined'?_devFilter:'all');
   var _pendP=0, _consCur=0, _consPre=0, _consPend=0;
@@ -11436,11 +11436,14 @@ function _renderDevInsight(){
       _consPre=_smP.reduce(function(s,x){return s+((CONS['monthly'+x.y]||{})[x.m]||0);},0);                // 소모품 회계(전년)
       _consPend=_sm.reduce(function(s,x){return s+(x.y===_cyP?((_pvCm[x.m]||0)+(_imCm[x.m]||0)):0);},0);   // 소모품 미반영
   } }catch(_e){ _pendP=0; }
-  var _grandCur=totCur+_consCur, _grandPre=totPre+_consPre;
-  var _grandYoy=(_grandPre>0&&_prevFull)?((_grandCur/_grandPre-1)*100):null;
-  var _totSub='전년 '+fw(_grandPre)+chg(_grandYoy)
-    +(_consCur>0?'<br><span style="color:#0891b2;font-weight:700">장비 '+fw(totCur)+' + 소모품 '+fw(_consCur)+'</span> <span style="color:#94a3b8">= 종합 전체</span>'+((_pendP+_consPend)>0?' <span style="color:#cbd5e1">· 미반영 '+fw(_pendP+_consPend)+' = 보고 '+fw(_grandCur+_pendP+_consPend)+'</span>':''):'');
-  box.innerHTML=tile('합계 매출',fw(_grandCur),_totSub,null,'total')
+  var _grandCur=totCur+_consCur, _grandPre=totPre+_consPre, _grandPend=_pendP+_consPend;
+  var _grandRep=_grandCur+_grandPend;   // 헤드라인=보고기준(회계+미반영) — 종합 헤드라인과 동일
+  var _grandYoy=(_grandPre>0&&_prevFull)?((_grandCur/_grandPre-1)*100):null;   // YoY는 회계 대 전년(전년엔 미반영 없음 → 동일기준)
+  var _totSub=(_grandPend>0
+        ? '회계 '+fw(_grandCur)+' · <span style="color:#7c3aed;font-weight:700">미반영 +'+fw(_grandPend)+'</span> · 전년 '+fw(_grandPre)+chg(_grandYoy)
+        : '전년 '+fw(_grandPre)+chg(_grandYoy))
+    +(_consCur>0?'<br><span style="color:#0891b2;font-weight:700">장비 '+fw(totCur)+' + 소모품 '+fw(_consCur)+'</span> <span style="color:#94a3b8">= 종합 전체 (회계 기준)</span>':'');
+  box.innerHTML=tile('합계 매출',fw(_grandRep),_totSub,null,'total')
     +tile('1위 담당',esc(top?top.name:'-'),top?fw(top.cur)+' · 비중 '+(totCur>0?(top.cur/totCur*100):0).toFixed(0)+'%':'',null,'top')
     +(g1?tile('성장 1위',esc(g1.name),'전년비 ▲'+g1.g.toFixed(0)+'%','#16a34a','grow'):'')
     +tile('상위 3 집중도',conc.toFixed(0)+'%','상위 3인 매출 비중',null,'conc')
