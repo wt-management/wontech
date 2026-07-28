@@ -781,15 +781,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
     <!-- KPI 행 + 파이프라인 퍼널(우측 소형) -->
     <div style="display:flex;gap:14px;align-items:stretch;flex-wrap:wrap;margin-bottom:16px">
-      <div class="wt-band" style="flex:1 1 520px;margin-bottom:0;min-width:0">
-      <div class="wt-hero" style="cursor:pointer"><span class="l"><i class="bi bi-check-circle-fill me-1" style="color:#2563eb"></i>확정 매출</span><b id="kpi-confirmed">-</b><span class="s" id="kpi-confirmed-sub"></span></div>
-      <div class="wt-fact" style="cursor:pointer"><span class="l"><i class="bi bi-hourglass-split me-1" style="color:#2563eb"></i>예상 추가</span><b id="kpi-expected">-</b><span class="s" id="kpi-expected-sub"></span></div>
-      <div class="wt-fact" style="cursor:pointer"><span class="l"><i class="bi bi-bullseye me-1" style="color:#2563eb"></i>총 전망</span><b id="kpi-total-forecast">-</b><span class="s" id="kpi-total-forecast-sub"></span></div>
-      <div class="wt-fact" style="cursor:pointer"><span class="l"><i class="bi bi-percent me-1" style="color:#2563eb"></i>Win Rate</span><b id="kpi-winrate">-</b><span class="s" id="kpi-winrate-sub"></span></div>
-      <div class="wt-fact" style="cursor:pointer"><span class="l"><i class="bi bi-layers-fill me-1" style="color:#2563eb"></i>파이프라인 잔고</span><b id="kpi-pipe-balance">-</b><span class="s" id="kpi-pipe-balance-sub"></span></div>
-      <div class="wt-fact" style="cursor:pointer" onclick="openWarrantyDetail()" title="클릭하면 상세 내역"><span class="l"><i class="bi bi-shield-exclamation me-1" style="color:#ea580c"></i>보증만료 임박</span><b id="kpi-warranty">-</b><span class="s">30일 이내 · 클릭 상세</span></div>
-      </div>
-      <div class="card" style="width:300px;flex:0 0 auto;padding:13px 15px"><div class="fw-bold mb-2" style="font-size:13px">파이프라인 퍼널</div><div id="dash-funnel"></div><div id="dash-funnel-summary" class="mt-2 pt-2" style="border-top:1px solid #f3f4f6"></div></div>
+      <div class="wt-band" id="dash-kpi-band" style="flex:1 1 520px;margin-bottom:0;min-width:0"></div>
+      <div class="card" style="width:300px;flex:0 0 auto;padding:13px 15px"><div class="fw-bold mb-2" style="font-size:13px">매출 구성 <span style="font-size:10px;font-weight:400;color:#94a3b8">보고기준</span></div><div id="dash-funnel"></div><div id="dash-funnel-summary" class="mt-2 pt-2" style="border-top:1px solid #f3f4f6"></div></div>
     </div>
 
     <!-- 매출 전망 바 -->
@@ -4249,60 +4242,46 @@ function renderDashboard() {
     ${overdueActs.length?`<div class="dash-badge" style="cursor:pointer;border-color:#fecaca;color:#dc2626" onclick="_showOverdue()" title="지연된 후속조치 목록 보기"><i class="bi bi-exclamation-circle-fill" style="color:#dc2626"></i>지연 ${overdueActs.length}건</div>`:''}
   `;
 
-  // KPI 1: 기간별 확정 매출
-  const wonPeriod=DB.d.pipeline.filter(d=>d.stage==='계약완료'&&yms.some(ym=>(d.stageUpdatedAt||'').startsWith(ym)));
-  const wonAmt=wonPeriod.reduce((s,d)=>s+Number(d.amount||0),0);
-  // KPI 2: 기간 내 마감 예정 파이프라인 금액(전액 합계)
-  const closingPeriod=DB.d.pipeline.filter(d=>d.stage!=='계약완료'&&ymsFull.some(ym=>(d.expectedDate||'').startsWith(ym)));
-  const expectedAmt=Math.round(closingPeriod.reduce((s,d)=>s+Number(d.amount||0),0));
-  const totalForecast=wonAmt+expectedAmt;
-  // 전월 대비 (월 단위일 때만)
-  const prevYms=(()=>{
-    if(_dashPeriodType!=='year'&&!_dashPeriodType.startsWith('Q')){
-      const mo=Number(_dashPeriodType);
-      const pm=mo===1?12:mo-1, py=mo===1?_dashYear-1:_dashYear;
-      return [`${py}-${String(pm).padStart(2,'0')}`];
-    }
-    return [];
-  })();
-  const prevWon=prevYms.length?DB.d.pipeline.filter(d=>d.stage==='계약완료'&&prevYms.some(pym=>(d.stageUpdatedAt||'').startsWith(pym))).reduce((s,d)=>s+Number(d.amount||0),0):null;
-  const momChg=prevWon!=null&&prevWon>0?((wonAmt/prevWon-1)*100).toFixed(0):null;
-  document.getElementById('kpi-confirmed').textContent=fmtAmt(wonAmt);
-  document.getElementById('kpi-confirmed-sub').textContent=`${wonPeriod.length}건 계약완료${momChg!==null?' · 전월比 '+(Number(momChg)>=0?'▲':'▼')+Math.abs(momChg)+'%':''}`;
-  document.getElementById('kpi-expected').textContent=fmtAmt(expectedAmt);
-  document.getElementById('kpi-expected-sub').textContent=`마감예정 ${closingPeriod.length}건 합계`;
-  document.getElementById('kpi-total-forecast').textContent=fmtAmt(totalForecast);
-  document.getElementById('kpi-total-forecast-sub').textContent=totalForecast>0?`확정 ${Math.round(wonAmt/totalForecast*100)}% + 예상 ${Math.round(expectedAmt/totalForecast*100)}%`:'데이터 없음';
-  // Win Rate (최근 6개월)
-  const won6m=DB.d.pipeline.filter(d=>{if(d.stage!=='계약완료')return false;const t=new Date();t.setMonth(t.getMonth()-6);return new Date(d.stageUpdatedAt||0)>=t;});
-  const total6m=DB.d.pipeline.filter(d=>{const t=new Date();t.setMonth(t.getMonth()-6);return new Date(d.stageUpdatedAt||d.expectedDate||0)>=t;});
-  const wr=total6m.length>0?Math.round(won6m.length/total6m.length*100):null;
-  document.getElementById('kpi-winrate').textContent=wr!=null?wr+'%':'-';
-  document.getElementById('kpi-winrate-sub').textContent=`최근 6개월 · ${won6m.length}건 완료`;
-  // 파이프라인 잔고
-  const weightedTotal=Math.round(activePipe.reduce((s,d)=>s+Number(d.amount||0),0));
-  document.getElementById('kpi-pipe-balance').textContent=fmtAmt(weightedTotal);
-  document.getElementById('kpi-pipe-balance-sub').textContent=`진행중 ${activePipe.length}건 합계`;
-  // 매출 전망 바
-  const revBar=document.getElementById('dash-revenue-bar');
-  if(revBar){ revBar.style.display='none'; }   // KPI 밴드(확정·예상·총전망)와 중복 → 제거
-  if(false&&revBar&&totalForecast>0){
-    revBar.style.display='block';
-    const cp=Math.round(wonAmt/totalForecast*100);
-    document.getElementById('dash-bar-confirmed').style.width=cp+'%';
-    document.getElementById('dash-bar-expected').style.width=(100-cp)+'%';
-    document.getElementById('dash-bar-confirmed-val').textContent=fmtAmt(wonAmt);
-    document.getElementById('dash-bar-expected-val').textContent=fmtAmt(expectedAmt);
-    document.getElementById('dash-revenue-label').textContent=label;
-    document.getElementById('dash-forecast-total').textContent=fmtAmt(totalForecast);
-  } else if(revBar) revBar.style.display='none';
+  // ── 실적 중심 KPI (회계+미반영=보고기준 · 제품/소모품 · 전년비) ──
+  const _cy=_curYear();
+  const _sumMY=(src,shift)=>yms.reduce((s,ym)=>{const p=ym.split('-'),y=(+p[0])+(shift||0),m=+p[1];return s+((src['monthly'+y]||{})[m]||0);},0);
+  const devAcc=_sumMY(DEVICE,0), consAcc=_sumMY(CONS,0), acc=devAcc+consAcc;
+  const devAccPre=_sumMY(DEVICE,-1), consAccPre=_sumMY(CONS,-1), accPre=devAccPre+consAccPre;
+  let devPend=0, consPend=0;
+  try{ const _pvA=(typeof _pendingView==='function')?(_pendingView(_cy).agg||{}):{}, _imA=(typeof _ilboMonthMaps==='function')?(_ilboMonthMaps()||{}):{};
+    const _pvDm=_pvA.devMonthly||{},_imDm=_imA.devMo||{},_pvCm=_pvA.consMonthly||{},_imCm=_imA.consMo||{};
+    yms.forEach(ym=>{const p=ym.split('-'),y=+p[0],m=+p[1]; if(y===_cy){ devPend+=(_pvDm[m]||0)+(_imDm[m]||0); consPend+=(_pvCm[m]||0)+(_imCm[m]||0); }});
+  }catch(e){}
+  const pend=devPend+consPend, rep=acc+pend, devRep=devAcc+devPend, consRep=consAcc+consPend;
+  const yoy=accPre>0?((acc/accPre-1)*100):null, devYoy=devAccPre>0?((devAcc/devAccPre-1)*100):null, consYoy=consAccPre>0?((consAcc/consAccPre-1)*100):null;
+  let momPct=null;
+  if(_dashPeriodType!=='year'&&!String(_dashPeriodType).startsWith('Q')){
+    const _mo=Number(_dashPeriodType), _pm=_mo===1?12:_mo-1, _py=_mo===1?_dashYear-1:_dashYear;
+    const _prevAcc=((DEVICE['monthly'+_py]||{})[_pm]||0)+((CONS['monthly'+_py]||{})[_pm]||0);
+    if(_prevAcc>0) momPct=((acc/_prevAcc-1)*100);
+  }
+  const _chg=(c)=>c==null?'':' <b style="color:'+(c>=0?'#16a34a':'#dc2626')+'">'+(c>=0?'▲':'▼')+Math.abs(c).toFixed(0)+'%</b>';
+  const band=document.getElementById('dash-kpi-band');
+  if(band) band.innerHTML=
+     '<div class="wt-hero" onclick="showPage(\'sales-overview\')" style="cursor:pointer"><span class="l"><i class="bi bi-bar-chart-fill me-1" style="color:#2563eb"></i>매출 (보고기준)</span><b>'+fmtAmt(rep)+'</b><span class="s">회계 '+fmtAmt(acc)+(pend>0?' · 미반영 +'+fmtAmt(pend):'')+' · 전년 '+fmtAmt(accPre)+_chg(yoy)+'</span></div>'
+    +'<div class="wt-fact" onclick="showPage(\'device-sales\')" style="cursor:pointer"><span class="l"><i class="bi bi-cpu me-1" style="color:#2563eb"></i>제품(장비)</span><b>'+fmtAmt(devRep)+'</b><span class="s">회계 '+fmtAmt(devAcc)+' · 전년比'+_chg(devYoy)+'</span></div>'
+    +'<div class="wt-fact" onclick="showPage(\'consumables\')" style="cursor:pointer"><span class="l"><i class="bi bi-capsule me-1" style="color:#2563eb"></i>소모품</span><b>'+fmtAmt(consRep)+'</b><span class="s">회계 '+fmtAmt(consAcc)+' · 전년比'+_chg(consYoy)+'</span></div>'
+    +'<div class="wt-fact" onclick="showPage(\'pending\')" style="cursor:pointer"><span class="l"><i class="bi bi-hourglass-split me-1" style="color:#7c3aed"></i>미반영(예정)</span><b>'+fmtAmt(pend)+'</b><span class="s">회계 반영 전 · 클릭 상세</span></div>'
+    +(momPct!=null
+        ? '<div class="wt-fact"><span class="l"><i class="bi bi-arrow-left-right me-1" style="color:#2563eb"></i>전월 대비</span><b style="color:'+(momPct>=0?'#16a34a':'#dc2626')+'">'+(momPct>=0?'+':'')+momPct.toFixed(0)+'%</b><span class="s">회계 기준</span></div>'
+        : '<div class="wt-fact"><span class="l"><i class="bi bi-graph-up-arrow me-1" style="color:#2563eb"></i>전년 대비</span><b style="color:'+(yoy==null?'#374151':yoy>=0?'#16a34a':'#dc2626')+'">'+(yoy==null?'-':(yoy>=0?'+':'')+yoy.toFixed(0)+'%')+'</b><span class="s">회계 기준 동기比</span></div>')
+    +'<div class="wt-fact" onclick="openWarrantyDetail()" style="cursor:pointer" title="클릭하면 상세"><span class="l"><i class="bi bi-shield-exclamation me-1" style="color:#ea580c"></i>보증만료 임박</span><b id="kpi-warranty">-</b><span class="s">30일 이내 · 클릭 상세</span></div>';
+  const revBar=document.getElementById('dash-revenue-bar'); if(revBar) revBar.style.display='none';
 
-  // 월별 매출 현황 차트 (확정 vs 예상)
-  const months=[];
-  for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);}
-  const confirmedByMonth=months.map(ym=>DB.d.pipeline.filter(d=>d.stage==='계약완료'&&(d.stageUpdatedAt||'').startsWith(ym)).reduce((s,d)=>s+Number(d.amount||0),0));
-  const expectedByMonth=months.map(ym=>Math.round(DB.d.pipeline.filter(d=>d.stage!=='계약완료'&&(d.expectedDate||'').startsWith(ym)).reduce((s,d)=>s+Number(d.amount||0),0)));
-  const monthLabels=months.map(ym=>ym.split('-')[1]+'월');
+  // 월별 실적 차트 (회계반영 + 미반영, 최근 6개월)
+  const months=[]; for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({y:d.getFullYear(),m:d.getMonth()+1});}
+  const accByMonth=months.map(o=>Math.round(((DEVICE['monthly'+o.y]||{})[o.m]||0)+((CONS['monthly'+o.y]||{})[o.m]||0)));
+  let pendByMonth=months.map(()=>0);
+  try{ const _pvB=(typeof _pendingView==='function')?(_pendingView(_cy).agg||{}):{}, _imB=(typeof _ilboMonthMaps==='function')?(_ilboMonthMaps()||{}):{};
+    const _pd=_pvB.devMonthly||{},_pdm=_imB.devMo||{},_pc=_pvB.consMonthly||{},_pcm=_imB.consMo||{};
+    pendByMonth=months.map(o=>o.y===_cy?Math.round((_pd[o.m]||0)+(_pdm[o.m]||0)+(_pc[o.m]||0)+(_pcm[o.m]||0)):0);
+  }catch(e){}
+  const monthLabels=months.map(o=>o.m+'월');
   if(monthlyChart){ try{monthlyChart.destroy();}catch(e){} monthlyChart=null; }
   var _cmEl=document.getElementById('chart-monthly');
   if(_cmEl){ const ctx=_cmEl.getContext('2d');
@@ -4311,8 +4290,8 @@ function renderDashboard() {
     data:{
       labels:monthLabels,
       datasets:[
-        {label:'확정 매출',data:confirmedByMonth,backgroundColor:'#2563eb',borderRadius:4,borderSkipped:false,stack:'rev'},
-        {label:'예상 추가',data:expectedByMonth,backgroundColor:'#bfdbfe',borderRadius:4,borderSkipped:false,stack:'rev'},
+        {label:'회계반영',data:accByMonth,backgroundColor:'#2563eb',borderRadius:4,borderSkipped:false,stack:'rev'},
+        {label:'미반영',data:pendByMonth,backgroundColor:'#c4b5fd',borderRadius:4,borderSkipped:false,stack:'rev'},
       ]
     },
     options:{
@@ -4329,27 +4308,20 @@ function renderDashboard() {
     }
   }); }
 
-  // 파이프라인 퍼널
+  // 매출 구성 (제품 vs 소모품, 보고기준)
   const funnelEl=document.getElementById('dash-funnel');
-  const stageAmts=STAGES.map(s=>({stage:s,amt:DB.d.pipeline.filter(d=>d.stage===s).reduce((t,d)=>t+Number(d.amount||0),0),cnt:DB.d.pipeline.filter(d=>d.stage===s).length}));
-  const maxAmt2=Math.max(...stageAmts.map(s=>s.amt),1);
-  funnelEl.innerHTML=stageAmts.map(s=>`
-    <div class="funnel-row" onclick="showPage('sales');setTimeout(function(){try{setPipeChip('${s.stage}')}catch(e){}},60)" style="cursor:pointer" title="${s.stage} 딜 보기">
-      <div class="funnel-label" style="font-size:11px">${s.stage}</div>
-      <div class="funnel-bar-wrap">
-        <div class="funnel-bar" style="width:${Math.max(s.amt/maxAmt2*100,s.cnt?2:0)}%;background:#16324f">${s.cnt?s.cnt+'건':''}</div>
-      </div>
-      <div class="funnel-amt" style="font-size:11px">${fmtAmt(s.amt)}</div>
-    </div>`).join('');
-
-  // 퍼널 요약
-  const activePipeAll=DB.d.pipeline.filter(d=>d.stage!=='계약완료');
-  const weightedAll=Math.round(activePipeAll.reduce((s,d)=>s+Number(d.amount||0),0));
+  if(funnelEl){ const _mx=Math.max(devRep,consRep,1);
+    funnelEl.innerHTML=[['제품(장비)',devRep,'#2563eb','device-sales'],['소모품',consRep,'#7c3aed','consumables']].map(r=>`
+      <div onclick="showPage('${r[3]}')" style="cursor:pointer;margin-bottom:9px">
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:3px"><span style="color:#475569">${r[0]}</span><b>${fmtAmt(r[1])}</b></div>
+        <div style="height:8px;background:#f1f5f9;border-radius:4px"><div style="height:8px;width:${Math.round(r[1]/_mx*100)}%;background:${r[2]};border-radius:4px"></div></div>
+      </div>`).join('');
+  }
   const funnelSum=document.getElementById('dash-funnel-summary');
   if(funnelSum) funnelSum.innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div style="text-align:center"><div style="font-size:10px;color:#64748b">진행중 딜</div><div style="font-size:16px;font-weight:800;color:#374151">${activePipeAll.length}<span style="font-size:11px;font-weight:400">건</span></div></div>
-      <div style="text-align:center"><div style="font-size:10px;color:#64748b">예상 합계</div><div style="font-size:14px;font-weight:800;color:#7c3aed">${fmtAmt(weightedAll)}</div></div>
+      <div style="text-align:center"><div style="font-size:10px;color:#64748b">회계반영</div><div style="font-size:15px;font-weight:800;color:#374151">${fmtAmt(acc)}</div></div>
+      <div style="text-align:center"><div style="font-size:10px;color:#64748b">미반영</div><div style="font-size:15px;font-weight:800;color:#7c3aed">${fmtAmt(pend)}</div></div>
     </div>`;
 
 
