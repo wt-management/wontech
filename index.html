@@ -855,11 +855,11 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <input type="text" id="pipe-search" class="form-control form-control-sm" style="max-width:180px" placeholder="병원명, 제품, 담당자..." oninput="renderPipeline()">
         <select id="pipe-sales-filter" class="form-select form-select-sm" style="max-width:120px" onchange="renderPipeline()"><option value="">전체 담당자</option></select>
         <div class="d-flex gap-1 flex-wrap" id="pipe-stage-chips">
-          <span class="pipe-chip on" onclick="setPipeChip('all',this)">전체</span>
-          <span class="pipe-chip" onclick="setPipeChip('상담중',this)">상담중</span>
-          <span class="pipe-chip" onclick="setPipeChip('견적발송',this)">견적발송</span>
-          <span class="pipe-chip" onclick="setPipeChip('협의중',this)">협의중</span>
-          <span class="pipe-chip" onclick="setPipeChip('계약완료',this)">계약완료</span>
+          <span class="pipe-chip on" data-stage="all" onclick="setPipeChip('all',this)">전체</span>
+          <span class="pipe-chip" data-stage="상담중" onclick="setPipeChip('상담중',this)">상담중</span>
+          <span class="pipe-chip" data-stage="견적발송" onclick="setPipeChip('견적발송',this)">견적발송</span>
+          <span class="pipe-chip" data-stage="협의중" onclick="setPipeChip('협의중',this)">협의중</span>
+          <span class="pipe-chip" data-stage="계약완료" onclick="setPipeChip('계약완료',this)">계약완료</span>
         </div>
       </div>
       <div class="row g-2 mb-3" id="pipe-forecast"></div>
@@ -3277,6 +3277,8 @@ function _dashPeriodYMs() {
 // ═══════ 기간 조회 엔진 (연/월 범위 셀렉터 + 프리셋 칩, 연도경계 지원) — 분석페이지 공용 ═══════
 const _PDST = {};  // prefix -> {mode:'simple'|'custom'}
 const _RENDERFN = {ov:'renderSalesOverview', cons:'renderConsumables', dev:'renderDeviceSales', hosp:'renderConsHospitals', devrep:'renderDevReps', reg:'renderRegion'};
+function _todayLocal(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }  // 로컬(KST) 오늘 — toISOString(UTC)는 새벽 00~09시 -1일 오류
+function _ymLocal(){ return _todayLocal().slice(0,7); }
 function _dataMaxMonth(){
   const ms=[].concat(Object.keys(CONS.monthly2026||{}),Object.keys(DEVICE.monthly2026||{})).map(Number).filter(m=>m>=1&&m<=12);
   let t=ms.length?Math.max.apply(null,ms):6;
@@ -4323,7 +4325,7 @@ function renderDashboard() {
   const stageAmts=STAGES.map(s=>({stage:s,amt:DB.d.pipeline.filter(d=>d.stage===s).reduce((t,d)=>t+Number(d.amount||0),0),cnt:DB.d.pipeline.filter(d=>d.stage===s).length}));
   const maxAmt2=Math.max(...stageAmts.map(s=>s.amt),1);
   funnelEl.innerHTML=stageAmts.map(s=>`
-    <div class="funnel-row" onclick="showPage('sales');setTimeout(function(){try{setPipeChip('${s.stage}',document.querySelector('#pipe-stage-chips .pipe-chip'))}catch(e){}},60)" style="cursor:pointer" title="${s.stage} 딜 보기">
+    <div class="funnel-row" onclick="showPage('sales');setTimeout(function(){try{setPipeChip('${s.stage}')}catch(e){}},60)" style="cursor:pointer" title="${s.stage} 딜 보기">
       <div class="funnel-label" style="font-size:11px">${s.stage}</div>
       <div class="funnel-bar-wrap">
         <div class="funnel-bar" style="width:${Math.max(s.amt/maxAmt2*100,s.cnt?2:0)}%;background:#16324f">${s.cnt?s.cnt+'건':''}</div>
@@ -5762,7 +5764,7 @@ function setPerfPeriod(p,el){
 function openLogFromHosp(name){
   ['l-id','l-content','l-product','l-next','l-sales'].forEach(id=>setV(id,''));
   setV('l-sales', (typeof currentUserName==='function'?currentUserName():'')||'');  // 작성자 자동
-  setV('l-date',new Date().toISOString().split('T')[0]);
+  setV('l-date',_todayLocal());
   setV('l-nextDate','');
   setV('l-custName', name||'');
   document.getElementById('l-type').value='방문';
@@ -6111,8 +6113,9 @@ function getQItems() {
 let _pipeStage = 'all';
 function setPipeChip(stage, el) {
   _pipeStage = stage;
-  document.querySelectorAll('.pipe-chip').forEach(c => c.classList.remove('on'));
-  el.classList.add('on');
+  document.querySelectorAll('#pipe-stage-chips .pipe-chip').forEach(c => c.classList.remove('on'));
+  if(!el) el = document.querySelector('#pipe-stage-chips .pipe-chip[data-stage="'+stage+'"]');
+  if(el) el.classList.add('on');
   renderPipeline();
 }
 
@@ -6244,8 +6247,8 @@ function renderPipeline() {
 
   // 전체 데이터 기준 요약 (필터 전)
   const allRaw=_basePipe;
-  const thisYm=new Date().toISOString().substring(0,7);
-  const today=new Date().toISOString().split('T')[0];
+  const thisYm=_ymLocal();
+  const today=_todayLocal();
   const activeRaw=allRaw.filter(d=>d.stage!=='계약완료');
   const openTotal=activeRaw.reduce((s,d)=>s+Number(d.amount||0),0);
   const weighted=activeRaw.reduce((s,d)=>s+Number(d.amount||0)*(Number(d.prob||0)/100),0);
@@ -6342,7 +6345,7 @@ function openModal(type,data={}) {
     new bootstrap.Modal(document.getElementById('equipModal')).show();
   } else if(type==='log'){
     ['l-id','l-custName','l-content','l-product','l-next','l-sales'].forEach(id=>setV(id,''));
-    setV('l-date',new Date().toISOString().split('T')[0]);
+    setV('l-date',_todayLocal());
     setV('l-nextDate','');
     setV('l-sales', currentUserName());
     document.getElementById('l-type').value='방문';
@@ -7617,10 +7620,10 @@ function saveCDUVisit(){
   if(!date||!hosp){ alert('방문일과 병원명을 입력하세요.'); return; }
   var id=g('cd-id')||uid();
   var _pv=(DB.d.logs||[]).find(function(l){return l.id===id;});
-  var _reelsActive=(/^(제안|촬영완료|O)$/i.test(g('cd-reels').trim())||g('cd-reels-url').trim());
+  // 릴스는 별도 cdu_reel 레코드로 관리 — 방문 저장 시 기존 방문내 릴스필드는 보존(덮어쓰지 않음)
   var rec={id:id, kind:'cdu', status:'done', date:date, custName:hosp, dealer:g('cd-dealer').trim(), doctor:g('cdv-doctor').trim(), doctorCount:g('cd-dcount'),
     mainProc:g('cd-proc').trim(), competitor:g('cd-comp').trim(), feedback:g('cd-fb').trim(), channels:g('cd-chan').trim(), region:g('cdv-region'),
-    sales:g('cd-sales').trim(), time:(_pv&&_pv.time)||'', event:g('cd-event'), reels:g('cd-reels'), reelsUrl:g('cd-reels-url').trim(), reelsStage:(_reelsActive?((_pv&&_pv.reelsStage)||''):''), reelsViews:(_pv&&_pv.reelsViews)||'', shots:g('cd-shots'), price:g('cd-price'), procCount:g('cd-pcount'), stock:g('cd-stock').trim(), churnRisk:g('cd-churn').trim(),
+    sales:g('cd-sales').trim(), time:(_pv&&_pv.time)||'', event:g('cd-event'), reels:(_pv&&_pv.reels)||'', reelsUrl:(_pv&&_pv.reelsUrl)||'', reelsStage:(_pv&&_pv.reelsStage)||'', reelsViews:(_pv&&_pv.reelsViews)||'', shots:g('cd-shots'), price:g('cd-price'), procCount:g('cd-pcount'), stock:g('cd-stock').trim(), churnRisk:g('cd-churn').trim(),
     noBuyReason:g('cd-reason'), action:g('cd-action').trim(),
     contactProfile:g('cd-contact-profile').trim(), oliBasic:g('cd-oli-basic'), oliX:g('cd-oli-x'), oliKiss:g('cd-oli-kiss'),
     by:(typeof currentUserName==='function'?currentUserName():'')};
@@ -8029,7 +8032,7 @@ function renderQuotes() {
 
 function clearQuoteForm(){
   ['q-cust','q-sales','q-note'].forEach(id=>setV(id,''));
-  setV('q-date',new Date().toISOString().split('T')[0]);
+  setV('q-date',_todayLocal());
   setV('q-valid','');
   document.getElementById('q-status').value='임시';
   document.getElementById('q-items').innerHTML='';
@@ -8550,7 +8553,7 @@ function renderPerformance(){
   const period=window._perfPeriod||'month';
   const yms=[];
   if(period==='month'){
-    yms.push(now.toISOString().substring(0,7));
+    yms.push(_ymLocal());
   } else if(period==='quarter'){
     const q=Math.floor(now.getMonth()/3);
     for(let m=q*3;m<=q*3+2;m++) yms.push(`${now.getFullYear()}-${String(m+1).padStart(2,'0')}`);
@@ -8610,8 +8613,8 @@ function renderPerformance(){
   const maxWon=Math.max(...salesData.map(x=>x.wonAmt),1);
 
   // KPI — 파이프라인 액션 중심 (대시보드와 중복 없이)
-  const todayStr2 = now.toISOString().split('T')[0];
-  const in30Str = new Date(now.getTime()+30*864e5).toISOString().split('T')[0];
+  const todayStr2 = _todayLocal();
+  const _in30d = new Date(now.getTime()+30*864e5); const in30Str = _in30d.getFullYear()+'-'+String(_in30d.getMonth()+1).padStart(2,'0')+'-'+String(_in30d.getDate()).padStart(2,'0');
   const closingSoon = DB.d.pipeline.filter(d=>d.stage!=='계약완료'&&d.expectedDate&&d.expectedDate>=todayStr2&&d.expectedDate<=in30Str);
   const closingSoonAmt = closingSoon.reduce((s,d)=>s+Number(d.amount||0),0);
   const overdue = DB.d.pipeline.filter(d=>d.stage!=='계약완료'&&d.expectedDate&&d.expectedDate<todayStr2);
@@ -8620,7 +8623,7 @@ function renderPerformance(){
   const _yms = yms;
   const _actAll=DB.d.pipeline.filter(d=>d.stage!=='계약완료');
   const _actAmt=_actAll.reduce((s,d)=>s+Number(d.amount||0),0);
-  const _thisYm=now.toISOString().substring(0,7);
+  const _thisYm=_ymLocal();
   const _closingMon=_actAll.filter(d=>d.expectedDate&&d.expectedDate.startsWith(_thisYm));
   const _wonAmtAll=DB.d.pipeline.filter(d=>d.stage==='계약완료').reduce((s,d)=>s+Number(d.amount||0),0);
   document.getElementById('perf-kpi').innerHTML=[
@@ -11548,7 +11551,7 @@ function _dvBuild(){
     var dl=((typeof _repOf==='function'&&_repOf(r.customer))||'')||'미배정'; var v=Number(r.amount||0), q=Number(r.qty||0); if(!v)return;
     accP(prod,p,v,q); accP(dealer,dl,v,q); acc2P(pByD,p,dl,v,q); acc2P(dByP,dl,p,v,q); acc2P(pMon,p,mo,v,q); acc2P(dMon,dl,mo,v,q); acc2P(mProd,mo,p,v,q); acc2P(mDealer,mo,dl,v,q);
     mQty.a[mo]=(mQty.a[mo]||0)+q; pendTot+=v; });
-  var incMonth=0, asOfDay=0; if(asOf){ var _ad=String(asOf).split('-'); asOfDay=parseInt(_ad[2],10)||0; if(asOfDay&&asOfDay<28) incMonth=parseInt(_ad[1],10)||0; }
+  var incMonth=0, asOfDay=0; if(asOf){ var _ad=String(asOf).split('-'); asOfDay=parseInt(_ad[2],10)||0; var _n=new Date(); if(parseInt(_ad[0],10)===_n.getFullYear() && parseInt(_ad[1],10)===(_n.getMonth()+1) && _n.getDate()<28) incMonth=parseInt(_ad[1],10)||0; }  // 실제 현재月만 집계중(과거 완결월 오판 방지)
   _dvIdx={P:P,curM:curM,preM:preM,prod:prod,dealer:dealer,pByD:pByD,dByP:dByP,pMon:pMon,dMon:dMon,mProd:mProd,mDealer:mDealer,mQty:mQty,asOf:asOf,incMonth:incMonth,asOfDay:asOfDay,pendTot:pendTot};
   return _dvIdx;
 }
