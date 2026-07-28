@@ -1154,7 +1154,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   </div>
 
   <!-- CDU 방문 기록 입력 모달 -->
-  <div class="modal fade" id="cduVisitModal" tabindex="-1"><div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
+  <div class="modal fade" id="cduVisitModal" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content">
     <div class="modal-header"><h5 class="modal-title">방문 기록</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body"><input type="hidden" id="cd-id">
       <div class="row g-2">
@@ -1191,10 +1191,10 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <div class="col-12"><label class="form-label" style="font-size:12px"><i class="bi bi-camera-reels me-1" style="color:#db2777"></i>릴스 URL <span class="text-muted">(촬영·게시 링크 — 여러 개는 띄어쓰기로 구분)</span></label><input id="cd-reels-url" class="form-control form-control-sm" placeholder="https://www.instagram.com/reel/... 붙여넣기" inputmode="url"></div>
 
         <div class="col-12 cdu-sec">영업 코멘트</div>
-        <div class="col-12"><label class="form-label" style="font-size:12px">병원 피드백 <span class="text-muted">(현장 대화·결과 상세히)</span></label><textarea id="cd-fb" class="form-control form-control-sm" rows="6" style="min-height:130px"></textarea></div>
-        <div class="col-12"><label class="form-label" style="font-size:12px">병원 담당자 프로필 <span class="text-muted">(실장·구매담당 등 이력·성향 참고)</span></label><textarea id="cd-contact-profile" class="form-control form-control-sm" rows="2" placeholder="예: 김실장 — 결정권 큼, 가격 민감. 전 병원서 써마지 운영. 원장 신뢰 두터움"></textarea></div>
-        <div class="col-12"><label class="form-label" style="font-size:12px">이탈 가능성</label><input id="cd-churn" class="form-control form-control-sm" placeholder="예: 볼뉴머로 이탈 우려"></div>
-        <div class="col-12" style="border-top:1px dashed #d8b4fe;padding-top:10px;margin-top:6px"><label class="form-label" style="font-size:12px;color:#7c3aed;font-weight:700">소모품 미구매 사유 <span class="text-muted" style="font-weight:400">(장비는 있는데 왜 안 사는가 — 집중관리 핵심)</span></label>
+        <div class="col-md-6"><label class="form-label" style="font-size:12px">병원 피드백 <span class="text-muted">(현장 대화·결과 상세히)</span></label><textarea id="cd-fb" class="form-control form-control-sm" rows="5" style="min-height:120px"></textarea></div>
+        <div class="col-md-6"><label class="form-label" style="font-size:12px">병원 담당자 프로필 <span class="text-muted">(실장·구매담당 성향)</span></label><textarea id="cd-contact-profile" class="form-control form-control-sm" rows="5" style="min-height:120px" placeholder="예: 김실장 — 결정권 큼, 가격 민감. 전 병원서 써마지 운영."></textarea></div>
+        <div class="col-md-4"><label class="form-label" style="font-size:12px">이탈 가능성</label><input id="cd-churn" class="form-control form-control-sm" placeholder="예: 볼뉴머로 이탈 우려"></div>
+        <div class="col-md-4"><label class="form-label" style="font-size:12px;color:#7c3aed;font-weight:700">소모품 미구매 사유</label>
           <select id="cd-reason" class="form-select form-select-sm">
             <option value="">해당 없음 · 정상 구매 중</option>
             <option>경쟁사 저가 소모품 사용</option>
@@ -1206,7 +1206,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
             <option>딜러 경유 구매</option>
             <option>기타(피드백에 기재)</option>
           </select></div>
-        <div class="col-12"><label class="form-label" style="font-size:12px;color:#7c3aed;font-weight:700">대응 방안 <span class="text-muted" style="font-weight:400">(어떻게 매출로 연결할지)</span></label><select id="cd-action" class="form-select form-select-sm">
+        <div class="col-md-4"><label class="form-label" style="font-size:12px;color:#7c3aed;font-weight:700">대응 방안</label><select id="cd-action" class="form-select form-select-sm">
             <option value="">미정 · 다음 방문 때 결정</option>
             <option>번들·패키지 견적 제안</option>
             <option>시술 교육·데모 지원</option>
@@ -6527,11 +6527,9 @@ function renderCDUReels(){
     if(it.stage==='게시완료'){ if((Number(it.views)||0)>0) acts.push('<button class="rlb-b vw" title="조회수 수정" onclick="_cduReelPromptViews(\''+it.vid+'\',event)">▶'+_cduViewsFmt(it.views)+'</button>'); else acts.push('<button class="rlb-b" title="조회수 입력" onclick="_cduReelPromptViews(\''+it.vid+'\',event)"><i class="bi bi-eye"></i></button>'); }
     var domain=isHttp?it.url.replace(/^https?:\/\/(www\.)?/i,'').slice(0,24):'';
     var meta=[(it.date||'').slice(5)]; if(it.sales)meta.push(it.sales); if(domain)meta.push(domain);
-    var fb=(it.note||'').trim();
-    return '<div class="rlb-card" draggable="true" ondragstart="window._cduReelDrag=\''+it.vid+'\'" onclick="openCDUVisit(\''+it.vid+'\')">'
+    return '<div class="rlb-card" draggable="true" ondragstart="window._cduReelDrag=\''+it.vid+'\'" onclick="openCDUVisit(\''+it.vid+'\')" title="클릭 시 방문 상세">'
       +'<div class="rlb-hs"><b>'+_cduEsc(it.custName||'-')+'</b>'+(acts.length?'<span class="rlb-a2">'+acts.join('')+'</span>':'')+'</div>'
       +'<div class="rlb-m2">'+_cduEsc(meta.join(' · '))+'</div>'
-      +(fb?'<div class="rlb-fb">'+_cduEsc(fb)+'</div>':'')
       +'</div>';
   };
   var board='<div class="rlb-board">'+CDU_REEL_STAGES.map(function(s){
