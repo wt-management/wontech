@@ -2726,20 +2726,42 @@ function _allReps(){
   return [...s].filter(Boolean);
 }
 // 거래처(hospitals) 실적을 담당자(_repOf) 기준으로 재집계 — mgr 오버라이드 반영(담당자별 분석용)
+// 입사일(KOR_TEAM_INFO.join) 이전 매출은 현 담당이 아니라 전임자로 귀속(신규입사자 유령 전년매출 방지).
+// join 미설정(=0)이면 라우팅 없이 종전과 동일하게 현 담당에 전액 귀속.
+function _repJoinMo(r){ try{ var j=((typeof KOR_TEAM_INFO!=='undefined'&&KOR_TEAM_INFO[r])||{}).join||''; var m=String(j).match(/^(\d{4})[\-.\/]?\s*(\d{1,2})/); return m?(parseInt(m[1],10)*12+parseInt(m[2],10)):0; }catch(e){ return 0; } }
+// 입사 이전 기간의 전임자 추정: 담당변경이력(prev) → 회계원본 담당(sales, 팀원·현담당과 다를 때) → 미상
+function _repPredecessor(name,h,cur){
+  try{ var hist=(((typeof HOSP_INFO!=='undefined'&&HOSP_INFO[name])||{}).mgrHistory)||[];
+    var e=hist.filter(function(x){return _sN((x&&x.mgr)||'')===cur && ((x&&x.prev)||'').trim();}).sort(function(a,b){return String(a.from||'').localeCompare(String(b.from||''));})[0];
+    if(e) return _sN(e.prev);
+  }catch(_e){}
+  var acc=_sN(String((h&&h.sales)||''));
+  if(acc && acc!==cur && (typeof _isKorSales==='function'&&_isKorSales(acc))) return acc;
+  return '전임자(미상)';
+}
 function _repsByMgr(hmap){
   const out={};
+  const ens=function(r){ return out[r]||(out[r]={total:0,y2025:0,y2026:0,cust2025:0,cust2026:0,prods2025:{},prods2026:{},m2025:{},m2026:{},qty2025:0,qty2026:0}); };
   Object.entries(hmap||{}).forEach(function(pair){
     const name=pair[0], h=pair[1]||{};
-    const r=_repOf(name); if(!r) return;
-    let o=out[r]; if(!o) o=out[r]={total:0,y2025:0,y2026:0,cust2025:0,cust2026:0,prods2025:{},prods2026:{},m2025:{},m2026:{},qty2025:0,qty2026:0};
-    o.total+=(h.total||0); o.y2025+=(h.y2025||0); o.y2026+=(h.y2026||0);
-    if((h.y2025||0)>0)o.cust2025++; if((h.y2026||0)>0)o.cust2026++;
-    for(const p in (h.prods2025||{}))o.prods2025[p]=(o.prods2025[p]||0)+(h.prods2025[p]||0);
-    for(const p in (h.prods2026||{}))o.prods2026[p]=(o.prods2026[p]||0)+(h.prods2026[p]||0);
-    for(const m in (h.m2025||{}))o.m2025[m]=(o.m2025[m]||0)+(h.m2025[m]||0);
-    for(const m in (h.m2026||{}))o.m2026[m]=(o.m2026[m]||0)+(h.m2026[m]||0);
-    (h.txns2025||[]).forEach(t=>o.qty2025+=(t[5]||0));
-    (h.txns2026||[]).forEach(t=>o.qty2026+=(t[5]||0));
+    const cur=_repOf(name); if(!cur) return;
+    const jm=_repJoinMo(cur);
+    const pre=jm?_repPredecessor(name,h,cur):cur;
+    const seen={};   // owner → {2025,2026} (거래처수 카운트)
+    [['txns2025',2025],['txns2026',2026]].forEach(function(pr){
+      const tk=pr[0], yy=pr[1];
+      (h[tk]||[]).forEach(function(t){
+        const mo=+t[0]||0, prod=t[3], amt=Number(t[4]||0), q=Number(t[5]||0);
+        const owner=(jm && mo && (yy*12+mo)<jm)?pre:cur;   // 입사월 이전 → 전임자
+        const o=ens(owner);
+        if(mo) o['m'+yy][mo]=(o['m'+yy][mo]||0)+amt;
+        o['y'+yy]+=amt; o['qty'+yy]+=q;
+        if(prod) o['prods'+yy][prod]=(o['prods'+yy][prod]||0)+amt;
+        if(amt>0||q>0){ (seen[owner]=seen[owner]||{})[yy]=1; }
+      });
+    });
+    ens(cur).total+=(h.total||0);   // 총액(연도무관)은 현 담당
+    Object.keys(seen).forEach(function(ow){ const o=ens(ow); if(seen[ow][2025])o.cust2025++; if(seen[ow][2026])o.cust2026++; });
   });
   return out;
 }
@@ -11677,8 +11699,8 @@ function renderDevReps() {
   // 대수·거래처수·주력제품도 선택 기간(_cur)으로 재집계 — 연간 누계 고정 버그 수정
   const _spanKeys={}; _cur.forEach(x=>{_spanKeys[x.y+'-'+x.m]=1;});
   const _repSpan={};
-  Object.entries(DEVICE.hospitals||{}).forEach(([hn,h])=>{ const r=_repOf(hn); if(!r) return; let o=_repSpan[r]; if(!o) o=_repSpan[r]={qty:0,prods:{},cust:{}};
-    [["txns2026",2026],["txns2025",2025]].forEach(([tk,y])=>{ (h[tk]||[]).forEach(t=>{ if(!_spanKeys[y+'-'+(+t[0])]) return; const amt=Number(t[4]||0), q=Number(t[5]||0), prod=t[3]; o.qty+=q; if(prod) o.prods[prod]=(o.prods[prod]||0)+amt; if(amt>0||q>0) o.cust[hn]=1; }); }); });
+  Object.entries(DEVICE.hospitals||{}).forEach(([hn,h])=>{ const cur=_repOf(hn); if(!cur) return; const jm=_repJoinMo(cur), pre=jm?_repPredecessor(hn,h,cur):cur;
+    [["txns2026",2026],["txns2025",2025]].forEach(([tk,y])=>{ (h[tk]||[]).forEach(t=>{ const mo=+t[0]; if(!_spanKeys[y+'-'+mo]) return; const owner=(jm&&mo&&(y*12+mo)<jm)?pre:cur; let o=_repSpan[owner]; if(!o) o=_repSpan[owner]={qty:0,prods:{},cust:{}}; const amt=Number(t[4]||0), q=Number(t[5]||0), prod=t[3]; o.qty+=q; if(prod) o.prods[prod]=(o.prods[prod]||0)+amt; if(amt>0||q>0) o.cust[hn]=1; }); }); });
   const entries = _allNames.map((name) => {
     const rep = reps[name] || _emptyRep;
     const cur  = _spanV(rep,_cur);
