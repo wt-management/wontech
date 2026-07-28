@@ -1245,6 +1245,22 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button><button class="btn btn-primary btn-sm" onclick="saveCDUQuick()">등록</button></div>
   </div></div></div>
 
+  <!-- CDU 일괄 일정 생성 모달 -->
+  <div class="modal fade" id="cduBulkModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-calendar-plus me-1" style="color:#2563eb"></i>방문 일정 일괄 등록</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <div class="row g-2">
+        <div class="col-5"><label class="form-label" style="font-size:12px">방문일 *</label><input type="date" id="cb-date" class="form-control form-control-sm"></div>
+        <div class="col-3"><label class="form-label" style="font-size:12px">시간대</label><select id="cb-time" class="form-select form-select-sm"><option value="">-</option><option>오전</option><option>오후</option><option>종일</option></select></div>
+        <div class="col-4"><label class="form-label" style="font-size:12px">담당</label><input id="cb-sales" class="form-control form-control-sm" list="cdu-sales-list" autocomplete="off"></div>
+        <div class="col-12 d-flex align-items-center" style="gap:8px"><label class="form-label mb-0" style="font-size:12px">병원 목록 <span class="text-muted">(한 줄에 하나)</span></label><button type="button" class="btn btn-outline-primary btn-sm ms-auto" style="font-size:11.5px;padding:2px 9px" onclick="_cduBulkLoadDue()"><i class="bi bi-arrow-repeat me-1"></i>재방문 도래 불러오기</button></div>
+        <div class="col-12"><textarea id="cb-hosps" class="form-control form-control-sm" rows="7" oninput="_cduBulkCount()" placeholder="병원명을 한 줄에 하나씩 입력"></textarea></div>
+        <div class="col-12"><div id="cb-count" style="font-size:12px;color:#64748b"></div></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button><button class="btn btn-primary btn-sm" onclick="saveCDUBulk()"><i class="bi bi-check2-all me-1"></i>일괄 등록</button></div>
+  </div></div></div>
+
   <!-- CDU Keyman 연락처 모달 -->
   <div class="modal fade" id="cduKeyModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
     <div class="modal-header"><h5 class="modal-title">Keyman 연락처</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -7107,6 +7123,7 @@ function renderCDUInput(vs){
   // 뷰 전환 + 통계 카드(일정 메뉴와 동일 양식)
   var vb=(k,lb)=>'<button class="btn btn-'+(_cduInputView===k?'primary':'outline-primary')+'" onclick="_cduSetInputView(\''+k+'\')">'+lb+'</button>';
   var toolbar='<div class="d-flex align-items-center mb-2 flex-wrap" style="gap:8px"><div class="btn-group btn-group-sm">'+vb('today','오늘')+vb('week','이번주')+vb('month','월간')+'</div>'
+    +'<button class="btn btn-sm btn-outline-primary" onclick="openCDUBulk()"><i class="bi bi-calendar-plus me-1"></i>일괄 등록</button>'
     +'<span style="font-size:12.5px;color:#94a3b8">방문 추가는 간단히(병원·날짜·담당) → 방문 후 카드의 <b>[결과 입력]</b></span></div>';
   var pendHtml=pend.length?'<div style="margin-bottom:12px;border-left:3px solid #dc2626;background:#fdf7f7;padding:8px 12px;font-size:13px;color:#b91c1c"><i class="bi bi-exclamation-triangle-fill me-1"></i><b>결과 미입력 '+pend.length+'건</b> — 방문일은 지났는데 결과가 없어요. 눌러서 입력해 주세요: '
     +pend.slice(0,6).map(v=>'<span onclick="openCDUVisit(\''+v.id+'\')" style="display:inline-block;font-size:12.5px;font-weight:700;color:#b91c1c;background:#fff;border:1px solid #fecaca;border-radius:12px;padding:2px 9px;margin:2px 3px;cursor:pointer">'+_cduEsc(v.custName||'')+' '+_cduEsc(String(v.date||'').slice(5,10))+'</span>').join('')+(pend.length>6?' 외 '+(pend.length-6)+'건':'')+'</div>':'';
@@ -7317,6 +7334,37 @@ function saveCDUQuick(){
   DB.d.logs.push(rec);
   try{ bootstrap.Modal.getInstance(document.getElementById('cduQuickModal')).hide(); }catch(e){}
   renderCDU(); DB.save('logs').then(()=>showToast('일정 등록 완료 — 방문 후 [결과 입력]을 눌러주세요', true));
+}
+// ── 방문 일정 일괄 등록 ──
+function openCDUBulk(){
+  _cduFillSalesList();
+  var sv=function(x,val){var e=document.getElementById(x);if(e)e.value=val;};
+  sv('cb-date',_cduTodayStr()); sv('cb-time',''); sv('cb-sales',(typeof currentUserName==='function'?currentUserName():'')); sv('cb-hosps','');
+  var cc=document.getElementById('cb-count'); if(cc)cc.textContent='';
+  new bootstrap.Modal(document.getElementById('cduBulkModal')).show();
+}
+function _cduBulkCount(){ var el=document.getElementById('cb-hosps'), cc=document.getElementById('cb-count'); if(!el||!cc)return; var n=el.value.split('\n').map(function(s){return s.trim();}).filter(Boolean).length; cc.textContent=n?('<i class="bi bi-check2-circle"></i> '+n+'곳 등록 예정'):''; cc.innerHTML=cc.textContent; }
+function _cduBulkLoadDue(){
+  var base=_cduBaseFiltered().filter(function(v){return v.status!=='planned';}), byHosp={};
+  base.forEach(function(v){ var h=(v.custName||'').trim(); if(!h)return; var d=String(v.date||'').slice(0,10); if(!d)return; (byHosp[h]=byHosp[h]||[]).push(d); });
+  var ts=_cduTodayStr(), plannedSet={};
+  _cduBaseFiltered().forEach(function(v){ if(v.status==='planned'&&String(v.date||'').slice(0,10)>=ts) plannedSet[(v.custName||'').trim()]=1; });
+  var due=[];
+  Object.keys(byHosp).forEach(function(h){ if(plannedSet[h])return; var ds=byHosp[h].sort(); var last=ds[ds.length-1], days=Math.round((new Date(ts+'T00:00:00')-new Date(last+'T00:00:00'))/86400000); var iv=[]; for(var i=1;i<ds.length;i++)iv.push(Math.round((new Date(ds[i])-new Date(ds[i-1]))/86400000)); var avg=iv.length?Math.round(iv.reduce(function(a,b){return a+b;},0)/iv.length):0; var cycle=avg>0?avg:30; if(days>=cycle) due.push({h:h,over:days-cycle}); });
+  due.sort(function(a,b){return b.over-a.over;});
+  var el=document.getElementById('cb-hosps'); if(el) el.value=due.map(function(d){return d.h;}).join('\n');
+  if(!due.length) showToast('재방문 도래 병원이 없습니다', true);
+  _cduBulkCount();
+}
+function saveCDUBulk(){
+  var g=function(x){return (document.getElementById(x)||{}).value||'';};
+  var date=g('cb-date'); if(!date){ alert('방문일을 입력하세요.'); return; }
+  var hosps=g('cb-hosps').split('\n').map(function(s){return s.trim();}).filter(Boolean);
+  if(!hosps.length){ alert('병원을 한 곳 이상 입력하세요.'); return; }
+  var sales=g('cb-sales').trim(), time=g('cb-time'), by=(typeof currentUserName==='function'?currentUserName():''), seen={}, n=0;
+  hosps.forEach(function(h){ if(seen[h])return; seen[h]=1; n++; DB.d.logs.push({id:uid(),kind:'cdu',status:'planned',date:date,custName:h,sales:sales,region:'국내',type:'방문',time:time,by:by}); });
+  try{ bootstrap.Modal.getInstance(document.getElementById('cduBulkModal')).hide(); }catch(e){}
+  renderCDU(); DB.save('logs').then(function(){ showToast(n+'곳 방문 예정 일괄 등록 완료', true); });
 }
 function openCDUVisit(id, copy){
   var v=id?(_cduVisits().find(x=>x.id===id)):null;
