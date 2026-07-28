@@ -1234,8 +1234,9 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <div class="row g-2">
         <div class="col-8"><label class="form-label" style="font-size:12px">병원명 *</label><input id="cq-hosp" class="form-control form-control-sm" list="cdu-hosp-list" autocomplete="off" placeholder="병원명 입력…"></div>
         <div class="col-4"><label class="form-label" style="font-size:12px">유형</label><select id="cq-type" class="form-select form-select-sm"><option>방문</option><option>콜</option><option>데모</option><option>A/S</option><option>견적발송</option><option>기타</option></select></div>
-        <div class="col-6"><label class="form-label" style="font-size:12px">방문일 *</label><input type="date" id="cq-date" class="form-control form-control-sm"></div>
-        <div class="col-6"><label class="form-label" style="font-size:12px">담당</label><input id="cq-sales" class="form-control form-control-sm" list="cdu-sales-list" autocomplete="off"></div>
+        <div class="col-5"><label class="form-label" style="font-size:12px">방문일 *</label><input type="date" id="cq-date" class="form-control form-control-sm"></div>
+        <div class="col-3"><label class="form-label" style="font-size:12px">시간대</label><select id="cq-time" class="form-select form-select-sm"><option value="">-</option><option>오전</option><option>오후</option><option>종일</option></select></div>
+        <div class="col-4"><label class="form-label" style="font-size:12px">담당</label><input id="cq-sales" class="form-control form-control-sm" list="cdu-sales-list" autocomplete="off"></div>
         <div class="col-12"><label class="form-label" style="font-size:12px">주력 시술 / 관심 제품</label><input id="cq-proc" class="form-control form-control-sm" placeholder="예: 올리지오 / 슈링크 / 써마지"></div>
         <div class="col-12"><label class="form-label" style="font-size:12px">방문 목적 / 메모</label><textarea id="cq-note" class="form-control form-control-sm" rows="2" placeholder="예: 재구매 상담 / 데모 후 견적 협의 / 경쟁사 대응"></textarea></div>
         <div class="col-12"><div style="font-size:11.5px;color:#64748b;background:#f8fafc;border-radius:8px;padding:8px 10px"><i class="bi bi-info-circle me-1" style="color:#2563eb"></i>방문/활동 계획을 등록하세요. 방문 후 카드의 <b>[결과 입력]</b>에서 수가·경쟁사·피드백 등 상세를 채우면 됩니다.</div></div>
@@ -7086,7 +7087,7 @@ function _cduTodayCard(){
   if(!total){ return box('<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><div style="font-size:13px;font-weight:800"><i class="bi bi-sun me-1"></i>오늘의 방문 · '+mmdd+'</div><div style="font-size:12px;opacity:.9;margin-top:3px">예정된 방문이 없습니다. 방문 일정을 추가하세요.</div></div><button onclick="openCDUQuickFor(\''+today+'\')" style="flex-shrink:0;background:#fff;color:#0066cc;border:0;border-radius:10px;padding:9px 14px;font-weight:800;font-size:13px;cursor:pointer"><i class="bi bi-plus-lg me-1"></i>추가</button></div>'); }
   var head='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px"><div style="font-size:13px;font-weight:800"><i class="bi bi-sun-fill me-1"></i>오늘의 방문 · '+mmdd+'</div><div style="font-size:12px;font-weight:700"><b style="font-size:16px">'+dn+'</b> / '+total+' 완료</div></div>'
     +'<div style="height:7px;background:rgba(255,255,255,.28);border-radius:4px;overflow:hidden;margin-bottom:11px"><div style="height:100%;width:'+pct+'%;background:#fff;border-radius:4px"></div></div>';
-  var plHtml=planned.map(function(v){ return '<div onclick="openCDUVisit(\''+v.id+'\')" style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.14);border-radius:10px;padding:10px 12px;margin-bottom:7px;cursor:pointer"><i class="bi bi-circle" style="font-size:15px;opacity:.9"></i><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+_cduEsc(v.custName||'')+'</div>'+(v.sales?'<div style="font-size:11px;opacity:.85">'+_cduEsc(v.sales)+'</div>':'')+'</div><span style="flex-shrink:0;background:#fff;color:#0066cc;border-radius:8px;padding:5px 11px;font-size:12px;font-weight:800">결과 입력 ›</span></div>'; }).join('');
+  var plHtml=planned.map(function(v){ return '<div onclick="openCDUVisit(\''+v.id+'\')" style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.14);border-radius:10px;padding:10px 12px;margin-bottom:7px;cursor:pointer"><i class="bi bi-circle" style="font-size:15px;opacity:.9"></i><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+_cduEsc(v.custName||'')+'</div>'+(v.sales?'<div style="font-size:11px;opacity:.85">'+_cduEsc(v.sales)+'</div>':'')+'</div>'+(v.time?'<span style="flex-shrink:0;font-size:10.5px;font-weight:800;background:rgba(255,255,255,.22);border-radius:6px;padding:2px 8px">'+_cduEsc(v.time)+'</span>':'')+'<span style="flex-shrink:0;background:#fff;color:#0066cc;border-radius:8px;padding:5px 11px;font-size:12px;font-weight:800">결과 입력 ›</span></div>'; }).join('');
   var allDone=(!planned.length)?'<div style="text-align:center;font-size:12.5px;padding:6px 0;opacity:.95"><i class="bi bi-check2-all me-1"></i>오늘 예정 방문 모두 완료!</div>':'';
   var dnHtml=done.length?'<div style="margin-top:'+(planned.length?'2px':'6px')+';display:flex;flex-wrap:wrap;gap:5px">'+done.map(function(v){return '<span onclick="openCDUVisit(\''+v.id+'\')" style="cursor:pointer;font-size:11.5px;background:rgba(255,255,255,.2);border-radius:12px;padding:3px 10px"><i class="bi bi-check-circle-fill me-1" style="font-size:11px"></i>'+_cduEsc(v.custName||'')+'</span>';}).join('')+'</div>':'';
   return box(head+plHtml+allDone+dnHtml);
@@ -7152,17 +7153,25 @@ function renderCDUInput(vs){
     +lg('#2563eb','방문 예정')+lg('#16a34a','완료')+lg('#ea580c','이탈위험 감지')+'</div>';
   var body;
   if(_cduInputView==='month') body=_cduInputMonth();
-  else if(_cduInputView==='today') body='<div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:6px">오늘 '+todayS.slice(5).replace('-','/')+' · '+cToday+'건</div>'+_cduInputList(base.filter(v=>dOf(v)===todayS));
+  else if(_cduInputView==='today') body='<div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:6px">오늘 '+todayS.slice(5).replace('-','/')+' · '+cToday+'건</div>'+_cduInputList(base.filter(function(v){return dOf(v)===todayS&&_cduStatusPass(v);}));
   else body=_cduInputCal();
   _cduEnsureCss();
-  el.innerHTML='<div class="cdud">'+_cduTodayCard()+toolbar+pendHtml+statsBar+(_cduInputView==='week'?'':legend)+_cduRevisitBox()+body+'</div>';
+  var _scDefs=[['all','전체',base.length],['planned','예정',cPlan],['pending','미입력',pend.length],['done','완료',cDone],['churn','이탈위험',base.filter(function(v){return (v.churnRisk||'').trim();}).length]];
+  var statusChips='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">'+_scDefs.map(function(c){var on=_cduSchStatus===c[0];var col=c[0]==='pending'?'#dc2626':c[0]==='churn'?'#ea580c':c[0]==='done'?'#16a34a':'#2563eb';return '<button onclick="_cduSchStatusSet(\''+c[0]+'\')" style="border:1px solid '+(on?col:'#e5e7eb')+';background:'+(on?col:'#fff')+';color:'+(on?'#fff':'#64748b')+';border-radius:16px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;min-height:32px">'+c[1]+' <b>'+c[2]+'</b></button>';}).join('')+'</div>';
+  el.innerHTML='<div class="cdud">'+_cduTodayCard()+toolbar+statusChips+pendHtml+statsBar+(_cduInputView==='week'?'':legend)+_cduRevisitBox()+body+'</div>';
 }
 // 월간 달력 드래그 재일정
 window._cduSchDrag=null;
 window._cduSchDrop=function(e,ds){ e.preventDefault(); var id=window._cduSchDrag; window._cduSchDrag=null; document.querySelectorAll('#cdu-input .cdu-mon-day.dragover').forEach(function(c){c.classList.remove('dragover');}); if(!id)return; var v=(DB.d.logs||[]).find(function(l){return l.id===id;}); if(!v||String(v.date||'').slice(0,10)===ds)return; v.date=ds; renderCDU(); DB.save('logs').then(function(){ showToast('방문일 변경 → '+ds.slice(5).replace('-','/'),true); }); };
+// 상태 필터
+var _cduSchStatus='all';
+window._cduSchStatusSet=function(s){ _cduSchStatus=s; renderCDU(); };
+function _cduStatusPass(v){ var s=_cduSchStatus; if(s==='all')return true; var t=_cduTodayStr(), d=String(v.date||'').slice(0,10), pl=(v.status==='planned'); if(s==='planned')return pl&&d>=t; if(s==='done')return v.status!=='planned'; if(s==='pending')return pl&&d<t; if(s==='churn')return (v.churnRisk||'').trim()!==''; return true; }
+// 시간대 뱃지
+function _cduTimeBadge(v,dark){ var tm=(v.time||'').trim(); if(!tm)return ''; var col=tm==='오전'?'#0891b2':tm==='오후'?'#d97706':'#64748b'; return '<span style="flex-shrink:0;font-size:10px;font-weight:800;border-radius:6px;padding:1px 6px;'+(dark?'background:rgba(255,255,255,.22);color:#fff':'background:'+col+'1a;color:'+col)+'">'+tm+'</span>'; }
 // 월간 달력(일정 메뉴 양식)
 function _cduInputMonth(){
-  var base=_cduBaseFiltered();
+  var base=_cduBaseFiltered().filter(_cduStatusPass);
   var now=new Date(); var y=(_cduCalMonth?_cduCalMonth.y:now.getFullYear()), m=(_cduCalMonth?_cduCalMonth.m:now.getMonth()+1);
   var mp=y+'-'+String(m).padStart(2,'0');
   var byd={}, cnt=0; base.forEach(function(v){ var d=String(v.date||'').slice(0,10); if(d.indexOf(mp)===0){ (byd[d]=byd[d]||[]).push(v); cnt++; } });
@@ -7187,22 +7196,36 @@ function _cduInputMonth(){
 }
 // 재방문 추천(담당자 참고용) — 방문기록 탭에만, 접힌 상태 기본
 function _cduRevisitBox(){
-  var base=_cduBaseFiltered().filter(v=>v.status!=='planned'), lastByHosp={};
-  base.forEach(function(v){ var h=(v.custName||'').trim(); if(!h)return; var d=String(v.date||'').slice(0,10); if(!d)return; if(!lastByHosp[h]||d>lastByHosp[h].date) lastByHosp[h]={date:d,sales:v.sales||''}; });
-  var t=new Date(); var ts=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
+  var base=_cduBaseFiltered().filter(function(v){return v.status!=='planned';}), byHosp={};
+  base.forEach(function(v){ var h=(v.custName||'').trim(); if(!h)return; var d=String(v.date||'').slice(0,10); if(!d)return; (byHosp[h]=byHosp[h]||{dates:[],sales:''}); byHosp[h].dates.push(d); if(v.sales)byHosp[h].sales=v.sales; });
+  var ts=_cduTodayStr();
   var dAgo=function(d){ return Math.max(0,Math.round((new Date(ts+'T00:00:00')-new Date(d+'T00:00:00'))/86400000)); };
-  var arr=Object.entries(lastByHosp).map(function(p){ return {hosp:p[0],date:p[1].date,days:dAgo(p[1].date),sales:p[1].sales}; }).sort(function(a,b){ return a.date<b.date?-1:1; }).slice(0,8);
-  if(!arr.length) return '';
-  var rows=arr.map(function(r){ return '<div onclick="openCDUHosp(\''+_cduEsc(r.hosp).replace(/\x27/g,"\\x27")+'\')" style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f1f5f9;cursor:pointer;font-size:13px"><span style="font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_cduEsc(r.hosp)+'</span>'+(r.sales?'<span style="font-size:11.5px;color:#94a3b8;flex-shrink:0">'+_cduEsc(r.sales)+'</span>':'')+'<span style="font-size:12.5px;color:#64748b;min-width:56px;text-align:right;flex-shrink:0">'+r.days+'일 전</span></div>'; }).join('');
-  return '<details style="margin:0 0 12px;border-top:1px solid #e4e8ef;border-bottom:1px solid #e4e8ef;padding:8px 4px"><summary style="cursor:pointer;font-size:13px;font-weight:700;color:#475569"><i class="bi bi-arrow-repeat me-1" style="color:#64748b"></i>재방문 추천 '+arr.length+'개처 <span style="font-weight:400;color:#94a3b8">· 담당자 참고용 · 오래 안 간 순 · 클릭하면 이력</span></summary><div class="mt-1" style="padding:0 6px">'+rows+'</div></details>';
+  var plannedSet={}; _cduBaseFiltered().forEach(function(v){ if(v.status==='planned'&&String(v.date||'').slice(0,10)>=ts) plannedSet[(v.custName||'').trim()]=1; });
+  var arr=Object.keys(byHosp).map(function(h){ var o=byHosp[h]; o.dates.sort(); var last=o.dates[o.dates.length-1], days=dAgo(last);
+      var iv=[]; for(var i=1;i<o.dates.length;i++){ iv.push(Math.round((new Date(o.dates[i])-new Date(o.dates[i-1]))/86400000)); }
+      var avg=iv.length?Math.round(iv.reduce(function(a,b){return a+b;},0)/iv.length):0; var cycle=avg>0?avg:30;
+      return {hosp:h,days:days,sales:o.sales,cycle:cycle,due:days>=cycle,over:days-cycle,visits:o.dates.length,planned:!!plannedSet[h]}; })
+    .filter(function(r){ return !r.planned; })
+    .sort(function(a,b){ if(a.due!==b.due) return a.due?-1:1; return b.over-a.over; });
+  var dueArr=arr.filter(function(r){return r.due;});
+  var show=(dueArr.length?dueArr:arr).slice(0,10);
+  if(!show.length) return '';
+  var rows=show.map(function(r){ var hs=_cduEsc(r.hosp).replace(/\x27/g,"\\x27");
+    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f1f5f9;font-size:13px">'
+      +'<span onclick="openCDUHosp(\''+hs+'\')" style="font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer">'+_cduEsc(r.hosp)+(r.due?' <span style="font-size:10px;color:#dc2626;background:#fef2f2;border-radius:6px;padding:1px 6px;font-weight:800">재방문 도래</span>':'')+'</span>'
+      +(r.sales?'<span style="font-size:11.5px;color:#94a3b8;flex-shrink:0">'+_cduEsc(r.sales)+'</span>':'')
+      +'<span style="font-size:11.5px;color:#64748b;min-width:96px;text-align:right;flex-shrink:0">'+r.days+'일 전'+(r.visits>1?' · 주기 '+r.cycle+'일':'')+'</span>'
+      +'<button onclick="openCDUVisitFor(\''+hs+'\')" title="이 병원 방문 예정 추가" style="flex-shrink:0;border:0;background:#2563eb;color:#fff;border-radius:7px;padding:5px 11px;font-size:12px;font-weight:800;cursor:pointer;min-height:30px">＋예약</button></div>'; }).join('');
+  var dueN=dueArr.length;
+  return '<details '+(dueN?'open':'')+' style="margin:0 0 12px;border-top:1px solid #e4e8ef;border-bottom:1px solid #e4e8ef;padding:8px 4px"><summary style="cursor:pointer;font-size:13px;font-weight:700;color:#475569"><i class="bi bi-arrow-repeat me-1" style="color:'+(dueN?'#dc2626':'#64748b')+'"></i>재방문 추천 '+(dueN?'<span style="color:#dc2626">· 주기 도래 '+dueN+'곳</span>':'· '+show.length+'개처')+' <span style="font-weight:400;color:#94a3b8">· 방문 주기 학습 · ＋예약으로 바로 등록</span></summary><div class="mt-1" style="padding:0 6px">'+rows+'</div></details>';
 }
 function _cduMiniCard(v){
   var planned=(v.status==='planned');
   var c=planned?'#2563eb':((v.churnRisk||'').trim()?'#ea580c':'#16a34a');
   var rc=(typeof _schRepColor==='function')?_schRepColor((v.sales||'').trim()):'#64748b';
-  return '<div onclick="event.stopPropagation();openCDUVisit(\''+v.id+'\')" style="background:'+c+'14;border-left:3px solid '+c+';border-radius:6px;padding:7px 9px;margin-bottom:6px;cursor:pointer;line-height:1.35" title="'+_cduEsc((v.custName||'')+(v.competitor?' · '+v.competitor:'')+(v.price?' · 수가'+v.price+'천':''))+'">'
+  return '<div draggable="true" ondragstart="event.stopPropagation();window._cduSchDrag=\''+v.id+'\'" onclick="event.stopPropagation();openCDUVisit(\''+v.id+'\')" style="background:'+c+'14;border-left:3px solid '+c+';border-radius:6px;padding:7px 9px;margin-bottom:6px;cursor:grab;line-height:1.35" title="'+_cduEsc((v.custName||'')+(v.competitor?' · '+v.competitor:'')+(v.price?' · 수가'+v.price+'천':''))+' · 드래그해 날짜 변경">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;gap:4px;margin-bottom:1px">'
-      +'<span style="font-size:12.5px;font-weight:800;color:'+c+';white-space:nowrap">'+(planned?'방문 예정':'완료 ✓')+'</span>'
+      +'<span style="font-size:12.5px;font-weight:800;color:'+c+';white-space:nowrap;display:flex;align-items:center;gap:4px">'+(planned?'방문 예정':'완료 ✓')+_cduTimeBadge(v)+'</span>'
       +((v.sales||'').trim()?'<span style="font-size:11.5px;color:'+rc+';background:'+rc+'22;font-weight:800;border-radius:7px;padding:1px 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+_cduEsc(v.sales)+'</span>':'')
     +'</div>'
     +'<div style="font-size:13px;font-weight:700;color:#1f2937;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.35">'+_cduEsc(v.custName||'')+'</div>'
@@ -7211,7 +7234,7 @@ function _cduMiniCard(v){
   +'</div>';
 }
 function _cduInputCal(){
-  var base=_cduBaseFiltered();
+  var base=_cduBaseFiltered().filter(_cduStatusPass);
   var todayS=_cduTodayStr(); var today=new Date(todayS+'T00:00:00');
   var dow=(today.getDay()+6)%7; var mon=new Date(today); mon.setDate(today.getDate()-dow+_cduWeekOff*7);
   var days=[]; for(var i=0;i<7;i++){ var d=new Date(mon); d.setDate(mon.getDate()+i); days.push(_cduFmtD(d)); }
@@ -7219,7 +7242,7 @@ function _cduInputCal(){
   var WD=['월','화','수','목','금','토','일'], cols='';
   for(var k=0;k<7;k++){ var ds2=days[k]; var isT=ds2===todayS;
     var its=(byd[ds2]||[]).sort(function(a,b){ return String(a.sales||'').localeCompare(String(b.sales||''),'ko')||String(a.custName||'').localeCompare(String(b.custName||''),'ko'); });
-    cols+='<div onclick="openCDUQuickFor(\''+ds2+'\')" title="이 날짜에 방문 예정 추가" style="border:1px solid '+(isT?'#bfdbfe':'#eef2f7')+';border-radius:9px;min-height:160px;background:'+(isT?'#eff6ff':'#fff')+';overflow:hidden;cursor:pointer">'
+    cols+='<div ondragover="event.preventDefault();this.style.boxShadow=\'inset 0 0 0 2px #2563eb\'" ondragleave="this.style.boxShadow=\'\'" ondrop="this.style.boxShadow=\'\';_cduSchDrop(event,\''+ds2+'\')" onclick="openCDUQuickFor(\''+ds2+'\')" title="이 날짜에 방문 예정 추가" style="border:1px solid '+(isT?'#bfdbfe':'#eef2f7')+';border-radius:9px;min-height:160px;background:'+(isT?'#eff6ff':'#fff')+';overflow:hidden;cursor:pointer">'
       +'<div style="padding:6px 8px;font-size:12.5px;font-weight:800;border-bottom:1px solid #f1f3f7;color:'+(isT?'#2563eb':k===5?'#2563eb':k===6?'#dc2626':'#475569')+'">'+WD[k]+' <span style="font-weight:600;color:#64748b">'+parseInt(ds2.slice(8),10)+'일</span>'+(isT?' <span style="font-size:11px">●오늘</span>':'')+'</div>'
       +'<div style="padding:5px">'+(its.length?its.map(_cduMiniCard).join(''):'<div style="font-size:11.5px;color:#cbd5e1;text-align:center;padding:14px 0"><i class="bi bi-plus-circle" style="opacity:.4"></i></div>')+'</div>'
     +'</div>';
@@ -7281,7 +7304,7 @@ function openCDUQuick(){
   _cduFillSalesList();
   var dl=document.getElementById('cdu-hosp-list'); if(dl&&!dl.innerHTML&&CONS.hospitals){ dl.innerHTML=Object.keys(CONS.hospitals).slice(0,800).map(n=>'<option value="'+_cduEsc(n)+'">').join(''); }
   var sv=(x,val)=>{var e=document.getElementById(x); if(e)e.value=val;};
-  sv('cq-hosp',''); sv('cq-date',_cduTodayStr()); sv('cq-sales',(typeof currentUserName==='function'?currentUserName():'')); sv('cq-type','방문'); sv('cq-proc',''); sv('cq-note','');
+  sv('cq-hosp',''); sv('cq-date',_cduTodayStr()); sv('cq-sales',(typeof currentUserName==='function'?currentUserName():'')); sv('cq-type','방문'); sv('cq-proc',''); sv('cq-note',''); sv('cq-time','');
   new bootstrap.Modal(document.getElementById('cduQuickModal')).show();
 }
 function openCDUQuickFor(ds){ openCDUQuick(); var e=document.getElementById('cq-date'); if(e&&ds) e.value=ds; }
@@ -7289,7 +7312,7 @@ function saveCDUQuick(){
   var g=x=>(document.getElementById(x)||{}).value||'';
   var hosp=g('cq-hosp').trim(), date=g('cq-date');
   if(!hosp||!date){ alert('병원명과 방문일을 입력하세요.'); return; }
-  var rec={id:uid(), kind:'cdu', status:'planned', date:date, custName:hosp, sales:g('cq-sales').trim(), region:'국내', type:(g('cq-type')||'방문'), mainProc:g('cq-proc').trim(), feedback:g('cq-note').trim(),
+  var rec={id:uid(), kind:'cdu', status:'planned', date:date, custName:hosp, sales:g('cq-sales').trim(), region:'국내', type:(g('cq-type')||'방문'), time:g('cq-time'), mainProc:g('cq-proc').trim(), feedback:g('cq-note').trim(),
     by:(typeof currentUserName==='function'?currentUserName():'')};
   DB.d.logs.push(rec);
   try{ bootstrap.Modal.getInstance(document.getElementById('cduQuickModal')).hide(); }catch(e){}
@@ -7329,7 +7352,7 @@ function saveCDUVisit(){
   var _reelsActive=(/^(제안|촬영완료|O)$/i.test(g('cd-reels').trim())||g('cd-reels-url').trim());
   var rec={id:id, kind:'cdu', status:'done', date:date, custName:hosp, dealer:g('cd-dealer').trim(), doctor:g('cdv-doctor').trim(), doctorCount:g('cd-dcount'),
     mainProc:g('cd-proc').trim(), competitor:g('cd-comp').trim(), feedback:g('cd-fb').trim(), channels:g('cd-chan').trim(), region:g('cdv-region'),
-    sales:g('cd-sales').trim(), event:g('cd-event'), reels:g('cd-reels'), reelsUrl:g('cd-reels-url').trim(), reelsStage:(_reelsActive?((_pv&&_pv.reelsStage)||''):''), reelsViews:(_pv&&_pv.reelsViews)||'', shots:g('cd-shots'), price:g('cd-price'), procCount:g('cd-pcount'), stock:g('cd-stock').trim(), churnRisk:g('cd-churn').trim(),
+    sales:g('cd-sales').trim(), time:(_pv&&_pv.time)||'', event:g('cd-event'), reels:g('cd-reels'), reelsUrl:g('cd-reels-url').trim(), reelsStage:(_reelsActive?((_pv&&_pv.reelsStage)||''):''), reelsViews:(_pv&&_pv.reelsViews)||'', shots:g('cd-shots'), price:g('cd-price'), procCount:g('cd-pcount'), stock:g('cd-stock').trim(), churnRisk:g('cd-churn').trim(),
     noBuyReason:g('cd-reason'), action:g('cd-action').trim(),
     contactProfile:g('cd-contact-profile').trim(), oliBasic:g('cd-oli-basic'), oliX:g('cd-oli-x'), oliKiss:g('cd-oli-kiss'),
     by:(typeof currentUserName==='function'?currentUserName():'')};
