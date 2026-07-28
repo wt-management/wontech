@@ -1124,8 +1124,6 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <button id="cdu-tab-input" class="btn btn-outline-primary" onclick="_cduTab('input')"><i class="bi bi-calendar-week me-1"></i>일정 관리</button>
         <button id="cdu-tab-target" class="btn btn-outline-primary" onclick="_cduTab('target')"><i class="bi bi-bullseye me-1"></i>타깃 병원</button>
         <button id="cdu-tab-reels" class="btn btn-outline-primary" onclick="_cduTab('reels')"><i class="bi bi-camera-reels me-1"></i>릴스 관리</button>
-        <button id="cdu-tab-keyman" class="btn btn-outline-primary" onclick="_cduTab('keyman')"><i class="bi bi-person-rolodex me-1"></i>Keyman</button>
-        <button id="cdu-tab-resp" class="btn btn-outline-primary" onclick="_cduTab('resp')"><i class="bi bi-bullseye me-1"></i>대응 관리</button>
       </div>
     </div>
     <div class="card p-2 mb-3" id="cdu-filterbar">
@@ -6673,35 +6671,35 @@ function renderCDUTarget(){
   _cduEnsureCss();
   var row=function(name,mgr,mid,right){
     var q=esc(name).replace(/\x27/g,"\\x27");
-    return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f1f5f9">'
-      +'<span onclick="showHospitalDetail(\''+q+'\')" style="font-size:13.5px;font-weight:700;color:#0f172a;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" title="병원 상세(구매이력·장비·상담)">'+esc(name)+' <i class="bi bi-search" style="font-size:11px;color:#cbd5e1"></i></span>'
-      +(mid?'<span style="font-size:12.5px;color:#475569;flex-shrink:0;width:186px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+mid+'</span>':'')
-      +'<span style="font-size:13px;font-weight:700;color:#0f172a;flex-shrink:0;width:96px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap">'+right+'</span>'
-      +'<span style="font-size:11.5px;color:#94a3b8;flex-shrink:0;width:58px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(mgr?esc(mgr):'')+'</span>'
-      +'<button class="btn btn-outline-warning btn-sm" style="font-size:11.5px;padding:1px 7px;flex-shrink:0;white-space:nowrap;margin-right:3px" onclick="openPromoFor(\''+q+'\')" title="이 병원에 프로모션"><i class="bi bi-megaphone"></i></button>'
-      +'<button class="btn btn-outline-primary btn-sm" style="font-size:11.5px;padding:1px 8px;flex-shrink:0;white-space:nowrap" onclick="openCDUVisitFor(\''+q+'\')">방문 등록</button></div>';
+    return '<div style="border:1px solid #eef0f4;border-radius:9px;background:#fff;padding:8px 11px">'
+      +'<div style="display:flex;align-items:center;gap:6px">'
+        +'<span onclick="showHospitalDetail(\''+q+'\')" style="font-size:13px;font-weight:700;color:#0f172a;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" title="병원 상세(구매이력·장비·상담)">'+esc(name)+'</span>'
+        +'<b style="font-size:12.5px;font-weight:800;color:#0f172a;flex-shrink:0;white-space:nowrap;font-variant-numeric:tabular-nums">'+right+'</b>'
+      +'</div>'
+      +'<div style="display:flex;align-items:center;gap:6px;margin-top:4px">'
+        +'<span style="flex:1;min-width:0;font-size:11px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(mid||'')+'</span>'
+        +(mgr?'<span style="font-size:10.5px;color:#94a3b8;flex-shrink:0;white-space:nowrap">'+esc(mgr)+'</span>':'')
+        +'<button class="btn btn-outline-warning btn-sm" style="font-size:10.5px;padding:1px 6px;flex-shrink:0;line-height:1.4" onclick="openPromoFor(\''+q+'\')" title="이 병원에 프로모션"><i class="bi bi-megaphone"></i></button>'
+        +'<button class="btn btn-outline-primary btn-sm" style="font-size:10.5px;padding:1px 8px;flex-shrink:0;white-space:nowrap;line-height:1.4" onclick="openCDUVisitFor(\''+q+'\')">방문</button>'
+      +'</div></div>';
   };
+  var _tgtGrid=function(inner){ return '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px;margin-top:8px">'+inner+'</div>'; };
   window._cduPromoDue=due.slice(0,LIM).map(function(d){return d.n;}); window._cduPromoDrop=drop.slice(0,LIM).map(function(d){return d.n;}); window._cduPromoDor=dormant.slice(0,LIM).map(function(d){return d.n;});
   var _promoBar=function(v){ return '<div style="margin:4px 0 6px"><button class="btn btn-outline-warning btn-sm" style="font-size:12.5px;padding:2px 10px" onclick="openPromoBulk(window.'+v+'||[])"><i class="bi bi-megaphone me-1"></i>이 목록 전체 프로모션</button></div>'; };
-  var dueHtml=due.slice(0,LIM).map(d=>row(d.n,d.mgr,'주기 <b>'+d.gap+'일</b> · 마지막 <b style="color:#dc2626">'+d.since+'일 전</b>','회당 '+_cduWon(d.amt))).join('')||'<div style="font-size:13px;color:#94a3b8;padding:8px 0">재구매 도래 병원이 없습니다.</div>';
+  var dueHtml=due.length?_tgtGrid(due.slice(0,LIM).map(d=>row(d.n,d.mgr,'주기 '+d.gap+'일 · 마지막 <b style="color:#dc2626">'+d.since+'일 전</b>','회당 '+_cduWon(d.amt))).join('')):'<div style="font-size:13px;color:#94a3b8;padding:8px 0">재구매 도래 병원이 없습니다.</div>';
   var reasonMid=function(n){ var r=_cduReasonOf(n);
     if(!r) return '<b style="color:#dc2626">사유 미파악</b> · 방문 필요';
     return (r.reason?'<span style="color:#475569;font-weight:700">'+esc(r.reason)+'</span>':'')+(r.action?' → '+esc(r.action):''); };
-  var dorHtml=dormant.slice(0,LIM).map(d=>row(d.n,d.mgr,reasonMid(d.n),d.y25>0?'작년 '+_cduWon(d.y25):'이력 없음')).join('')||'<div style="font-size:13px;color:#94a3b8;padding:8px 0">휴면 병원이 없습니다.</div>';
-  var drpHtml=drop.slice(0,LIM).map(d=>{ var r=_cduReasonOf(d.n);
-    return row(d.n,d.mgr,_cduWon(d.y25)+'→'+_cduWon(d.y26)+(r&&r.reason?' · <span style="color:#475569;font-weight:700">'+esc(r.reason)+'</span>':' · <b style="color:#dc2626">사유 미파악</b>'),'회복 '+_cduWon(Math.max(0,d.y25-d.y26*12/mm))); }).join('')||'<div style="font-size:13px;color:#94a3b8;padding:8px 0">급감 병원이 없습니다.</div>';
+  var dorHtml=dormant.length?_tgtGrid(dormant.slice(0,LIM).map(d=>row(d.n,d.mgr,reasonMid(d.n),d.y25>0?'작년 '+_cduWon(d.y25):'이력 없음')).join('')):'<div style="font-size:13px;color:#94a3b8;padding:8px 0">휴면 병원이 없습니다.</div>';
+  var drpHtml=drop.length?_tgtGrid(drop.slice(0,LIM).map(d=>{ var r=_cduReasonOf(d.n);
+    return row(d.n,d.mgr,_cduWon(d.y25)+'→'+_cduWon(d.y26)+(r&&r.reason?' · <span style="color:#475569;font-weight:700">'+esc(r.reason)+'</span>':' · <b style="color:#dc2626">사유 미파악</b>'),'회복 '+_cduWon(Math.max(0,d.y25-d.y26*12/mm))); }).join('')):'<div style="font-size:13px;color:#94a3b8;padding:8px 0">급감 병원이 없습니다.</div>';
   var dueSum=due.reduce((s,d)=>s+d.amt,0), dorSum=dormant.reduce((s,d)=>s+d.y25,0), drpSum=drop.reduce((s,d)=>s+d.y25,0);
   var tsec=function(title,badgeCol,badge,tip,inner){ return '<div><div class="cdud-st" style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">'+title+'<u style="margin-left:2px">· '+tip+'</u><span style="margin-left:auto;font-size:12.5px;font-weight:800;color:'+badgeCol+';white-space:nowrap">'+badge+'</span></div>'+inner+'</div>'; };
   el.innerHTML='<div class="cdud">'
     +'<div style="font-size:13px;color:#64748b;padding-bottom:2px"><i class="bi bi-lightbulb me-1" style="color:#d97706"></i>실제 구매 데이터가 찍어주는 <b>다음 방문 우선순위</b>입니다. 병원명 클릭 = 병원 상세(구매이력·장비·상담) · [방문 등록] = 바로 일정 잡기</div>'
-    +'<div class="cdud-grid2" style="margin-top:14px">'
-      +tsec('구매 급감 병원','#dc2626',drop.length+'개처 · 작년 팁매출 '+_cduWon(drpSum),'작년比 60%↓(연환산) — 이탈 방어',(drop.length?_promoBar('_cduPromoDrop'):'')+drpHtml)
-      +tsec('재구매 도래','#16324f',due.length+'개처 · 회당 합계 '+_cduWon(dueSum),'평균 구매주기 경과 — 회당 구매액 순',(due.length?_promoBar('_cduPromoDue'):'')+dueHtml)
-    +'</div>'
-    +'<div class="cdud-sec">'
-      +tsec('휴면 장비 병원','#dc2626',dormant.length+'개처 · 사유 파악 '+dormant.filter(d=>_cduReasonOf(d.n)).length+'/'+dormant.length+' · 작년 '+_cduWon(dorSum),'Oligio·Tightan 보유, 올해 팁 0 — 미사용·경쟁 소모품 의심(작년 매출순)',
-        (dormant.length?_promoBar('_cduPromoDor'):'')+'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(440px,1fr));column-gap:28px">'+dorHtml+'</div>')
-    +'</div>'
+    +'<div class="cdud-sec" style="margin-top:16px">'+tsec('구매 급감 병원','#dc2626',drop.length+'개처 · 작년 팁매출 '+_cduWon(drpSum),'작년比 60%↓(연환산) — 이탈 방어',(drop.length?_promoBar('_cduPromoDrop'):'')+drpHtml)+'</div>'
+    +'<div class="cdud-sec">'+tsec('재구매 도래','#16324f',due.length+'개처 · 회당 합계 '+_cduWon(dueSum),'평균 구매주기 경과 — 회당 구매액 순',(due.length?_promoBar('_cduPromoDue'):'')+dueHtml)+'</div>'
+    +'<div class="cdud-sec">'+tsec('휴면 장비 병원','#dc2626',dormant.length+'개처 · 사유 파악 '+dormant.filter(d=>_cduReasonOf(d.n)).length+'/'+dormant.length+' · 작년 '+_cduWon(dorSum),'Oligio·Tightan 보유, 올해 팁 0 — 미사용·경쟁 소모품 의심(작년 매출순)',(dormant.length?_promoBar('_cduPromoDor'):'')+dorHtml)+'</div>'
   +'</div>';
 }
 function _cduTab(t){ _cduView=t; try{ sessionStorage.setItem('cdu_view', t); }catch(e){}
