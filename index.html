@@ -8725,13 +8725,13 @@ function showPerfDrill(type, label, filter) {
     else html = `<table class="table table-sm table-hover mb-0" style="font-size:12px">
       <thead class="table-light"><tr><th>병원명</th><th>담당</th><th>금액</th><th>단계</th><th>마감</th><th>다음 일정</th><th>제품</th></tr></thead>
       <tbody>${deals.map(d=>`<tr>
-        <td style="font-weight:600">${d.custName||'-'}</td>
-        <td>${d.sales||'-'}</td>
+        <td style="font-weight:600">${_escH(d.custName||'-')}</td>
+        <td>${_escH(d.sales||'-')}</td>
         <td style="font-weight:700;color:#2563eb">${fmtA(Number(d.amount||0))}</td>
-        <td><span style="font-size:11px;font-weight:600;color:${SC[d.stage]||'#666'}">${d.stage||'-'}</span></td>
+        <td><span style="font-size:11px;font-weight:600;color:${SC[d.stage]||'#666'}">${_escH(d.stage||'-')}</span></td>
         <td style="color:#6b7280;white-space:nowrap">${fmtD(d.expectedDate||'')}</td>
-        <td style="color:#059669;font-size:11.5px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.nextAction?`${d.nextAction}${d.nextDate?' · '+fmtD(d.nextDate):''}`:'-'}</td>
-        <td style="color:#6b7280;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.product||'-'}</td>
+        <td style="color:#059669;font-size:11.5px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.nextAction?`${_escH(d.nextAction)}${d.nextDate?' · '+fmtD(d.nextDate):''}`:'-'}</td>
+        <td style="color:#6b7280;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escH(d.product||'-')}</td>
       </tr>`).join('')}</tbody>
     </table>`;
   } else if(type === 'logs') {
@@ -8741,10 +8741,10 @@ function showPerfDrill(type, label, filter) {
       <thead class="table-light"><tr><th>날짜</th><th>병원명</th><th>담당</th><th>유형</th><th>내용</th><th>다음액션</th></tr></thead>
       <tbody>${logs.map(l=>`<tr>
         <td style="color:#6b7280;white-space:nowrap">${fmtD(l.date)}</td>
-        <td style="font-weight:600">${l.custName||'-'}</td>
-        <td>${l.sales||'-'}</td>
-        <td style="color:#2563eb;font-weight:600">${l.type||'-'}</td>
-        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.content||'-'}</td>
+        <td style="font-weight:600">${_escH(l.custName||'-')}</td>
+        <td>${_escH(l.sales||'-')}</td>
+        <td style="color:#2563eb;font-weight:600">${_escH(l.type||'-')}</td>
+        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escH(l.content||'-')}</td>
         <td style="color:#64748b;font-size:11px">${l.nextAction?_escH(l.nextAction):'-'}</td>
       </tr>`).join('')}</tbody>
     </table>`;
