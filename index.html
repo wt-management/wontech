@@ -3279,8 +3279,14 @@ const _PDST = {};  // prefix -> {mode:'simple'|'custom'}
 const _RENDERFN = {ov:'renderSalesOverview', cons:'renderConsumables', dev:'renderDeviceSales', hosp:'renderConsHospitals', devrep:'renderDevReps', reg:'renderRegion'};
 function _todayLocal(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }  // 로컬(KST) 오늘 — toISOString(UTC)는 새벽 00~09시 -1일 오류
 function _ymLocal(){ return _todayLocal().slice(0,7); }
+// ── 연도 롤오버 대비: 데이터에 존재하는 연도로 '올해(CY)'를 구동(2027이 되면 자동 승격) ──
+function _dataYears(){ var s=new Set(); [ (typeof DEVICE!=='undefined'?DEVICE:null),(typeof CONS!=='undefined'?CONS:null) ].forEach(function(D){ if(!D)return; try{ Object.keys(D).forEach(function(k){ var m=k.match(/^monthly(\d{4})$/); if(m) s.add(parseInt(m[1],10)); }); }catch(e){} }); return Array.from(s).sort(function(a,b){return a-b;}); }
+function _curYear(){ var ys=_dataYears(); return ys.length? ys[ys.length-1] : new Date().getFullYear(); }
+function _prevYear(){ return _curYear()-1; }
+function _minDataYear(){ var ys=_dataYears(); return ys.length? ys[0] : _prevYear(); }
 function _dataMaxMonth(){
-  const ms=[].concat(Object.keys(CONS.monthly2026||{}),Object.keys(DEVICE.monthly2026||{})).map(Number).filter(m=>m>=1&&m<=12);
+  const CY=_curYear();
+  const ms=[].concat(Object.keys(CONS['monthly'+CY]||{}),Object.keys(DEVICE['monthly'+CY]||{})).map(Number).filter(m=>m>=1&&m<=12);
   let t=ms.length?Math.max.apply(null,ms):6;
   // 월이 바뀌면 즉시 최신월 반영(성숙월 캡 제거) — 월초 YoY 왜곡은 KPI 카드의 '전월까지' 병기로 해소
   return t;
@@ -3288,8 +3294,9 @@ function _dataMaxMonth(){
 function _renderPrefix(p){ const fn=window[_RENDERFN[p]]; if(fn) fn(); }
 function _gvN(id,d){ const e=document.getElementById(id); return e?(parseInt(e.value)||d):d; }
 function _normPeriod(sy,sm,ey,em){ if(ey<sy||(ey===sy&&em<sm)){ let t; t=sy;sy=ey;ey=t; t=sm;sm=em;em=t; } const cross=(sy!==ey); const lab=cross?(String(sy).slice(2)+'.'+sm+'~'+String(ey).slice(2)+'.'+em):(sm===em?sm+'월':sm+'-'+em+'월'); return {sy:sy,sm:sm,ey:ey,em:em,cross:cross,label:lab}; }
-function _getPeriod(prefix){  // 단일 출처: 4개 커스텀 셀렉터(프리셋이 값을 채움)
-  return _normPeriod(_gvN(prefix+'-csy',2026),_gvN(prefix+'-csm',1),_gvN(prefix+'-cey',2026),_gvN(prefix+'-cem',_dataMaxMonth()));
+function _getPeriod(prefix){  // 단일 출처: 4개 커스텀 셀렉터(프리셋이 값을 채움). 기본연도=데이터 최신연도(CY)
+  var CY=_curYear();
+  return _normPeriod(_gvN(prefix+'-csy',CY),_gvN(prefix+'-csm',1),_gvN(prefix+'-cey',CY),_gvN(prefix+'-cem',_dataMaxMonth()));
 }
 function _spanMonths(p){ const o=[]; for(let y=p.sy;y<=p.ey;y++){ const lo=(y===p.sy?p.sm:1), hi=(y===p.ey?p.em:12); for(let m=lo;m<=hi;m++) o.push({y:y,m:m}); } return o; }
 function _prevSpan(p){ const len=_spanMonths(p).length; let ey=p.sy, em=p.sm-1; if(em<1){em=12;ey--;} let sy=ey, sm=em-len+1; while(sm<1){sm+=12;sy--;} return _normPeriod(sy,sm,ey,em); }
@@ -3302,12 +3309,12 @@ function _setSimpleSel(prefix,y,fm,tm){ const ys=document.getElementById(prefix+
 function _setCustomSel(prefix,sy,sm,ey,em){ const set=(s,v)=>{const e=document.getElementById(prefix+'-'+s); if(e)e.value=v;}; set('csy',sy);set('csm',sm);set('cey',ey);set('cem',em); }
 function _periodUIMode(prefix,custom){ const sb=document.getElementById(prefix+'-simple'); const cb=document.getElementById(prefix+'-custom'); if(sb) sb.style.display=custom?'none':''; if(cb) cb.style.display=custom?'inline-flex':'none'; }
 function _periodPreset(prefix,type,btn){
-  const mx=_dataMaxMonth();
+  const mx=_dataMaxMonth(), CY=_curYear(), PY=_prevYear(), MN=_minDataYear();
   document.querySelectorAll('.pp-'+prefix).forEach(b=>b.classList.remove('pp-on')); if(btn) btn.classList.add('pp-on');
-  if(type==='olhae'){ _setCustomSel(prefix,2026,1,2026,mx); }
-  else if(type==='y2025'){ _setCustomSel(prefix,2025,1,2025,12); }
-  else if(type==='last12'){ let sy=2026,sm=mx-11; while(sm<1){sm+=12;sy--;} _setCustomSel(prefix,sy,sm,2026,mx); }
-  else if(type==='all'){ _setCustomSel(prefix,2025,1,2026,mx); }
+  if(type==='olhae'){ _setCustomSel(prefix,CY,1,CY,mx); }
+  else if(type==='py'){ _setCustomSel(prefix,PY,1,PY,12); }
+  else if(type==='last12'){ let sy=CY,sm=mx-11; while(sm<1){sm+=12;sy--;} _setCustomSel(prefix,sy,sm,CY,mx); }
+  else if(type==='all'){ _setCustomSel(prefix,MN,1,CY,mx); }
   _renderPrefix(prefix);
 }
 function _periodCustomChange(prefix){  // 셀렉터 직접 변경 → 프리셋 칩 강조 해제
@@ -3316,9 +3323,11 @@ function _periodCustomChange(prefix){  // 셀렉터 직접 변경 → 프리셋 
 }
 // 조회기간 컨트롤 HTML (범위 셀렉터 상시 노출 + 프리셋 칩)
 function _periodCtrl(prefix){
-  const yrOpt=[2025,2026].map(y=>'<option value="'+y+'">'+y+'년</option>').join('');
+  const _CY=_curYear(), _PY=_prevYear(), _MN=_minDataYear();
+  const _yrs=[]; for(let _y=Math.min(_MN,_PY); _y<=_CY; _y++) _yrs.push(_y);
+  const yrOpt=_yrs.map(y=>'<option value="'+y+'">'+y+'년</option>').join('');
   const moOpt=Array.from({length:12},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+'월</option>').join('');
-  const presets=[['olhae','올해'],['y2025','2025년'],['last12','최근 12개월'],['all','2025~현재']];
+  const presets=[['olhae','올해'],['py',_PY+'년'],['last12','최근 12개월'],['all',_MN+'~현재']];
   const chips=presets.map(o=>'<button type="button" class="pp-chip pp-'+prefix+'" data-t="'+o[0]+'" onclick="_periodPreset(\''+prefix+'\',\''+o[0]+'\',this)">'+o[1]+'</button>').join('');
   return '<span id="'+prefix+'-custom" style="display:inline-flex;align-items:center;gap:4px;margin-right:8px;padding-right:8px;border-right:1px solid #e5e7eb">'
     +'<select id="'+prefix+'-csy" class="form-select form-select-sm" style="width:94px" onchange="_periodCustomChange(\''+prefix+'\')">'+yrOpt+'</select>'
@@ -3335,7 +3344,7 @@ function _injectPeriodCtrl(prefix){
   const host=document.getElementById(prefix+'-period-host');
   if(host && !host.dataset.init){
     host.innerHTML=_periodCtrl(prefix); host.dataset.init='1';
-    _setCustomSel(prefix,2026,1,2026,_dataMaxMonth());
+    _setCustomSel(prefix,_curYear(),1,_curYear(),_dataMaxMonth());
     // 기본값 1월~최신월(셀렉터 항상 노출, 별도 활성 칩 없음)
   }
 }
@@ -3353,13 +3362,13 @@ function renderSalesOverview() {
   _injectPeriodCtrl('ov');
   const P=_getPeriod('ov'), spanMs=_spanMonths(P), prevMs=_spanMonths(_yoyShift(P));
   const yr=P.ey, prev=yr-1, fromM=P.sm, toM=P.em;   // 차트는 yr 기준(연단위)
-  const _mCY=(src,y)=>y===2026?(src.monthly2026||{}):(y===2025?(src.monthly2025||{}):{});
+  const _mCY=(src,y)=>(src['monthly'+y]||{});
   const _spanS=(src,rng)=>rng.reduce((s,x)=>s+(_mCY(src,x.y)[x.m]||0),0);
 
-  const consCurMo = yr===2026?CONS.monthly2026||{}:CONS.monthly2025||{};
-  const consPrMo  = yr===2026?CONS.monthly2025||{}:{};
-  const devCurMo  = yr===2026?DEVICE.monthly2026||{}:DEVICE.monthly2025||{};
-  const devPrMo   = yr===2026?DEVICE.monthly2025||{}:{};
+  const consCurMo = CONS['monthly'+yr]||{};
+  const consPrMo  = CONS['monthly'+(yr-1)]||{};
+  const devCurMo  = DEVICE['monthly'+yr]||{};
+  const devPrMo   = DEVICE['monthly'+(yr-1)]||{};
 
   // 예정분(회계 미반영) — 2026만 존재. span에 2026 포함 시 표시
   const incPend = (P.sy===2026||P.ey===2026);
@@ -3986,7 +3995,7 @@ function _cntNewLost(hosps){ let nw=0,lost=0; Object.values(hosps).forEach(o=>{ 
 // 병원별 기간 매출(2026/2025) + 담당자/주력제품 (CONS+DEVICE 합산)
 function _hospPeriodVals(P){
   const cur=_spanMonths(P), prev=_spanMonths(_yoyShift(P));
-  const mY=(h,y)=>y===2026?(h.m2026||{}):(y===2025?(h.m2025||{}):{});
+  const mY=(h,y)=>(h['m'+y]||{});
   const sv=(h,rng)=>rng.reduce((s,x)=>s+Number(mY(h,x.y)[x.m]||0),0);
   const byName={};
   const addH=hmap=>Object.entries(hmap||{}).forEach(function(e){ const name=e[0],h=e[1];
@@ -4048,7 +4057,7 @@ function _initRegMap(){
 }
 function _hospDeviceSales(name,P){
   const h=(typeof DEVICE!=='undefined'&&DEVICE.hospitals)?DEVICE.hospitals[name]:null; if(!h) return {v:0,prod:''};
-  const cur=_spanMonths(P), mY=(y)=>y===2026?(h.m2026||{}):(y===2025?(h.m2025||{}):{});
+  const cur=_spanMonths(P), mY=(y)=>(h['m'+y]||{});
   const v=cur.reduce((s,x)=>s+Number(mY(x.y)[x.m]||0),0);
   const pr=h.prods2026||h.prods||{}; const top=Object.entries(pr).sort((a,b)=>b[1]-a[1])[0];
   return {v, prod: top?top[0]:''};
@@ -5057,7 +5066,7 @@ function renderConsumables() {
   const _moM=_lastSpan.m;
   const _lastPrev=[{y:_lastSpan.y-1,m:_lastSpan.m}];
   const ytdLabel = P.label+' 기준';
-  const moCY=y=>y===2026?(CONS.monthly2026||{}):(y===2025?(CONS.monthly2025||{}):{});
+  const moCY=y=>(CONS['monthly'+y]||{});
   const spanMonthlySum=rng=>rng.reduce((s,x)=>s+(moCY(x.y)[x.m]||0),0);
   const spanProdSum=(key,rng)=>rng.reduce((s,x)=>s+((x.y===2025||x.y===2026)?prodSum(x.y,key,[x.m]):0),0);  // prodSum=후방 hoist, 2025/26만(2024는 폴백오류 방지)
 
@@ -5091,7 +5100,7 @@ function renderConsumables() {
 
   // Cartridge — 월별 데이터 없음 → 연간 누계를 기간 비율로 환산(전년과 동일 방식·기간 준수)
   const cartV26full = CONS.groups2026['Cartridge']||0;
-  const totFull26 = Object.values(CONS.monthly2026||{}).reduce((s,v)=>s+v,0);
+  const totFull26 = Object.values(CONS['monthly'+_curYear()]||{}).reduce((s,v)=>s+v,0);
   const cartV26 = totFull26>0 ? Math.round(cartV26full * total2026ytd / totFull26) : 0;
   const cartV25full = Object.entries(CONS.products2025).filter(([k])=>k.toLowerCase().startsWith('cartridge')).reduce((s,[,v])=>s+v,0);
   const totFull25 = Object.values(CONS.monthly2025||{}).reduce((s,v)=>s+v,0);
@@ -5355,7 +5364,7 @@ function renderGradeTrend() {
     {g:'C',c:'#2563eb',bg:'#eff6ff',desc:'50만~300만',min:5e5,max:3e6},
   ];
   const hosps=Object.entries(CONS.hospitals||{});
-  const ytdMonths=Object.keys(CONS.monthly2026||{}).map(Number).filter(m=>m>=1&&m<=12).sort((a,b)=>a-b);
+  const ytdMonths=Object.keys(CONS['monthly'+_curYear()]||{}).map(Number).filter(m=>m>=1&&m<=12).sort((a,b)=>a-b);
   const ytd25=h=>ytdMonths.reduce((s,m)=>s+(h.m2025?.[m]||0),0);
   const fmtA=v=>!v||v<=0?'0':v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만':v.toLocaleString();
   const labels=ytdMonths.map(m=>m+'월');
@@ -5447,7 +5456,7 @@ function showGradeDrill(g) {
   };
   const gr=GRADES[g]; if(!gr) return;
   const fmtA=v=>!v||v<=0?'-':v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만':v.toLocaleString();
-  const ytdMonths=Object.keys(CONS.monthly2026||{}).map(Number).filter(m=>m>=1&&m<=12);
+  const ytdMonths=Object.keys(CONS['monthly'+_curYear()]||{}).map(Number).filter(m=>m>=1&&m<=12);
   const ytd25=h=>ytdMonths.reduce((s,m)=>s+(h.m2025?.[m]||0),0);
   const daysSince=ds=>ds?Math.floor((Date.now()-new Date(ds))/864e5):null;
 
@@ -5539,7 +5548,7 @@ function renderConsHospitals() {
 
   _injectPeriodCtrl('hosp');
   const P=_getPeriod('hosp'), _hcur=_spanMonths(P), _hprev=_spanMonths(_yoyShift(P));
-  const _hmY=(h,y)=>y===2026?(h.m2026||{}):(y===2025?(h.m2025||{}):{});
+  const _hmY=(h,y)=>(h['m'+y]||{});
   const ytd26cur  = h => _hcur.reduce((s,x)=>s+(_hmY(h,x.y)[x.m]||0),0);
   const ytd25est  = h => _hprev.reduce((s,x)=>s+(_hmY(h,x.y)[x.m]||0),0);
   const _prevHasData=_hprev.some(x=>x.y===2025||x.y===2026);   // 전년 비교기간에 데이터가 있나(2024↓ 없음)
@@ -5707,7 +5716,7 @@ function renderHospRank() {
   const gradeF= document.getElementById('hosp-grade-filter')?.value||'';
   const sortKey=document.getElementById('hosp-sort')?.value||'ytd26';
   const _P=_getPeriod('hosp'), _hcur=_spanMonths(_P), _hprev=_spanMonths(_yoyShift(_P));
-  const _hmY=(h,y)=>y===2026?(h.m2026||{}):(y===2025?(h.m2025||{}):{});
+  const _hmY=(h,y)=>(h['m'+y]||{});
   const cur26=h=>_hcur.reduce((s,x)=>s+(_hmY(h,x.y)[x.m]||0),0);
   const ytd25est=h=>_hprev.reduce((s,x)=>s+(_hmY(h,x.y)[x.m]||0),0);
   const GRADE=h=>{const v=h.y2026||0;if(v>=5e7)return{g:'S',c:'#9333ea',bg:'#f3e8ff'};if(v>=1e7)return{g:'A',c:'#dc2626',bg:'#fee2e2'};if(v>=3e6)return{g:'B',c:'#d97706',bg:'#fef3c7'};if(v>=5e5)return{g:'C',c:'#2563eb',bg:'#eff6ff'};return{g:'-',c:'#64748b',bg:'#f3f4f6'};};
@@ -5790,7 +5799,7 @@ function renderConsAccounts() { renderConsHospitals(); }
 function consExportAccounts() {
   const q = (document.getElementById('hosp-search')?.value||'').trim().toLowerCase();
   let list = Object.entries(CONS.hospitals).filter(([n])=>!q||n.toLowerCase().includes(q));
-  const _ym=Object.keys(CONS.monthly2026||{}).map(Number).filter(m=>m>=1&&m<=12), _lastM=_ym.length?Math.max(..._ym):0;
+  const _ym=Object.keys(CONS['monthly'+_curYear()]||{}).map(Number).filter(m=>m>=1&&m<=12), _lastM=_ym.length?Math.max(..._ym):0;
   const ytd25est = h => _ym.reduce((s,m)=>s+((h.m2025||{})[m]||0),0);   // 화면과 동일: 실제 1~마지막데이터월 m2025 합
   const ytd26cur = h => _ym.reduce((s,m)=>s+((h.m2026||{})[m]||0),0);
   list.sort((a,b)=>ytd26cur(b[1])-ytd26cur(a[1]));
@@ -9138,7 +9147,7 @@ function showHospitalDetail(name){
   const expiring=equips.filter(e=>e.warrantyEnd&&Math.ceil((new Date(e.warrantyEnd)-now)/(864e5))<=60).length;
   // 소모품 실적 (CONS.hospitals 연동)
   const hospCons = CONS.hospitals?.[name];
-  const ytdMo = Object.keys(CONS.monthly2026||{}).map(Number).filter(m=>m>=1&&m<=12);
+  const ytdMo = Object.keys(CONS['monthly'+_curYear()]||{}).map(Number).filter(m=>m>=1&&m<=12);
   const cons26 = hospCons?.y2026||0, cons25est = hospCons?ytdMo.reduce((s,m)=>s+(hospCons.m2025?.[m]||0),0):0;
   const consChg = cons25est>0?((cons26/cons25est-1)*100).toFixed(1):null;
   const _EXCL_SUMMARY = new Set(['A/S소모품','의료기기']);
@@ -11161,8 +11170,8 @@ function renderDeviceSales() {
   const PP = _yoyShift(P);
   const spanMs = _spanMonths(P);   // [{y,m}]
   const prevMs = _spanMonths(PP);
-  const moY        = y => y===2026 ? (DEVICE.monthly2026||{})    : y===2025 ? (DEVICE.monthly2025||{})    : {};
-  const prodMoY    = y => y===2026 ? (DEVICE.prodMo2026||{})     : y===2025 ? (DEVICE.prodMo2025||{})     : {};
+  const moY        = y => (DEVICE['monthly'+y]||{});
+  const prodMoY    = y => (DEVICE['prodMo'+y]||{});
   const prodMoQtyY = y => y===2026 ? (DEVICE.prodMoQty2026||{})  : y===2025 ? (DEVICE.prodMoQty2025||{})  : {};
   const _prevFull = PP.sy>=2025;   // 전년 데이터가 온전한 경우만 YoY 표시
   const ytdCur  = spanMs.reduce((s,x)=>s+(moY(x.y)[x.m]||0), 0);
@@ -11203,7 +11212,7 @@ function renderDeviceSales() {
   let peakM=null,peakV=0; spanMs.forEach(x=>{ const v=moY(x.y)[x.m]||0; if(v>peakV){peakV=v;peakM=x.m;} });
   const avgPrice=totUnits>0?ytdCur/totUnits:0;
   // KPI 카드
-  const noData = Object.keys(DEVICE.monthly2026||{}).length === 0 && Object.keys(DEVICE.monthly2025||{}).length === 0;
+  const noData = Object.keys(DEVICE['monthly'+_curYear()]||{}).length === 0 && Object.keys(DEVICE['monthly'+_prevYear()]||{}).length === 0;
   document.getElementById('dev-kpi').innerHTML = noData
     ? `<div class="card p-4 text-center text-muted mb-3"><i class="bi bi-cloud-upload me-2"></i>소모품 메뉴에서 Excel 업로드 후 데이터가 표시됩니다</div>`
     : '<div class="wt-band">'
@@ -11352,7 +11361,7 @@ function _devRepPeriodChange() {
 
 function devRepExport() {
   const P=_getPeriod('devrep'), yr=P.ey, _cur=_spanMonths(P), _prev=_spanMonths(_yoyShift(P));   // 화면 기간엔진과 통일(숨은 옛 셀렉터 제거)
-  const _mY=(o,y)=>y===2026?(o.m2026||{}):(y===2025?(o.m2025||{}):{});
+  const _mY=(o,y)=>(o['m'+y]||{});
   const _spanV=(o,rng)=>rng.reduce((s,x)=>s+(_mY(o,x.y)[x.m]||0),0);
   const _spanKeys={}; _cur.forEach(x=>{_spanKeys[x.y+'-'+x.m]=1;});
   const _repSpan={};
@@ -11709,7 +11718,7 @@ function renderDevReps() {
   _injectPeriodCtrl('devrep');
   const P=_getPeriod('devrep'), _cur=_spanMonths(P), _prev=_spanMonths(_yoyShift(P));
   const _devPrevFull = _yoyShift(P).sy>=2025;   // 전년창이 2024로 넘어가면 데이터 없어 YoY 부풀려짐 → '-' 처리
-  const _mY=(o,y)=>y===2026?(o.m2026||{}):(y===2025?(o.m2025||{}):{});
+  const _mY=(o,y)=>(o['m'+y]||{});
   const _spanV=(o,rng)=>rng.reduce((s,x)=>s+(_mY(o,x.y)[x.m]||0),0);
   const _endY=P.ey;   // 대수/거래처수/주력제품은 연단위 지표 → 종료연도 기준
   // 담당자 기준 재집계(HOSP_INFO.mgr 우선) — 고객사에서 담당자 바꾸면 여기 즉시 반영됨
@@ -11760,7 +11769,7 @@ function renderDevReps() {
 function showDevRepDetail(repName) {
   const fmtW = v => (v=Number(v||0))>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만원':Math.round(v).toLocaleString()+'원';
   const P=_getPeriod('devrep'), _cur=_spanMonths(P), _prev=_spanMonths(_yoyShift(P));
-  const _mY=(o,y)=>y===2026?(o.m2026||{}):(y===2025?(o.m2025||{}):{});
+  const _mY=(o,y)=>(o['m'+y]||{});
   const _spanV=(o,rng)=>rng.reduce((s,x)=>s+(_mY(o,x.y)[x.m]||0),0);
   const _endY=P.ey, yr=_endY;
   const rep   = _repsByMgr(DEVICE.hospitals)[repName];
@@ -11859,8 +11868,8 @@ function showDevRepDetail(repName) {
 
   // 차트 렌더
   if (_devRepChart) { _devRepChart.destroy(); _devRepChart=null; }
-  const curM  = yr===2026?rep.m2026||{}:rep.m2025||{};
-  const preM  = yr===2026?rep.m2025||{}:{};
+  const curM  = rep['m'+yr]||{};
+  const preM  = rep['m'+(yr-1)]||{};
   const months12 = Array.from({length:12},(_,i)=>i+1);
   requestAnimationFrame(() => {
     const ctx2 = document.getElementById(chartId);
