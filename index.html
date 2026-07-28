@@ -7152,7 +7152,7 @@ function renderCDUReport(vs){
     +fact('올해 팁매출',_cduWon(visitedRev),(visitedRevPrev>0?'전년 동기 '+_cduWon(visitedRevPrev):'관리처 팁매출'),'','_cduDrillVip()')
     +fact('리스크 감지',churnU.length+'개처',(churnU.length?'선제 대응 진행 중':'감지 리스크 없음'),(churnU.length?'rd':''),'_cduDrillChurn()')
     +fact('이벤트 진행',ev+'건','마케팅 이벤트 방문','',ev?'_cduDrillEvent()':'')
-    +(function(){var c=_cduReels().filter(function(v){var s=_cduReelStageOf(v);return s==='촬영완료'||s==='게시완료';}).length;return fact('릴스 이벤트',c+'건','누계 · 촬영 완료','',c?"_cduTab('reels')":'');})()
+    +(function(){var rp=0,rc=0,rg=0;_cduReels().forEach(function(v){var s=_cduReelStageOf(v);if(s==='제안')rp++;else if(s==='촬영완료')rc++;else if(s==='게시완료')rg++;});var tot=rp+rc+rg;return fact('릴스 이벤트',tot+'건','제안 '+rp+' · 촬영 '+rc+' · 게시 '+rg,'',tot?"_cduTab('reels')":'');})()
   +'</div>';
   var focusBand='<div class="cdud-bt">집중관리 분석 <u>· 이 기간 방문이 휴면·급감 공략으로 이어졌는가 · 클릭 상세</u></div>'
     +'<div class="cdud-band">'
