@@ -11046,8 +11046,6 @@ function _dvDrill(type,key){
   var head='<div style="font-size:21px;font-weight:800;color:'+_dvCol(dTot)+';margin-bottom:12px">'+_dvSgn(dTot)+' <span style="font-size:12px;font-weight:400;color:#94a3b8">전년 동기 대비 증감</span></div>';
   _dvShowModal('<i class="bi bi-graph-up-arrow me-1" style="color:#2563eb"></i>'+String(title),head+tables);
 }
-<<<<<<< Updated upstream
-=======
 function _dvExec(idx){
   var pAll=_dvRows(idx.prod), dAll=_dvRows(idx.dealer);
   var t26=0,t25=0; pAll.forEach(function(r){t26+=r.a;t25+=r.b;});
@@ -11080,26 +11078,12 @@ function _dvExec(idx){
     +'<span style="font-size:12px;color:#64748b">'+_dvFmtW(t25)+' → <b>'+_dvFmtW(t26)+'</b></span></div>'
     +'<div style="padding:8px 16px 10px">'+line('▲','성장 동력',driveH)+line('⚠','리스크',riskH)+line('◆','기회',oppH)+line('☑','권장 조치','<div style="font-size:11.5px">'+actH+'</div>')+'</div></div>';
 }
->>>>>>> Stashed changes
 function renderDevVariance(){
   var host=document.getElementById('dev-variance'); if(!host) return;
   if(typeof DEVICE==='undefined'||!DEVICE.hospitals){ host.innerHTML=''; return; }
   var idx=_dvBuild(); var curM=idx.curM, P=idx.P;
   var pAll=_dvRows(idx.prod), dAll=_dvRows(idx.dealer);
-<<<<<<< Updated upstream
-  var t26=0,t25=0; pAll.forEach(function(r){t26+=r.a;t25+=r.b;});
-  var dTot=t26-t25, yoy=t25>0?(dTot/t25*100):null, yoyStr=yoy===null?'-':(dTot>=0?'+':'')+yoy.toFixed(0)+'%';
-  var g=pAll[0], l=pAll[pAll.length-1], dg=dAll[0], dl=dAll[dAll.length-1];
-  var narr='<div style="flex:1;min-width:260px;font-size:12px;color:#334155;line-height:1.7">'
-    +(g?('제품: <b style="color:'+_dvCol(g.d)+'">'+_dvEsc(g.name)+' '+_dvSgn(g.d)+'</b>'+(l&&l.d<0?' 견인, <b style="color:#dc2626">'+_dvEsc(l.name)+' '+_dvSgn(l.d)+'</b> 상쇄':'')+'<br>'):'')
-    +'대리점: '+(dg&&dg.d>0?('<b style="color:#16a34a">'+_dvEsc(dg.name)+' '+_dvSgn(dg.d)+'</b>'):'-')+(dl&&dl.d<0?(' · <b style="color:#dc2626">'+_dvEsc(dl.name)+' '+_dvSgn(dl.d)+(dl.a===0?'(이탈)':'')+'</b>'):'')+'</div>';
-  var head='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:12px 16px;background:linear-gradient(135deg,#eff6ff,#faf5ff);border:1px solid #e0e7ff;border-radius:12px;margin-bottom:12px">'
-    +'<div><div style="font-size:11px;color:#94a3b8">전년 동기 대비 총 증감 · '+P.label+'</div>'
-    +'<div style="font-size:23px;font-weight:800;color:'+_dvCol(dTot)+'">'+_dvSgn(dTot)+' <span style="font-size:13px">('+yoyStr+')</span></div>'
-    +'<div style="font-size:12px;color:#64748b">'+_dvFmtW(t25)+' → <b>'+_dvFmtW(t26)+'</b></div></div>'+narr+'</div>';
-=======
   var head=_dvExec(idx);
->>>>>>> Stashed changes
   var seg=function(cur){ var o=[['cum','누계'],['mon','월별']]; return '<div style="display:inline-flex;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden">'+o.map(function(x,i){return '<button onclick="_setDevVarMode(\''+x[0]+'\')" style="border:none;'+(i?'border-left:1px solid #e2e8f0;':'')+'padding:5px 14px;font-size:12px;cursor:pointer;background:'+(cur===x[0]?'#2563eb':'#fff')+';color:'+(cur===x[0]?'#fff':'#475569')+'">'+x[1]+'</button>';}).join('')+'</div>'; };
   var body='';
   if(_devVarMode==='cum'){
