@@ -11775,8 +11775,10 @@ function showDevRepDetail(repName) {
 
   // 제품별 실적도 선택 기간으로 재집계(연간 누계 고정 버그 수정)
   const _spanKeysR={}; _cur.forEach(x=>{_spanKeysR[x.y+"-"+x.m]=1;});
+  // 입사일 라우팅 일치: 각 거래의 실제 귀속자(현담당/전임자)를 판정해 repName 소유분만 집계(랭크·월별표와 동일 기준)
+  const _ownerOfTxn=(hn,h,y,mo)=>{ const cur=_repOf(hn); if(!cur) return ''; const jm=(typeof _repJoinMo==='function')?_repJoinMo(cur):0; return (jm&&mo&&(y*12+mo)<jm)?_repPredecessor(hn,h,cur):cur; };
   const prods={};
-  Object.entries(DEVICE.hospitals||{}).forEach(([hn,h])=>{ if(_repOf(hn)!==repName) return; [["txns2026",2026],["txns2025",2025]].forEach(([tk,y])=>{ (h[tk]||[]).forEach(t=>{ if(!_spanKeysR[y+"-"+(+t[0])]) return; const prod=t[3], amt=Number(t[4]||0); if(prod) prods[prod]=(prods[prod]||0)+amt; }); }); });
+  Object.entries(DEVICE.hospitals||{}).forEach(([hn,h])=>{ [["txns2026",2026],["txns2025",2025]].forEach(([tk,y])=>{ (h[tk]||[]).forEach(t=>{ const mo=+t[0]; if(!_spanKeysR[y+"-"+mo]) return; if(_ownerOfTxn(hn,h,y,mo)!==repName) return; const prod=t[3], amt=Number(t[4]||0); if(prod) prods[prod]=(prods[prod]||0)+amt; }); }); });
   const maxP  = Math.max(...Object.values(prods))||1;
   const COLS  = ['#16a34a'];  // 장비 단일색(무지개 제거)
   const prodsHtml = Object.entries(prods).sort((a,b)=>b[1]-a[1]).map(([p,v],i)=>`
@@ -11790,13 +11792,10 @@ function showDevRepDetail(repName) {
       </div>
     </div>`).join('') || '<div class="text-muted" style="font-size:12px">데이터 없음</div>';
 
-  const hospList = Object.entries(DEVICE.hospitals||{})
-    .filter(([name])=>_repOf(name)===repName)
-    .map(([name,h]) => {
-      const cur  = _spanV(h,_cur);
-      const pre  = _spanV(h,_prev);
-      return {name, cur, pre, topProd:h.topProd||'', lastDate:h.lastDate||''};
-    }).filter(h=>h.cur>0||h.pre>0).sort((a,b)=>b.cur-a.cur);
+  const _preKeysR={}; _prev.forEach(x=>{_preKeysR[x.y+"-"+x.m]=1;});
+  const _hAgg={};
+  Object.entries(DEVICE.hospitals||{}).forEach(([hn,h])=>{ [["txns2026",2026],["txns2025",2025]].forEach(([tk,y])=>{ (h[tk]||[]).forEach(t=>{ const mo=+t[0]; if(_ownerOfTxn(hn,h,y,mo)!==repName) return; const amt=Number(t[4]||0), key=y+"-"+mo; const o=_hAgg[hn]||(_hAgg[hn]={cur:0,pre:0,topProd:h.topProd||'',lastDate:h.lastDate||''}); if(_spanKeysR[key]) o.cur+=amt; if(_preKeysR[key]) o.pre+=amt; }); }); });
+  const hospList = Object.entries(_hAgg).map(([name,o])=>({name,cur:o.cur,pre:o.pre,topProd:o.topProd,lastDate:o.lastDate})).filter(h=>h.cur>0||h.pre>0).sort((a,b)=>b.cur-a.cur);
 
   const hospHtml = hospList.length
     ? `<table class="table table-sm mb-0">
@@ -11814,7 +11813,7 @@ function showDevRepDetail(repName) {
     : '<div class="text-muted p-2" style="font-size:12px">해당 기간 거래처 없음</div>';
 
   // ── 월별 매출 전년 비교표(요청) ──
-  const _cM = rep.m2026||{}, _pM = rep.m2025||{};
+  const _cM = _mY(rep,yr)||{}, _pM = _mY(rep,yr-1)||{};   // 선택 종료연도 기준(2025단독/연도경계도 정확)
   const _monList = _cur.map(x=>x.m);
   const _repCur = _monList.reduce((s2,m)=>s2+(_cM[m]||0),0);
   const _repPre = _prev.map(x=>x.m).reduce((s2,m)=>s2+(_pM[m]||0),0);
