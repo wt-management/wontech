@@ -1088,6 +1088,30 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 #page-cdu #cdu-filterbar .form-control,#page-cdu #cdu-filterbar .form-select{border-radius:9999px;border:1px solid var(--hair);font-size:12.5px}
 #page-cdu #cdu-filterbar .form-control:focus,#page-cdu #cdu-filterbar .form-select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(0,102,204,.12)}
 #page-cdu #cdu-filterbar .btn{border-radius:9999px}
+/* == CDU 모바일 최적화 (≤640px): 병원 대기 중 폰 활용 == */
+@media(max-width:640px){
+  #page-cdu .page-header{flex-direction:column;align-items:stretch;gap:9px}
+  #page-cdu .page-header>h5{margin-bottom:0}
+  #page-cdu .page-header .btn-group{width:100%;display:flex}
+  #page-cdu .page-header .btn-group>.btn{flex:1;min-height:44px;padding:7px 3px;font-size:11.5px}
+  #page-cdu .page-header .btn-group>.btn i{display:block;margin:0 0 2px 0!important;font-size:14px}
+  #page-cdu #cdu-filterbar{padding:9px 11px!important}
+  #page-cdu #cdu-filterbar .d-flex{gap:7px!important}
+  #page-cdu #cdu-search{flex:1 1 100%!important;width:100%!important;min-width:0!important;min-height:44px;order:-2}
+  #page-cdu #cdu-period-chips{order:-1;flex:1 1 100%;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;padding-bottom:3px}
+  #page-cdu #cdu-sales{flex:1 1 auto;min-width:0;min-height:42px}
+  #page-cdu #cdu-filterbar .btn{display:none}  /* 내보내기·요약은 PC에서 · 추가는 FAB */
+  #page-cdu #cdu-count{flex:1 1 auto;order:6;font-size:12px;text-align:right}
+  #page-cdu .cdu-chip{min-height:34px;display:inline-flex;align-items:center;padding:6px 13px;font-size:12.5px}
+  #page-cdu .form-control-sm,#page-cdu .form-select-sm{min-height:44px;font-size:15px}
+  #cdu-fab{display:inline-flex!important}
+}
+/* CDU 입력 모달 모바일 터치·확대 방지(15px) */
+@media(max-width:640px){
+  #cduVisitModal .form-control-sm,#cduVisitModal .form-select-sm,#cduQuickModal .form-control-sm,#cduQuickModal .form-select-sm{min-height:44px;font-size:15px}
+  #cduVisitModal .cdu-chip,#cduQuickModal .cdu-chip{min-height:34px;padding:6px 13px;font-size:12.5px}
+  #cduVisitModal #cd-fb{min-height:150px;font-size:15px}
+}
 </style>
 
     <div class="page-header">
@@ -1096,6 +1120,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <button id="cdu-tab-report" class="btn btn-primary" onclick="_cduTab('report')"><i class="bi bi-graph-up-arrow me-1"></i>대시보드</button>
         <button id="cdu-tab-input" class="btn btn-outline-primary" onclick="_cduTab('input')"><i class="bi bi-calendar-week me-1"></i>일정 관리</button>
         <button id="cdu-tab-target" class="btn btn-outline-primary" onclick="_cduTab('target')"><i class="bi bi-bullseye me-1"></i>타깃 병원</button>
+        <button id="cdu-tab-reels" class="btn btn-outline-primary" onclick="_cduTab('reels')"><i class="bi bi-camera-reels me-1"></i>릴스 관리</button>
       </div>
     </div>
     <div class="card p-2 mb-3" id="cdu-filterbar">
@@ -1115,9 +1140,11 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <button id="cdu-add-btn" class="btn btn-primary btn-sm" onclick="openCDUQuick()"><i class="bi bi-plus-lg me-1"></i>일정 추가</button>
       </div>
     </div>
+    <button id="cdu-fab" title="추가" onclick="var b=document.getElementById('cdu-add-btn'); b?b.click():openCDUQuick();" style="display:none;position:fixed;right:16px;bottom:82px;z-index:1035;width:56px;height:56px;border-radius:50%;background:#0066cc;color:#fff;border:0;box-shadow:0 6px 20px rgba(0,102,204,.45);align-items:center;justify-content:center;font-size:26px;line-height:1;padding:0"><i class="bi bi-plus-lg"></i></button>
     <div id="cdu-report"></div>
     <div id="cdu-input" style="display:none"></div>
     <div id="cdu-target" style="display:none"></div>
+    <div id="cdu-reels" style="display:none"></div>
     <div id="cdu-plan" style="display:none"></div>
     <div id="cdu-keyman" style="display:none"></div>
   </div>
@@ -1157,9 +1184,10 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
           <div><span class="cdu-chip" data-for="cd-chan" data-v="리얼모델" onclick="_cduChip(this)">리얼모델</span><span class="cdu-chip" data-for="cd-chan" data-v="블로그" onclick="_cduChip(this)">블로그</span><span class="cdu-chip" data-for="cd-chan" data-v="앱" onclick="_cduChip(this)">앱</span><span class="cdu-chip" data-for="cd-chan" data-v="유튜브" onclick="_cduChip(this)">유튜브</span><span class="cdu-chip" data-for="cd-chan" data-v="인스타그램" onclick="_cduChip(this)">인스타그램</span><span class="cdu-chip" data-for="cd-chan" data-v="카페" onclick="_cduChip(this)">카페</span><span class="cdu-chip" data-for="cd-chan" data-v="페이스북" onclick="_cduChip(this)">페이스북</span><span class="cdu-chip" data-for="cd-chan" data-v="N/A" onclick="_cduChip(this)">N/A</span></div></div>
         <div class="col-md-2 col-6"><label class="form-label" style="font-size:12px">이벤트</label><select id="cd-event" class="form-select form-select-sm"><option value="">-</option><option>원내</option><option>외부</option><option>X</option></select></div>
         <div class="col-md-2 col-6"><label class="form-label" style="font-size:12px">릴스 촬영</label><select id="cd-reels" class="form-select form-select-sm"><option value="">-</option><option>제안</option><option>촬영완료</option><option>X</option></select></div>
+        <div class="col-12"><label class="form-label" style="font-size:12px"><i class="bi bi-camera-reels me-1" style="color:#db2777"></i>릴스 URL <span class="text-muted">(촬영·게시 링크 — 여러 개는 띄어쓰기로 구분)</span></label><input id="cd-reels-url" class="form-control form-control-sm" placeholder="https://www.instagram.com/reel/... 붙여넣기" inputmode="url"></div>
 
         <div class="col-12 cdu-sec">영업 코멘트</div>
-        <div class="col-12"><label class="form-label" style="font-size:12px">병원 피드백</label><textarea id="cd-fb" class="form-control form-control-sm" rows="2"></textarea></div>
+        <div class="col-12"><label class="form-label" style="font-size:12px">병원 피드백 <span class="text-muted">(현장 대화·결과 상세히)</span></label><textarea id="cd-fb" class="form-control form-control-sm" rows="6" style="min-height:130px"></textarea></div>
         <div class="col-12"><label class="form-label" style="font-size:12px">병원 담당자 프로필 <span class="text-muted">(실장·구매담당 등 이력·성향 참고)</span></label><textarea id="cd-contact-profile" class="form-control form-control-sm" rows="2" placeholder="예: 김실장 — 결정권 큼, 가격 민감. 전 병원서 써마지 운영. 원장 신뢰 두터움"></textarea></div>
         <div class="col-12"><label class="form-label" style="font-size:12px">이탈 가능성</label><input id="cd-churn" class="form-control form-control-sm" placeholder="예: 볼뉴머로 이탈 우려"></div>
         <div class="col-12" style="border-top:1px dashed #d8b4fe;padding-top:10px;margin-top:6px"><label class="form-label" style="font-size:12px;color:#7c3aed;font-weight:700">소모품 미구매 사유 <span class="text-muted" style="font-weight:400">(장비는 있는데 왜 안 사는가 — 집중관리 핵심)</span></label>
@@ -6360,12 +6388,80 @@ function renderCDU(){
   _cduFillSales(); _cduFillPeriodChips();
   var dl=document.getElementById('cdu-hosp-list'); if(dl && CONS.hospitals){ dl.innerHTML=Object.keys(CONS.hospitals).slice(0,800).map(n=>'<option value="'+_cduEsc(n)+'">').join(''); }
   var fb=document.getElementById('cdu-filterbar'); if(fb) fb.style.display=(_cduView==='keyman'||_cduView==='plan'||_cduView==='target')?'none':'';
+  if(_cduView==='reels'){ renderCDUReels(); return; }
   if(_cduView==='target'){ renderCDUTarget(); return; }
   if(_cduView==='keyman'){ renderCDUKeyman(); return; }
   if(_cduView==='plan'){ renderCDUPlan(); return; }
   var vs=_cduFiltered();
   var cc=document.getElementById('cdu-count'); if(cc) cc.textContent='· '+vs.length+'건 · '+_cduPeriodLabel();
   if(_cduView==='report') renderCDUReport(vs); else renderCDUInput(vs);
+}
+// ── 릴스 관리: 촬영·제안·게시 추적 + URL 모음(열기/복사) ──
+function renderCDUReels(){
+  var el=document.getElementById('cdu-reels'); if(!el) return;
+  var vs=_cduFiltered();
+  var reelRe=/^(촬영완료|제안|O)$/i;
+  var list=vs.filter(function(v){ return v.status!=='planned' && ( reelRe.test((v.reels||'').trim()) || (v.reelsUrl||'').trim() ); })
+             .sort(function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')); });
+  var cc=document.getElementById('cdu-count'); if(cc) cc.textContent='· 릴스 '+list.length+'건 · '+_cduPeriodLabel();
+  window._cduCopyReel=function(u){ try{ navigator.clipboard.writeText(u).then(function(){ showToast('URL 복사됨',true); }); }catch(e){ showToast('복사 실패',true,true); } };
+  var nDone=list.filter(function(v){return /^(촬영완료|O)$/i.test((v.reels||'').trim());}).length;
+  var nProp=list.filter(function(v){return /^제안$/.test((v.reels||'').trim());}).length;
+  var nUrl=list.filter(function(v){return (v.reelsUrl||'').trim();}).length;
+  var nHosp=new Set(list.map(function(v){return (v.custName||'').trim();}).filter(Boolean)).size;
+  var css='<style>#cdu-reels .rl-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}'
+    +'#cdu-reels .rl-k{background:#fff;border:1px solid #eef0f4;border-radius:12px;padding:12px 14px}'
+    +'#cdu-reels .rl-k b{display:block;font-size:22px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}'
+    +'#cdu-reels .rl-k span{display:block;font-size:11.5px;color:#6b7280;margin-top:3px;font-weight:600}'
+    +'#cdu-reels .rl-card{background:#fff;border:1px solid #eef0f4;border-radius:12px;padding:13px 15px;margin-bottom:10px}'
+    +'#cdu-reels .rl-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}'
+    +'#cdu-reels .rl-hosp{font-size:14px;font-weight:800;color:#111827}'
+    +'#cdu-reels .rl-badge{font-size:10.5px;font-weight:800;border-radius:5px;padding:2px 7px;white-space:nowrap}'
+    +'#cdu-reels .rl-meta{font-size:12px;color:#6b7280;margin-top:3px}'
+    +'#cdu-reels .rl-fb{font-size:12.5px;color:#374151;margin-top:6px;line-height:1.5;white-space:pre-line}'
+    +'#cdu-reels .rl-url{display:flex;align-items:center;gap:8px;margin-top:8px;background:#fafbfc;border:1px solid #eef0f4;border-radius:9px;padding:7px 10px}'
+    +'#cdu-reels .rl-open{flex-shrink:0;font-size:12.5px;font-weight:700;color:#fff;background:#db2777;border-radius:7px;padding:6px 12px;text-decoration:none;white-space:nowrap;min-height:36px;display:inline-flex;align-items:center;gap:4px}'
+    +'#cdu-reels .rl-link{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:#64748b}'
+    +'#cdu-reels .rl-copy{flex-shrink:0;border:1px solid #e5e7eb;background:#fff;border-radius:7px;min-width:38px;min-height:36px;cursor:pointer;color:#475569;font-size:14px}'
+    +'#cdu-reels .rl-nourl{margin-top:8px;font-size:12px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:7px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px}'
+    +'#cdu-reels .rl-add{border:0;background:#0066cc;color:#fff;border-radius:7px;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;min-height:34px}'
+    +'@media(max-width:640px){#cdu-reels .rl-kpis{grid-template-columns:1fr 1fr}#cdu-reels .rl-url{flex-wrap:wrap}#cdu-reels .rl-link{flex-basis:100%;order:3}}'
+    +'</style>';
+  if(!list.length){ el.innerHTML=css+'<div class="card p-5 text-center text-muted" style="font-size:14px"><i class="bi bi-camera-reels" style="font-size:28px;color:#f9a8d4"></i><div class="mt-2">이 기간 등록된 릴스가 없습니다.<br><b>일정 관리</b> 탭 → 방문 기록에서 <b>릴스 촬영</b> 상태와 <b>릴스 URL</b>을 입력하면 여기 모입니다.</div></div>'; return; }
+  var kpis='<div class="rl-kpis">'
+    +'<div class="rl-k"><b style="color:#111827">'+list.length+'</b><span>릴스 활동 · '+nHosp+'개처</span></div>'
+    +'<div class="rl-k"><b style="color:#db2777">'+nDone+'</b><span>촬영 완료</span></div>'
+    +'<div class="rl-k"><b style="color:#f472b6">'+nProp+'</b><span>촬영 제안</span></div>'
+    +'<div class="rl-k"><b style="color:#16a34a">'+nUrl+'</b><span>URL 게시</span></div></div>';
+  var rows=list.map(function(v){
+    var done=/^(촬영완료|O)$/i.test((v.reels||'').trim());
+    var prop=/^제안$/.test((v.reels||'').trim());
+    var badge=done?'<span class="rl-badge" style="color:#db2777;background:#fce7f3">✓ 촬영완료</span>'
+      :prop?'<span class="rl-badge" style="color:#be185d;background:#fbcfe8">제안</span>':'';
+    var urls=(v.reelsUrl||'').trim().split(/\s+/).filter(Boolean);
+    var urlHtml=urls.map(function(u){
+      var isHttp=/^https?:\/\//i.test(u);
+      var safe=encodeURIComponent(u);
+      var disp=_cduEsc(u.replace(/^https?:\/\//i,'').slice(0,60));
+      return '<div class="rl-url">'
+        +(isHttp?'<a class="rl-open" href="'+_cduEsc(u)+'" target="_blank" rel="noopener"><i class="bi bi-play-circle-fill"></i>열기</a>':'<span class="rl-open" style="background:#94a3b8">링크</span>')
+        +'<span class="rl-link" title="'+_cduEsc(u)+'">'+disp+'</span>'
+        +'<button class="rl-copy" title="URL 복사" onclick="_cduCopyReel(decodeURIComponent(\''+safe+'\'))"><i class="bi bi-clipboard"></i></button></div>';
+    }).join('');
+    if(!urls.length && done){ urlHtml='<div class="rl-nourl"><span><i class="bi bi-exclamation-circle me-1"></i>촬영은 완료됐지만 URL 미등록</span><button class="rl-add" onclick="openCDUVisit(\''+v.id+'\')">URL 추가</button></div>'; }
+    var fb=(v.feedback||'').trim();
+    return '<div class="rl-card">'
+      +'<div class="rl-top"><span class="rl-hosp">'+_cduEsc(v.custName||'-')+'</span>'+badge
+      +'<span style="flex:1"></span><span style="font-size:11.5px;color:#94a3b8;white-space:nowrap">'+_cduEsc(v.date||'')+'</span></div>'
+      +'<div class="rl-meta">'+(v.sales?'<i class="bi bi-person me-1"></i>'+_cduEsc(v.sales):'')+(v.mainProc?' · '+_cduEsc(v.mainProc):'')+'</div>'
+      +(fb?'<div class="rl-fb">'+_cduEsc(fb.slice(0,160))+(fb.length>160?'…':'')+'</div>':'')
+      +urlHtml
+      +'<div style="text-align:right;margin-top:8px"><button class="rl-add" style="background:#eef2f7;color:#334155" onclick="openCDUVisit(\''+v.id+'\')"><i class="bi bi-pencil me-1"></i>방문 기록 열기</button></div>'
+      +'</div>';
+  }).join('');
+  el.innerHTML=css
+    +'<div style="font-size:13.5px;font-weight:800;color:#111827;padding:2px 0 12px"><i class="bi bi-camera-reels me-1" style="color:#db2777"></i>릴스 촬영·게시 추적 <span style="font-size:11.5px;font-weight:600;color:#94a3b8;margin-left:4px">촬영한 릴스가 어디에 게시됐는지 링크로 관리</span></div>'
+    +kpis+rows;
 }
 // ── 타깃 병원: 데이터가 찍어주는 다음 방문지 (재구매 도래 + 휴면 장비) ──
 function renderCDUTarget(){
@@ -6443,10 +6539,11 @@ function renderCDUTarget(){
   +'</div>';
 }
 function _cduTab(t){ _cduView=t; try{ sessionStorage.setItem('cdu_view', t); }catch(e){}
-  ['report','input','target','plan','keyman'].forEach(function(x){ var b=document.getElementById('cdu-tab-'+x); if(b) b.className='btn btn-'+(x===t?'primary':'outline-primary'); });
+  ['report','input','target','reels','plan','keyman'].forEach(function(x){ var b=document.getElementById('cdu-tab-'+x); if(b) b.className='btn btn-'+(x===t?'primary':'outline-primary'); });
   document.getElementById('cdu-report').style.display=t==='report'?'':'none';
   document.getElementById('cdu-input').style.display=t==='input'?'':'none';
   var tg=document.getElementById('cdu-target'); if(tg) tg.style.display=t==='target'?'':'none';
+  var rl=document.getElementById('cdu-reels'); if(rl) rl.style.display=t==='reels'?'':'none';
   document.getElementById('cdu-plan').style.display=t==='plan'?'':'none';
   document.getElementById('cdu-keyman').style.display=t==='keyman'?'':'none';
   var ab=document.getElementById('cdu-add-btn'); if(ab){
@@ -7119,6 +7216,7 @@ function openCDUVisit(id, copy){
   document.getElementById('cdv-region').value = v&&v.region?v.region:'국내';
   sv('cd-sales', v?v.sales:(typeof currentUserName==='function'?currentUserName():''));
   document.getElementById('cd-event').value=(v&&!copy)?(v.event||''):''; document.getElementById('cd-reels').value=(v&&!copy)?((v.reels||'')==='O'?'촬영완료':(v.reels||'')):'';
+  sv('cd-reels-url', copy?'':(v?(v.reelsUrl||''):''));
   sv('cd-shots', v?(v.shots||'300'):'300'); sv('cd-price', v?v.price:''); sv('cd-pcount', copy?'':(v?v.procCount:'')); sv('cd-stock', v?v.stock:''); sv('cd-churn', copy?'':(v?v.churnRisk:''));
   sv('cd-reason', copy?'':(v?(v.noBuyReason||''):''));
   sv('cd-contact-profile', copy?'':(v?(v.contactProfile||''):'')); sv('cd-oli-basic', v?(v.oliBasic||''):'1'); sv('cd-oli-x', v?(v.oliX||''):''); sv('cd-oli-kiss', v?(v.oliKiss||''):'');
@@ -7139,7 +7237,7 @@ function saveCDUVisit(){
   var id=g('cd-id')||uid();
   var rec={id:id, kind:'cdu', status:'done', date:date, custName:hosp, dealer:g('cd-dealer').trim(), doctor:g('cdv-doctor').trim(), doctorCount:g('cd-dcount'),
     mainProc:g('cd-proc').trim(), competitor:g('cd-comp').trim(), feedback:g('cd-fb').trim(), channels:g('cd-chan').trim(), region:g('cdv-region'),
-    sales:g('cd-sales').trim(), event:g('cd-event'), reels:g('cd-reels'), shots:g('cd-shots'), price:g('cd-price'), procCount:g('cd-pcount'), stock:g('cd-stock').trim(), churnRisk:g('cd-churn').trim(),
+    sales:g('cd-sales').trim(), event:g('cd-event'), reels:g('cd-reels'), reelsUrl:g('cd-reels-url').trim(), shots:g('cd-shots'), price:g('cd-price'), procCount:g('cd-pcount'), stock:g('cd-stock').trim(), churnRisk:g('cd-churn').trim(),
     noBuyReason:g('cd-reason'), action:g('cd-action').trim(),
     contactProfile:g('cd-contact-profile').trim(), oliBasic:g('cd-oli-basic'), oliX:g('cd-oli-x'), oliKiss:g('cd-oli-kiss'),
     by:(typeof currentUserName==='function'?currentUserName():'')};
