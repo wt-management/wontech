@@ -10991,7 +10991,7 @@ var _dvFmtW=function(v){ v=Number(v||0); var a=Math.abs(v); return a>=1e8?(v/1e8
 var _dvSgn=function(v){ return (v>=0?'+':'−')+_dvFmtW(Math.abs(v)); };
 var _dvCol=function(v){ return v>=0?'#16a34a':'#dc2626'; };
 var _dvEsc=function(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
-var _dvRows=function(map){ return Object.keys(map||{}).map(function(k){ return {name:k,a:map[k].a,b:map[k].b,d:map[k].a-map[k].b}; }).sort(function(x,y){return y.d-x.d;}); };
+var _dvRows=function(map){ return Object.keys(map||{}).map(function(k){ return {name:k,a:map[k].a,b:map[k].b,d:map[k].a-map[k].b,qa:map[k].qa||0,qb:map[k].qb||0}; }).sort(function(x,y){return y.d-x.d;}); };
 function _setDevVarMode(m){ _devVarMode=m; renderDevVariance(); }
 function _dvBuild(){
   var Hs=(typeof DEVICE!=='undefined'&&DEVICE.hospitals)||{};
@@ -11000,11 +11000,11 @@ function _dvBuild(){
   var sN=function(s){ return String(s==null?'':s).replace(/^\s*\d+\s*[.\-]\s*/,''); };
   var repOf=function(hn,h){ var r=(typeof _repOf==='function')?_repOf(hn):sN((h.sales||'').trim()); return r||'미지정'; };
   var prod={},dealer={},pByD={},dByP={},pMon={},dMon={},mProd={},mDealer={},mQty={a:{},b:{}};
-  var acc=function(bag,k,side,v){ (bag[k]=bag[k]||{a:0,b:0})[side]+=v; };
-  var acc2=function(bag,k1,k2,side,v){ var o=bag[k1]=bag[k1]||{}; (o[k2]=o[k2]||{a:0,b:0})[side]+=v; };
+  var acc=function(bag,k,side,v,q){ var o=bag[k]=bag[k]||{a:0,b:0,qa:0,qb:0}; o[side]+=v; o['q'+side]+=q; };
+  var acc2=function(bag,k1,k2,side,v,q){ var o=bag[k1]=bag[k1]||{}; var e=o[k2]=o[k2]||{a:0,b:0,qa:0,qb:0}; e[side]+=v; e['q'+side]+=q; };
   var scan=function(txns,inM,side,dl){ (txns||[]).forEach(function(t){ var mo=+t[0]; if(inM.indexOf(mo)<0)return; var p=t[3]||'기타', v=Number(t[4]||0), q=Number(t[5]||0);
-    acc(prod,p,side,v); acc(dealer,dl,side,v); acc2(pByD,p,dl,side,v); acc2(dByP,dl,p,side,v);
-    acc2(pMon,p,mo,side,v); acc2(dMon,dl,mo,side,v); acc2(mProd,mo,p,side,v); acc2(mDealer,mo,dl,side,v);
+    acc(prod,p,side,v,q); acc(dealer,dl,side,v,q); acc2(pByD,p,dl,side,v,q); acc2(dByP,dl,p,side,v,q);
+    acc2(pMon,p,mo,side,v,q); acc2(dMon,dl,mo,side,v,q); acc2(mProd,mo,p,side,v,q); acc2(mDealer,mo,dl,side,v,q);
     mQty[side][mo]=(mQty[side][mo]||0)+q; }); };
   Object.keys(Hs).forEach(function(hn){ var h=Hs[hn]||{}; var dl=repOf(hn,h); scan(h.txns2026,curM,'a',dl); scan(h.txns2025,preM,'b',dl); });
   _dvIdx={P:P,curM:curM,preM:preM,prod:prod,dealer:dealer,pByD:pByD,dByP:dByP,pMon:pMon,dMon:dMon,mProd:mProd,mDealer:mDealer,mQty:mQty};
@@ -11015,11 +11015,15 @@ function _dvCTable(rows,label,drill){
   if(!rows.length) return '<div style="flex:1;min-width:300px"><div style="font-size:12px;font-weight:800;color:#334155;margin-bottom:5px">'+label+'</div><div style="font-size:12px;color:#cbd5e1;padding:8px">유의미한 변동 없음</div></div>';
   var mx=Math.max.apply(null,rows.map(function(r){return Math.abs(r.d);}).concat([1]));
   return '<div style="flex:1;min-width:300px"><div style="font-size:12px;font-weight:800;color:#334155;margin-bottom:5px">'+label+'</div><table style="width:100%;font-size:12px;border-collapse:collapse">'
-    +rows.map(function(r){ var w=Math.round(Math.abs(r.d)/mx*100); var tag=(r.b===0?' <span style="font-size:9px;color:#16a34a;font-weight:700">신규</span>':(r.a===0?' <span style="font-size:9px;color:#dc2626;font-weight:700">이탈</span>':''));
+    +rows.map(function(r){ var w=Math.round(Math.abs(r.d)/mx*100);
+      var isNew=(r.b===0&&r.a!==0), isCh=(r.a===0&&r.b!==0), isEmp=(typeof _isKorSales==='function'&&_isKorSales(r.name));
+      var tag=isCh?' <span style="font-size:9px;color:#dc2626;font-weight:700">이탈</span>':(isNew?(' <span style="font-size:9px;color:'+(isEmp?'#7c3aed':'#16a34a')+';font-weight:700">'+(isEmp?'신규입사?':'신규')+'</span>'):'');
+      var qStr=(r.qb||0).toLocaleString()+'→'+(r.qa||0).toLocaleString()+'대';
       var tr=drill?('<tr onclick="_dvDrill(\''+drill+'\',this.dataset.k)" data-k="'+_dvEsc(r.name)+'" title="클릭 → 상세 분해" style="border-top:1px solid #f4f6f9;cursor:pointer">'):('<tr style="border-top:1px solid #f4f6f9">');
       return tr+'<td style="padding:4px 6px">'+_dvEsc(r.name)+tag+(drill?' <i class="bi bi-search" style="font-size:8px;color:#cbd5e1"></i>':'')+'</td>'
-        +'<td style="text-align:right;color:#94a3b8;font-size:10.5px;white-space:nowrap;padding:0 6px">'+_dvFmtW(r.b)+'→'+_dvFmtW(r.a)+'</td>'
-        +'<td style="width:34%;padding:0 6px"><div style="display:flex;align-items:center;gap:5px"><div style="flex:1;height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden"><div style="width:'+w+'%;height:100%;background:'+_dvCol(r.d)+'"></div></div><span style="width:66px;text-align:right;font-weight:700;color:'+_dvCol(r.d)+'">'+_dvSgn(r.d)+'</span></div></td></tr>'; }).join('')
+        +'<td style="text-align:right;color:#94a3b8;font-size:10.5px;white-space:nowrap;padding:0 8px">'+_dvFmtW(r.b)+'→'+_dvFmtW(r.a)+'</td>'
+        +'<td style="text-align:right;color:#64748b;font-size:10px;white-space:nowrap;padding:0 8px">'+qStr+'</td>'
+        +'<td style="width:22%;padding:0 6px"><div style="display:flex;align-items:center;gap:5px"><div style="flex:1;height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden"><div style="width:'+w+'%;height:100%;background:'+_dvCol(r.d)+'"></div></div><span style="width:62px;text-align:right;font-weight:700;color:'+_dvCol(r.d)+'">'+_dvSgn(r.d)+'</span></div></td></tr>'; }).join('')
     +'</table></div>';
 }
 function _dvShowModal(title,html){
@@ -11058,7 +11062,7 @@ function _dvExec(idx){
   var mArr=idx.curM.map(function(m){ var mp=idx.mProd[m]||{}, a=0,b=0; Object.keys(mp).forEach(function(p){a+=mp[p].a;b+=mp[p].b;}); return {m:m,d:a-b}; });
   var worst=mArr.slice().sort(function(a,b){return a.d-b.d;})[0];
   var st=yoy===null?['#64748b','—']:(yoy>=8?['#16a34a','성장']:(yoy>=-2?['#f59e0b','보합']:['#dc2626','감소']));
-  var chip=function(r,pos){ return '<span style="display:inline-block;background:'+(pos?'#f0fdf4':'#fef2f2')+';color:'+(pos?'#166534':'#991b1b')+';border-radius:6px;padding:1px 8px;margin:0 4px 4px 0;font-size:11.5px;font-weight:600">'+_dvEsc(r.name)+' '+_dvSgn(r.d)+(r.a===0?'(이탈)':(r.b===0?'(신규)':''))+'</span>'; };
+  var chip=function(r,pos){ var isEmp=(typeof _isKorSales==='function'&&_isKorSales(r.name)); var t=(r.a===0&&r.b!==0)?'(이탈)':((r.b===0&&r.a!==0)?(isEmp?'(신규입사?)':'(신규)'):''); return '<span style="display:inline-block;background:'+(pos?'#f0fdf4':'#fef2f2')+';color:'+(pos?'#166534':'#991b1b')+';border-radius:6px;padding:1px 8px;margin:0 4px 4px 0;font-size:11.5px;font-weight:600">'+_dvEsc(r.name)+' '+_dvSgn(r.d)+t+'</span>'; };
   var line=function(icon,lab,html){ return '<div style="display:flex;gap:9px;padding:5px 0;border-top:1px solid #eef2f7"><span style="flex:0 0 74px;font-size:11px;font-weight:700;color:#64748b">'+icon+' '+lab+'</span><span style="flex:1;font-size:12px;color:#334155;line-height:1.7">'+html+'</span></div>'; };
   var acts=[];
   if(churn.length) acts.push('<b>'+_dvEsc(churn[0].name)+'</b> 이탈(전년 '+_dvFmtW(churn[0].b)+') 원인 점검·회복');
