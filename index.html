@@ -1170,10 +1170,10 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <div class="col-md-2 col-4"><label class="form-label" style="font-size:12px">샷 기준</label><input type="number" id="cd-shots" class="form-control form-control-sm" min="0" value="300"></div>
         <div class="col-md-3 col-4"><label class="form-label" style="font-size:12px">시술 수가<span class="text-muted">(천원)</span></label><input type="number" id="cd-price" class="form-control form-control-sm" min="0"></div>
         <div class="col-md-2 col-4"><label class="form-label" style="font-size:12px">시술 건수<span class="text-muted">(1일)</span></label><input type="number" id="cd-pcount" class="form-control form-control-sm" min="0"></div>
-        <div class="col-12"><label class="form-label" style="font-size:12px">주력 시술 <span class="text-muted">(분류 칩 터치 또는 직접 입력, 복수는 /)</span></label><input id="cd-proc" class="form-control form-control-sm" oninput="_cduChipSync()">
-          <div><span class="cdu-chip" data-for="cd-proc" data-v="레이저" onclick="_cduChip(this)">레이저</span><span class="cdu-chip" data-for="cd-proc" data-v="리프팅" onclick="_cduChip(this)">리프팅</span><span class="cdu-chip" data-for="cd-proc" data-v="모공·흉터" onclick="_cduChip(this)">모공·흉터</span><span class="cdu-chip" data-for="cd-proc" data-v="보톡스·필러" onclick="_cduChip(this)">보톡스·필러</span><span class="cdu-chip" data-for="cd-proc" data-v="비만" onclick="_cduChip(this)">비만</span><span class="cdu-chip" data-for="cd-proc" data-v="색소·미백" onclick="_cduChip(this)">색소·미백</span><span class="cdu-chip" data-for="cd-proc" data-v="수술" onclick="_cduChip(this)">수술</span><span class="cdu-chip" data-for="cd-proc" data-v="스킨부스터" onclick="_cduChip(this)">스킨부스터</span><span class="cdu-chip" data-for="cd-proc" data-v="여드름" onclick="_cduChip(this)">여드름</span><span class="cdu-chip" data-for="cd-proc" data-v="질환치료" onclick="_cduChip(this)">질환치료</span><span class="cdu-chip" data-for="cd-proc" data-v="탈모" onclick="_cduChip(this)">탈모</span></div></div>
-        <div class="col-12"><label class="form-label" style="font-size:12px">경쟁사 <span class="text-muted">(보유 타사 장비)</span></label><input id="cd-comp" class="form-control form-control-sm" placeholder="직접 입력 가능" oninput="_cduChipSync()">
-          <div><span class="cdu-chip" data-for="cd-comp" data-v="덴서티" onclick="_cduChip(this)">덴서티</span><span class="cdu-chip" data-for="cd-comp" data-v="듀오타이트" onclick="_cduChip(this)">듀오타이트</span><span class="cdu-chip" data-for="cd-comp" data-v="레비나스" onclick="_cduChip(this)">레비나스</span><span class="cdu-chip" data-for="cd-comp" data-v="리니어지" onclick="_cduChip(this)">리니어지</span><span class="cdu-chip" data-for="cd-comp" data-v="리프테라" onclick="_cduChip(this)">리프테라</span><span class="cdu-chip" data-for="cd-comp" data-v="볼뉴머" onclick="_cduChip(this)">볼뉴머</span><span class="cdu-chip" data-for="cd-comp" data-v="브이로" onclick="_cduChip(this)">브이로</span><span class="cdu-chip" data-for="cd-comp" data-v="세르프" onclick="_cduChip(this)">세르프</span><span class="cdu-chip" data-for="cd-comp" data-v="소프웨이브" onclick="_cduChip(this)">소프웨이브</span><span class="cdu-chip" data-for="cd-comp" data-v="슈링크" onclick="_cduChip(this)">슈링크</span><span class="cdu-chip" data-for="cd-comp" data-v="써마지" onclick="_cduChip(this)">써마지</span><span class="cdu-chip" data-for="cd-comp" data-v="온다" onclick="_cduChip(this)">온다</span><span class="cdu-chip" data-for="cd-comp" data-v="울쎄라" onclick="_cduChip(this)">울쎄라</span><span class="cdu-chip" data-for="cd-comp" data-v="인모드" onclick="_cduChip(this)">인모드</span><span class="cdu-chip" data-for="cd-comp" data-v="쿨소닉" onclick="_cduChip(this)">쿨소닉</span><span class="cdu-chip" data-for="cd-comp" data-v="텐써마" onclick="_cduChip(this)">텐써마</span><span class="cdu-chip" data-for="cd-comp" data-v="텐쎄라" onclick="_cduChip(this)">텐쎄라</span><span class="cdu-chip" data-for="cd-comp" data-v="튠라이너" onclick="_cduChip(this)">튠라이너</span><span class="cdu-chip" data-for="cd-comp" data-v="튠페이스" onclick="_cduChip(this)">튠페이스</span><span class="cdu-chip" data-for="cd-comp" data-v="티타늄" onclick="_cduChip(this)">티타늄</span><span class="cdu-chip" data-for="cd-comp" data-v="피아모" onclick="_cduChip(this)">피아모</span><span class="cdu-chip" data-for="cd-comp" data-v="N/A" onclick="_cduChip(this)">N/A</span></div></div>
+        <div class="col-12"><label class="form-label" style="font-size:12px">주력 시술 <span class="text-muted">(칩 터치·직접 입력, 복수 /)</span> <button type="button" class="cdu-chipedit" onclick="_cduChipEditToggle('proc')" style="display:none;font-size:10.5px;color:#2563eb;background:none;border:0;padding:0 3px;cursor:pointer">✎ 칩 편집</button></label><input id="cd-proc" class="form-control form-control-sm" oninput="_cduChipSync()">
+          <div id="cd-proc-chips"><span class="cdu-chip" data-for="cd-proc" data-v="레이저" onclick="_cduChip(this)">레이저</span><span class="cdu-chip" data-for="cd-proc" data-v="리프팅" onclick="_cduChip(this)">리프팅</span><span class="cdu-chip" data-for="cd-proc" data-v="모공·흉터" onclick="_cduChip(this)">모공·흉터</span><span class="cdu-chip" data-for="cd-proc" data-v="보톡스·필러" onclick="_cduChip(this)">보톡스·필러</span><span class="cdu-chip" data-for="cd-proc" data-v="비만" onclick="_cduChip(this)">비만</span><span class="cdu-chip" data-for="cd-proc" data-v="색소·미백" onclick="_cduChip(this)">색소·미백</span><span class="cdu-chip" data-for="cd-proc" data-v="수술" onclick="_cduChip(this)">수술</span><span class="cdu-chip" data-for="cd-proc" data-v="스킨부스터" onclick="_cduChip(this)">스킨부스터</span><span class="cdu-chip" data-for="cd-proc" data-v="여드름" onclick="_cduChip(this)">여드름</span><span class="cdu-chip" data-for="cd-proc" data-v="질환치료" onclick="_cduChip(this)">질환치료</span><span class="cdu-chip" data-for="cd-proc" data-v="탈모" onclick="_cduChip(this)">탈모</span></div></div>
+        <div class="col-12"><label class="form-label" style="font-size:12px">경쟁사 <span class="text-muted">(보유 타사 장비)</span> <button type="button" class="cdu-chipedit" onclick="_cduChipEditToggle('comp')" style="display:none;font-size:10.5px;color:#2563eb;background:none;border:0;padding:0 3px;cursor:pointer">✎ 칩 편집</button></label><input id="cd-comp" class="form-control form-control-sm" placeholder="직접 입력 가능" oninput="_cduChipSync()">
+          <div id="cd-comp-chips"><span class="cdu-chip" data-for="cd-comp" data-v="덴서티" onclick="_cduChip(this)">덴서티</span><span class="cdu-chip" data-for="cd-comp" data-v="듀오타이트" onclick="_cduChip(this)">듀오타이트</span><span class="cdu-chip" data-for="cd-comp" data-v="레비나스" onclick="_cduChip(this)">레비나스</span><span class="cdu-chip" data-for="cd-comp" data-v="리니어지" onclick="_cduChip(this)">리니어지</span><span class="cdu-chip" data-for="cd-comp" data-v="리프테라" onclick="_cduChip(this)">리프테라</span><span class="cdu-chip" data-for="cd-comp" data-v="볼뉴머" onclick="_cduChip(this)">볼뉴머</span><span class="cdu-chip" data-for="cd-comp" data-v="브이로" onclick="_cduChip(this)">브이로</span><span class="cdu-chip" data-for="cd-comp" data-v="세르프" onclick="_cduChip(this)">세르프</span><span class="cdu-chip" data-for="cd-comp" data-v="소프웨이브" onclick="_cduChip(this)">소프웨이브</span><span class="cdu-chip" data-for="cd-comp" data-v="슈링크" onclick="_cduChip(this)">슈링크</span><span class="cdu-chip" data-for="cd-comp" data-v="써마지" onclick="_cduChip(this)">써마지</span><span class="cdu-chip" data-for="cd-comp" data-v="온다" onclick="_cduChip(this)">온다</span><span class="cdu-chip" data-for="cd-comp" data-v="울쎄라" onclick="_cduChip(this)">울쎄라</span><span class="cdu-chip" data-for="cd-comp" data-v="인모드" onclick="_cduChip(this)">인모드</span><span class="cdu-chip" data-for="cd-comp" data-v="쿨소닉" onclick="_cduChip(this)">쿨소닉</span><span class="cdu-chip" data-for="cd-comp" data-v="텐써마" onclick="_cduChip(this)">텐써마</span><span class="cdu-chip" data-for="cd-comp" data-v="텐쎄라" onclick="_cduChip(this)">텐쎄라</span><span class="cdu-chip" data-for="cd-comp" data-v="튠라이너" onclick="_cduChip(this)">튠라이너</span><span class="cdu-chip" data-for="cd-comp" data-v="튠페이스" onclick="_cduChip(this)">튠페이스</span><span class="cdu-chip" data-for="cd-comp" data-v="티타늄" onclick="_cduChip(this)">티타늄</span><span class="cdu-chip" data-for="cd-comp" data-v="피아모" onclick="_cduChip(this)">피아모</span><span class="cdu-chip" data-for="cd-comp" data-v="N/A" onclick="_cduChip(this)">N/A</span></div></div>
         <div class="col-md-6"><label class="form-label" style="font-size:12px">보유 올리지오 <span class="text-muted">(대수)</span></label>
           <div class="d-flex gap-2">
             <div style="flex:1"><input type="number" id="cd-oli-basic" class="form-control form-control-sm" min="0" placeholder="0"><div style="font-size:10px;color:#94a3b8;text-align:center;margin-top:2px">올리지오</div></div>
@@ -1184,8 +1184,8 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <div class="col-md-3 col-6"><label class="form-label" style="font-size:12px">국내/해외</label><select id="cdv-region" class="form-select form-select-sm"><option>국내</option><option>국내/해외</option><option>해외</option></select></div>
 
         <div class="col-12 cdu-sec">마케팅</div>
-        <div class="col-12"><label class="form-label" style="font-size:12px">마케팅 채널 <span class="text-muted">(복수 선택)</span></label><input id="cd-chan" class="form-control form-control-sm" placeholder="직접 입력 가능" oninput="_cduChipSync()">
-          <div><span class="cdu-chip" data-for="cd-chan" data-v="리얼모델" onclick="_cduChip(this)">리얼모델</span><span class="cdu-chip" data-for="cd-chan" data-v="블로그" onclick="_cduChip(this)">블로그</span><span class="cdu-chip" data-for="cd-chan" data-v="앱" onclick="_cduChip(this)">앱</span><span class="cdu-chip" data-for="cd-chan" data-v="유튜브" onclick="_cduChip(this)">유튜브</span><span class="cdu-chip" data-for="cd-chan" data-v="인스타그램" onclick="_cduChip(this)">인스타그램</span><span class="cdu-chip" data-for="cd-chan" data-v="카페" onclick="_cduChip(this)">카페</span><span class="cdu-chip" data-for="cd-chan" data-v="페이스북" onclick="_cduChip(this)">페이스북</span><span class="cdu-chip" data-for="cd-chan" data-v="N/A" onclick="_cduChip(this)">N/A</span></div></div>
+        <div class="col-12"><label class="form-label" style="font-size:12px">마케팅 채널 <span class="text-muted">(복수 선택)</span> <button type="button" class="cdu-chipedit" onclick="_cduChipEditToggle('chan')" style="display:none;font-size:10.5px;color:#2563eb;background:none;border:0;padding:0 3px;cursor:pointer">✎ 칩 편집</button></label><input id="cd-chan" class="form-control form-control-sm" placeholder="직접 입력 가능" oninput="_cduChipSync()">
+          <div id="cd-chan-chips"><span class="cdu-chip" data-for="cd-chan" data-v="리얼모델" onclick="_cduChip(this)">리얼모델</span><span class="cdu-chip" data-for="cd-chan" data-v="블로그" onclick="_cduChip(this)">블로그</span><span class="cdu-chip" data-for="cd-chan" data-v="앱" onclick="_cduChip(this)">앱</span><span class="cdu-chip" data-for="cd-chan" data-v="유튜브" onclick="_cduChip(this)">유튜브</span><span class="cdu-chip" data-for="cd-chan" data-v="인스타그램" onclick="_cduChip(this)">인스타그램</span><span class="cdu-chip" data-for="cd-chan" data-v="카페" onclick="_cduChip(this)">카페</span><span class="cdu-chip" data-for="cd-chan" data-v="페이스북" onclick="_cduChip(this)">페이스북</span><span class="cdu-chip" data-for="cd-chan" data-v="N/A" onclick="_cduChip(this)">N/A</span></div></div>
         <div class="col-md-3 col-6"><label class="form-label" style="font-size:12px">이벤트</label><select id="cd-event" class="form-select form-select-sm"><option value="">-</option><option>원내</option><option>외부</option><option>X</option></select></div>
         <div class="col-md-4 col-6"><label class="form-label" style="font-size:12px">릴스 <span class="text-muted">(촬영 1건씩 등록)</span></label><button type="button" class="btn btn-outline-primary btn-sm w-100" style="font-size:12px" onclick="_cduReelFromVisit()"><i class="bi bi-camera-reels me-1" style="color:#db2777"></i>이 방문 릴스 등록</button></div>
 
@@ -7432,6 +7432,28 @@ function _cduChipSync(){
     c.classList.toggle('on', parts.indexOf(c.dataset.v)>=0);
   });
 }
+// ── 입력 칩 프리셋(파트장 편집 가능) ──
+var CDU_CHIP_DEFAULTS={
+  proc:['레이저','리프팅','모공·흉터','보톡스·필러','비만','색소·미백','수술','스킨부스터','여드름','질환치료','탈모'],
+  comp:['덴서티','듀오타이트','레비나스','리니어지','리프테라','볼뉴머','브이로','세르프','소프웨이브','슈링크','써마지','온다','울쎄라','인모드','쿨소닉','텐써마','텐쎄라','튠라이너','튠페이스','티타늄','피아모','N/A'],
+  chan:['리얼모델','블로그','앱','유튜브','인스타그램','카페','페이스북','N/A']
+};
+var _cduChipData=null, _cduChipEditMode={proc:false,comp:false,chan:false}, _cduChipField={proc:'cd-proc',comp:'cd-comp',chan:'cd-chan'};
+function _cduLoadChips(){ if(_cduChipData)return _cduChipData; var r=(DB.d.logs||[]).find(function(l){return l.kind==='cdu_chips';}); _cduChipData={proc:(r&&r.proc&&r.proc.length?r.proc.slice():CDU_CHIP_DEFAULTS.proc.slice()),comp:(r&&r.comp&&r.comp.length?r.comp.slice():CDU_CHIP_DEFAULTS.comp.slice()),chan:(r&&r.chan&&r.chan.length?r.chan.slice():CDU_CHIP_DEFAULTS.chan.slice())}; return _cduChipData; }
+function _cduRenderChips(){
+  var c=_cduLoadChips();
+  ['proc','comp','chan'].forEach(function(g){
+    var fid=_cduChipField[g], box=document.getElementById(fid+'-chips'); if(!box)return; var ed=_cduChipEditMode[g];
+    box.innerHTML=c[g].map(function(v){ var vv=_cduEsc(v).replace(/'/g,"\\'");
+      return '<span class="cdu-chip" data-for="'+fid+'" data-v="'+_cduEsc(v)+'" onclick="'+(ed?'_cduChipDel(\''+g+'\',\''+vv+'\')':'_cduChip(this)')+'">'+_cduEsc(v)+(ed?' <b style="color:#dc2626">×</b>':'')+'</span>'; }).join('')
+      +(ed?'<span class="cdu-chip" style="border-style:dashed;color:#2563eb;font-weight:700" onclick="_cduChipAdd(\''+g+'\')">+ 추가</span>':'');
+  });
+  _cduChipSync();
+}
+function _cduChipEditToggle(g){ _cduChipEditMode[g]=!_cduChipEditMode[g]; _cduRenderChips(); }
+function _cduChipAdd(g){ var v=prompt('추가할 항목 입력'); if(v===null)return; v=v.trim(); if(!v)return; var c=_cduLoadChips(); if(c[g].indexOf(v)<0){ c[g].push(v); _cduSaveChips(); } _cduRenderChips(); }
+function _cduChipDel(g,v){ if(!confirm('"'+v+'" 칩을 삭제할까요?'))return; var c=_cduLoadChips(); c[g]=c[g].filter(function(x){return x!==v;}); _cduSaveChips(); _cduRenderChips(); }
+function _cduSaveChips(){ var c=_cduLoadChips(); var rec={id:'cdu_chips',kind:'cdu_chips',proc:c.proc,comp:c.comp,chan:c.chan}; var idx=(DB.d.logs||[]).findIndex(function(l){return l.id==='cdu_chips';}); if(idx>=0)DB.d.logs[idx]=rec; else DB.d.logs.push(rec); DB.save('logs').then(function(){ showToast('칩 저장됨',true); }); }
 function _cduFillSalesList(){
   var dl=document.getElementById('cdu-sales-list'); if(!dl) return;
   var s=new Set((typeof KOR_SALES_TEAM!=='undefined'&&KOR_SALES_TEAM)||[]);
@@ -7508,7 +7530,7 @@ function openCDUVisit(id, copy){
   document.getElementById('cd-del-btn').style.display=isNew?'none':'inline-block';
   var dl=document.getElementById('cdu-hosp-list'); if(dl&&!dl.innerHTML&&CONS.hospitals){ dl.innerHTML=Object.keys(CONS.hospitals).slice(0,800).map(n=>'<option value="'+_cduEsc(n)+'">').join(''); }
   try{ _cduHospAuto(false); }catch(e){}
-  try{ _cduFillSalesList(); _cduChipSync(); }catch(e){}
+  try{ _cduFillSalesList(); _cduChipEditMode={proc:false,comp:false,chan:false}; _cduRenderChips(); var _mgr=(typeof _isMgr!=='undefined'&&_isMgr); document.querySelectorAll('#cduVisitModal .cdu-chipedit').forEach(function(b){b.style.display=_mgr?'inline':'none';}); }catch(e){}
   new bootstrap.Modal(document.getElementById('cduVisitModal')).show();
 }
 function openCDUVisitFor(name){ openCDUQuick(); var e=document.getElementById('cq-hosp'); if(e){ e.value=name||''; } }
@@ -8467,7 +8489,7 @@ function renderPerformance(){
     const ym=(d.stageUpdatedAt||'').substring(0,7);
     if(ym) monthlyA[ym]=(monthlyA[ym]||0)+Number(d.amount||0);
   });
-  DB.d.logs.filter(l=>l.kind!=='cdu'&&l.kind!=='cdu_meta'&&l.kind!=='cdu_key'&&l.kind!=='cdu_plan'&&l.kind!=='cdu_note'&&l.kind!=='cdu_reel'&&l.kind!=='sdr'&&l.kind!=='promo').forEach(l=>{
+  DB.d.logs.filter(l=>l.kind!=='cdu'&&l.kind!=='cdu_meta'&&l.kind!=='cdu_key'&&l.kind!=='cdu_plan'&&l.kind!=='cdu_note'&&l.kind!=='cdu_reel'&&l.kind!=='cdu_chips'&&l.kind!=='sdr'&&l.kind!=='promo').forEach(l=>{
     const ym=(l.date||'').substring(0,7);
     if(ym) monthlyL[ym]=(monthlyL[ym]||0)+1;
   });
@@ -9072,7 +9094,7 @@ function showHospitalDetail(name){
   }).join('');
   // ③ 활동 타임라인 생성
   const tlItems = [];
-  DB.d.logs.filter(l=>l.custName===name&&l.kind!=='cdu'&&l.kind!=='cdu_meta'&&l.kind!=='cdu_key'&&l.kind!=='cdu_plan'&&l.kind!=='cdu_note'&&l.kind!=='cdu_reel'&&l.kind!=='sdr'&&l.kind!=='promo').forEach(l=>tlItems.push({
+  DB.d.logs.filter(l=>l.custName===name&&l.kind!=='cdu'&&l.kind!=='cdu_meta'&&l.kind!=='cdu_key'&&l.kind!=='cdu_plan'&&l.kind!=='cdu_note'&&l.kind!=='cdu_reel'&&l.kind!=='cdu_chips'&&l.kind!=='sdr'&&l.kind!=='promo').forEach(l=>tlItems.push({
     date:l.date, type:'log', icon:'bi-journal-text', color:'#2563eb', bg:'#eff6ff',
     title:`상담 — ${_escH(l.type||'')}`, sub: _escH(l.content||''), sales: l.sales||'', extra: l.nextAction?`다음액션: ${l.nextAction}${l.nextDate?' ('+fmtDate(l.nextDate)+')':''}`:''
   }));
@@ -10129,7 +10151,7 @@ function renderSchDaily(force){
     data={part:_pt, author:saved.author||R, rows:(saved.rows||[]).slice(), stats:(saved.stats||['','','','']).slice(), opinion:saved.opinion||''};
   } else {
     var rows=[];
-    var _gen=l=>l.kind!=='schedule'&&l.kind!=='cdu'&&l.kind!=='cdu_meta'&&l.kind!=='cdu_key'&&l.kind!=='cdu_plan'&&l.kind!=='cdu_note'&&l.kind!=='cdu_reel'&&l.kind!=='sdr'&&l.kind!=='promo';   // 상담일지 등 일반 로그
+    var _gen=l=>l.kind!=='schedule'&&l.kind!=='cdu'&&l.kind!=='cdu_meta'&&l.kind!=='cdu_key'&&l.kind!=='cdu_plan'&&l.kind!=='cdu_note'&&l.kind!=='cdu_reel'&&l.kind!=='cdu_chips'&&l.kind!=='sdr'&&l.kind!=='promo';   // 상담일지 등 일반 로그
     var usedLog=new Set();
     logs.filter(l=>l.kind==='schedule'&&l.date===D&&(l.sales||'').trim()===R).forEach(function(s){
       var reaction='', extComp='';
@@ -10360,7 +10382,7 @@ async function sdrIMG(){
 // ── 상담일지 ──────────────────────────────────────────────────────
 function renderLogs(){
   const q=(document.getElementById('search-log').value||'').toLowerCase();
-  const list=[...DB.d.logs].filter(l=>l.kind!=='schedule'&&l.kind!=='cdu'&&l.kind!=='cdu_meta'&&l.kind!=='cdu_key'&&l.kind!=='cdu_plan'&&l.kind!=='cdu_note'&&l.kind!=='cdu_reel'&&l.kind!=='sdr'&&l.kind!=='promo').sort((a,b)=>new Date(b.date)-new Date(a.date)).filter(l=>!q||(l.custName||'').toLowerCase().includes(q)||(l.content||'').toLowerCase().includes(q)||(l.sales||'').toLowerCase().includes(q));
+  const list=[...DB.d.logs].filter(l=>l.kind!=='schedule'&&l.kind!=='cdu'&&l.kind!=='cdu_meta'&&l.kind!=='cdu_key'&&l.kind!=='cdu_plan'&&l.kind!=='cdu_note'&&l.kind!=='cdu_reel'&&l.kind!=='cdu_chips'&&l.kind!=='sdr'&&l.kind!=='promo').sort((a,b)=>new Date(b.date)-new Date(a.date)).filter(l=>!q||(l.custName||'').toLowerCase().includes(q)||(l.content||'').toLowerCase().includes(q)||(l.sales||'').toLowerCase().includes(q));
   const el=document.getElementById('log-list');
   if(!list.length){el.innerHTML='<tr><td colspan="8" class="text-center text-muted py-3">데이터 없음</td></tr>';return;}
   el.innerHTML=list.map(l=>`<tr><td style="font-size:12px">${fmtDate(l.date)}</td><td><strong>${_escH(l.custName)}</strong></td><td><span class="badge bg-secondary" style="font-size:10px">${_escH(l.type)}</span></td><td style="font-size:12px;color:#555">${_escH((l.content||'').substring(0,35))}</td><td style="font-size:12px">${_escH(l.product)}</td><td style="font-size:12px">${_escH(l.nextAction)}</td><td style="font-size:12px">${_escH(l.sales)}</td><td><button class="btn btn-outline-primary" style="font-size:11px;padding:1px 6px" onclick='editLog("${l.id}")'>수정</button></td></tr>`).join('');
