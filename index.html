@@ -1126,6 +1126,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <button id="cdu-tab-reels" class="btn btn-outline-primary" onclick="_cduTab('reels')"><i class="bi bi-camera-reels me-1"></i>릴스 관리</button>
         <button id="cdu-tab-plan" class="btn btn-outline-primary" onclick="_cduTab('plan')"><i class="bi bi-calendar-check me-1"></i>월간 계획</button>
         <button id="cdu-tab-keyman" class="btn btn-outline-primary" onclick="_cduTab('keyman')"><i class="bi bi-person-rolodex me-1"></i>Keyman</button>
+        <button id="cdu-tab-resp" class="btn btn-outline-primary" onclick="_cduTab('resp')"><i class="bi bi-bullseye me-1"></i>대응 관리</button>
       </div>
     </div>
     <div class="card p-2 mb-3" id="cdu-filterbar">
@@ -1150,6 +1151,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <div id="cdu-input" style="display:none"></div>
     <div id="cdu-target" style="display:none"></div>
     <div id="cdu-reels" style="display:none"></div>
+    <div id="cdu-resp" style="display:none"></div>
     <div id="cdu-plan" style="display:none"></div>
     <div id="cdu-keyman" style="display:none"></div>
   </div>
@@ -6411,6 +6413,7 @@ function renderCDU(){
   var dl=document.getElementById('cdu-hosp-list'); if(dl && CONS.hospitals){ dl.innerHTML=Object.keys(CONS.hospitals).slice(0,800).map(n=>'<option value="'+_cduEsc(n)+'">').join(''); }
   var fb=document.getElementById('cdu-filterbar'); if(fb) fb.style.display=(_cduView==='keyman'||_cduView==='plan'||_cduView==='target')?'none':'';
   if(_cduView==='reels'){ renderCDUReels(); return; }
+  if(_cduView==='resp'){ renderCDUResp(); return; }
   if(_cduView==='target'){ renderCDUTarget(); return; }
   if(_cduView==='keyman'){ renderCDUKeyman(); return; }
   if(_cduView==='plan'){ renderCDUPlan(); return; }
@@ -6484,13 +6487,12 @@ function renderCDUReels(){
     +'#cdu-reels .rlb-body{max-height:56vh;overflow-y:auto;padding-right:2px}'
     +'#cdu-reels .rlb-card{background:#fff;border:1px solid #eef0f4;border-radius:10px;padding:9px 11px;margin-bottom:8px;cursor:pointer;box-shadow:0 1px 2px rgba(2,6,23,.04)}'
     +'#cdu-reels .rlb-card:hover{border-color:#c7d2fe}'
-    +'#cdu-reels .rlb-hs{display:flex;justify-content:space-between;gap:6px;align-items:baseline}'
-    +'#cdu-reels .rlb-hs b{font-size:12.5px;font-weight:800;color:#111827;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
-    +'#cdu-reels .rlb-hs .dt{font-size:10.5px;color:#94a3b8;font-weight:600;flex-shrink:0}'
-    +'#cdu-reels .rlb-sub{font-size:11px;color:#6b7280;margin-top:2px;display:flex;justify-content:space-between;gap:6px}'
-    +'#cdu-reels .rlb-fb{font-size:11px;color:#475569;margin-top:6px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}'
-    +'#cdu-reels .rlb-acts{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}'
-    +'#cdu-reels .rlb-b{border:1px solid #e5e7eb;background:#fff;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;cursor:pointer;min-height:30px;display:inline-flex;align-items:center;gap:4px;color:#475569;text-decoration:none}'
+    +'#cdu-reels .rlb-hs{display:flex;justify-content:space-between;gap:6px;align-items:center}'
+    +'#cdu-reels .rlb-hs b{font-size:12.5px;font-weight:800;color:#111827;min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+    +'#cdu-reels .rlb-a2{display:flex;gap:4px;flex-shrink:0}'
+    +'#cdu-reels .rlb-m2{font-size:11px;color:#94a3b8;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+    +'#cdu-reels .rlb-fb{font-size:11px;color:#475569;margin-top:6px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}'
+    +'#cdu-reels .rlb-b{border:1px solid #e5e7eb;background:#fff;border-radius:7px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer;min-height:28px;display:inline-flex;align-items:center;gap:3px;color:#475569;text-decoration:none}'
     +'#cdu-reels .rlb-b.play{background:#db2777;color:#fff;border-color:#db2777}'
     +'#cdu-reels .rlb-b.vw{color:#15803d;border-color:#bbf7d0;background:#f0fdf4}'
     +'#cdu-reels .rlb-empty{font-size:11px;color:#cbd5e1;text-align:center;padding:16px 0}'
@@ -6522,17 +6524,17 @@ function renderCDUReels(){
     var ci=_cduReelIdx(it.stage);
     var isHttp=/^https?:\/\//i.test(it.url);
     var acts=[];
-    if(ci===0){ acts.push('<button class="rlb-b" onclick="event.stopPropagation();_cduReelSetStage(\''+it.vid+'\',\'촬영완료\')"><i class="bi bi-camera"></i>촬영완료</button>'); }
-    if(isHttp){ acts.push('<a class="rlb-b play" href="'+_cduEsc(it.url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i class="bi bi-play-fill"></i>열기</a>'); acts.push('<button class="rlb-b" title="URL 복사" onclick="event.stopPropagation();_cduCopyReel(decodeURIComponent(\''+encodeURIComponent(it.url)+'\'))"><i class="bi bi-clipboard"></i></button>'); }
-    else if(ci>=1){ acts.push('<button class="rlb-b" onclick="_cduReelPromptUrl(\''+it.vid+'\',event)"><i class="bi bi-link-45deg"></i>URL 추가</button>'); }
-    if(it.stage==='게시완료'){ if((Number(it.views)||0)>0) acts.push('<button class="rlb-b vw" onclick="_cduReelPromptViews(\''+it.vid+'\',event)">▶ '+_cduViewsFmt(it.views)+'회</button>'); else acts.push('<button class="rlb-b" onclick="_cduReelPromptViews(\''+it.vid+'\',event)"><i class="bi bi-eye"></i>조회수</button>'); }
-    var domain=isHttp?it.url.replace(/^https?:\/\/(www\.)?/i,'').slice(0,26):'';
+    if(ci===0){ acts.push('<button class="rlb-b" title="촬영완료로 이동" onclick="event.stopPropagation();_cduReelSetStage(\''+it.vid+'\',\'촬영완료\')"><i class="bi bi-camera"></i>촬영</button>'); }
+    if(isHttp){ acts.push('<a class="rlb-b play" title="열기" href="'+_cduEsc(it.url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i class="bi bi-play-fill"></i></a>'); acts.push('<button class="rlb-b" title="URL 복사" onclick="event.stopPropagation();_cduCopyReel(decodeURIComponent(\''+encodeURIComponent(it.url)+'\'))"><i class="bi bi-clipboard"></i></button>'); }
+    else if(ci>=1){ acts.push('<button class="rlb-b" title="URL 추가" onclick="_cduReelPromptUrl(\''+it.vid+'\',event)"><i class="bi bi-link-45deg"></i>URL</button>'); }
+    if(it.stage==='게시완료'){ if((Number(it.views)||0)>0) acts.push('<button class="rlb-b vw" title="조회수 수정" onclick="_cduReelPromptViews(\''+it.vid+'\',event)">▶'+_cduViewsFmt(it.views)+'</button>'); else acts.push('<button class="rlb-b" title="조회수 입력" onclick="_cduReelPromptViews(\''+it.vid+'\',event)"><i class="bi bi-eye"></i></button>'); }
+    var domain=isHttp?it.url.replace(/^https?:\/\/(www\.)?/i,'').slice(0,24):'';
+    var meta=[(it.date||'').slice(5)]; if(it.sales)meta.push(it.sales); if(domain)meta.push(domain);
     var fb=(it.note||'').trim();
     return '<div class="rlb-card" draggable="true" ondragstart="window._cduReelDrag=\''+it.vid+'\'" onclick="openCDUVisit(\''+it.vid+'\')">'
-      +'<div class="rlb-hs"><b>'+_cduEsc(it.custName||'-')+'</b><span class="dt">'+_cduEsc((it.date||'').slice(5))+'</span></div>'
-      +'<div class="rlb-sub"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(domain?'<i class="bi bi-link-45deg"></i>'+_cduEsc(domain):'')+'</span>'+(it.sales?'<span style="flex-shrink:0;color:#475569;font-weight:600">'+_cduEsc(it.sales)+'</span>':'')+'</div>'
+      +'<div class="rlb-hs"><b>'+_cduEsc(it.custName||'-')+'</b>'+(acts.length?'<span class="rlb-a2">'+acts.join('')+'</span>':'')+'</div>'
+      +'<div class="rlb-m2">'+_cduEsc(meta.join(' · '))+'</div>'
       +(fb?'<div class="rlb-fb">'+_cduEsc(fb)+'</div>':'')
-      +(acts.length?'<div class="rlb-acts">'+acts.join('')+'</div>':'')
       +'</div>';
   };
   var board='<div class="rlb-board">'+CDU_REEL_STAGES.map(function(s){
@@ -6550,6 +6552,83 @@ function renderCDUReels(){
       }).join('')+'</div>';
   }
   el.innerHTML=css+headH+strip+insights+board+topH;
+}
+// ── 미구매 → 대응 파이프라인 (장비 있는데 소모품 안 사는 병원 추적) ──
+var CDU_RESP_STAGES=[['사유파악','#ef4444'],['대응중','#f59e0b'],['재방문예정','#2563eb'],['전환성공','#16a34a']];
+window._cduRespDrag=null;
+function _cduRespIdx(st){ for(var i=0;i<CDU_RESP_STAGES.length;i++){ if(CDU_RESP_STAGES[i][0]===st) return i; } return 0; }
+function _cduRespStageOf(v){ if(v.respStage && CDU_RESP_STAGES.some(function(s){return s[0]===v.respStage;})) return v.respStage; return '사유파악'; }
+window._cduRespSetStage=function(id,st){ var v=(DB.d.logs||[]).find(function(l){return l.id===id;}); if(!v)return; v.respStage=st; renderCDU(); DB.save('logs').then(function(){ showToast('대응 단계 → '+st, true); }); };
+window._cduRespDrop=function(e,st){ e.preventDefault(); var id=window._cduRespDrag; window._cduRespDrag=null; document.querySelectorAll('#cdu-resp .rp-col.drop').forEach(function(c){c.classList.remove('drop');}); if(id) _cduRespSetStage(id,st); };
+function _cduRespItems(){
+  var byHosp={};
+  _cduFiltered().filter(function(v){return v.status!=='planned' && (v.noBuyReason||'').trim();}).forEach(function(v){
+    var h=(v.custName||'').trim(); if(!h)return; var d=String(v.date||'').slice(0,10);
+    if(!byHosp[h] || d>String(byHosp[h].date||'').slice(0,10)) byHosp[h]=v;
+  });
+  return Object.keys(byHosp).map(function(h){ var v=byHosp[h]; return {vid:v.id,custName:h,sales:v.sales,date:v.date,reason:v.noBuyReason,action:v.action,stage:_cduRespStageOf(v)}; })
+    .sort(function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')); });
+}
+function renderCDUResp(){
+  var el=document.getElementById('cdu-resp'); if(!el)return;
+  var items=_cduRespItems();
+  var cnt={}; CDU_RESP_STAGES.forEach(function(s){cnt[s[0]]=0;});
+  items.forEach(function(it){ cnt[it.stage]=(cnt[it.stage]||0)+1; });
+  var cc=document.getElementById('cdu-count'); if(cc) cc.textContent='· 대응 '+items.length+'건 · '+_cduPeriodLabel();
+  var css='<style>'
+    +'#cdu-resp .rp-head{font-size:13.5px;font-weight:800;color:#111827;padding:2px 0 12px}'
+    +'#cdu-resp .rp-head span{font-size:11.5px;font-weight:600;color:#94a3b8;margin-left:6px}'
+    +'#cdu-resp .rp-ins{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}'
+    +'#cdu-resp .rp-inc{background:#fff;border:1px solid #eef0f4;border-left:3px solid #ccc;border-radius:12px;padding:12px 15px}'
+    +'#cdu-resp .rp-inc .l{font-size:11.5px;color:#6b7280;font-weight:700}'
+    +'#cdu-resp .rp-inc .v{font-size:22px;font-weight:800;margin-top:4px;line-height:1}'
+    +'#cdu-resp .rp-inc .s{font-size:11px;color:#94a3b8;margin-top:3px}'
+    +'#cdu-resp .rp-board{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:start}'
+    +'#cdu-resp .rp-col{background:#f8fafc;border:1px solid #eef0f4;border-radius:12px;padding:8px;display:flex;flex-direction:column;min-height:110px}'
+    +'#cdu-resp .rp-col.drop{outline:2px dashed #93c5fd;outline-offset:-2px;background:#eff6ff}'
+    +'#cdu-resp .rp-ch{display:flex;align-items:center;justify-content:space-between;padding:3px 6px 9px;font-size:12.5px;font-weight:800;flex-shrink:0}'
+    +'#cdu-resp .rp-ch .c{font-size:11px;font-weight:800;color:#fff;border-radius:10px;padding:1px 8px}'
+    +'#cdu-resp .rp-body{max-height:58vh;overflow-y:auto;padding-right:2px}'
+    +'#cdu-resp .rp-card{background:#fff;border:1px solid #eef0f4;border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;box-shadow:0 1px 2px rgba(2,6,23,.04)}'
+    +'#cdu-resp .rp-card:hover{border-color:#c7d2fe}'
+    +'#cdu-resp .rp-hs{display:flex;justify-content:space-between;gap:6px;align-items:baseline}'
+    +'#cdu-resp .rp-hs b{font-size:13px;font-weight:800;color:#111827;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+    +'#cdu-resp .rp-hs .dt{font-size:10.5px;color:#94a3b8;flex-shrink:0}'
+    +'#cdu-resp .rp-reason{font-size:11.5px;color:#b91c1c;background:#fef2f2;border-radius:7px;padding:5px 8px;margin-top:6px;line-height:1.4}'
+    +'#cdu-resp .rp-action{font-size:11.5px;color:#1d4ed8;background:#eff6ff;border-radius:7px;padding:5px 8px;margin-top:5px;line-height:1.4}'
+    +'#cdu-resp .rp-foot{display:flex;align-items:center;gap:6px;margin-top:8px}'
+    +'#cdu-resp .rp-sales{font-size:11px;color:#64748b;font-weight:600}'
+    +'#cdu-resp .rp-next{margin-left:auto;border:1px solid #e5e7eb;background:#fff;border-radius:7px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;color:#2563eb;min-height:28px}'
+    +'#cdu-resp .rp-empty{font-size:11px;color:#cbd5e1;text-align:center;padding:16px 0}'
+    +'@media(max-width:900px){#cdu-resp .rp-board{grid-template-columns:1fr}#cdu-resp .rp-ins{grid-template-columns:1fr}#cdu-resp .rp-body{max-height:none}}'
+    +'</style>';
+  var head='<div class="rp-head"><i class="bi bi-bullseye me-1" style="color:#ef4444"></i>미구매 대응 관리 <span>장비 보유·소모품 미구매 병원을 사유→대응→전환으로 추적 · 카드 드래그로 단계 이동</span></div>';
+  if(!items.length){ el.innerHTML=css+head+'<div class="card p-5 text-center text-muted" style="font-size:14px"><i class="bi bi-clipboard-check" style="font-size:28px;color:#cbd5e1"></i><div class="mt-2">미구매 사유가 입력된 병원이 없습니다.<br>방문 기록의 <b>소모품 미구매 사유</b>·<b>대응 방안</b>을 입력하면 여기서 단계별로 추적됩니다.</div></div>'; return; }
+  var conv=items.length?Math.round((cnt['전환성공']||0)/items.length*100):0;
+  var wait=cnt['사유파악']||0, prog=(cnt['대응중']||0)+(cnt['재방문예정']||0);
+  var inc=function(ic,col,l,v,s){ return '<div class="rp-inc" style="border-left-color:'+col+'"><div class="l"><i class="bi '+ic+' me-1" style="color:'+col+'"></i>'+l+'</div><div class="v" style="color:'+col+'">'+v+'</div><div class="s">'+s+'</div></div>'; };
+  var insights='<div class="rp-ins">'
+    +inc('bi-hourglass-split','#ef4444','대응 대기',wait+'건','사유만 파악 — 대응 계획 필요')
+    +inc('bi-arrow-repeat','#f59e0b','진행 중',prog+'건','대응중 + 재방문 예정')
+    +inc('bi-trophy','#16a34a','전환율',conv+'%',(cnt['전환성공']||0)+'건 전환 성공 / 총 '+items.length+'건')
+    +'</div>';
+  var byStage={}; CDU_RESP_STAGES.forEach(function(s){byStage[s[0]]=[];});
+  items.forEach(function(it){ (byStage[it.stage]||byStage['사유파악']).push(it); });
+  var cardHtml=function(it){ var ci=_cduRespIdx(it.stage); var next=ci<CDU_RESP_STAGES.length-1?CDU_RESP_STAGES[ci+1][0]:null;
+    return '<div class="rp-card" draggable="true" ondragstart="window._cduRespDrag=\''+it.vid+'\'" onclick="openCDUVisit(\''+it.vid+'\')">'
+      +'<div class="rp-hs"><b>'+_cduEsc(it.custName)+'</b><span class="dt">'+_cduEsc((it.date||'').slice(5))+'</span></div>'
+      +(it.reason?'<div class="rp-reason"><i class="bi bi-x-circle me-1"></i>'+_cduEsc(it.reason)+'</div>':'')
+      +(it.action?'<div class="rp-action"><i class="bi bi-lightbulb me-1"></i>'+_cduEsc(it.action)+'</div>':'')
+      +'<div class="rp-foot">'+(it.sales?'<span class="rp-sales"><i class="bi bi-person me-1"></i>'+_cduEsc(it.sales)+'</span>':'')+(next?'<button class="rp-next" onclick="event.stopPropagation();_cduRespSetStage(\''+it.vid+'\',\''+next+'\')">'+next+' →</button>':'<span class="rp-next" style="color:#16a34a;border-color:#bbf7d0;background:#f0fdf4;cursor:default">전환 완료 ✓</span>')+'</div>'
+      +'</div>';
+  };
+  var board='<div class="rp-board">'+CDU_RESP_STAGES.map(function(s){ var arr=byStage[s[0]];
+    return '<div class="rp-col" ondragover="event.preventDefault();this.classList.add(\'drop\')" ondragleave="this.classList.remove(\'drop\')" ondrop="_cduRespDrop(event,\''+s[0]+'\')">'
+      +'<div class="rp-ch"><span style="color:'+s[1]+'">'+s[0]+'</span><span class="c" style="background:'+s[1]+'">'+arr.length+'건</span></div>'
+      +'<div class="rp-body">'+(arr.length?arr.map(cardHtml).join(''):'<div class="rp-empty">비어 있음</div>')+'</div>'
+      +'</div>';
+  }).join('')+'</div>';
+  el.innerHTML=css+head+insights+board;
 }
 // ── 타깃 병원: 데이터가 찍어주는 다음 방문지 (재구매 도래 + 휴면 장비) ──
 function renderCDUTarget(){
@@ -6627,11 +6706,12 @@ function renderCDUTarget(){
   +'</div>';
 }
 function _cduTab(t){ _cduView=t; try{ sessionStorage.setItem('cdu_view', t); }catch(e){}
-  ['report','input','target','reels','plan','keyman'].forEach(function(x){ var b=document.getElementById('cdu-tab-'+x); if(b) b.className='btn btn-'+(x===t?'primary':'outline-primary'); });
+  ['report','input','target','reels','resp','plan','keyman'].forEach(function(x){ var b=document.getElementById('cdu-tab-'+x); if(b) b.className='btn btn-'+(x===t?'primary':'outline-primary'); });
   document.getElementById('cdu-report').style.display=t==='report'?'':'none';
   document.getElementById('cdu-input').style.display=t==='input'?'':'none';
   var tg=document.getElementById('cdu-target'); if(tg) tg.style.display=t==='target'?'':'none';
   var rl=document.getElementById('cdu-reels'); if(rl) rl.style.display=t==='reels'?'':'none';
+  var rp=document.getElementById('cdu-resp'); if(rp) rp.style.display=t==='resp'?'':'none';
   document.getElementById('cdu-plan').style.display=t==='plan'?'':'none';
   document.getElementById('cdu-keyman').style.display=t==='keyman'?'':'none';
   var ab=document.getElementById('cdu-add-btn'); if(ab){
