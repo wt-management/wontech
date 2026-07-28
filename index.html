@@ -11536,10 +11536,13 @@ function _dvBuild(){
   _dvIdx={P:P,curM:curM,preM:preM,prod:prod,dealer:dealer,pByD:pByD,dByP:dByP,pMon:pMon,dMon:dMon,mProd:mProd,mDealer:mDealer,mQty:mQty,asOf:asOf,incMonth:incMonth,asOfDay:asOfDay,pendTot:pendTot};
   return _dvIdx;
 }
-function _dvCTable(rows,label,drill){
-  rows=(rows||[]).filter(function(r){return Math.abs(r.d)>=1e7;});
-  if(!rows.length) return '<div style="flex:1;min-width:300px"><div style="font-size:12px;font-weight:800;color:#334155;margin-bottom:5px">'+label+'</div><div style="font-size:12px;color:#cbd5e1;padding:8px">유의미한 변동 없음</div></div>';
+function _dvCTable(rows,label,drill,totalDelta){
+  var all=(rows||[]);
+  rows=all.filter(function(r){return Math.abs(r.d)>=1e7;});
+  var totF=(typeof totalDelta==='number')?totalDelta:all.reduce(function(s,r){return s+(r.d||0);},0);
+  if(!rows.length) return '<div style="flex:1;min-width:300px"><div style="font-size:12px;font-weight:800;color:#334155;margin-bottom:5px">'+label+'</div><div style="font-size:12px;color:#cbd5e1;padding:8px">유의미한 변동 없음</div><div style="font-size:10px;color:#94a3b8;padding:2px 8px 0">열 전체 증감 '+_dvFmtW(totF)+'</div></div>';
   var mx=Math.max.apply(null,rows.map(function(r){return Math.abs(r.d);}).concat([1]));
+  var shownSum=rows.reduce(function(s,r){return s+(r.d||0);},0);
   return '<div style="flex:1;min-width:300px"><div style="font-size:12px;font-weight:800;color:#334155;margin-bottom:5px">'+label+'</div><table style="width:100%;font-size:12px;border-collapse:collapse">'
     +rows.map(function(r){ var w=Math.round(Math.abs(r.d)/mx*100);
       var isNew=(r.b===0&&r.a!==0), isCh=(r.a===0&&r.b!==0), isEmp=(typeof _isKorSales==='function'&&_isKorSales(r.name));
@@ -11551,7 +11554,8 @@ function _dvCTable(rows,label,drill){
         +'<td style="text-align:right;color:#94a3b8;font-size:10.5px;white-space:nowrap;padding:0 8px">'+_dvFmtW(r.b)+'→'+_dvFmtW(r.a)+((r.pa||0)>0?' <span style="color:#0891b2">(미반 '+_dvFmtW(r.pa)+')</span>':'')+'</td>'
         +'<td style="text-align:right;color:#64748b;font-size:10px;white-space:nowrap;padding:0 8px">'+qStr+'</td>'
         +'<td style="width:22%;padding:0 6px"><div style="display:flex;align-items:center;gap:5px"><div style="flex:1;height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden"><div style="width:'+w+'%;height:100%;background:'+_dvCol(r.d)+'"></div></div><span style="width:62px;text-align:right;font-weight:700;color:'+_dvCol(r.d)+'">'+_dvSgn(r.d)+'</span></div></td></tr>'; }).join('')
-    +'</table></div>';
+    +'</table>'
+    +'<div style="font-size:10px;color:#94a3b8;margin-top:4px;padding-top:4px;border-top:1px solid #f1f5f9">표시 '+rows.length+'건 <span style="color:#cbd5e1">(|증감|≥1천만)</span> · 합계 '+_dvFmtW(shownSum)+' · <b style="color:#64748b">열 전체 증감 '+_dvFmtW(totF)+'</b></div></div>';
 }
 function _dvShowModal(title,html,w){
   var m=document.getElementById('dv-modal');
@@ -11660,8 +11664,9 @@ function renderDevVariance(){
   if(_devVarMode==='cum'){
     var losers=dAll.filter(function(r){return r.d<0;}).slice(0,6);
     var gainers=dAll.filter(function(r){return r.d>0;}).slice(0,6);
-    body='<div style="font-size:10px;color:#94a3b8;margin-bottom:6px"><i class="bi bi-info-circle me-1"></i>행을 클릭하면 그 제품/대리점이 어디서 왜 증감했는지 상세 분해가 열립니다</div>'
-      +'<div style="display:flex;flex-wrap:wrap;gap:18px">'+_dvCTable(pAll,'제품별 기여','product')+_dvCTable(gainers.concat(losers),'대리점·담당별 기여 (증가·감소 상위)','dealer')+'</div>';
+    var _totD=pAll.reduce(function(s,r){return s+(r.d||0);},0);
+    body='<div style="font-size:10px;color:#94a3b8;margin-bottom:6px"><i class="bi bi-info-circle me-1"></i>행을 클릭하면 그 제품/대리점이 어디서 왜 증감했는지 상세 분해가 열립니다 · 좌·우는 같은 총증감('+_dvFmtW(_totD)+')을 제품/담당 두 축으로 나눈 것 — 각 열은 |증감|≥1천만 상위만 표시</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:18px">'+_dvCTable(pAll,'제품별 기여','product',_totD)+_dvCTable(gainers.concat(losers),'대리점·담당별 기여 (증가·감소 상위)','dealer',_totD)+'</div>';
   } else {
     var run=0;
     var rowsH=curM.map(function(m){ var mp=idx.mProd[m]||{}; var a=0,b=0,pm=0; Object.keys(mp).forEach(function(p){a+=mp[p].a;b+=mp[p].b;pm+=mp[p].pa||0;}); var dd=a-b; run+=dd;
