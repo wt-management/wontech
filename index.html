@@ -2929,7 +2929,7 @@ async function init() {
 const _LAUNCH_GRPS=[['매출 현황',['total','korea','intl']],['해외법인',['japan','us','th']],['영업전략 도구',['daily','portfolio','equip','ar','export']]];
 function _buildLauncherCardsHTML(access) {
   // site_registry 기반 — 신규 사이트는 DB row 추가만으로 여기 자동 반영됨
-  const cardStyle = 'background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(12px);border-radius:20px;width:200px;cursor:pointer;transition:transform .18s,box-shadow .18s,border-color .18s;overflow:hidden';
+  const cardStyle = 'background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(12px);border-radius:18px;width:222px;cursor:pointer;transition:transform .18s,box-shadow .18s,border-color .18s;overflow:hidden';
   const cardHover = "this.style.transform='translateY(-6px)';this.style.boxShadow='0 24px 48px rgba(0,0,0,.5)';this.style.borderColor='rgba(255,255,255,.25)'";
   const cardOut   = "this.style.transform='';this.style.boxShadow='';this.style.borderColor='rgba(255,255,255,.1)'";
   const card = s=>{
@@ -2940,13 +2940,17 @@ function _buildLauncherCardsHTML(access) {
           : `location.href='${s.url}'`);
     return `<div onclick="${onclick.replace(/"/g,'&quot;')}" style="${cardStyle}" onmouseover="${cardHover}" onmouseout="${cardOut}">
       <div style="height:5px;background:linear-gradient(90deg,${s.grad_from},${s.grad_to})"></div>
-      <div style="padding:28px 24px">
-        <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,${s.grad_from},${s.grad_to});display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 20px ${s.grad_from}59">
-          <i class="bi ${s.icon}" style="font-size:22px;color:#fff"></i>
+      <div style="padding:17px 19px">
+        <div style="display:flex;align-items:center;gap:11px;margin-bottom:13px">
+          <div style="width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,${s.grad_from},${s.grad_to});display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 16px ${s.grad_from}59">
+            <i class="bi ${s.icon}" style="font-size:18px;color:#fff"></i>
+          </div>
+          <div style="font-size:14.5px;font-weight:800;color:#f1f5f9;letter-spacing:-.3px;line-height:1.2">${s.title}</div>
         </div>
-        <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px;letter-spacing:-.3px">${s.title}</div>
-        <div style="font-size:11px;color:#64748b;line-height:1.6">${s.body_html}</div>
-        <div style="margin-top:16px;display:flex;align-items:center;gap:4px;font-size:11px;color:${s.accent_color};font-weight:600">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px">
+          <div style="font-size:11.5px;color:#64748b;line-height:1.6;flex:1;min-width:0">${s.body_html}</div>
+          <div style="display:flex;align-items:center;gap:3px;font-size:11px;color:${s.accent_color};font-weight:700;white-space:nowrap;flex-shrink:0">입장하기 <i class="bi bi-arrow-right" style="font-size:10px"></i></div>
+        </div>
       </div>
     </div>`;
   };
