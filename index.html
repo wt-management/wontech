@@ -6671,19 +6671,17 @@ function renderCDUTarget(){
   _cduEnsureCss();
   var row=function(name,mgr,mid,right){
     var q=esc(name).replace(/\x27/g,"\\x27");
-    return '<div style="border:1px solid #eef0f4;border-radius:9px;background:#fff;padding:8px 11px">'
-      +'<div style="display:flex;align-items:center;gap:6px">'
-        +'<span onclick="showHospitalDetail(\''+q+'\')" style="font-size:13px;font-weight:700;color:#0f172a;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" title="병원 상세(구매이력·장비·상담)">'+esc(name)+'</span>'
-        +'<b style="font-size:12.5px;font-weight:800;color:#0f172a;flex-shrink:0;white-space:nowrap;font-variant-numeric:tabular-nums">'+right+'</b>'
+    return '<div style="display:flex;align-items:center;gap:12px;border:1px solid #eef0f4;border-radius:10px;background:#fff;padding:11px 14px">'
+      +'<div style="flex:1;min-width:0">'
+        +'<div onclick="showHospitalDetail(\''+q+'\')" style="font-size:13.5px;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer">'+esc(name)+'</div>'
+        +'<div style="font-size:11.5px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">'+(mid||'')+(mgr?' · '+esc(mgr):'')+'</div>'
       +'</div>'
-      +'<div style="display:flex;align-items:center;gap:6px;margin-top:4px">'
-        +'<span style="flex:1;min-width:0;font-size:11px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(mid||'')+'</span>'
-        +(mgr?'<span style="font-size:10.5px;color:#94a3b8;flex-shrink:0;white-space:nowrap">'+esc(mgr)+'</span>':'')
-        +'<button class="btn btn-outline-warning btn-sm" style="font-size:10.5px;padding:1px 6px;flex-shrink:0;line-height:1.4" onclick="openPromoFor(\''+q+'\')" title="이 병원에 프로모션"><i class="bi bi-megaphone"></i></button>'
-        +'<button class="btn btn-outline-primary btn-sm" style="font-size:10.5px;padding:1px 8px;flex-shrink:0;white-space:nowrap;line-height:1.4" onclick="openCDUVisitFor(\''+q+'\')">방문</button>'
+      +'<div style="flex-shrink:0;text-align:right">'
+        +'<div style="font-size:14px;font-weight:800;color:#0f172a;white-space:nowrap;font-variant-numeric:tabular-nums">'+right+'</div>'
+        +'<button class="btn btn-outline-primary btn-sm" style="font-size:11px;padding:2px 12px;margin-top:5px;white-space:nowrap" onclick="openCDUVisitFor(\''+q+'\')">방문</button>'
       +'</div></div>';
   };
-  var _tgtGrid=function(inner){ return '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px;margin-top:8px">'+inner+'</div>'; };
+  var _tgtGrid=function(inner){ return '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(430px,1fr));gap:9px;margin-top:9px">'+inner+'</div>'; };
   window._cduPromoDue=due.slice(0,LIM).map(function(d){return d.n;}); window._cduPromoDrop=drop.slice(0,LIM).map(function(d){return d.n;}); window._cduPromoDor=dormant.slice(0,LIM).map(function(d){return d.n;});
   var _promoBar=function(v){ return '<div style="margin:4px 0 6px"><button class="btn btn-outline-warning btn-sm" style="font-size:12.5px;padding:2px 10px" onclick="openPromoBulk(window.'+v+'||[])"><i class="bi bi-megaphone me-1"></i>이 목록 전체 프로모션</button></div>'; };
   var dueHtml=due.length?_tgtGrid(due.slice(0,LIM).map(d=>row(d.n,d.mgr,'주기 '+d.gap+'일 · 마지막 <b style="color:#dc2626">'+d.since+'일 전</b>','회당 '+_cduWon(d.amt))).join('')):'<div style="font-size:13px;color:#94a3b8;padding:8px 0">재구매 도래 병원이 없습니다.</div>';
@@ -7252,7 +7250,7 @@ function renderCDUInput(vs){
   _cduEnsureCss();
   var _scDefs=[['all','전체',base.length],['planned','예정',cPlan],['pending','미입력',pend.length],['done','완료',cDone],['churn','이탈위험',base.filter(function(v){return (v.churnRisk||'').trim();}).length]];
   var statusChips='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">'+_scDefs.map(function(c){var on=_cduSchStatus===c[0];var col=c[0]==='pending'?'#dc2626':c[0]==='churn'?'#ea580c':c[0]==='done'?'#16a34a':'#2563eb';return '<button onclick="_cduSchStatusSet(\''+c[0]+'\')" style="border:1px solid '+(on?col:'#e5e7eb')+';background:'+(on?col:'#fff')+';color:'+(on?'#fff':'#64748b')+';border-radius:16px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;min-height:32px">'+c[1]+' <b>'+c[2]+'</b></button>';}).join('')+'</div>';
-  el.innerHTML='<div class="cdud">'+_cduTodayCard()+toolbar+statusChips+pendHtml+statsBar+(_cduInputView==='week'?'':legend)+_cduRevisitBox()+body+'</div>';
+  el.innerHTML='<div class="cdud">'+toolbar+statusChips+pendHtml+statsBar+(_cduInputView==='week'?'':legend)+_cduRevisitBox()+body+'</div>';
 }
 // 월간 달력 드래그 재일정
 window._cduSchDrag=null;
