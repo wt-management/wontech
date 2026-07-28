@@ -10995,7 +10995,7 @@ var _dvCol=function(v){ return v>=0?'#16a34a':'#dc2626'; };
 var _dvEsc=function(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
 var _dvJoin=function(nm){ try{ return (typeof KOR_TEAM_INFO!=='undefined'&&KOR_TEAM_INFO[nm]&&KOR_TEAM_INFO[nm].join)||''; }catch(e){ return ''; } };
 // 최근입사(전년 비교기간에 재직 전이라 baseline 왜곡) 판정 → '입사 YYYY.M', 아니면 ''
-var _dvRecentHire=function(nm){ var j=_dvJoin(nm); if(!j)return ''; try{ var jy=parseInt(String(j).slice(0,4),10); var py=(_dvIdx&&_dvIdx.P&&_dvIdx.P.ey)?(_dvIdx.P.ey-1):jy; return (jy>=py)?('입사 '+String(j).replace('-','.')):''; }catch(e){ return ''; } };
+var _dvRecentHire=function(nm){ var j=_dvJoin(nm); if(!j)return ''; try{ var jy=parseInt(String(j).slice(0,4),10); var py=(_dvIdx&&_dvIdx.P&&_dvIdx.P.ey)?(_dvIdx.P.ey-1):jy; return (jy>=py)?('입사 '+String(j).slice(0,7).replace('-','.')):''; }catch(e){ return ''; } };
 var _dvRows=function(map){ return Object.keys(map||{}).map(function(k){ return {name:k,a:map[k].a,b:map[k].b,d:map[k].a-map[k].b,qa:map[k].qa||0,qb:map[k].qb||0}; }).sort(function(x,y){return y.d-x.d;}); };
 function _setDevVarMode(m){ _devVarMode=m; renderDevVariance(); }
 function _dvBuild(){
