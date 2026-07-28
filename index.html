@@ -6481,7 +6481,7 @@ function renderCDUReels(){
     +'#cdu-reels .rlb-col.drop{outline:2px dashed #93c5fd;outline-offset:-2px;background:#eff6ff}'
     +'#cdu-reels .rlb-ch{display:flex;align-items:center;justify-content:space-between;padding:3px 6px 9px;font-size:12.5px;font-weight:800;flex-shrink:0}'
     +'#cdu-reels .rlb-ch .c{font-size:11px;font-weight:800;color:#fff;border-radius:10px;padding:1px 8px}'
-    +'#cdu-reels .rlb-body{max-height:56vh;overflow-y:auto;padding-right:2px}'
+    +'#cdu-reels .rlb-body{display:grid;grid-template-columns:1fr 1fr;gap:5px;align-content:start;max-height:56vh;overflow-y:auto;padding-right:2px}'
     +'#cdu-reels .rlb-card{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #eef0f4;border-radius:8px;padding:5px 9px;margin-bottom:5px;cursor:pointer}'
     +'#cdu-reels .rlb-card:hover{border-color:#c7d2fe}'
     +'#cdu-reels .rlb-rn{flex:1;min-width:0;font-size:12.5px;font-weight:700;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
@@ -6494,6 +6494,7 @@ function renderCDUReels(){
     +'#cdu-reels .rlb-empty{font-size:11px;color:#cbd5e1;text-align:center;padding:16px 0}'
     +'#cdu-reels .rl-top{background:#fff;border:1px solid #eef0f4;border-radius:12px;padding:12px 15px;margin-top:14px}'
     +'@media(max-width:900px){#cdu-reels .rlb-board{grid-template-columns:1fr}#cdu-reels .rl-ins{grid-template-columns:1fr}#cdu-reels .rlb-body{max-height:none}}'
+    +'@media(max-width:560px){#cdu-reels .rlb-body{grid-template-columns:1fr}}'
     +'</style>';
   var headH='<div class="rl-head"><i class="bi bi-camera-reels me-1" style="color:#db2777"></i>릴스 관리 <span>URL 1개=1건 · 병원당 여러 릴스 관리 · 카드를 끌어 단계 이동</span></div>';
   if(!items.length){ el.innerHTML=css+headH+'<div class="card p-5 text-center text-muted" style="font-size:14px"><i class="bi bi-camera-reels" style="font-size:28px;color:#f9a8d4"></i><div class="mt-2">이 기간 등록된 릴스가 없습니다.<br><b>일정 관리</b> 탭 → 방문 기록에서 <b>릴스 촬영</b>·<b>URL</b>을 입력하면 여기서 건별로 관리됩니다.</div></div>'; return; }
