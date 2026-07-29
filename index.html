@@ -10975,12 +10975,11 @@ function _renderAccessCards() {
   if(!el) return;
   el.innerHTML = _siteRegistry.map(s=>`
     <div class="access-card" data-val="${s.key}" onclick="toggleAccessCard(this)"
-      style="flex:1;min-width:90px;border:2px solid #e5e7eb;border-radius:14px;padding:14px 10px 12px;cursor:pointer;text-align:center;transition:all .18s;background:#fff">
-      <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,${s.grad_from},${s.grad_to});display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 12px ${s.grad_from}40">
-        <i class="bi ${s.icon}" style="font-size:18px;color:#fff"></i>
+      style="display:flex;align-items:center;gap:9px;border:2px solid #e5e7eb;border-radius:10px;padding:8px 10px;cursor:pointer;transition:all .18s;background:#fff">
+      <div style="width:28px;height:28px;flex-shrink:0;border-radius:8px;background:linear-gradient(135deg,${s.grad_from},${s.grad_to});display:flex;align-items:center;justify-content:center">
+        <i class="bi ${s.icon}" style="font-size:14px;color:#fff"></i>
       </div>
-      <div style="font-size:11px;font-weight:800;color:#1e293b;letter-spacing:-.2px">${s.title}</div>
-      <div style="font-size:10px;color:#94a3b8;margin-top:2px">${s.short_label}</div>
+      <div style="min-width:0;font-size:12px;font-weight:800;color:#1e293b;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.title}</div>
     </div>`).join('');
 }
 async function openAddUserModal() {
@@ -11975,7 +11974,7 @@ window.addEventListener('pageshow', function(e){
 </div></div></div>
 
 <!-- 사용자 추가 모달 (body 최상위 — main-content 밖) -->
-<div class="modal fade" id="addUserModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content">
+<div class="modal fade" id="addUserModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
   <div class="modal-header border-0 pb-0"><h6 class="modal-title"><i class="bi bi-person-plus me-2 text-primary"></i>사용자 추가</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
   <div class="modal-body">
     <div class="mb-2"><label class="form-label fw-bold" style="font-size:12px">이메일</label><input type="email" id="new-user-email" class="form-control form-control-sm" placeholder="example@gmail.com"></div>
@@ -11987,7 +11986,7 @@ window.addEventListener('pageshow', function(e){
     </div>
     <div class="mb-3">
       <label class="form-label fw-bold" style="font-size:12px">접근 권한 <span style="font-weight:400;color:#6b7280">(복수 선택 가능)</span></label>
-      <div id="access-cards" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+      <div id="access-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px"></div>
       <div id="access-card-error" style="font-size:11px;color:#dc2626;margin-top:4px;display:none">최소 1개 선택하세요</div>
     </div>
     <div class="mb-2"><label class="form-label fw-bold" style="font-size:12px">역할</label>
