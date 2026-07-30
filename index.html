@@ -2526,10 +2526,11 @@ async function _loadSiteRegistry() {
   catch(e) { _siteRegistry = []; }
   return _siteRegistry;
 }
-function _siteVisible(site, access, isAdmin) {
+function _siteVisible(site, access, isAdmin, isStrat) {
+  if(isStrat===undefined) isStrat = (typeof _isStrat!=='undefined' && !!_isStrat);   // 영업전략파트(dept) 전달 — 미지정 시 전역값 사용
   if(access.includes(site.key)) return true;
   if(site.admin_bypass && isAdmin) return true;
-  if(site.extra_visible_rule) { try { return !!(new Function('access','isAdmin','return ('+site.extra_visible_rule+')'))(access, isAdmin); } catch(e) { return false; } }
+  if(site.extra_visible_rule) { try { return !!(new Function('access','isAdmin','isStrat','return ('+site.extra_visible_rule+')'))(access, isAdmin, isStrat); } catch(e) { return false; } }
   return false;
 }
 

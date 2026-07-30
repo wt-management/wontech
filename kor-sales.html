@@ -232,10 +232,11 @@ function closeModal(){document.getElementById('modal').classList.remove('on');}
   try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
 })();
 async function allowed(user){ if((user.email||'')==='pmw0406@gmail.com')return true;
-  try{ const {data:p}=await _sb.from('crm_profiles').select('access,role').eq('id',user.id).maybeSingle();
+  try{ const {data:p}=await _sb.from('crm_profiles').select('access,role,dept').eq('id',user.id).maybeSingle();
     if(!p)return false; if(p.role==='admin')return true;
+    if(String(p.dept||'').replace(/\s/g,'').includes('영업전략'))return true;   // 영업전략파트 전원
     const ac=(p.access||'').split(',').map(s=>s.trim());
-    return ac.indexOf('korea')>=0||ac.indexOf('all')>=0;
+    return ac.indexOf('all')>=0;
   }catch(e){return false;} }
 async function enter(user){ ME=user.email||'';
   if(!(await allowed(user))){ document.getElementById('load').style.display='none'; document.getElementById('noacc').style.display='flex'; return; }
@@ -481,8 +482,8 @@ function exportCsv(){
 /* ── 사이트 스위처 ── */
 async function renderSwitcher(){
   let reg=[]; try{ reg=(await _sb.from('site_registry').select('*').order('sort_order')).data||[]; }catch(e){}
-  let ac=[],ad=false; try{ const s=(await _sb.auth.getSession()).data.session; if(s&&s.user){ if(s.user.email==='pmw0406@gmail.com')ad=true; const p=await _sb.from('crm_profiles').select('access,role').eq('id',s.user.id).maybeSingle(); if(p&&p.data){ac=(p.data.access||'').split(',').map(x=>x.trim()).filter(Boolean); if(p.data.role==='admin')ad=true;} } }catch(e){}
-  const vis=s=>{ if(ac.indexOf(s.key)>=0)return true; if(s.admin_bypass&&ad)return true; if(s.extra_visible_rule){try{return !!(new Function('access','isAdmin','return('+s.extra_visible_rule+')'))(ac,ad);}catch(e){return false;}} return false; };
+  let ac=[],ad=false,st=false; try{ const s=(await _sb.auth.getSession()).data.session; if(s&&s.user){ if(s.user.email==='pmw0406@gmail.com')ad=true; const p=await _sb.from('crm_profiles').select('access,role,dept').eq('id',s.user.id).maybeSingle(); if(p&&p.data){ac=(p.data.access||'').split(',').map(x=>x.trim()).filter(Boolean); if(p.data.role==='admin')ad=true; st=String(p.data.dept||'').replace(/\s/g,'').includes('영업전략');} } }catch(e){}
+  const vis=s=>{ if(ac.indexOf(s.key)>=0)return true; if(s.admin_bypass&&ad)return true; if(s.extra_visible_rule){try{return !!(new Function('access','isAdmin','isStrat','return('+s.extra_visible_rule+')'))(ac,ad,st);}catch(e){return false;}} return false; };
   const seen={}; const items=reg.filter(s=>{ if(!vis(s))return false; const d=(s.url==='LOCAL'||s.key==='korea')?'wontech':s.url; if(seen[d])return false; seen[d]=1; return true; });
   document.getElementById('swdd').innerHTML=items.map((s,i)=>'<div class="sw-item" onclick="swGo('+i+')"><span class="bdg" style="background:'+(s.grad_from||'#64748b')+'">'+esc(s.badge||'')+'</span>'+esc(s.title||s.key)+'</div>').join('')||'<div class="sw-item mut">이동 가능한 사이트 없음</div>';
   window._swItems=items;
