@@ -6840,6 +6840,7 @@ function _cduAllTip(){ if(_cduAllTipCache!=null) return _cduAllTipCache; var s=0
 var _CDU_BANDS=[['~349천원',p=>p<350],['350~399',p=>p>=350&&p<400],['400~449',p=>p>=400&&p<450],['450~',p=>p>=450]];
 var _cduRepVs=[];
 // ── 지표 드릴다운(목록) ──
+function _cduCompEtcToggle(){ var e=document.getElementById('cduCompEtc'); var ic=document.getElementById('cduCompEtcIc'); if(!e)return; var op=e.style.display==='none'; e.style.display=op?'block':'none'; if(ic)ic.className='bi bi-chevron-'+(op?'up':'down'); }
 function _cduDrillComp(c){ var _s={}; _cduDrill('경쟁사 노출: '+c, _cduRepVs.filter(function(v){ if((v.competitor||'').split(/[\/,·]/).map(function(x){return x.trim();}).indexOf(c)<0) return false; var n=(v.custName||'').trim(); if(_s[n]) return false; _s[n]=1; return true; }), 'comp'); }
 function _cduDrillCompAll(){ _cduDrill('경쟁사 노출 전체', _cduRepVs.filter(function(v){ return (v.competitor||'').trim(); }), 'comp'); }
 function _cduDrillChan(c){ _cduDrill('마케팅 채널: '+c, _cduRepVs.filter(v=>(v.channels||'').split(/[\/,·]/).map(s=>s.trim()).indexOf(c)>=0)); }
@@ -6888,7 +6889,7 @@ function _cduDrill(title, arr, kind){
   var _pArr=Object.entries(byProc).sort((a,b)=>b[1]-a[1]);
   var _mx=function(a){return Math.max.apply(null,a.concat([1]));};
   var _hostRev=Object.keys(uniq).map(function(n){var r=_cduRev(n);return {n:n,y26:r.y2026||0,y25:r.y2025||0};});
-  var barW=function(name,val,max,c2,disp){return '<div style="display:flex;align-items:center;gap:8px;padding:3px 0"><span style="font-size:12.5px;min-width:82px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">'+_cduEsc(name)+'</span>'+_cduBar(val/(max||1)*100,c2)+'<span style="font-size:12px;font-weight:700;min-width:58px;text-align:right">'+disp+'</span></div>';};
+  var barW=function(name,val,max,c2,disp,extra){return '<div style="display:flex;align-items:center;gap:8px;padding:3px 0"><span style="font-size:12.5px;min-width:82px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">'+_cduEsc(name)+'</span>'+(extra||'')+_cduBar(val/(max||1)*100,c2)+'<span style="font-size:12px;font-weight:700;min-width:58px;text-align:right">'+disp+'</span></div>';};
   var note=function(t){return '<div style="font-size:12px;color:#64748b;line-height:1.65;margin-top:7px;padding-top:6px;border-top:1px dashed #e5e7eb">'+t+'</div>';};
   var gl=function(txt,bg,fg,bd){return '<div style="background:'+(bg||'#eff6ff')+';border:1px solid '+(bd||'#dbeafe')+';border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:'+(fg||'#1e40af')+';line-height:1.6">'+txt+'</div>';};
   var col=function(inner,w){return '<div class="col-md-'+(w||6)+'">'+inner+'</div>';};
@@ -6932,9 +6933,9 @@ function _cduDrill(title, arr, kind){
     _glance=gl('<b>급감 병원 방어</b> · <b>'+nH+'개처</b> · 작년 <b>'+_cduWon(y25s2)+'</b> → 올해 <b>'+_cduWon(y26s2)+'</b> ('+(y25s2?Math.round((y26s2-y25s2)/y25s2*100):0)+'%)', '#fef2f2', '#b91c1c', '#fecaca');
     cells.push(col(box('병원별 감소액 <span style="font-weight:400;color:#94a3b8">작년-올해</span>',(dd.length?dd.map(x=>barW(x.n,x.d,mxDd,'#dc2626','\u25bc'+_cduWon(x.d))).join(''):'<div style="font-size:12px;color:#94a3b8">감소 데이터 없음</div>')+note('감소액 큰 곳부터 이탈 방어. <b>미구매 사유·경쟁사 노출</b>을 함께 확인해 원인을 파악하세요.'))));
   } else if(kind==='conv'){
-    var _cb=window._cduConvBy||{}; var cv=_hostRev.map(function(x){return {n:x.n,y26:_cb[x.n]||0};}).filter(x=>x.y26>0).sort((a,b)=>b.y26-a.y26).slice(0,8); var mxCv=_mx(cv.map(x=>x.y26)); var _convTot=_hostRev.reduce(function(s,x){return s+(_cb[x.n]||0);},0);
+    var _cb=window._cduConvBy||{}; var cv=_hostRev.map(function(x){return {n:x.n,y26:_cb[x.n]||0};}).filter(x=>x.y26>0).sort((a,b)=>b.y26-a.y26).slice(0,8); var mxCv=_mx(cv.map(x=>x.y26)); var _convTot=_hostRev.reduce(function(s,x){return s+(_cb[x.n]||0);},0); var _ccl=window._cduConvCls||{}; var _lblOf=function(n){ var c=_ccl[n]||''; if(!c)return ''; var C=(c==='휴면')?['#c2410c','#fff7ed']:['#b91c1c','#fef2f2']; return '<span style="font-size:10px;font-weight:700;color:'+C[0]+';background:'+C[1]+';border-radius:4px;padding:1px 5px;margin-right:2px;flex-shrink:0">'+c+'</span>'; };
     _glance=gl('<b>재구매 전환 성과</b> · <b>'+nH+'개처</b> 전환 · 전환 팁매출(방문 후) <b>'+_cduWon(_convTot)+'</b>', '#f0fdf4', '#15803d', '#bbf7d0');
-    cells.push(col(box('전환 병원 기여 <span style="font-weight:400;color:#94a3b8">방문 후 재구매분</span>',(cv.length?cv.map(x=>barW(x.n,x.y26,mxCv,'#16a34a',_cduWon(x.y26))).join(''):'<div style="font-size:12px;color:#94a3b8">전환 데이터 없음</div>')+note('병원 전체매출이 아니라 <b>방문 이후</b> 실제 재구매(팁)로 이어진 금액만 집계 — 상단 KPI와 동일 기준.'))));
+    cells.push(col(box('전환 병원 기여 <span style="font-weight:400;color:#94a3b8">방문 후 재구매분</span>',(cv.length?cv.map(x=>barW(x.n,x.y26,mxCv,'#16a34a',_cduWon(x.y26),_lblOf(x.n))).join(''):'<div style="font-size:12px;color:#94a3b8">전환 데이터 없음</div>')+note('병원 전체매출이 아니라 <b>방문 이후</b> 실제 재구매(팁)로 이어진 금액만 집계 — 상단 KPI와 동일 기준. 이름 옆 <span style="color:#c2410c">휴면</span>·<span style="color:#b91c1c">급감</span>은 방문 전 상태(전환분 제외 기준).'))));
   } else if(kind==='rev'){
     var rv=_hostRev.slice().sort((a,b)=>b.y26-a.y26).filter(x=>x.y26>0); var top5=rv.slice(0,5).reduce((s,x)=>s+x.y26,0);
     var shown=rv.slice(0,8); var mxRv=_mx(shown.map(x=>x.y26));
@@ -7129,14 +7130,14 @@ function renderCDUReport(vs){
       +'<div style="font-size:12px;color:#64748b;margin-top:6px">※ 방문 결과 입력의 [소모품 미구매 사유] 누적 — 사유 분포가 대응 전략(가격·교육·번들·딜러 정리)의 근거가 됩니다</div>'
     : '<div style="font-size:13px;color:#64748b">아직 기록된 미구매 사유가 없습니다 — 방문 결과 입력에서 <b>[소모품 미구매 사유]</b>를 남기면 여기에 누적됩니다.</div>';
   var _tipOnly2=t=>String(t[2]||'').indexOf('Oligio Tip')===0;
-  var _convN=0,_convAmt=0,_convHosp={},_convBy={};
+  var _convN=0,_convAmt=0,_convHosp={},_convBy={},_convCls={};
   uniqNames.forEach(function(n){
     var f=firstDate[n]; if(!f) return;
     var rv=_cduRev(n); var tx=(rv.txns2026||[]).filter(_tipOnly2).filter(t=>String(t[1]||'')>f);
     var s2=tx.reduce((s,t)=>s+Number(t[3]||0),0);
-    if(s2>0){ _convN++; _convAmt+=s2; _convHosp[n]=1; _convBy[n]=s2; }
+    if(s2>0){ _convN++; _convAmt+=s2; _convHosp[n]=1; _convBy[n]=s2; var _c26=rv.y2026||0,_c25=rv.y2025||0,_c26x=_c26-s2; _convCls[n]=(_c26x<=0&&_c25>0)?'휴면':((_c25>0&&(_c26x*12/_mmC)<_c25*0.4)?'급감':''); }
   });
-  window._cduConvBy=_convBy; window._cduDrillConv=function(){ var seen3={}; _cduDrill('방문 후 재구매 전환 병원', _cduVisits().filter(function(v){ var n=(v.custName||'').trim(); if(!_convHosp[n]||seen3[n]) return false; seen3[n]=1; return true; }), 'conv'); };
+  window._cduConvBy=_convBy; window._cduConvCls=_convCls; window._cduDrillConv=function(){ var seen3={}; _cduDrill('방문 후 재구매 전환 병원', _cduVisits().filter(function(v){ var n=(v.custName||'').trim(); if(!_convHosp[n]||seen3[n]) return false; seen3[n]=1; return true; }), 'conv'); };
   // 방문 병원 구성 분류(휴면·급감) + 사유 파악
   var _clsDor=[], _clsDrop=[], _rsKnown={};
   uniqNames.forEach(function(n){ var r=_cduRev(n); var y26=r.y2026||0, y25=r.y2025||0;
@@ -7188,10 +7189,10 @@ function renderCDUReport(vs){
   var dsec=(title,sub,inner)=>'<div><div class="cdud-st">'+title+(sub?'<u>· '+sub+'</u>':'')+'</div><div class="cdud-2col">'+inner+'</div></div>';
   var _noD=t=>'<div style="font-size:13px;color:#94a3b8;padding:4px 0">'+t+'</div>';
   var detailSec='<div class="cdud-grid2">'
-    +dsec('시술 수가 밴드','올리지오 300샷 · 클릭 상세',
+    +dsec('시술 수가 밴드','올리지오 300샷'+(prices.length?' · 평균 '+avg+'천':'')+' · 클릭 상세',
         (prices.length? bands.map((b,i)=>barRow(b[0].replace('천원','')+'천원',bandCnt[i],bandCnt[i]/prices.length*100,'#2563eb','건','_cduDrillBand('+i+')')).join('')+'<div style="font-size:12.5px;color:#64748b;margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9">평균 <b>'+avg+'</b> · 최고 '+mx+' · 최저 '+mn+' · '+prices.length+'건 파악</div>'
           : _noD('수가 파악 병원 없음')))
-    +dsec('경쟁사 노출 현황','클릭 상세',(compArr.length?compArr.map(([n,c])=>barRow(n,c,c/compTot*100,'#ef4444','개처',"_cduDrillComp('"+_cduEsc(n).replace(/\x27/g,"\\x27")+"')")).join(''):_noD('경쟁사 정보 없음')))
+    +dsec('경쟁사 노출 현황','클릭 상세',(compArr.length?(function(){ var _cr=function(e){return barRow(e[0],e[1],e[1]/compTot*100,'#ef4444','개처',"_cduDrillComp('"+_cduEsc(e[0]).replace(/\x27/g,"\\x27")+"')");}; var _mj=compArr.filter(function(e){return e[1]/compTot*100>2;}); var _mn=compArr.filter(function(e){return e[1]/compTot*100<=2;}); if(!(_mj.length&&_mn.length)) return compArr.map(_cr).join(''); var _mc=_mn.reduce(function(s,x){return s+x[1];},0); var _et='<div onclick="_cduCompEtcToggle()" style="display:flex;align-items:center;gap:10px;padding:5px 2px;cursor:pointer;border-bottom:1px solid #f5f7fa"><span style="width:9px;height:9px;border-radius:2px;background:#cbd5e1;flex-shrink:0"></span><span style="font-size:13.5px;flex:1;min-width:0;font-weight:600;color:#64748b">기타 '+_mn.length+'개사</span><span style="font-size:13.5px;font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums">'+_mc+'개처 <span style="color:#94a3b8;font-weight:600;font-size:12.5px">'+Math.round(_mc/compTot*100)+'%</span></span><i id="cduCompEtcIc" class="bi bi-chevron-down" style="font-size:11.5px;color:#94a3b8;flex-shrink:0"></i></div>'; return _mj.map(_cr).join('')+_et+'<div id="cduCompEtc" style="display:none">'+_mn.map(_cr).join('')+'</div>';})():_noD('경쟁사 정보 없음')))
     +dsec('주요 마케팅 채널 활용','클릭 상세',(chanArr.length?chanArr.map(([n,c])=>barRow(n,c,c/nHosp*100,'#2563eb','개처',"_cduDrillChan('"+_cduEsc(n).replace(/\x27/g,"\\x27")+"')")).join(''):_noD('채널 정보 없음'))+'<div style="font-size:12px;color:#64748b;margin-top:6px">※ 방문 병원 대비 활용률(복수 선택)</div>')
     +dsec('담당자별 방문 커버리지','클릭 상세',salesArr.map(([n,c])=>barRow(n,c,c/nHosp*100,'#2563eb','개처',"_cduDrillSales('"+_cduEsc(n).replace(/\x27/g,"\\x27")+"')")).join(''))
     +dsec('주력 시술','방문처가 미는 시술',(procArr.length?procArr.map(([n,c])=>barRow(n,c,c/procTot*100,'#2563eb','건')).join(''):_noD('시술 정보 입력 없음')))
