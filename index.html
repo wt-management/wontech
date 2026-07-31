@@ -9008,18 +9008,19 @@ function _autoEquip(){
   var out=[];
   try{
     if(DEVICE&&DEVICE.hospitals){
-      var seen={};
-      (DB.d.equipments||[]).forEach(function(e){ var k=_eqNorm(e.custName)+'|'+_eqNorm(e.model); (seen[k]=seen[k]||{})[String(e.delivDate||'').slice(0,7)]=1; });
-      var near=function(o,ym){ if(!o||!ym) return false; var y=+ym.slice(0,4),m=+ym.slice(5,7); for(var dm=-1;dm<=1;dm++){ var mm=m+dm,yy=y; if(mm<1){mm=12;yy--;} if(mm>12){mm=1;yy++;} if(o[yy+'-'+String(mm).padStart(2,'0')]) return true; } return false; };
+      // 등록장비를 병원별·월별 '대수'로 집계 — 등록(코드명 OLG/VL…)과 회계추정(풀네임 Oligio/V-Laser…)은 모델명 표기가 달라 모델기준 매칭 불가 → 병원+월(±1) 기준으로 같은 장비를 추정에서 차감(이중계상 방지)
+      var regHM={};
+      (DB.d.equipments||[]).forEach(function(e){ var h=_eqNorm(e.custName), ym=String(e.delivDate||'').slice(0,7); if(!h||!ym) return; (regHM[h]=regHM[h]||{}); regHM[h][ym]=(regHM[h][ym]||0)+1; });
+      var consume=function(h,ym){ var mm=regHM[h]; if(!mm||!ym) return false; var y=+ym.slice(0,4),m=+ym.slice(5,7); var cand=[[y,m]]; var a=m+1,ay=y; if(a>12){a=1;ay++;} cand.push([ay,a]); var b=m-1,by=y; if(b<1){b=12;by--;} cand.push([by,b]); for(var i=0;i<cand.length;i++){ var key=cand[i][0]+'-'+String(cand[i][1]).padStart(2,'0'); if(mm[key]>0){ mm[key]--; return true; } } return false; };
       ['txns2025','txns2026'].forEach(function(tk){
         Object.keys(DEVICE.hospitals).forEach(function(hn){
           (DEVICE.hospitals[hn][tk]||[]).forEach(function(t){
             var date=t[1], model=t[3], amt=Number(t[4])||0, qty=Number(t[5])||0;
-            if(amt<=0||qty<=0||!model||!date) return;
+            if(amt<=0||!model||!date) return;              // 양수 장비판매만 · 수량 빈칸이어도 최소 1대
             if(_EQ_NONDEV.test(model)) return;
-            var k=_eqNorm(hn)+'|'+_eqNorm(model), ym=String(date).slice(0,7);
-            if(seen[k]&&near(seen[k],ym)) return;
-            for(var i=0;i<qty;i++) out.push({custName:hn, model:model, serial:'', delivDate:date, warrantyEnd:_eqPlusYear(date), status:'정상', sales:(DEVICE.hospitals[hn].sales||''), _auto:true});
+            var q=qty>0?qty:1, ym=String(date).slice(0,7), h=_eqNorm(hn);
+            for(var i=0;i<q;i++){ if(consume(h,ym)) continue;   // 등록분과 중복 → 추정 제외
+              out.push({custName:hn, model:model, serial:'', delivDate:date, warrantyEnd:_eqPlusYear(date), status:'정상', sales:(DEVICE.hospitals[hn].sales||''), _auto:true}); }
           });
         });
       });
