@@ -267,7 +267,7 @@ function build(sheets, existing){
   var EXCL_DEPT=/지컬|B2C|CS|연구|구매팀|인사|총무/;
   var _incl=function(r){return !EXCL_DEPT.test(String(r['사용부서']||''));};
   var consR=rows26.filter(function(r){return r['구분#2']==='소모품'&&r['국내외']==='국내'&&_incl(r);});
-  var devR =rows26.filter(function(r){return r['구분#2']==='제품군'&&r['국내외']==='국내'&&_incl(r);});
+  var devR =rows26.filter(function(r){return (r['구분#2']==='제품군'||r['구분#2']==='의료기기')&&r['국내외']==='국내'&&_incl(r);});
   var intlR=rows26.filter(function(r){return r['국내외']==='해외';});
   // updatedAt: 소모품 2026 날짜 max (없으면 전체 rows26 max)
   var dates=consR.map(function(r){return r['날짜'];}).filter(Boolean);
