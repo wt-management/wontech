@@ -12576,7 +12576,7 @@ setInterval(chk,5*60*1000);chk();
   function _esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function _gsBuild(){
     var rows=[];
-    try{ var seen={}; [window.CONS,window.DEVICE].forEach(function(S){ if(S&&S.hospitals) Object.keys(S.hospitals).forEach(function(n){ if(n&&!seen[n]){seen[n]=1; rows.push({t:'병원',n:n,sub:'',act:'showHospitalDetail',arg:n,ic:'bi-hospital',c:'#0891b2'});} }); }); }catch(e){}
+    try{ var seen={}; [CONS,DEVICE].forEach(function(S){ if(S&&S.hospitals) Object.keys(S.hospitals).forEach(function(n){ if(n&&!seen[n]){seen[n]=1; rows.push({t:'병원',n:n,sub:'',act:'showHospitalDetail',arg:n,ic:'bi-hospital',c:'#0891b2'});} }); }); }catch(e){}
     try{ (DB.d.pipeline||[]).forEach(function(x){ rows.push({t:'딜',n:x.custName||x.title||'(무제)',sub:(x.stage||'')+(x.model?' · '+x.model:''),act:'openDealDrawer',arg:x.id,ic:'bi-kanban',c:'#7c3aed'}); }); }catch(e){}
     try{ (DB.d.logs||[]).filter(function(l){return l.kind==='schedule';}).forEach(function(l){ rows.push({t:'일정',n:l.custName||'(미지정)',sub:(l.date||'')+(l.type?' · '+l.type:''),act:'_gsSched',arg:l.id,ic:'bi-calendar-week',c:'#2563eb'}); }); }catch(e){}
     try{ (DB.d.quotes||[]).forEach(function(q){ rows.push({t:'견적',n:q.custName||'(미지정)',sub:(q.total?_gsWon(q.total)+'원':'')+(q.date?' · '+String(q.date).slice(0,10):''),act:'_gsQuote',arg:q.id,ic:'bi-file-earmark-text',c:'#c2410c'}); }); }catch(e){}
@@ -12622,7 +12622,7 @@ setInterval(chk,5*60*1000);chk();
 (function(){
   function _days(dstr){ if(!dstr)return null; var t=new Date(); t.setHours(0,0,0,0); return Math.ceil((new Date(dstr)-t)/864e5); }
   function _today(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-  function _sched(){ return (window.DB&&DB.d&&DB.d.logs)||[]; }
+  function _sched(){ return (DB&&DB.d&&DB.d.logs)||[]; }
   function _ntCalc(){
     var t=_today(), o={};
     try{ o.missed=_sched().filter(function(l){return l.kind==='schedule'&&!l.done&&l.date&&String(l.date).slice(0,10)<t;}).length; }catch(e){o.missed=0;}
@@ -12648,7 +12648,7 @@ setInterval(chk,5*60*1000);chk();
     document.getElementById('nt-ov').style.display='block';
   };
   window._ntClose=function(){ var ov=document.getElementById('nt-ov'); if(ov)ov.style.display='none'; try{_ntBadge();}catch(e){} };
-  var _tries=0; (function _armBadge(){ _tries++; try{ if(window.CONS&&(CONS.hospitals||DB.d.logs)){ _ntBadge(); } }catch(e){} if(_tries<20) setTimeout(_armBadge,3000); })();
+  var _tries=0; (function _armBadge(){ _tries++; try{ if(CONS&&(CONS.hospitals||DB.d.logs)){ _ntBadge(); } }catch(e){} if(_tries<20) setTimeout(_armBadge,3000); })();
 })();
 </script>
 <!-- 오늘 방문 동선 -->
@@ -12661,9 +12661,9 @@ setInterval(chk,5*60*1000);chk();
 <script>
 function _schRoute(ds){
   var dt=new Date(); var t=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); ds=ds||t;
-  var vs=((window.DB&&DB.d&&DB.d.logs)||[]).filter(function(l){return l.kind==='schedule'&&String(l.date||'').slice(0,10)===ds;});
+  var vs=((DB&&DB.d&&DB.d.logs)||[]).filter(function(l){return l.kind==='schedule'&&String(l.date||'').slice(0,10)===ds;});
   var seen={},rows=[];
-  vs.forEach(function(l){ var n=(l.custName||'').trim(); if(!n||seen[n])return; seen[n]=1; var hi=(window.HOSP_INFO&&HOSP_INFO[n])||{}; var reg=(typeof _hospRegion==='function'?_hospRegion(n):null); rows.push({n:n,addr:(hi.address||'').trim(),reg:(reg&&reg[0])?(reg[0]+' '+(reg[1]||'')).trim():'',sales:(l.sales||'').trim(),type:(l.type||'방문').trim()}); });
+  vs.forEach(function(l){ var n=(l.custName||'').trim(); if(!n||seen[n])return; seen[n]=1; var hi=(HOSP_INFO&&HOSP_INFO[n])||{}; var reg=(typeof _hospRegion==='function'?_hospRegion(n):null); rows.push({n:n,addr:(hi.address||'').trim(),reg:(reg&&reg[0])?(reg[0]+' '+(reg[1]||'')).trim():'',sales:(l.sales||'').trim(),type:(l.type||'방문').trim()}); });
   var ttl=document.getElementById('sch-route-ttl'); if(ttl) ttl.textContent=ds.slice(5).replace('-','/')+' 방문 동선 · '+rows.length+'곳';
   var body=document.getElementById('sch-route-body'); if(!body)return;
   if(!rows.length){ body.innerHTML='<div style="padding:26px;text-align:center;color:#94a3b8;font-size:13px">이 날 방문 일정이 없습니다.</div>'; }
@@ -12688,7 +12688,7 @@ function _schRouteClose(){ var o=document.getElementById('sch-route-ov'); if(o)o
 <script>
 function _unassignedOpen(){
   var rows=[], seen={};
-  try{ [window.CONS,window.DEVICE].forEach(function(S){ if(!S||!S.hospitals)return; Object.keys(S.hospitals).forEach(function(n){ if(seen[n])return; seen[n]=1; var mgr=(typeof _repOf==='function'?(_repOf(n)||'').trim():''); if(mgr)return; var y=0; try{ y=(((CONS.hospitals||{})[n]||{}).y2026||0)+(((DEVICE.hospitals||{})[n]||{}).y2026||0); }catch(e){} if(y>0) rows.push({n:n,y:y}); }); }); }catch(e){}
+  try{ [CONS,DEVICE].forEach(function(S){ if(!S||!S.hospitals)return; Object.keys(S.hospitals).forEach(function(n){ if(seen[n])return; seen[n]=1; var mgr=(typeof _repOf==='function'?(_repOf(n)||'').trim():''); if(mgr)return; var y=0; try{ y=(((CONS.hospitals||{})[n]||{}).y2026||0)+(((DEVICE.hospitals||{})[n]||{}).y2026||0); }catch(e){} if(y>0) rows.push({n:n,y:y}); }); }); }catch(e){}
   rows.sort(function(a,b){return b.y-a.y;});
   var won=function(v){v=Number(v)||0;return v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만':String(Math.round(v));};
   var ttl=document.getElementById('unasgn-ttl'); if(ttl)ttl.textContent='담당 미배정 거래처 · '+rows.length+'곳';
