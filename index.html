@@ -5063,6 +5063,15 @@ function consParseExcel(input) {
       // 제품명 정규화(Oligio ES→Oligio 등) — 저장 전 적용
       try{ _normProds(CONS,true); _normProds(DEVICE,false); }catch(e){ console.warn('제품명 정규화 실패', e); }
 
+      // ── 저장 전 검증 리포트 (잘못된 파일/컬럼밀림/이상치를 팀 반영 전에 차단) ──
+      var _upC=0,_upD=0; try{ Object.values(CONS.monthly2026||{}).forEach(function(v){_upC+=(Number(v)||0);}); Object.values(DEVICE.monthly2026||{}).forEach(function(v){_upD+=(Number(v)||0);}); }catch(_e){}
+      var _upN=Object.keys(CONS.hospitals||{}).length, _upW=[];
+      if(_upC<=0) _upW.push('소모품 매출 합계가 0 — 소모품 시트/컬럼(구분#2·금액)을 확인하세요.');
+      if(_upD<=0) _upW.push('제품 매출 합계가 0 — 제품(제품군) 데이터를 확인하세요.');
+      if(_upN<10) _upW.push('거래처가 '+_upN+'개뿐 — 파일이 비었거나 컬럼이 밀렸을 수 있습니다.');
+      var _upOk=await _uploadConfirm({cons:_upC, dev:_upD, hosp:_upN, upd:updatedAt, warns:_upW});
+      if(!_upOk){ try{ setMsg('업로드 취소됨',''); var _st=document.getElementById('saving-toast'); if(_st) setTimeout(function(){_st.style.display='none';},1200); }catch(_e){} return; }
+
       // Supabase에 저장 (팀 전체 공유)
       setMsg('저장 중...', '팀 전체에 반영 중입니다');
       await _sb.from('cons_cache').delete().eq('key','main');
@@ -12825,6 +12834,36 @@ function _dqOpen(){
   document.getElementById('dq-ov').style.display='block';
 }
 function _dqClose(){ var o=document.getElementById('dq-ov'); if(o)o.style.display='none'; }
+</script>
+<!-- 엑셀 업로드 검증 확인 -->
+<div id="up-conf-ov" style="display:none;position:fixed;inset:0;z-index:21000;background:rgba(15,23,42,.5)">
+  <div style="max-width:460px;margin:12vh auto 0;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
+    <div style="display:flex;align-items:center;gap:8px;padding:14px 18px;border-bottom:1px solid #eef2f7"><i class="bi bi-clipboard-data-fill" style="color:#2563eb"></i><b style="font-size:14px;color:#0f172a">업로드 반영 전 확인</b></div>
+    <div id="up-conf-body" style="padding:16px 18px"></div>
+  </div>
+</div>
+<script>
+function _uploadConfirm(s){
+  return new Promise(function(resolve){
+    window._upResolve=resolve;
+    var won=function(v){v=Number(v)||0;return v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만':String(Math.round(v));};
+    var warn=(s.warns&&s.warns.length);
+    var body=document.getElementById('up-conf-body'); if(!body){ resolve(true); return; }
+    body.innerHTML='<div style="font-size:12px;color:#94a3b8;margin-bottom:11px;line-height:1.5">기준일 <b style="color:#475569">'+_escH(s.upd||'')+'</b> · 이 내용으로 <b>팀 전체에 반영</b>됩니다. 숫자가 평소와 크게 다르면 파일/시트를 다시 확인하세요.</div>'
+      +'<div style="display:flex;gap:8px;margin-bottom:12px">'
+      +'<div style="flex:1;background:#f0f9ff;border:1px solid #e0f2fe;border-radius:10px;padding:10px 12px"><div style="font-size:11px;color:#64748b">소모품</div><div style="font-size:19px;font-weight:800;color:#0369a1">'+won(s.cons)+'</div></div>'
+      +'<div style="flex:1;background:#f0fdf4;border:1px solid #dcfce7;border-radius:10px;padding:10px 12px"><div style="font-size:11px;color:#64748b">제품</div><div style="font-size:19px;font-weight:800;color:#15803d">'+won(s.dev)+'</div></div>'
+      +'<div style="flex:1;background:#f8fafc;border:1px solid #eef2f7;border-radius:10px;padding:10px 12px"><div style="font-size:11px;color:#64748b">거래처</div><div style="font-size:19px;font-weight:800;color:#0f172a">'+s.hosp+'<span style="font-size:11px;font-weight:600;color:#94a3b8">개</span></div></div>'
+      +'</div>'
+      +(warn?'<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px 13px;margin-bottom:12px"><div style="font-size:12px;font-weight:800;color:#b91c1c;margin-bottom:4px"><i class="bi bi-exclamation-triangle-fill me-1"></i>확인 필요</div>'+s.warns.map(function(w){return '<div style="font-size:12px;color:#991b1b;line-height:1.55">· '+_escH(w)+'</div>';}).join('')+'</div>':'')
+      +'<div style="display:flex;gap:8px">'
+      +'<button onclick="_upConf(false)" style="flex:1;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:9px;padding:10px;font-size:13px;color:#475569;font-weight:600;cursor:pointer">취소</button>'
+      +'<button onclick="_upConf(true)" style="flex:1.5;background:'+(warn?'#dc2626':'#2563eb')+';border:0;border-radius:9px;padding:10px;font-size:13px;color:#fff;font-weight:700;cursor:pointer">'+(warn?'경고 무시하고 반영':'확인 · 팀에 반영')+'</button>'
+      +'</div>';
+    document.getElementById('up-conf-ov').style.display='block';
+  });
+}
+function _upConf(v){ var o=document.getElementById('up-conf-ov'); if(o)o.style.display='none'; var r=window._upResolve; window._upResolve=null; if(r)r(v); }
 </script>
 </body>
 </html>
