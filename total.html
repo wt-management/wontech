@@ -1626,7 +1626,7 @@ function renderChannelMix(f,t){
   const ct=document.getElementById('ov-mix-cat'); if(ct) ct.innerHTML=bar('장비',dev,cd,'#7c3aed')+bar('소모품',cons,cd,'#0891b2')+'<div style="font-size:11px;color:#9ca3af;margin-top:2px">국내 실데이터 \u00b7 해외 제품군 비율 환산</div>';
 }
 // 보고 기준월 = 달력상 현재월과 실제 데이터 마지막월 중 작은 값. 월초(데이터 없는 새 달)에 빈 현재월/분기/반기로 롤오버되는 것 방지.
-function _curMonth(){ const n=new Date(); const cal=n.getFullYear()===2026?(n.getMonth()+1):12; return Math.max(1,Math.min(cal,_lastDataMonth())); }
+function _curMonth(){ const n=new Date(); const cal=n.getFullYear()===2026?(n.getMonth()+1):12; return Math.max(1,cal); }   // 달력 현재월 자동 반영(데이터월 캡 제거 — 월 바뀌면 즉시 전환, 전월 병기로 공백 보완)
 // 보고 기준월(성숙월): 새 달 실적이 전월의 20% 미만이면 아직 '월초 소량'으로 보고 전월을 기준월로.
 // 매출현황 분기/반기 자동전환·목표달성률 분모·임원리포트가 월초에 텅 빈 새 분기/반기로 넘어가는 것 방지.
 // (누계 기간·이번달 관리 카드는 _curMonth 그대로 — 당월 진행분은 계속 보임)
