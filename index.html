@@ -4819,7 +4819,7 @@ function consParseExcel(input) {
       setMsg('제품 데이터 집계 중...');
       const _devAmtKey = k => k.includes('금액');
       const _devRows = (sn) => _sj(sn)
-        .filter(r => r['구분#2'] === '제품군' && r['국내외'] === '국내');
+        .filter(r => (r['구분#2'] === '제품군' || r['구분#2'] === '의료기기') && r['국내외'] === '국내');
       const rd25 = _devRows(sheet25name);
       const rd26 = _devRows(sheet26name);
 
@@ -4835,15 +4835,16 @@ function consParseExcel(input) {
         const processRow = (r, yr) => {
           const amtKey = Object.keys(r).find(_devAmtKey)||'';
           const amt = Number(r[amtKey]||0);
-          if (!amt || amt < 100) return;  // 1원 더미 제거
-          let qty = parseInt(r['수량']||0);
-          if (qty <= 0) qty = 1;
+          if (amt === 0) return;  // 음수(반품·[결산]충당) 유지 = 순매출 (정본 aggDevice2026과 동일)
+          let qtyRaw = parseInt(r['수량']||0);
+          let qtyForExcl = qtyRaw > 0 ? qtyRaw : 1;
+          let qty = qtyRaw > 0 ? qtyRaw : 0;  // 빈 수량은 0(세지 않음, 금액은 반영)
           const mo   = monthNum(r['월']);
           let prod = (r['구분#4']||'').trim();
           if (/hair|헤어/i.test(prod)) {
             prod = 'Hair Beam';
-          } else if (amt / qty < 1_000_000) {
-            return;  // Hair Beam 외 단가 100만원 미만 → 팁샷/소모품 제외
+          } else if (amt > 0 && amt / qtyForExcl < 1_000_000) {
+            return;  // 양수 저단가(팁샷/소모품)만 제외 — 음수 충당은 유지
           }
           const name = (r['거래처명']||'').trim();
           const sales= (r['담당자']||'').trim();
@@ -4966,6 +4967,26 @@ function consParseExcel(input) {
       CONS.hospitals = hospMap;
       CONS.updatedAt = updatedAt;
 
+      // 기타(종합 전용): 국내전체 − 소모품 − 제품 잔차 = 서지컬·B2C·고객만족·지원부서. total.html 전사합계·서지컬행 정합 (정본 build와 동일)
+      try{
+        const _amKeyE = r => Object.keys(r).find(k => String(k).includes('금액')) || '';
+        const _all26E = _sj(sheet26name);
+        const _domAll = {};
+        _all26E.forEach(r => { if(r['국내외']==='국내'){ const _m=monthNum(r['월']); const _a=Number(r[_amKeyE(r)]||0); if(_m&&_a) _domAll[_m]=(_domAll[_m]||0)+_a; } });
+        const _etcMo = {};
+        for(let _em=1; _em<=12; _em++){ const _ev=Math.round((_domAll[_em]||0)-(a26.monthly[_em]||0)-(devFull.monthly2026[_em]||0)); if(_ev) _etcMo[_em]=_ev; }
+        CONS.etcMonthly2026 = _etcMo;
+        if(!CONS.etcMonthly2025) CONS.etcMonthly2025 = {};
+        const _isConsE = r => r['구분#2']==='소모품' && r['국내외']==='국내';
+        const _isDevE  = r => (r['구분#2']==='제품군'||r['구분#2']==='의료기기') && r['국내외']==='국내';
+        const _dept = {'서지컬':{},'B2C':{},'고객만족':{},'기타':{}};
+        _all26E.forEach(r => { if(r['국내외']!=='국내'||_isConsE(r)||_isDevE(r)) return; const _m=monthNum(r['월']); const _a=Number(r[_amKeyE(r)]||0); if(!_m||!_a) return; const _d=String(r['사용부서']||''); const _b=/지컬/.test(_d)?'서지컬':(/B2C/i.test(_d)?'B2C':(/고객만족|CS/.test(_d)?'고객만족':'기타')); _dept[_b][_m]=(_dept[_b][_m]||0)+_a; });
+        for(let _em=1; _em<=12; _em++){ let _bs=0; for(const _bk in _dept) _bs+=(_dept[_bk][_em]||0); const _adj=(_etcMo[_em]||0)-_bs; if(Math.round(_adj)) _dept['기타'][_em]=(_dept['기타'][_em]||0)+_adj; }
+        Object.keys(_dept).forEach(_k => { const _o={}; Object.keys(_dept[_k]).forEach(_m => { const _v=Math.round(_dept[_k][_m]); if(_v)_o[_m]=_v; }); _dept[_k]=_o; });
+        CONS.etcDept2026 = _dept;
+        if(!CONS.etcDept2025) CONS.etcDept2025 = {};
+      }catch(e){ console.warn('기타(etc) 산출 실패', e); }
+
       // 제품명 정규화(Oligio ES→Oligio 등) — 저장 전 적용
       try{ _normProds(CONS,true); _normProds(DEVICE,false); }catch(e){ console.warn('제품명 정규화 실패', e); }
 
@@ -4989,7 +5010,7 @@ function consParseExcel(input) {
         const _amK=r=>Object.keys(r).find(k=>k.includes('금액'))||'';
         const _exCt=nm=>{if(!nm||typeof nm!=='string')return'기타';const m=nm.match(/^([가-힣a-zA-Z]+)\s*\//);return m?m[1]:'국내법인';};
         const proc=(r,yr)=>{
-          const ak=_amK(r),amt=Number(r[ak]||0);if(!amt||amt<0)return;
+          const ak=_amK(r),amt=Number(r[ak]||0);if(amt===0)return;   // 음수(반품·충당) 유지 = 순매출 (정본 aggIntl2026과 동일)
           const usd=Number(r['USD']||0);
           let qty=parseInt(r['수량']||0);if(qty<=0)qty=1;
           const m=_moN(r['월']),p=(r['구분#4']||'').trim(),cat=(r['구분#2']||'').trim(),nm=(r['거래처명']||'').trim(),sl=(r['담당자']||'').trim(),co=_exCt(nm);
