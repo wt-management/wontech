@@ -5989,7 +5989,7 @@ function dealDrawerHtml(d){
         </div></div></div>
     <div style="padding:14px 22px;border-top:1px solid #e5e7eb;display:flex;gap:8px;justify-content:flex-end">
       <button onclick="closeDealDrawer()" style="border:1px solid #e5e7eb;background:#fff;border-radius:9px;padding:8px 14px;font-weight:600;font-size:13px;cursor:pointer">닫기</button>
-      <button onclick="closeDealDrawer();openSchedule({custName:'${esc(d.custName).replace(/'/g,"&#39;")}',sales:'${esc(d.sales||'').replace(/'/g,"&#39;")}',type:'방문',product:'${esc(d.model||'').replace(/'/g,"&#39;")}',content:'딜 관련 방문',dealId:'${d.id}'})" style="border:1px solid #bfdbfe;background:#eff6ff;color:#2563eb;border-radius:9px;padding:8px 14px;font-weight:600;font-size:13px;cursor:pointer"><i class="bi bi-calendar-plus"></i> 일정 잡기</button>
+      <button onclick="closeDealDrawer();openSchedule({custName:'${_jsArg(d.custName)}',sales:'${_jsArg(d.sales||'')}',type:'방문',product:'${_jsArg(d.model||'')}',content:'딜 관련 방문',dealId:'${d.id}'})" style="border:1px solid #bfdbfe;background:#eff6ff;color:#2563eb;border-radius:9px;padding:8px 14px;font-weight:600;font-size:13px;cursor:pointer"><i class="bi bi-calendar-plus"></i> 일정 잡기</button>
       <button onclick="closeDealDrawer();editPipeline('${d.id}')" style="border:0;background:#2563eb;color:#fff;border-radius:9px;padding:8px 14px;font-weight:600;font-size:13px;cursor:pointer"><i class="bi bi-pencil"></i> 정보 수정</button></div>`;
 }
 
@@ -6129,6 +6129,7 @@ function setPipeChip(stage, el) {
 
 // 공용 HTML 이스케이프 (저장형 XSS 방지 + 특수문자 깨짐 방지)
 function _escH(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function _jsArg(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/[\r\n]/g,' '); }   // onclick=".." 안 '..' JS문자열 인자 안전 이스케이프
 // onclick/속성 JS 문자열 인자용 이스케이프
 function _jsAttr(s){return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 // ── 실적 정정 신청(팀원) + 파트장 승인(담당 재배정=mgr 오버라이드) ──
@@ -9087,8 +9088,8 @@ function filterEquip(){
     <td>${statusBadge(e.status)}</td>
     <td style="color:#6b7280">${_eqSalesDisp(e.sales)}</td>
     <td style="white-space:nowrap">
-      <button class="btn btn-outline-secondary btn-sm me-1" style="font-size:11px;padding:2px 8px" onclick="editEquip('${(e.serial||'').replace(/'/g,"\\'")}')" >수정</button>
-      <button class="btn btn-outline-danger btn-sm" style="font-size:11px;padding:2px 8px" onclick="delEquip('${(e.serial||'').replace(/'/g,"\\'")}')">삭제</button>
+      <button class="btn btn-outline-secondary btn-sm me-1" style="font-size:11px;padding:2px 8px" onclick="editEquip('${_jsArg(e.serial||'')}')" >수정</button>
+      <button class="btn btn-outline-danger btn-sm" style="font-size:11px;padding:2px 8px" onclick="delEquip('${_jsArg(e.serial||'')}')">삭제</button>
     </td>
   </tr>`).join('');
   if(result.length>300){const more=document.createElement('tr');more.innerHTML=`<td colspan="8" class="text-center text-muted py-2" style="font-size:12px">검색어를 좁히면 전체 결과를 볼 수 있습니다 (현재 300건 표시)</td>`;el.appendChild(more);}
@@ -11293,7 +11294,7 @@ function renderDeviceSales() {
       const chg = p.v25>0?(p.v26/p.v25-1)*100:null;
       const barW = (p.v26/maxV*100)||0;
       const share = Math.round(p.v26/totV*100);
-      return `<div style="position:relative;padding:8px 8px;border-bottom:1px solid #f3f4f6;cursor:pointer;overflow:hidden" onclick="showDevTxnModal('${p.key.replace(/'/g,'\\\'').replace(/"/g,'&quot;')}','${rngStr}')" title="전년 ${fmtW(p.v25)}${p.qty25?' '+p.qty25+'대':''} · 클릭 시 거래내역">
+      return `<div style="position:relative;padding:8px 8px;border-bottom:1px solid #f3f4f6;cursor:pointer;overflow:hidden" onclick="showDevTxnModal('${_jsArg(p.key)}','${rngStr}')" title="전년 ${fmtW(p.v25)}${p.qty25?' '+p.qty25+'대':''} · 클릭 시 거래내역">
         <div style="position:absolute;left:0;top:0;bottom:0;width:${barW.toFixed(1)}%;background:linear-gradient(90deg,rgba(22,163,74,.11),rgba(22,163,74,.03))"></div>
         <div style="position:relative;display:flex;justify-content:space-between;align-items:center;gap:8px">
           <span style="font-size:12px;font-weight:600;color:#1c2534;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0"><span style="width:7px;height:7px;border-radius:2px;background:#16a34a;display:inline-block;margin-right:6px"></span>${p.key} <span style="color:#94a3b8;font-weight:500;font-size:10.5px">${p.qty}대</span></span>
@@ -11354,7 +11355,7 @@ function showDevTxnModal(prod, rngStr) {
         </tr></thead>
         <tbody>${txns.map(t=>`<tr>
           <td style="font-size:12px;white-space:nowrap;color:#6b7280">${t.date||t.mo+'월'}</td>
-          <td style="font-size:12px;font-weight:600;cursor:pointer;color:#0f172a" onclick="_drillHospOver('${String(t.name).replace(/'/g,"\\'")}')" title="클릭하면 병원 상세">${_escH(t.name)} <i class="bi bi-search" style="font-size:8px;color:#cbd5e1"></i></td>
+          <td style="font-size:12px;font-weight:600;cursor:pointer;color:#0f172a" onclick="_drillHospOver('${_jsArg(t.name)}')" title="클릭하면 병원 상세">${_escH(t.name)} <i class="bi bi-search" style="font-size:8px;color:#cbd5e1"></i></td>
           <td style="font-size:11px;color:#6b7280">${_escH(t.sales)}</td>
           <td class="text-end" style="font-size:12px;font-weight:600">${t.qty?t.qty+'대':''}</td>
           <td class="text-end" style="font-size:12px;font-weight:700;color:${t.amt<0?'#dc2626':'#1d4ed8'}">${t.amt<0?'−':''}${fmtW(Math.abs(t.amt))}${t.amt<0?' <span style=\"font-size:10px;font-weight:600\">보상</span>':''}</td>
@@ -11791,7 +11792,7 @@ function renderDevReps() {
   document.getElementById('devrep-rank-table').innerHTML = entries.map((e,i) => {
     const yoyStr = e.yoy===null?'-':(e.yoy>=0?'▲':'▼')+Math.abs(e.yoy).toFixed(1)+'%';
     const yoyCol = e.yoy===null?'#64748b':e.yoy>=0?'#16a34a':'#dc2626';
-    return `<tr style="cursor:pointer" onclick="showDevRepDetail('${e.name.replace(/'/g,'\\\'')}')" title="클릭하면 상세 보기">
+    return `<tr style="cursor:pointer" onclick="showDevRepDetail('${_jsArg(e.name)}')" title="클릭하면 상세 보기">
       <td style="color:#64748b;font-size:11px">${i+1}</td>
       <td style="font-size:12px;font-weight:700;color:${e.isTeam?'#1d4ed8':'#334155'}">${_devRepName(e)}</td>
       <td class="text-end" style="font-size:12px">${fmtW(e.pre)}</td>
@@ -11854,7 +11855,7 @@ function showDevRepDetail(repName) {
         <thead class="table-light" style="position:sticky;top:0"><tr>
           <th>거래처명</th><th class="text-end">전년YTD</th><th class="text-end">당해YTD</th><th>주력제품</th><th class="text-end">최근거래</th>
         </tr></thead>
-        <tbody>${hospList.map(h=>`<tr style="cursor:pointer" onclick="_drillHospOver('${String(h.name).replace(/'/g,"\\'")}')" title="클릭하면 병원 상세">
+        <tbody>${hospList.map(h=>`<tr style="cursor:pointer" onclick="_drillHospOver('${_jsArg(h.name)}')" title="클릭하면 병원 상세">
           <td style="font-size:12px;font-weight:600;color:#0f172a">${h.name} <i class="bi bi-search" style="font-size:8px;color:#cbd5e1"></i></td>
           <td class="text-end" style="font-size:11px;color:#64748b">${fmtW(h.pre)}</td>
           <td class="text-end" style="font-size:12px;font-weight:600;color:#1d4ed8">${fmtW(h.cur)}</td>
