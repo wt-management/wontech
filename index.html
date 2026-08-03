@@ -9634,6 +9634,10 @@ function setSchView(v,btn){ _schView=v; _schDayFromMonth=false; _schDrillSnap=nu
 function _schSyncViewBtn(){ const m={today:'sch-v-today',week:'sch-v-week',month:'sch-v-month'}; document.querySelectorAll('#page-schedule .btn-group .btn').forEach(b=>b.classList.remove('active')); const b=document.getElementById(m[_schView]); if(b)b.classList.add('active'); }
 // 월간에서 날짜 클릭 → 그 날의 활동 전체를 일간 뷰로 조회(일정 추가 아님)
 function _schMonthDay(ds){ _schEnterDrill(); _schView='today'; _schOverdueOnly=false; _schDoneOnly=false; _schRef=ds; try{sessionStorage.setItem('sch_view','today');}catch(e){} renderSchedule(); }
+var _schDragId=null;
+function _schDragStart(e,id){ _schDragId=id; try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',id);}catch(_){} }
+function _schDragOver(e){ e.preventDefault(); try{e.dataTransfer.dropEffect='move';}catch(_){} }
+function _schDrop(e,ds){ e.preventDefault(); e.stopPropagation(); var id=_schDragId; _schDragId=null; if(!id||!ds)return; var l=(DB.d.logs||[]).find(function(x){return x.id===id;}); if(!l||String(l.date||'').slice(0,10)===ds)return; l.date=ds; renderSchedule(); if(DB&&typeof DB.save==='function') DB.save('logs').then(function(){ if(typeof showToast==='function')showToast('일정 '+ds.slice(5).replace('-','/')+'로 이동',true); }); }
 // 데모 일정 사이트(demo_schedules) 병합읽기 — 읽기전용, 데모사이트가 쓰는 테이블. 오늘~+7일 범위만 표시(그 이후는 숨김).
 let _demoSched=[];
 async function _loadDemoSched(){
@@ -9774,7 +9778,7 @@ function _schMiniCard(i){
   const c=i.kind==='deal'?'#7c3aed':(_SCH_COL[i.type]||'#64748b');
   _schInfoCache[i.id]=i;
   const click=i.kind==='sched'?"editSchedule('"+i.id+"')":i.kind==='deal'?"showPage('sales');openDealDrawer('"+_schEsc(i.dealId)+"')":"_schInfoPop('"+_schEsc(i.id)+"')";
-  return '<div onclick="event.stopPropagation();'+click+'" style="background:'+c+'14;border-left:3px solid '+c+';border-radius:6px;padding:7px 9px;margin-bottom:6px;cursor:pointer;'+(i.done&&!_schNoDim?'opacity:.5':'')+'" title="'+_schEsc(i.custName+(i.product?' · '+i.product:'')+' · '+i.content)+'">'
+  return '<div '+(i.kind==='sched'?'draggable="true" ondragstart="event.stopPropagation();_schDragStart(event,\''+i.id+'\')" ':'')+'onclick="event.stopPropagation();'+click+'" style="background:'+c+'14;border-left:3px solid '+c+';border-radius:6px;padding:7px 9px;margin-bottom:6px;cursor:pointer;'+(i.done&&!_schNoDim?'opacity:.5':'')+'" title="'+_schEsc(i.custName+(i.product?' · '+i.product:'')+' · '+i.content)+'">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;gap:4px;margin-bottom:1px">'
       +'<span style="font-size:11.5px;font-weight:800;color:'+c+';white-space:nowrap">'+(i.kind==='deal'?'<i class="bi bi-kanban"></i> ':'')+_schEsc(i.type)+(i.done?' ✓':'')+'</span>'
       +(i.sales?'<span style="font-size:10px;color:'+_schRepColor(i.sales)+';background:'+_schRepColor(i.sales)+'22;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:7px;padding:1px 7px">'+_schEsc(i.sales)+'</span>':'')
@@ -9793,7 +9797,7 @@ function _schWeekGrid(items,wref){
   let cols='';
   for(let idx=0;idx<7;idx++){ const dt=new Date(mon); dt.setDate(mon.getDate()+idx); const ds=f(dt); const isToday=ds===today;
     const its=(byd[ds]||[]).sort(_schCmp);
-    cols+='<div onclick="openSchedule({date:\''+ds+'\'})" title="이 날짜에 일정 추가" style="border:1px solid '+(isToday?'#bfdbfe':'#eef2f7')+';border-radius:9px;min-height:140px;'+(isToday?'background:#eff6ff':'background:#fff')+';overflow:hidden;cursor:pointer">'
+    cols+='<div onclick="openSchedule({date:\''+ds+'\'})" ondragover="_schDragOver(event)" ondrop="_schDrop(event,\''+ds+'\')" title="이 날짜에 일정 추가" style="border:1px solid '+(isToday?'#bfdbfe':'#eef2f7')+';border-radius:9px;min-height:140px;'+(isToday?'background:#eff6ff':'background:#fff')+';overflow:hidden;cursor:pointer">'
       +'<div style="padding:6px 8px;font-size:11px;font-weight:800;border-bottom:1px solid #f1f3f7;color:'+(isToday?'#2563eb':idx===5?'#2563eb':idx===6?'#dc2626':'#475569')+'">'+WD[idx]+' <span style="font-weight:600;color:#64748b">'+parseInt(ds.slice(8),10)+'일</span>'+(isToday?' <span style="font-size:9px">●오늘</span>':'')+'</div>'
       +'<div style="padding:5px">'+_schBdays(ds).map(_schBdayCard).join('')+(its.length?its.map(_schMiniCard).join(''):(_schBdays(ds).length?'':'<div style="font-size:10px;color:#cbd5e1;text-align:center;padding:14px 0"><i class="bi bi-plus-circle" style="opacity:.4"></i></div>'))+'</div>'
     +'</div>';
@@ -9821,10 +9825,10 @@ function _schMonthView(items){
   for(let i=0;i<startDow;i++) cells+='<div style="min-height:82px;border:1px solid #f1f3f7;background:#fafbfc"></div>';
   for(let d=1;d<=days;d++){ const ds=mp+'-'+String(d).padStart(2,'0'); const its=(byd[ds]||[]).sort(_schCmp);
     const bg=(ds===todayS?'#eff6ff':''), hov=(ds===todayS?'#e0efff':'#f8fbff');
-    cells+='<div onclick="_schMonthDay(\''+ds+'\')" title="이 날 활동 전체 보기" style="position:relative;min-height:84px;border:1px solid #f1f3f7;padding:3px 4px;overflow:hidden;cursor:pointer;background:'+bg+'" onmouseover="this.style.background=\''+hov+'\';this.querySelector(\'.d-add\').style.opacity=1" onmouseout="this.style.background=\''+bg+'\';this.querySelector(\'.d-add\').style.opacity=0">'
+    cells+='<div onclick="_schMonthDay(\''+ds+'\')" ondragover="_schDragOver(event)" ondrop="_schDrop(event,\''+ds+'\')" title="이 날 활동 전체 보기" style="position:relative;min-height:84px;border:1px solid #f1f3f7;padding:3px 4px;overflow:hidden;cursor:pointer;background:'+bg+'" onmouseover="this.style.background=\''+hov+'\';this.querySelector(\'.d-add\').style.opacity=1" onmouseout="this.style.background=\''+bg+'\';this.querySelector(\'.d-add\').style.opacity=0">'
       +'<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;color:'+(ds===todayS?'#2563eb':'#64748b')+';font-weight:'+(ds===todayS?'800':'400')+'">'+d+'</span><span class="d-add" style="opacity:0;font-size:11px;color:#2563eb;transition:.1s" title="이 날 활동 전체 보기"><i class="bi bi-list-ul"></i></span></div>'
       +_schBdays(ds).map(m=>'<div style="font-size:10px;margin-top:1px;padding:1px 4px;border-radius:3px;background:#fdf4ff;color:#a21caf;font-weight:700">🎂 '+_schEsc(m.name)+' 생일</div>').join('')
-      +its.slice(0,3).map(i=>{ const c2=i.kind==='deal'?'#7c3aed':(_SCH_COL[i.type]||'#64748b'); const click2=i.kind==='sched'?'editSchedule(\''+i.id+'\')':i.kind==='deal'?'openDealDrawer(\''+_schEsc(i.dealId)+'\')':''; return '<div onclick="event.stopPropagation();'+click2+'" style="font-size:10px;margin-top:1px;padding:1px 4px;border-radius:3px;background:'+(c2+'22')+';color:'+c2+';cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+_schEsc(i.custName+' '+(i.sales?'('+i.sales+') ':'')+i.content)+'">'+(i.kind==='deal'?'<i class="bi bi-kanban" style="font-size:8px"></i> ':'')+_schEsc(i.custName)+(i.sales?' <span style="color:'+_schRepColor(i.sales)+';background:'+_schRepColor(i.sales)+'22;font-weight:700;border-radius:5px;padding:0 4px">'+_schEsc(i.sales)+'</span>':'')+'</div>'; }).join('')
+      +its.slice(0,3).map(i=>{ const c2=i.kind==='deal'?'#7c3aed':(_SCH_COL[i.type]||'#64748b'); const click2=i.kind==='sched'?'editSchedule(\''+i.id+'\')':i.kind==='deal'?'openDealDrawer(\''+_schEsc(i.dealId)+'\')':''; return '<div '+(i.kind==='sched'?'draggable="true" ondragstart="event.stopPropagation();_schDragStart(event,\''+i.id+'\')" ':'')+'onclick="event.stopPropagation();'+click2+'" style="font-size:10px;margin-top:1px;padding:1px 4px;border-radius:3px;background:'+(c2+'22')+';color:'+c2+';cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+_schEsc(i.custName+' '+(i.sales?'('+i.sales+') ':'')+i.content)+'">'+(i.kind==='deal'?'<i class="bi bi-kanban" style="font-size:8px"></i> ':'')+_schEsc(i.custName)+(i.sales?' <span style="color:'+_schRepColor(i.sales)+';background:'+_schRepColor(i.sales)+'22;font-weight:700;border-radius:5px;padding:0 4px">'+_schEsc(i.sales)+'</span>':'')+'</div>'; }).join('')
       +(its.length>3?'<div style="font-size:9px;color:#64748b;margin-top:1px">+'+(its.length-3)+' 더</div>':'')
       +'</div>';
   }
@@ -9901,7 +9905,7 @@ function renderSchedule(){
     const list=items.filter(i=>i.date===ref);
     const WDD=['일','월','화','수','목','금','토'][new Date(ref+'T00:00').getDay()];
     title.textContent=(ref===today?'오늘 ':'')+ref.slice(5).replace('-','/')+' ('+WDD+') · '+list.length+'건'+(sfv?' · '+_schEsc(sfv):'');
-    nav.innerHTML=_schNavBtns();
+    nav.innerHTML=_schNavBtns()+' <button onclick="_schRoute(\''+ref+'\')" style="background:#ecfeff;border:1px solid #a5f3fc;color:#0e7490;font-size:11px;padding:3px 10px;font-weight:700;border-radius:7px;cursor:pointer"><i class="bi bi-geo-alt"></i> 동선</button>';
     const bd=_schBdays(ref);
     body.innerHTML=(bd.length?'<div style="margin-bottom:8px;padding:9px 12px;background:#fdf4ff;border:1px dashed #d946ef;border-radius:9px;font-size:13px;font-weight:700;color:#a21caf">🎂 오늘은 '+bd.map(m=>_schEsc((m.name+' '+(m.pos||'')).trim())).join(', ')+' 님의 생일입니다!</div>':'')+_schListView(list);
   }
@@ -12609,6 +12613,33 @@ setInterval(chk,5*60*1000);chk();
   window._ntClose=function(){ var ov=document.getElementById('nt-ov'); if(ov)ov.style.display='none'; try{_ntBadge();}catch(e){} };
   var _tries=0; (function _armBadge(){ _tries++; try{ if(window.CONS&&(CONS.hospitals||DB.d.logs)){ _ntBadge(); } }catch(e){} if(_tries<20) setTimeout(_armBadge,3000); })();
 })();
+</script>
+<!-- 오늘 방문 동선 -->
+<div id="sch-route-ov" style="display:none;position:fixed;inset:0;z-index:20000;background:rgba(15,23,42,.45)" onclick="if(event.target===this)_schRouteClose()">
+  <div style="max-width:480px;margin:9vh auto 0;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
+    <div style="display:flex;align-items:center;gap:8px;padding:14px 18px;border-bottom:1px solid #eef2f7"><i class="bi bi-geo-alt-fill" style="color:#0891b2"></i><b id="sch-route-ttl" style="font-size:14px;color:#0f172a">방문 동선</b><span style="flex:1"></span><button onclick="_schRouteClose()" style="border:0;background:none;color:#94a3b8;font-size:16px;cursor:pointer">✕</button></div>
+    <div id="sch-route-body" style="max-height:64vh;overflow:auto;padding:8px 16px 14px"></div>
+  </div>
+</div>
+<script>
+function _schRoute(ds){
+  var dt=new Date(); var t=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); ds=ds||t;
+  var vs=((window.DB&&DB.d&&DB.d.logs)||[]).filter(function(l){return l.kind==='schedule'&&String(l.date||'').slice(0,10)===ds;});
+  var seen={},rows=[];
+  vs.forEach(function(l){ var n=(l.custName||'').trim(); if(!n||seen[n])return; seen[n]=1; var hi=(window.HOSP_INFO&&HOSP_INFO[n])||{}; var reg=(typeof _hospRegion==='function'?_hospRegion(n):null); rows.push({n:n,addr:(hi.address||'').trim(),reg:(reg&&reg[0])?(reg[0]+' '+(reg[1]||'')).trim():'',sales:(l.sales||'').trim(),type:(l.type||'방문').trim()}); });
+  var ttl=document.getElementById('sch-route-ttl'); if(ttl) ttl.textContent=ds.slice(5).replace('-','/')+' 방문 동선 · '+rows.length+'곳';
+  var body=document.getElementById('sch-route-body'); if(!body)return;
+  if(!rows.length){ body.innerHTML='<div style="padding:26px;text-align:center;color:#94a3b8;font-size:13px">이 날 방문 일정이 없습니다.</div>'; }
+  else { body.innerHTML=rows.map(function(r,i){ var q=encodeURIComponent(r.addr||r.n); var loc=r.addr||r.reg||'주소 미등록';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid #f1f5f9">'
+      +'<span style="width:22px;height:22px;border-radius:50%;background:#0891b2;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+(i+1)+'</span>'
+      +'<span style="flex:1;min-width:0"><span style="font-size:13.5px;font-weight:700;color:#0f172a;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_schEsc(r.n)+(r.sales?' <span style="font-size:10.5px;color:#2563eb">('+_schEsc(r.sales)+')</span>':'')+'</span><span style="font-size:11.5px;color:#94a3b8;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_schEsc(loc)+'</span></span>'
+      +'<a href="https://map.kakao.com/link/search/'+q+'" target="_blank" rel="noopener noreferrer" style="font-size:11px;font-weight:800;color:#3c1e1e;background:#fee500;border-radius:6px;padding:4px 8px;text-decoration:none;flex-shrink:0">카카오</a>'
+      +'<a href="https://map.naver.com/p/search/'+q+'" target="_blank" rel="noopener noreferrer" style="font-size:11px;font-weight:800;color:#fff;background:#03c75a;border-radius:6px;padding:4px 8px;text-decoration:none;flex-shrink:0">네이버</a>'
+    +'</div>'; }).join('')+'<div style="font-size:11px;color:#94a3b8;margin-top:10px;line-height:1.5">※ 주소=병원정보 등록값(없으면 병원명 검색) · 순서=일정 등록 순. 지도 앱에서 길찾기로 이어집니다.</div>'; }
+  document.getElementById('sch-route-ov').style.display='block';
+}
+function _schRouteClose(){ var o=document.getElementById('sch-route-ov'); if(o)o.style.display='none'; }
 </script>
 </body>
 </html>
