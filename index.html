@@ -6454,7 +6454,7 @@ function editPipeline(id) {
   new bootstrap.Modal(document.getElementById('pipelineModal')).show();
 }
 
-function savePipeline() {
+async function savePipeline() {
   const prev = DB.d.pipeline.find(x=>x.id===gV('p-id'));
   const newStage = gV('p-stage');
   const d={
@@ -6469,6 +6469,8 @@ function savePipeline() {
     stageUpdatedAt: (prev && prev.stage===newStage) ? (prev.stageUpdatedAt||new Date().toISOString()) : new Date().toISOString()
   };
   if(!d.custName||!d.model){alert('병원명과 제품/모델을 입력하세요.');return;}
+  const _hr=await _igHospResolve(d.custName); if(_hr===false) return; if(_hr!==d.custName){ d.custName=_hr; var _pe=document.getElementById('p-cust'); if(_pe)_pe.value=_hr; }
+  const _aw=window._IG.numWarn('amount', d.amount); if(_aw && !confirm('입력값 확인: '+_aw+'\n\n이대로 저장할까요?')) return;
   const idx=DB.d.pipeline.findIndex(x=>x.id===d.id);
   if(idx>=0) DB.d.pipeline[idx]=d; else DB.d.pipeline.push(d);
   DB.save('pipeline').then(()=>{ bootstrap.Modal.getInstance(document.getElementById('pipelineModal')).hide(); renderPipeline(); });
@@ -7700,10 +7702,12 @@ function openCDUVisit(id, copy){
   new bootstrap.Modal(document.getElementById('cduVisitModal')).show();
 }
 function openCDUVisitFor(name){ openCDUQuick(); var e=document.getElementById('cq-hosp'); if(e){ e.value=name||''; } }
-function saveCDUVisit(){
+async function saveCDUVisit(){
   var g=x=>(document.getElementById(x)||{}).value||'';
   var date=g('cd-date'), hosp=g('cd-hosp').trim();
   if(!date||!hosp){ alert('방문일과 병원명을 입력하세요.'); return; }
+  var _hr=await _igHospResolve(hosp); if(_hr===false) return; if(_hr!==hosp){ hosp=_hr; var _he=document.getElementById('cd-hosp'); if(_he)_he.value=hosp; }
+  var _pw=window._IG.numWarn('price', g('cd-price')); if(_pw && !confirm('입력값 확인: '+_pw+'\n\n이대로 저장할까요?')) return;
   var id=g('cd-id')||uid();
   var _pv=(DB.d.logs||[]).find(function(l){return l.id===id;});
   // 릴스는 별도 cdu_reel 레코드로 관리 — 방문 저장 시 기존 방문내 릴스필드는 보존(덮어쓰지 않음)
@@ -12746,6 +12750,12 @@ window._IG={
     return {known:false,suggest:sug};
   }
 };
+window._IG.numWarn=function(kind,val){ val=Number(val)||0; if(!val) return null;
+  if(kind==='price'){ if(val<20||val>5000) return '시술 수가 '+val.toLocaleString()+'천원 (보통 100~800천원)'; }
+  if(kind==='amount'){ if(Math.abs(val)>=5e9) return '금액 '+(val/1e8).toFixed(1)+'억 (자릿수 확인)'; }
+  if(kind==='qty'){ if(val<0||val>50) return '수량 '+val+'대'; }
+  return null; };
+async function _igHospResolve(cust){ try{ cust=String(cust||'').trim(); if(!cust) return cust; var hc=window._IG.hospCheck(cust); if(hc.known) return cust; var pick=await _igHospModal(cust, hc.suggest||[]); return (pick===null)?false:pick; }catch(e){ return cust; } }
 var _igResolve=null;
 function _igHospModal(typed,suggest){
   return new Promise(function(resolve){
