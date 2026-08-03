@@ -7173,10 +7173,12 @@ function renderCDUReport(vs){
 
   var fact=(l,v,s,cl,click)=>'<div class="cdud-fact'+(click?' clk" onclick="'+click+'"':'"')+'><span>'+l+'</span><b'+(cl?' class="'+cl+'"':'')+'>'+v+'</b>'+(s?'<i>'+s+'</i>':'')+'</div>';
   var _sh26=_cduAllTip()>0?(visitedRev/_cduAllTip()*100).toFixed(1):null;
+  var _allPrev=0; try{ Object.values(CONS.hospitals||{}).forEach(function(h){ var m=h.m2025||{}, s=0; for(var _i=1;_i<=_mmC;_i++) s+=Number(m[_i]||0); _allPrev+=s; }); }catch(e){}
+  var _sh25=_allPrev>0?(visitedRevPrev/_allPrev*100).toFixed(1):null;   // 전년 '동기'(YTD) 기준 — 전년 동기 매출과 정합
   var kpiBand='<div class="cdud-bt">방문 관리 현황 <u>· 이번 기간 활동량·매출·리스크 요약 · 클릭 상세</u></div>'
     +'<div class="cdud-kpis">'
     +'<div class="cdud-hero" onclick="_cduDrillAll()"><span class="l">방문 관리 병원</span><b>'+nHosp+'개처</b><span class="s">방문 <span style="color:var(--acc);font-weight:800">'+nVisit+'건</span> · 영업일수 <span style="color:var(--acc);font-weight:800">'+days.size+'일</span></span></div>'
-    +fact('올해 팁매출',_cduWon(visitedRev)+(_sh26!=null?' <span style="font-size:12px;color:#94a3b8;font-weight:700">(전체 '+_sh26+'%)</span>':''),(visitedRevPrev>0?'전년 동기 '+_cduWon(visitedRevPrev):'관리처 팁매출'),'','_cduDrillVip()')
+    +fact('올해 팁매출',_cduWon(visitedRev)+(_sh26!=null?' <span style="font-size:12px;color:#94a3b8;font-weight:700">(전체 '+_sh26+'%)</span>':''),(visitedRevPrev>0?'전년 동기 '+_cduWon(visitedRevPrev)+(_sh25!=null?' (전체 '+_sh25+'%)':''):'관리처 팁매출'),'','_cduDrillVip()')
     +fact('이벤트 진행',ev+'건','마케팅 이벤트 방문','',ev?'_cduDrillEvent()':'')
     +(function(){var rp=0,rc=0,rg=0;_cduReels().forEach(function(v){var s=_cduReelStageOf(v);if(s==='제안')rp++;else if(s==='촬영완료')rc++;else if(s==='게시완료')rg++;});var tot=rp+rc+rg;return fact('릴스 이벤트',tot+'건','제안 '+rp+' · 촬영 '+rc+' · 게시 '+rg,'',tot?"_cduTab('reels')":'');})()
   +'</div>';
