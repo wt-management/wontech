@@ -7172,10 +7172,14 @@ function renderCDUReport(vs){
   // ── 문서형 재조립: 히어로 KPI 밴드 + 집중관리 밴드 + 플랫 섹션 (Madia 원칙) ──
 
   var fact=(l,v,s,cl,click)=>'<div class="cdud-fact'+(click?' clk" onclick="'+click+'"':'"')+'><span>'+l+'</span><b'+(cl?' class="'+cl+'"':'')+'>'+v+'</b>'+(s?'<i>'+s+'</i>':'')+'</div>';
+  var _sh26=_cduAllTip()>0?(visitedRev/_cduAllTip()*100).toFixed(1):null;
+  var _sh25=_cduAllTip25()>0?(visitedRev25/_cduAllTip25()*100).toFixed(1):null;
+  var _shFact=(_sh26!=null||_sh25!=null)?fact('전체 소모품 비중',(_sh26!=null?'<span style="font-size:11.5px;color:#94a3b8;font-weight:700;margin-right:3px">\'26</span>'+_sh26+'%':'-'),(_sh25!=null?'<span style="color:#94a3b8;font-weight:700">\'25</span> '+_sh25+'%':''),''):'';
   var kpiBand='<div class="cdud-bt">방문 관리 현황 <u>· 이번 기간 활동량·매출·리스크 요약 · 클릭 상세</u></div>'
     +'<div class="cdud-kpis">'
-    +'<div class="cdud-hero" onclick="_cduDrillAll()"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;width:100%">'+'<div style="min-width:0"><span class="l">방문 관리 병원</span><b>'+nHosp+'개처</b><span class="s">방문 <span style="color:var(--acc);font-weight:800">'+nVisit+'건</span> · 영업일수 <span style="color:var(--acc);font-weight:800">'+days.size+'일</span></span></div>'+((_cduAllTip()>0||_cduAllTip25()>0)?'<div style="text-align:right;flex-shrink:0;padding-left:12px;border-left:1px solid var(--line)"><div style="font-size:10.5px;color:var(--mut);font-weight:700;margin-bottom:3px;white-space:nowrap">전체 소모품매출 비중</div><div style="font-size:19px;font-weight:800;color:var(--acc);line-height:1.15;white-space:nowrap">\'26 '+(_cduAllTip()>0?(visitedRev/_cduAllTip()*100).toFixed(1):0)+'%</div><div style="font-size:13px;font-weight:700;color:#94a3b8;line-height:1.35;white-space:nowrap">\'25 '+(_cduAllTip25()>0?(visitedRev25/_cduAllTip25()*100).toFixed(1):0)+'%</div></div>':'')+'</div></div>'
+    +'<div class="cdud-hero" onclick="_cduDrillAll()"><span class="l">방문 관리 병원</span><b>'+nHosp+'개처</b><span class="s">방문 <span style="color:var(--acc);font-weight:800">'+nVisit+'건</span> · 영업일수 <span style="color:var(--acc);font-weight:800">'+days.size+'일</span></span></div>'
     +fact('올해 팁매출',_cduWon(visitedRev),(visitedRevPrev>0?'전년 동기 '+_cduWon(visitedRevPrev):'관리처 팁매출'),'','_cduDrillVip()')
+    +_shFact
     +fact('이벤트 진행',ev+'건','마케팅 이벤트 방문','',ev?'_cduDrillEvent()':'')
     +(function(){var rp=0,rc=0,rg=0;_cduReels().forEach(function(v){var s=_cduReelStageOf(v);if(s==='제안')rp++;else if(s==='촬영완료')rc++;else if(s==='게시완료')rg++;});var tot=rp+rc+rg;return fact('릴스 이벤트',tot+'건','제안 '+rp+' · 촬영 '+rc+' · 게시 '+rg,'',tot?"_cduTab('reels')":'');})()
   +'</div>';
