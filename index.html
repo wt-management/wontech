@@ -577,6 +577,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
           <div style="font-size:10px;color:#475569;margin-top:1px" id="sidebar-user-dept"></div>
         </div>
       </div>
+      <button onclick="_gsOpen()" style="width:100%;background:#eef4ff;border:1px solid #c7dbff;border-radius:6px;padding:6px 0;color:#2563eb;font-size:11.5px;font-weight:600;cursor:pointer;margin-bottom:5px"><i class="bi bi-search"></i> 통합검색 <kbd style="font-size:9px;background:#dbeafe;border-radius:3px;padding:0 4px;margin-left:2px;color:#1d4ed8">Ctrl K</kbd></button>
       <div style="display:flex;gap:4px">
         <button onclick="openChangePwModal()" style="flex:1;background:#f8fafc;border:1px solid #d5dde8;border-radius:6px;padding:5px 0;color:#475569;font-size:11px;cursor:pointer">
           <i class="bi bi-key"></i> 비밀번호</button>
@@ -12514,5 +12515,59 @@ function chk(){et().then(function(e){if(e==null||e==='')return;if(base===null){b
 document.addEventListener('visibilitychange',function(){if(!document.hidden)chk();});
 setInterval(chk,5*60*1000);chk();
 })();</script>
+<!-- 전역 통합검색 (Ctrl+K) -->
+<div id="gsearch-ov" style="display:none;position:fixed;inset:0;z-index:20000;background:rgba(15,23,42,.45)" onclick="if(event.target===this)_gsClose()">
+  <div style="max-width:640px;margin:8vh auto 0;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #eef2f7">
+      <i class="bi bi-search" style="color:#94a3b8;font-size:16px"></i>
+      <input id="gsearch-in" placeholder="병원 · 딜 · 일정 · 견적 검색…" autocomplete="off" style="flex:1;border:0;outline:none;font-size:15px;color:#0f172a;background:transparent">
+      <kbd style="font-size:10px;color:#94a3b8;background:#f1f5f9;border-radius:5px;padding:2px 6px">ESC</kbd>
+    </div>
+    <div id="gsearch-res" style="max-height:60vh;overflow:auto;padding:6px"></div>
+  </div>
+</div>
+<script>
+(function(){
+  var _gsIdx=[], _gsSel=0, _gsRows=[];
+  function _norm(s){return String(s==null?'':s).toLowerCase().replace(/\s+/g,'');}
+  function _gsWon(v){ v=Number(v)||0; return v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4)+'만':String(v); }
+  function _esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function _gsBuild(){
+    var rows=[];
+    try{ var seen={}; [window.CONS,window.DEVICE].forEach(function(S){ if(S&&S.hospitals) Object.keys(S.hospitals).forEach(function(n){ if(n&&!seen[n]){seen[n]=1; rows.push({t:'병원',n:n,sub:'',act:'showHospitalDetail',arg:n,ic:'bi-hospital',c:'#0891b2'});} }); }); }catch(e){}
+    try{ (DB.d.pipeline||[]).forEach(function(x){ rows.push({t:'딜',n:x.custName||x.title||'(무제)',sub:(x.stage||'')+(x.model?' · '+x.model:''),act:'openDealDrawer',arg:x.id,ic:'bi-kanban',c:'#7c3aed'}); }); }catch(e){}
+    try{ (DB.d.logs||[]).filter(function(l){return l.kind==='schedule';}).forEach(function(l){ rows.push({t:'일정',n:l.custName||'(미지정)',sub:(l.date||'')+(l.type?' · '+l.type:''),act:'_gsSched',arg:l.id,ic:'bi-calendar-week',c:'#2563eb'}); }); }catch(e){}
+    try{ (DB.d.quotes||[]).forEach(function(q){ rows.push({t:'견적',n:q.custName||'(미지정)',sub:(q.total?_gsWon(q.total)+'원':'')+(q.date?' · '+String(q.date).slice(0,10):''),act:'_gsQuote',arg:q.id,ic:'bi-file-earmark-text',c:'#c2410c'}); }); }catch(e){}
+    _gsIdx=rows;
+  }
+  window._gsSched=function(id){ _gsClose(); try{showPage('schedule');}catch(e){} setTimeout(function(){ try{editSchedule(id);}catch(e){} },160); };
+  window._gsQuote=function(id){ _gsClose(); try{showPage('quotes');}catch(e){} };
+  function _gsRender(q){
+    var res=document.getElementById('gsearch-res'); if(!res)return;
+    var nq=_norm(q);
+    var hits = nq ? _gsIdx.filter(function(r){return _norm(r.n).indexOf(nq)>=0||_norm(r.sub).indexOf(nq)>=0;}).slice(0,40) : _gsIdx.filter(function(r){return r.t==='병원';}).slice(0,6);
+    _gsRows=hits; _gsSel=0;
+    if(!hits.length){ res.innerHTML='<div style="padding:26px;text-align:center;color:#94a3b8;font-size:13px">결과 없음</div>'; return; }
+    res.innerHTML=hits.map(function(r,i){ return '<div class="gs-row" data-i="'+i+'" onmouseover="_gsSel='+i+';_gsHi()" onclick="_gsGo('+i+')" style="display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;cursor:pointer">'
+      +'<span style="width:26px;height:26px;border-radius:7px;background:'+r.c+'18;color:'+r.c+';display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="'+r.ic+'" style="font-size:13px"></i></span>'
+      +'<span style="flex:1;min-width:0;overflow:hidden"><span style="font-size:13.5px;font-weight:600;color:#0f172a;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_esc(r.n)+'</span>'+(r.sub?'<span style="font-size:11.5px;color:#94a3b8">'+_esc(r.sub)+'</span>':'')+'</span>'
+      +'<span style="font-size:10.5px;font-weight:700;color:'+r.c+';flex-shrink:0">'+r.t+'</span></div>'; }).join('');
+    _gsHi();
+  }
+  window._gsHi=function(){ var rs=document.querySelectorAll('#gsearch-res .gs-row'); for(var i=0;i<rs.length;i++) rs[i].style.background=(i===_gsSel)?'#f1f5f9':''; if(rs[_gsSel])rs[_gsSel].scrollIntoView({block:'nearest'}); };
+  window._gsGo=function(i){ var r=_gsRows[i]; if(!r)return; _gsClose(); try{ (window[r.act]||function(){})(r.arg); }catch(e){} };
+  window._gsOpen=function(){ _gsBuild(); var ov=document.getElementById('gsearch-ov'); if(!ov)return; ov.style.display='block'; var inp=document.getElementById('gsearch-in'); if(inp){inp.value='';} _gsRender(''); setTimeout(function(){ if(inp)inp.focus(); },30); };
+  window._gsClose=function(){ var ov=document.getElementById('gsearch-ov'); if(ov)ov.style.display='none'; };
+  document.addEventListener('keydown',function(e){
+    if((e.ctrlKey||e.metaKey)&&(e.key==='k'||e.key==='K')){ e.preventDefault(); var ov=document.getElementById('gsearch-ov'); if(ov&&ov.style.display==='block')_gsClose(); else _gsOpen(); return; }
+    var ov=document.getElementById('gsearch-ov'); if(!ov||ov.style.display!=='block')return;
+    if(e.key==='Escape'){ e.preventDefault(); _gsClose(); }
+    else if(e.key==='ArrowDown'){ e.preventDefault(); _gsSel=Math.min(_gsRows.length-1,_gsSel+1); _gsHi(); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); _gsSel=Math.max(0,_gsSel-1); _gsHi(); }
+    else if(e.key==='Enter'){ e.preventDefault(); _gsGo(_gsSel); }
+  });
+  document.addEventListener('input',function(e){ if(e.target&&e.target.id==='gsearch-in') _gsRender(e.target.value); });
+})();
+</script>
 </body>
 </html>
