@@ -10077,8 +10077,11 @@ function _schDealsBox(name){
 }
 function closeSchModalThen(dealId){ try{ bootstrap.Modal.getInstance(document.getElementById('scheduleModal')).hide(); }catch(e){} setTimeout(function(){ if(typeof showPage==='function') showPage('sales'); openDealDrawer(dealId); }, 230); }
 async function saveSchedule(){
-  const cust=document.getElementById('sch-cust').value.trim(), date=document.getElementById('sch-date').value;
+  let cust=document.getElementById('sch-cust').value.trim(); const date=document.getElementById('sch-date').value;
   if(!cust||!date){ alert('병원과 날짜를 입력하세요.'); return; }
+  const _g=await _igGuardSched(cust, date, _schTypeGet(), document.getElementById('sch-id').value);
+  if(_g===false) return;                         // 취소
+  if(_g&&_g!==cust){ cust=_g; document.getElementById('sch-cust').value=cust; }   // 유사명으로 교정
   const id=document.getElementById('sch-id').value||uid();
   const idx=(DB.d.logs||[]).findIndex(l=>l.id===id);
   const rec={id:id,kind:'schedule',custName:cust,date:date,time:(idx>=0?(DB.d.logs[idx].time||''):''),type:_schTypeGet(),product:document.getElementById('sch-prod').value.trim(),content:document.getElementById('sch-note').value.trim(),sales:document.getElementById('sch-sales').value.trim(),done:(idx>=0?!!DB.d.logs[idx].done:false),dealId:document.getElementById('sch-deal-id').value||(idx>=0?DB.d.logs[idx].dealId||'':'')};
@@ -12719,6 +12722,60 @@ function _unassignedOpen(){
 }
 function _unasgnGo(n){ _unasgnClose(); try{ showHospitalDetail(n); }catch(e){} }
 function _unasgnClose(){ var o=document.getElementById('unasgn-ov'); if(o)o.style.display='none'; }
+</script>
+<!-- 입력 오류 방지 가드 -->
+<div id="ig-hosp-ov" style="display:none;position:fixed;inset:0;z-index:21000;background:rgba(15,23,42,.5)">
+  <div style="max-width:420px;margin:14vh auto 0;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
+    <div style="display:flex;align-items:center;gap:8px;padding:14px 18px;border-bottom:1px solid #eef2f7"><i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b"></i><b style="font-size:14px;color:#0f172a">거래처명 확인</b></div>
+    <div id="ig-hosp-body" style="padding:16px 18px"></div>
+  </div>
+</div>
+<script>
+window._IG={
+  _kc:null,
+  known:function(){ if(this._kc)return this._kc; var s={}; try{ [CONS,DEVICE].forEach(function(S){ if(S&&S.hospitals) Object.keys(S.hospitals).forEach(function(n){ if(n)s[n]=1; }); }); if(typeof HOSP_INFO==='object'&&HOSP_INFO) Object.keys(HOSP_INFO).forEach(function(n){ if(n)s[n]=1; }); }catch(e){} this._kc=s; return s; },
+  reset:function(){ this._kc=null; },
+  norm:function(x){ return String(x==null?'':x).toLowerCase().replace(/\s+/g,'').replace(/[()\-.]/g,''); },
+  hospCheck:function(name){
+    name=String(name||'').trim(); if(!name) return {known:true,suggest:[]};
+    var k=this.known(); if(k[name]) return {known:true,suggest:[]};
+    var nn=this.norm(name), keys=Object.keys(k), exact=null, sug=[];
+    for(var i=0;i<keys.length;i++){ if(this.norm(keys[i])===nn){ exact=keys[i]; break; } }
+    if(exact) return {known:false,suggest:[exact]};
+    for(var i=0;i<keys.length&&sug.length<5;i++){ var kn=this.norm(keys[i]); if(kn.length>=3&&nn.length>=3&&(kn.indexOf(nn)>=0||nn.indexOf(kn)>=0)) sug.push(keys[i]); }
+    return {known:false,suggest:sug};
+  }
+};
+var _igResolve=null;
+function _igHospModal(typed,suggest){
+  return new Promise(function(resolve){
+    _igResolve=resolve;
+    var ov=document.getElementById('ig-hosp-ov'), body=document.getElementById('ig-hosp-body');
+    ov.dataset.typed=typed;
+    body.innerHTML='<div style="font-size:13.5px;color:#334155;margin-bottom:12px;line-height:1.5">입력하신 <b style="color:#b91c1c">'+_escH(typed)+'</b> 는 등록된 거래처 목록에 <b>없습니다</b>. 오타/표기 차이면 매출·장비가 따로 잡힐 수 있어요.</div>'
+      +(suggest.length?'<div style="font-size:12px;color:#64748b;font-weight:600;margin-bottom:6px">혹시 이 거래처인가요? (누르면 교정)</div>'
+        +suggest.map(function(s){ return '<button onclick="_igPick(\''+_jsArg(s)+'\')" style="display:block;width:100%;text-align:left;background:#f0f9ff;border:1px solid #bae6fd;border-radius:9px;padding:10px 13px;margin-bottom:6px;font-size:13.5px;font-weight:600;color:#0369a1;cursor:pointer"><i class="bi bi-check2-circle me-1"></i>'+_escH(s)+'</button>'; }).join('')
+        :'<div style="font-size:12px;color:#94a3b8;margin-bottom:6px">유사한 기존 거래처가 없습니다. 정말 새 거래처인지 확인하세요.</div>')
+      +'<div style="display:flex;gap:8px;margin-top:14px">'
+      +'<button onclick="_igCancel()" style="flex:1;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:9px;padding:9px;font-size:13px;color:#475569;cursor:pointer;font-weight:600">취소</button>'
+      +'<button onclick="_igPickNew()" style="flex:1;background:#fff7ed;border:1px solid #fed7aa;border-radius:9px;padding:9px;font-size:13px;font-weight:700;color:#c2410c;cursor:pointer">새 거래처로 저장</button>'
+      +'</div>';
+    ov.style.display='block';
+  });
+}
+function _igPick(name){ var ov=document.getElementById('ig-hosp-ov'); ov.style.display='none'; var r=_igResolve; _igResolve=null; if(r)r(name); }
+function _igPickNew(){ var ov=document.getElementById('ig-hosp-ov'); var t=ov.dataset.typed; ov.style.display='none'; var r=_igResolve; _igResolve=null; if(r)r(t); }
+function _igCancel(){ var ov=document.getElementById('ig-hosp-ov'); ov.style.display='none'; var r=_igResolve; _igResolve=null; if(r)r(null); }
+// 일정 저장 가드: 병원명 유사경고 + 중복경고. 반환: false(취소) | 최종거래처명
+async function _igGuardSched(cust, date, type, excludeId){
+  try{
+    var hc=window._IG.hospCheck(cust);
+    if(!hc.known){ var pick=await _igHospModal(cust, hc.suggest||[]); if(pick===null) return false; cust=pick; }
+    var dup=(DB.d.logs||[]).find(function(l){ return l&&l.kind==='schedule'&&l.id!==excludeId&&(l.custName||'').trim()===cust&&String(l.date||'').slice(0,10)===String(date).slice(0,10)&&(l.type||'')===type; });
+    if(dup){ if(!confirm('같은 거래처·날짜·유형의 일정이 이미 있습니다.\n\n'+cust+' · '+date+' · '+type+'\n\n중복이 아니면 계속하세요. 저장할까요?')) return false; }
+  }catch(e){ return cust; }   // 가드 오류 시 저장은 막지 않음
+  return cust;
+}
 </script>
 </body>
 </html>
