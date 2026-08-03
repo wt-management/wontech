@@ -7174,7 +7174,7 @@ function renderCDUReport(vs){
   var fact=(l,v,s,cl,click)=>'<div class="cdud-fact'+(click?' clk" onclick="'+click+'"':'"')+'><span>'+l+'</span><b'+(cl?' class="'+cl+'"':'')+'>'+v+'</b>'+(s?'<i>'+s+'</i>':'')+'</div>';
   var _sh26=_cduAllTip()>0?(visitedRev/_cduAllTip()*100).toFixed(1):null;
   var _sh25=_cduAllTip25()>0?(visitedRev25/_cduAllTip25()*100).toFixed(1):null;
-  var _shFact=(_sh26!=null||_sh25!=null)?fact('전체 소모품 비중',(_sh26!=null?'<span style="font-size:11.5px;color:#94a3b8;font-weight:700;margin-right:3px">\'26</span>'+_sh26+'%':'-'),(_sh25!=null?'<span style="color:#94a3b8;font-weight:700">\'25</span> '+_sh25+'%':''),''):'';
+  var _shFact=(_sh26!=null||_sh25!=null)?fact('소모품매출 비중',(_sh26!=null?_sh26+'%':'-'),(_sh25!=null?'전년 '+_sh25+'%':'전체 소모품 대비'),'','_cduDrillVip()'):'';
   var kpiBand='<div class="cdud-bt">방문 관리 현황 <u>· 이번 기간 활동량·매출·리스크 요약 · 클릭 상세</u></div>'
     +'<div class="cdud-kpis">'
     +'<div class="cdud-hero" onclick="_cduDrillAll()"><span class="l">방문 관리 병원</span><b>'+nHosp+'개처</b><span class="s">방문 <span style="color:var(--acc);font-weight:800">'+nVisit+'건</span> · 영업일수 <span style="color:var(--acc);font-weight:800">'+days.size+'일</span></span></div>'
