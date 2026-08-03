@@ -392,6 +392,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <div style="display:flex;gap:4px;margin-bottom:18px;border-bottom:1px solid rgba(255,255,255,.1)">
       <button id="admtab-users" onclick="adminTab('users')" style="background:none;border:none;border-bottom:2px solid #ff4500;color:#fff;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer">사용자 관리</button>
       <button id="admtab-fb" onclick="adminTab('fb')" style="background:none;border:none;border-bottom:2px solid transparent;color:#94a3b8;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer">요청·신고함 <span id="admtab-fb-badge" style="display:none;background:#ef4444;color:#fff;font-size:10px;padding:1px 6px;border-radius:9px;margin-left:2px;font-weight:700"></span></button>
+      <button id="admtab-signup" onclick="adminTab('signup')" style="background:none;border:none;border-bottom:2px solid transparent;color:#94a3b8;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer">가입 신청 <span id="admtab-signup-badge" style="display:none;background:#16a34a;color:#fff;font-size:10px;padding:1px 6px;border-radius:9px;margin-left:2px;font-weight:700"></span></button>
     </div>
     <div id="admin-tab-users">
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
@@ -428,6 +429,10 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <button onclick="renderAdminFeedback()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 12px;font-size:12.5px;color:#cbd5e1;cursor:pointer">새로고침</button>
       </div>
       <div id="admin-fb-list" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:auto;min-height:120px"></div>
+    </div>
+    <div id="admin-tab-signup" style="display:none">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px"><div style="font-size:12px;color:#94a3b8">대기 중인 가입 신청을 검토하고 권한을 부여해 승인하세요.</div><button onclick="renderSignupRequests()" style="margin-left:auto;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 12px;font-size:12.5px;color:#cbd5e1;cursor:pointer">새로고침</button></div>
+      <div id="admin-signup-list" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:auto;min-height:120px"></div>
     </div>
   </div>
   </div>
@@ -468,6 +473,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <button class="btn btn-primary w-100" onclick="doLogin()" style="font-weight:700;padding:10px">로그인</button>
     <div style="text-align:center;margin-top:14px">
       <a href="#" onclick="showForgotPw(event)" style="font-size:12px;color:#6b7280;text-decoration:none">비밀번호를 잊으셨나요?</a>
+      <div style="margin-top:9px;padding-top:9px;border-top:1px solid #eef1f5"><a href="#" onclick="showSignup(event)" style="font-size:12px;color:#2563eb;text-decoration:none;font-weight:700">회원가입 신청 →</a></div>
     </div>
   </div>
   <!-- 비밀번호 찾기 패널 -->
@@ -508,6 +514,21 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     </div>
     <div id="reset-pw-msg" style="font-size:12px;margin-bottom:12px;display:none"></div>
     <button class="btn btn-primary w-100" onclick="doResetPw()" style="font-weight:700;padding:10px">비밀번호 변경</button>
+  </div>
+  <!-- 회원가입 신청 패널(관리자 승인형) -->
+  <div id="signup-box" style="display:none;background:#fff;border-radius:20px;padding:34px 32px;width:360px;box-shadow:0 25px 60px rgba(0,0,0,.4)">
+    <div style="text-align:center;margin-bottom:18px"><div style="font-size:20px;font-weight:800;color:#111827">회원가입 신청</div><div style="font-size:12px;color:#64748b;margin-top:4px">기본 정보를 입력하면 관리자 승인 후 계정이 생성됩니다</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="grid-column:1/3"><label style="font-size:11px;font-weight:600;color:#374151;margin-bottom:3px;display:block">이메일 *</label><input id="su-email" type="email" class="form-control" placeholder="회사 이메일"></div>
+      <div><label style="font-size:11px;font-weight:600;color:#374151;margin-bottom:3px;display:block">이름 *</label><input id="su-name" type="text" class="form-control" placeholder="홍길동"></div>
+      <div><label style="font-size:11px;font-weight:600;color:#374151;margin-bottom:3px;display:block">연락처</label><input id="su-phone" type="text" class="form-control" placeholder="010-0000-0000"></div>
+      <div><label style="font-size:11px;font-weight:600;color:#374151;margin-bottom:3px;display:block">부서</label><input id="su-dept" type="text" class="form-control" placeholder="영업1팀"></div>
+      <div><label style="font-size:11px;font-weight:600;color:#374151;margin-bottom:3px;display:block">직급</label><input id="su-position" type="text" class="form-control" placeholder="사원"></div>
+      <div style="grid-column:1/3"><label style="font-size:11px;font-weight:600;color:#374151;margin-bottom:3px;display:block">입사일</label><input id="su-hire" type="date" class="form-control"></div>
+    </div>
+    <div id="su-msg" style="font-size:12px;margin:12px 0;display:none"></div>
+    <button id="su-btn" class="btn btn-primary w-100" onclick="submitSignup()" style="font-weight:700;padding:10px;margin-top:12px">가입 신청</button>
+    <div style="text-align:center;margin-top:14px"><a href="#" onclick="hideSignup(event)" style="font-size:12px;color:#6b7280;text-decoration:none">← 로그인으로 돌아가기</a></div>
   </div>
 </div>
 
@@ -10567,8 +10588,8 @@ function showAdminPanel() {
   const ls = document.getElementById('launcher-screen');
   if(ls){ ls.style.justifyContent = 'flex-start'; ls.scrollTop = 0; }
   try{ sessionStorage.setItem('wt_app','admin'); }catch(e){}
-  renderAdminUsers(); _fbLoadBadge();
-  try{ if(sessionStorage.getItem('wt_admtab')==='fb') adminTab('fb'); }catch(e){}
+  renderAdminUsers(); _fbLoadBadge(); _signupBadge();
+  try{ var _at=sessionStorage.getItem('wt_admtab'); if(_at==='fb'||_at==='signup') adminTab(_at); }catch(e){}
 }
 
 function hideAdminPanel() {
@@ -10787,13 +10808,13 @@ async function renderUsers() { renderAdminUsers(); }
 // ── 요청·신고함 (site_feedback / site_errors 조회, 관리자 전용) ──
 let _fbSub='feedback';
 function adminTab(t){
-  try{ sessionStorage.setItem('wt_admtab', t==='fb'?'fb':'users'); }catch(e){}
-  var u=document.getElementById('admin-tab-users'), f=document.getElementById('admin-tab-fb');
-  if(u) u.style.display=(t==='fb')?'none':''; if(f) f.style.display=(t==='fb')?'':'none';
-  var bu=document.getElementById('admtab-users'), bf=document.getElementById('admtab-fb');
-  if(bu){ bu.style.color=(t==='fb')?'#94a3b8':'#fff'; bu.style.borderBottomColor=(t==='fb')?'transparent':'#ff4500'; }
-  if(bf){ bf.style.color=(t==='fb')?'#fff':'#94a3b8'; bf.style.borderBottomColor=(t==='fb')?'#ff4500':'transparent'; }
+  try{ sessionStorage.setItem('wt_admtab', (t==='fb'||t==='signup')?t:'users'); }catch(e){}
+  var map={users:'admin-tab-users',fb:'admin-tab-fb',signup:'admin-tab-signup'};
+  Object.keys(map).forEach(function(k){ var el=document.getElementById(map[k]); if(el) el.style.display=(k===t)?'':'none'; });
+  var btns={users:'admtab-users',fb:'admtab-fb',signup:'admtab-signup'};
+  Object.keys(btns).forEach(function(k){ var b=document.getElementById(btns[k]); if(b){ b.style.color=(k===t)?'#fff':'#94a3b8'; b.style.borderBottomColor=(k===t)?'#ff4500':'transparent'; } });
   if(t==='fb') renderAdminFeedback();
+  if(t==='signup') renderSignupRequests();
 }
 function fbSub(x){ _fbSub=x; renderAdminFeedback(); }
 async function _fbLoadBadge(){ try{ var c=await _sb.from('site_feedback').select('id',{count:'exact',head:true}); var bd=document.getElementById('admtab-fb-badge'); if(bd){ if(c && c.count){ bd.style.display=''; bd.textContent=c.count; } else bd.style.display='none'; } }catch(e){} }
@@ -11078,6 +11099,57 @@ async function saveNewUser() {
   showToast('사용자 추가됨!', true);
   renderAdminUsers();
 }
+
+// ── 회원가입 신청(관리자 승인형) ──────────────────────────────
+function showSignup(e){ if(e)e.preventDefault(); document.getElementById('login-screen').querySelectorAll(':scope > div').forEach(function(x){ x.style.display='none'; }); var b=document.getElementById('signup-box'); if(b)b.style.display='block'; var em=document.getElementById('su-email'); if(em) em.value=(document.getElementById('login-id')||{}).value||''; var m=document.getElementById('su-msg'); if(m)m.style.display='none'; }
+function hideSignup(e){ if(e)e.preventDefault(); document.getElementById('signup-box').style.display='none'; document.getElementById('login-screen').querySelector('div').style.display='block'; }
+async function submitSignup(){
+  var g=function(id){ var el=document.getElementById(id); return (el&&el.value||'').trim(); };
+  var email=g('su-email'),name=g('su-name'),dept=g('su-dept'),position=g('su-position'),hire=g('su-hire'),phone=g('su-phone');
+  var m=document.getElementById('su-msg'); m.style.display='block';
+  if(!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ m.style.color='#dc2626'; m.textContent='올바른 이메일을 입력하세요.'; return; }
+  if(!name){ m.style.color='#dc2626'; m.textContent='이름을 입력하세요.'; return; }
+  var btn=document.getElementById('su-btn'); btn.disabled=true; btn.textContent='접수 중...';
+  try{ var r=await _sb.from('signup_requests').insert({ email:email, name:name, dept:dept||null, position:position||null, hire_date:hire||null, phone:phone||null }); if(r.error) throw r.error;
+    m.style.color='#16a34a'; m.textContent='가입 신청이 접수되었습니다. 관리자 승인 후 이용하실 수 있습니다.'; btn.style.display='none';
+  }catch(err){ btn.disabled=false; btn.textContent='가입 신청'; m.style.color='#dc2626'; m.textContent='접수 실패: '+((err&&err.message)||err); }
+}
+async function _signupBadge(){ try{ var c=await _sb.from('signup_requests').select('id',{count:'exact',head:true}).eq('status','pending'); var bd=document.getElementById('admtab-signup-badge'); if(bd){ if(c&&c.count){ bd.style.display=''; bd.textContent=c.count; } else bd.style.display='none'; } }catch(e){} }
+async function renderSignupRequests(){
+  var box=document.getElementById('admin-signup-list'); if(!box) return;
+  box.innerHTML='<div style="padding:24px;text-align:center;color:#64748b;font-size:13px">불러오는 중...</div>';
+  try{ await _loadSiteRegistry(); }catch(e){}
+  var res=await _sb.from('signup_requests').select('*').eq('status','pending').order('created_at',{ascending:false});
+  var rows=res.data||[];
+  var esc=function(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+  if(!rows.length){ box.innerHTML='<div style="padding:32px;text-align:center;color:#64748b;font-size:13px">대기 중인 가입 신청이 없습니다.</div>'; return; }
+  box.innerHTML=rows.map(function(r){
+    var perm=_siteRegistry.map(function(s){ return '<label style="display:inline-flex;flex-direction:column;align-items:center;gap:2px;font-size:9px;color:#94a3b8;margin:0 8px 6px 0"><span>'+esc(s.short_label)+'</span><input type="checkbox" data-req="'+r.id+'" data-key="'+s.key+'" style="accent-color:'+s.matrix_color+';cursor:pointer"></label>'; }).join('');
+    return '<div style="border-bottom:1px solid rgba(255,255,255,.08);padding:14px 16px">'+'<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:10px">'+'<div style="font-size:13px;color:#e2e8f0;font-weight:700">'+esc(r.name||'')+'</div>'+'<div style="font-size:12px;color:#94a3b8">'+esc(r.email)+'</div>'+'<div style="font-size:12px;color:#94a3b8">'+esc(r.dept||'')+(r.position?' · '+esc(r.position):'')+'</div>'+(r.hire_date?'<div style="font-size:11px;color:#64748b">입사 '+esc(r.hire_date)+'</div>':'')+(r.phone?'<div style="font-size:11px;color:#64748b">'+esc(r.phone)+'</div>':'')+'<div style="font-size:11px;color:#475569;margin-left:auto">신청 '+esc((r.created_at||'').replace('T',' ').slice(0,16))+'</div>'+'</div>'+'<div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px">'+'<div><div style="font-size:10px;color:#64748b;margin-bottom:4px;font-weight:700">부여 권한</div><div style="display:flex;flex-wrap:wrap">'+perm+'</div></div>'+'<div style="margin-left:auto;display:flex;gap:8px;align-items:center">'+'<select id="su-role-'+r.id+'" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:5px 8px;font-size:12px;color:#fff"><option value="user">팀원</option><option value="manager">팀/파트장</option><option value="admin">관리자</option></select>'+'<button onclick="approveSignup('+r.id+')" style="background:rgba(16,163,74,.2);border:1px solid rgba(16,163,74,.35);color:#86efac;padding:6px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">승인</button>'+'<button onclick="rejectSignup('+r.id+')" style="background:rgba(220,38,38,.15);border:1px solid rgba(220,38,38,.3);color:#fca5a5;padding:6px 12px;border-radius:7px;font-size:12px;cursor:pointer">거절</button>'+'</div></div></div>';
+  }).join('');
+}
+async function approveSignup(id){
+  var checks=document.querySelectorAll('input[type=checkbox][data-req="'+id+'"]:checked');
+  var access=Array.prototype.map.call(checks,function(c){return c.getAttribute('data-key');}).join(',');
+  if(!access){ if(!confirm('부여할 권한을 선택하지 않았습니다. 권한 없이 승인할까요?')) return; }
+  var role=(document.getElementById('su-role-'+id)||{}).value||'user';
+  var reqRes=await _sb.from('signup_requests').select('*').eq('id',id).single(); var req=reqRes.data;
+  if(!req){ showToast('신청 정보를 찾을 수 없습니다', true, true); return; }
+  var pw='wt'+Math.random().toString(36).slice(2,8);
+  var s=(await _sb.auth.getSession()).data.session; if(!s){ showToast('세션 없음 — 새로고침 후 재시도', true, true); return; }
+  try{
+    var resp=await fetch('https://mhfacbsittfdkknwybhc.supabase.co/functions/v1/create-user',{method:'POST',headers:{'Authorization':'Bearer '+s.access_token,'Content-Type':'application/json'},body:JSON.stringify({email:req.email,password:pw})});
+    var dj=await resp.json();
+    if(!resp.ok){ showToast('계정 생성 실패: '+(dj.error||dj.message||resp.status), true, true); return; }
+    var uid=(dj.user&&dj.user.id)||dj.id;
+    if(uid){ await _sb.from('crm_profiles').upsert({id:uid,email:req.email,display_name:req.name||req.email.split('@')[0],dept:req.dept||'',position:req.position||'',role:role,access:access,temp_pw:pw}); }
+    await _sb.from('signup_requests').update({status:'approved',reviewed_by:(typeof _meName!=='undefined'?_meName:'관리자'),reviewed_at:new Date().toISOString()}).eq('id',id);
+    renderSignupRequests(); _signupBadge();
+    alert(req.name+'('+req.email+') 승인 완료.\n임시 비밀번호: '+pw+'\n\n이 임시비밀번호를 본인에게 전달하세요. 첫 로그인 시 비밀번호를 변경하게 됩니다.');
+  }catch(e){ showToast('오류: '+((e&&e.message)||e), true, true); }
+}
+async function rejectSignup(id){ if(!confirm('이 가입 신청을 거절하시겠습니까?')) return; await _sb.from('signup_requests').update({status:'rejected',reviewed_by:(typeof _meName!=='undefined'?_meName:'관리자'),reviewed_at:new Date().toISOString()}).eq('id',id); renderSignupRequests(); _signupBadge(); }
+
 
 // ── 제품 ──────────────────────────────────────────────────────
 function renderProducts(){
