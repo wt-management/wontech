@@ -3146,6 +3146,7 @@ function showPage(name, el, noPush) {
   if(name==='dashboard' && typeof _isMgr!=='undefined' && !(_isMgr||_isStrat)){ name='sales-overview'; el=null; }
   if((name==='cons-hospitals'||name==='region') && typeof _isMgr!=='undefined' && !_isMgr){ name='sales-overview'; el=null; }
   sessionStorage.setItem('wt_page', name);
+  if(name!=='schedule'){ try{ _schDayFromMonth=false; }catch(e){} }
   if(!noPush && !(history.state && history.state.page===name)) history.pushState({page: name}, '', location.href.split('#')[0] + '#' + name);   // 같은 페이지 중복 push 금지(재클릭 시 엔트리 누적 방지)
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(a=>a.classList.remove('active'));
@@ -9569,16 +9570,17 @@ function _schDoneModeSet(m){ _schDoneMode=m; renderSchedule(); }
 function _schDoneNav(d){ const p=(_schDoneRef||_schTodayStr()).split('-').map(Number); const dt=new Date(p[0],p[1]-1,p[2]); dt.setDate(dt.getDate()+d*(_schDoneMode==='week'?7:1)); _schDoneRef=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); renderSchedule(); }
 const _SCH_COL={'방문':'#2563eb','콜':'#0891b2','데모':'#7c3aed','A/S':'#ea580c','기타':'#64748b','후속':'#64748b','견적발송':'#7c3aed','계약검토':'#7c3aed'};
 var _schTypeFilter=null;   // 유형 범례 클릭 필터(null=전체)
+var _schDayFromMonth=false;   // 월간→일간 드릴 여부(뒤로가기 시 월간 복원용)
 function _schIsDemo(i){ return !!(i&&(i.kind==='demo'||i.type==='데모')); }
 function _schCmp(a,b){ var da=_schIsDemo(a)?1:0, db=_schIsDemo(b)?1:0; if(da!==db) return da-db; return String(a.sales||'').localeCompare(String(b.sales||''),'ko')||String(a.custName||'').localeCompare(String(b.custName||''),'ko'); }
 function _schSetType(t){ _schTypeFilter=(t&&_schTypeFilter===t)?null:(t||null); renderSchedule(); }
 function _schEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function _schTodayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function _schMe(){ return ((typeof _meName!=='undefined'&&_meName)||(typeof currentUserName==='function'?currentUserName():'')||'').trim(); }
-function setSchView(v,btn){ _schView=v; _schOverdueOnly=false; _schDoneOnly=false; _schRef=null; try{sessionStorage.setItem('sch_view',v);}catch(e){} document.querySelectorAll('#page-schedule .btn-group .btn').forEach(b=>b.classList.remove('active')); if(btn)btn.classList.add('active'); renderSchedule(); }
+function setSchView(v,btn){ _schView=v; _schDayFromMonth=false; _schOverdueOnly=false; _schDoneOnly=false; _schRef=null; try{sessionStorage.setItem('sch_view',v);}catch(e){} document.querySelectorAll('#page-schedule .btn-group .btn').forEach(b=>b.classList.remove('active')); if(btn)btn.classList.add('active'); renderSchedule(); }
 function _schSyncViewBtn(){ const m={today:'sch-v-today',week:'sch-v-week',month:'sch-v-month'}; document.querySelectorAll('#page-schedule .btn-group .btn').forEach(b=>b.classList.remove('active')); const b=document.getElementById(m[_schView]); if(b)b.classList.add('active'); }
 // 월간에서 날짜 클릭 → 그 날의 활동 전체를 일간 뷰로 조회(일정 추가 아님)
-function _schMonthDay(ds){ _schView='today'; _schOverdueOnly=false; _schDoneOnly=false; _schRef=ds; try{sessionStorage.setItem('sch_view','today');}catch(e){} renderSchedule(); }
+function _schMonthDay(ds){ _schDayFromMonth=true; _schView='today'; _schOverdueOnly=false; _schDoneOnly=false; _schRef=ds; try{sessionStorage.setItem('sch_view','today'); history.pushState({page:'schedule',schDay:ds},'',location.href.split('#')[0]+'#schedule');}catch(e){} renderSchedule(); }
 // 데모 일정 사이트(demo_schedules) 병합읽기 — 읽기전용, 데모사이트가 쓰는 테이블. 오늘~+7일 범위만 표시(그 이후는 숨김).
 let _demoSched=[];
 async function _loadDemoSched(){
@@ -11945,6 +11947,10 @@ window.addEventListener('popstate', function(e) {
     _wtAppShell();
     showPage('speech', null, true);
     if(typeof showSpeechDetail==='function') showSpeechDetail(e.state.sd, true);
+  } else if(e.state?.page === 'schedule' && _schDayFromMonth) {
+    _schDayFromMonth=false; _schView='month'; _schRef=null;   // 월간→일간 드릴에서 뒤로가기=월간으로 복귀(CDU로 튐 방지)
+    _wtAppShell();
+    showPage('schedule', null, true);
   } else if(e.state?.page) {
     _wtAppShell();
     showPage(e.state.page, null, true);   // showPage 내부에서 권한 게이트(device-reps 등) 재검증됨
