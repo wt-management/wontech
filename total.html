@@ -262,7 +262,7 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 #page-goals .gc.clk{cursor:pointer;transition:border-color .12s,box-shadow .12s}
 #page-goals .gc.clk:hover{border-color:#c9d5e6;box-shadow:0 3px 12px rgba(16,42,67,.07)}
 #page-goals .gc-pcbox{flex-shrink:0;width:88px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;border-right:1px solid #eef2f7;padding-right:15px}
-#page-goals .gc-pc{font-size:2.15rem;font-weight:800;line-height:.95;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+#page-goals .gc-pc{font-size:1.7rem;font-weight:800;line-height:.95;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
 #page-goals .gc-plbl{font-size:10px;font-weight:700;color:#94a3b8;margin-top:3px}
 #page-goals .gc-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:11px}
 #page-goals .gc-r1{display:flex;align-items:center;gap:13px}
@@ -273,12 +273,12 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 #page-goals .gc-r2{display:flex;align-items:baseline;justify-content:space-between;gap:12px;font-size:12px;font-variant-numeric:tabular-nums}
 #page-goals .gc-av{font-weight:800;color:#1c2534}
 #page-goals .gc-tv{color:#94a3b8;font-weight:500;font-size:11.5px}
-#page-goals .gc-gap{font-weight:800;white-space:nowrap}
+#page-goals .gc-gap{font-weight:700;white-space:nowrap}
 #page-goals .gc-sub{color:#94a3b8;font-weight:500}
 #page-goals .gc-meta{white-space:nowrap;flex-shrink:0}
 /* 합계 밴드(지역 카드와 분리) */
 #page-goals .g-tband{display:flex;align-items:center;gap:16px;border:1px solid #c7d7f0;background:linear-gradient(135deg,#eaf3ff,#f8fbff);border-radius:12px;padding:12px 20px;margin-bottom:9px}
-#page-goals .tb-pc{font-size:1.85rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;flex-shrink:0;letter-spacing:-.02em}
+#page-goals .tb-pc{font-size:1.55rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;flex-shrink:0;letter-spacing:-.02em}
 #page-goals .tb-lbl{font-size:10px;font-weight:700;color:#94a3b8;flex-shrink:0;margin-left:-9px;align-self:flex-end;margin-bottom:5px}
 #page-goals .tb-nm{font-size:14px;font-weight:800;color:#1c2534;flex-shrink:0}
 #page-goals .tb-track{flex:1;display:flex;height:9px;border-radius:5px;background:#e2eaf4;overflow:hidden;min-width:80px}
@@ -291,7 +291,7 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 #page-goals .g-top-main{flex:1.5 1 220px;padding:0 14px;align-self:center}
 #page-goals .g-top-k{font-size:12px;color:#5b7591;font-weight:700}
 #page-goals .g-top-vr{display:flex;align-items:baseline;gap:11px;margin-top:3px}
-#page-goals .g-top-v{font-size:2.7rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+#page-goals .g-top-v{font-size:2.2rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 #page-goals .g-top-s{font-size:12px;color:#64748b}
 #page-goals .g-top-stats{flex:4 1 320px;display:flex;align-items:center}
 #page-goals .g-st{flex:1;padding:0 16px;border-left:1px solid #dbe6f3}
@@ -962,7 +962,7 @@ b.onclick=function(){p.style.display=p.style.display==='none'?'block':'none';if(
 document.getElementById('wt-fb-cancel').onclick=function(){p.style.display='none';};
 document.getElementById('wt-fb-send').onclick=function(){var t=document.getElementById('wt-fb-msg');var m=(t&&t.value||'').trim();var em=wtEmail();var nmEl=document.getElementById('wt-fb-name');var nm=(nmEl&&nmEl.value||'').trim();if(!em && !nm){ if(nmEl){ nmEl.style.borderColor='#ef4444'; nmEl.focus(); } return; }if(!m){ if(t){ t.style.borderColor='#ef4444'; t.focus(); } return; }wtPost('site_feedback',{site:SITE,page:PAGE,message:m.slice(0,2000),reporter:em||nm.slice(0,100)});p.innerHTML='<div style="color:#5eead4;font-size:13px;text-align:center;padding:14px 4px">\uC811\uC218\uB418\uC5C8\uC2B5\uB2C8\uB2E4! \uAC10\uC0AC\uD569\uB2C8\uB2E4 \uD83D\uDE4F</div>';setTimeout(function(){p.style.display='none';p.remove();b.remove();wtFb();},1600);};
 }
-if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',wtFb);}else{wtFb();}
+/* 전사 종합: 우하단 요청·신고 플로팅 버튼 미표시(오류 자동수집은 유지) */
 })();</script>
 </head>
 <body>
@@ -2321,17 +2321,38 @@ function renderQuery(){
   const top=G.filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,5), bot=G.filter(x=>x.d<0).sort((a,b)=>a.d-b.d).slice(0,5);
   const drow=x=>'<div class="dl-row"><span class="dl-dot" style="background:'+_yoyCol(x.y)+'"></span><span class="dl-name">'+esc(x.name)+'</span>'+divBar(x.d,maxAbs)+'<span class="dl-d" style="color:'+_yoyCol(x.y)+'">'+fmtD(x.d)+'</span><span class="dl-sub">'+(x.y===null?'신규':arrow(x.y))+'</span></div>';
   document.getElementById('q-dual').innerHTML=dualList(top,bot,drow);
-  document.getElementById('q-rows').innerHTML=G.map((x,idx)=>{
+  const _qrow=(x,idx)=>{
     const contrib=x.d>0?Math.round(x.d/totGrowth*100):0;
     const row='<div class="drow" onclick="qToggle('+idx+')">'+
-      '<span><span class="dl-dot" style="display:inline-block;margin-right:6px;background:'+_yoyCol(x.y)+'"></span>'+esc(x.name)+(x.tag?' <span style="font-size:10px;color:#94a3b8">'+x.tag+'</span>':'')+
+      '<span><span class="dl-dot" style="display:inline-block;margin-right:6px;background:'+_yoyCol(x.y)+'"></span>'+esc(x.name)+((x.tag&&qState.tab!=='prod')?' <span style="font-size:10px;color:#94a3b8">'+x.tag+'</span>':'')+
         '<div style="display:flex;align-items:center;gap:8px;margin-top:5px">'+divBar(x.d,maxAbs)+(x.d>0?'<span style="font-size:10px;color:#94a3b8">성장기여 '+contrib+'%</span>':'')+'</div></span>'+
       '<span style="text-align:right;font-weight:700">'+fmtW(x.val)+'</span>'+
       '<span style="text-align:right;color:#64748b">'+fmtW(x.prev||0)+'</span>'+
       '<span style="text-align:right;color:'+_yoyCol(x.y)+';font-weight:700">'+(x.y===null?'신규':arrow(x.y))+'</span>'+
     '</div>';
     return row+(qState.open[idx]?'<div class="det">'+(x.detail||'상세 없음')+'</div>':'');
-  }).join('')||'<div class="text-muted" style="font-size:12px;padding:14px">데이터 없음</div>';
+  };
+  let _rowsHtml='';
+  if(qState.tab==='prod'){
+    // 제품별: 장비 / 소모품 / 기타 그룹으로 분리 + 그룹 소계
+    const GRP=[['장비',DEV_PURPLE],['소모품',CONS_CYAN],['기타','#64748b']];
+    const idxOf=new Map(G.map((x,i)=>[x,i]));
+    GRP.forEach(([gname,gcol])=>{
+      const list=G.filter(x=>(x.tag||'기타')===gname);
+      if(!list.length)return;
+      const gv=list.reduce((s,x)=>s+x.val,0), gp=list.reduce((s,x)=>s+(x.prev||0),0), gd=gv-gp, gy=pct(gv,gp);
+      _rowsHtml+='<div class="drow" style="background:#f8fafc;font-weight:800;cursor:default;border-top:2px solid '+gcol+'">'+
+        '<span style="color:'+gcol+'"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+gcol+';margin-right:7px"></span>'+gname+
+          ' <span style="font-size:10.5px;font-weight:500;color:#94a3b8">'+list.length+'개 · 비중 '+(tot>0?Math.round(gv/_accF*100):0)+'%</span></span>'+
+        '<span style="text-align:right">'+fmtW(gv)+'</span>'+
+        '<span style="text-align:right;color:#64748b;font-weight:600">'+fmtW(gp)+'</span>'+
+        '<span style="text-align:right;color:'+_yoyCol(gy)+'">'+(gy===null?'신규':arrow(gy))+' <span style="font-size:10px;font-weight:600">'+fmtD(gd)+'</span></span></div>';
+      _rowsHtml+=list.map(x=>_qrow(x,idxOf.get(x))).join('');
+    });
+  } else {
+    _rowsHtml=G.map((x,idx)=>_qrow(x,idx)).join('');
+  }
+  document.getElementById('q-rows').innerHTML=_rowsHtml||'<div class="text-muted" style="font-size:12px;padding:14px">데이터 없음</div>';
   const top3=G.filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,3).reduce((s,x)=>s+x.d,0);
   document.getElementById('q-insight').innerHTML='<i class="bi bi-lightbulb-fill me-1" style="color:#f59e0b"></i>조회 '+items.length+'개 중 <b>'+grewN+'개 성장</b> · 성장의 <b>'+Math.round(top3/totGrowth*100)+'%</b>가 상위 3개에서 발생'+(bot.length?(' · <b style="color:#dc2626">'+esc(bot[0].name)+(bot[1]?' · '+esc(bot[1].name):'')+'</b> 역성장 → 점검'):'');
   _qItems=items;
@@ -2482,9 +2503,10 @@ function _execT(){ return (window._execTsel!=null)?Math.max(1,Math.min(12,window
 var _EXEC_SEL_PAGES=['goals','units','quarters','corps'];
 function _setExecT(v){ window._execTsel=(v==='auto'||v==='')?null:parseInt(v,10); var ap=document.querySelector('.page.on'); if(!ap)return; var id=ap.id.replace('page-',''); var nav=Array.prototype.slice.call(document.querySelectorAll('.nav-link')).filter(function(a){return (a.getAttribute('onclick')||'').indexOf("'"+id+"'")>=0;})[0]; showPage(id, nav||null); }
 function _paintExecSel(name){ var host=document.getElementById('exec-sel-host'); if(!host)return; if(_EXEC_SEL_PAGES.indexOf(name)<0){ host.innerHTML=''; return; } var cal=_execCalMonth(),auto=(window._execTsel==null),cur=_execT(); var o='<option value="auto"'+(auto?' selected':'')+'>자동 · 당월(1~'+cal+'월)</option>'; for(var m=1;m<=cal;m++)o+='<option value="'+m+'"'+((!auto&&m===cur)?' selected':'')+'>1~'+m+'월</option>'; host.innerHTML='<span class="exec-sel"><i class="bi bi-calendar3 me-1"></i>보고 기간 <select onchange="_setExecT(this.value)">'+o+'</select></span>'; }
-const _achCol=r=> r==null?'#94a3b8' : r>=100?'#16a34a' : r>=80?'#0d9488' : r>=60?'#f59e0b':'#dc2626';
+/* 절제 팔레트: 기본은 잉크색(무채색), 위험 구간만 강조 — 색 경쟁 제거 */
+const _achCol=r=> r==null?'#94a3b8' : r>=100?'#0f766e' : r>=70?'#182230' : r>=50?'#d97706':'#dc2626';
 // 진행바 전용 파스텔 톤(숫자는 _achCol 유지 — 파스텔 숫자는 가독성↓)
-const _achBar=r=> r==null?'#d1d9e2' : r>=100?'#8fe3b0' : r>=80?'#7ad9cc' : r>=60?'#fcd97a':'#f6acac';
+const _achBar=r=> r==null?'#e2e8f0' : r>=100?'#5eead4' : r>=70?'#93b4f4' : r>=50?'#fcd97a':'#f6acac';
 // 성장률 RAG 색 (급성장~급락)
 const _yoyCol=v=> v==null?'#94a3b8' : v>=30?'#15803d' : v>=5?'#16a34a' : v>=-5?'#94a3b8' : v>=-20?'#f59e0b':'#b91c1c';
 // 증감액 포맷(부호+억) — fmtW는 양수만 처리 → 음수는 절대값으로
@@ -3948,7 +3970,8 @@ window.addEventListener('popstate', function(e){
   // state 없으면 아무것도 하지 않음 — pushState로 되밀면 무한 트랩
 });
 </script>
-<button id="pdf-fab" onclick="printPDF()" title="이 페이지를 PDF로 추출"><i class="bi bi-filetype-pdf me-1"></i>PDF</button>
+<!-- PDF 플로팅 버튼 제거(요청) — 인쇄는 Ctrl+P -->
+<button id="pdf-fab" onclick="printPDF()" style="display:none"><i class="bi bi-filetype-pdf me-1"></i>PDF</button>
 <script>
 /* 서비스워커 등록: 일반 새로고침(F5)에도 항상 최신 HTML(network-first) — 하드리프레시 불필요 */
 if('serviceWorker' in navigator){ window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
