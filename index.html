@@ -3146,7 +3146,7 @@ function showPage(name, el, noPush) {
   if(name==='dashboard' && typeof _isMgr!=='undefined' && !(_isMgr||_isStrat)){ name='sales-overview'; el=null; }
   if((name==='cons-hospitals'||name==='region') && typeof _isMgr!=='undefined' && !_isMgr){ name='sales-overview'; el=null; }
   sessionStorage.setItem('wt_page', name);
-  if(name!=='schedule'){ try{ _schDayFromMonth=false; }catch(e){} }
+  if(name!=='schedule'){ try{ _schDayFromMonth=false; _schDrillSnap=null; _schOverdueOnly=false; _schDoneOnly=false; }catch(e){} }
   if(!noPush && !(history.state && history.state.page===name)) history.pushState({page: name}, '', location.href.split('#')[0] + '#' + name);   // 같은 페이지 중복 push 금지(재클릭 시 엔트리 누적 방지)
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(a=>a.classList.remove('active'));
@@ -6948,7 +6948,7 @@ function _cduDrill(title, arr, kind){
     _glance=gl('<b>릴스 콘텐츠</b> · <b>'+nH+'개처</b>에서 총 <b>'+arr.length+'회</b> 촬영', '#eff6ff', '#1d4ed8', '#dbeafe');
     cells.push(col(box('병원별 촬영 횟수',reArr.slice(0,10).map(x=>barW(x[0],x[1],mxRe,'#2563eb',x[1]+'회')).join('')+note('여러 번 촬영한 병원 = 콘텐츠 협업 우호적. 아직 0회인 관리처로 확대 제안하세요.'))));
   } else if(kind==='dormant'){
-    var recov=_hostRev.filter(x=>x.y26>0).length, y25s=_hostRev.reduce((s,x)=>s+x.y25,0);
+    var _cbD=window._cduConvBy||{}; var recov=_hostRev.filter(x=>(_cbD[x.n]||0)>0).length, y25s=_hostRev.reduce((s,x)=>s+x.y25,0);   // 방문 후 실제 재구매분 기준(휴면은 y26<=0이라 원시 y26으론 항상 0)
     var top=_hostRev.slice().sort((a,b)=>b.y25-a.y25).filter(x=>x.y25>0).slice(0,8); var mxD=_mx(top.map(x=>x.y25));
     _glance=gl('<b>휴면 병원 공략</b> · <b>'+nH+'개처</b> 방문 · 작년 팁매출 합 <b>'+_cduWon(y25s)+'</b> (회복 잠재)'+(recov?' · 방문 후 재구매 <b style="color:#16a34a">'+recov+'개처</b>':' · 재구매 <b style="color:#dc2626">0개처</b>'), '#fff7ed', '#c2410c', '#fed7aa');
     cells.push(col(box('작년 팁매출 규모 <span style="font-weight:400;color:#94a3b8">회복 잠재 순</span>',(top.length?top.map(x=>barW(x.n,x.y25,mxD,'#ea580c',_cduWon(x.y25))).join(''):'<div style="font-size:12px;color:#94a3b8">작년 매출 데이터 없음</div>')+note('작년 매출 컸던 곳 = 회복 가치 큰 우선 타깃. 재구매 <b>0개처</b>면 방문이 아직 매출로 이어지지 못한 것.'))));
@@ -7086,7 +7086,7 @@ function renderCDUReport(vs){
   var nHosp=Object.keys(_hset).length, nVisit=vs.length;   // 방문 병원 = 고유 병원 수(방문 건수와 구분)
   _cduRepVs=vs.slice();
   var compArr=Object.entries(comp).map(function(e){return [e[0],Object.keys(e[1]).length];}).sort((a,b)=>b[1]-a[1]); var compTot=compArr.reduce((s,x)=>s+x[1],0)||1;
-  var compVis=vs.filter(function(v){ return (v.competitor||'').trim(); }).length;   // 경쟁사 노출 '방문' 건수(클릭 목록과 일치)
+  var compVis=vs.filter(function(v){ var _c=(v.competitor||'').trim(); return _c&&!/^(n|a|na|없음|해당없음|미정|-)$/i.test(_c); }).length;   // 경쟁사 노출 '방문' 건수(노이즈 제외 — 분포와 정합)
   var chanArr=Object.entries(chan).map(function(e){return [e[0],Object.keys(e[1]).length];}).sort((a,b)=>b[1]-a[1]);
   var salesArr=Object.entries(bySales).map(function(e){return [e[0],Object.keys(e[1]).length];}).sort((a,b)=>b[1]-a[1]);
   var avg=prices.length?Math.round(prices.reduce((s,p)=>s+p,0)/prices.length):0, mx=prices.length?Math.max.apply(null,prices):0, mn=prices.length?Math.min.apply(null,prices):0;
@@ -7202,7 +7202,7 @@ function renderCDUReport(vs){
     +'<div class="cdud-hero" onclick="_cduDrillAll()"><span class="l">방문 관리 병원</span><b>'+nHosp+'개처</b><span class="s">방문 <span style="color:var(--acc);font-weight:800">'+nVisit+'건</span> · 영업일수 <span style="color:var(--acc);font-weight:800">'+days.size+'일</span></span></div>'
     +fact('올해 팁매출',_cduWon(visitedRev)+(_sh26!=null?' <span style="font-size:12px;color:#94a3b8;font-weight:700">(전체 '+_sh26+'%)</span>':''),(visitedRevPrev>0?'전년 동기 '+_cduWon(visitedRevPrev)+(_sh25!=null?' (전체 '+_sh25+'%)':''):'관리처 팁매출'),'','_cduDrillVip()')
     +fact('이벤트 진행',ev+'건','마케팅 이벤트 방문','',ev?'_cduDrillEvent()':'')
-    +(function(){var rp=0,rc=0,rg=0;_cduReels().forEach(function(v){var s=_cduReelStageOf(v);if(s==='제안')rp++;else if(s==='촬영완료')rc++;else if(s==='게시완료')rg++;});var tot=rp+rc+rg;return fact('릴스 이벤트',tot+'건','제안 '+rp+' · 촬영 '+rc+' · 게시 '+rg,'',tot?"_cduTab('reels')":'');})()
+    +(function(){var rp=0,rc=0,rg=0;_cduReelItems().forEach(function(v){var s=v.stage;if(s==='제안')rp++;else if(s==='촬영완료')rc++;else if(s==='게시완료')rg++;});var tot=rp+rc+rg;return fact('릴스 이벤트',tot+'건','제안 '+rp+' · 촬영 '+rc+' · 게시 '+rg,'',tot?"_cduTab('reels')":'');})()
   +'</div>';
   var focusBand='<div class="cdud-bt">집중관리 분석 <u>· 이 기간 방문이 휴면·급감 공략으로 이어졌는가 · 클릭 상세</u></div>'
     +'<div class="cdud-band">'
@@ -9150,7 +9150,7 @@ function showHospitalDetail(name){
   equips.forEach(e=>{models[e.model||'미상']=(models[e.model||'미상']||0)+1;});
   const modelTags=Object.entries(models).sort((a,b)=>b[1]-a[1]).map(([m,c])=>`<span style="display:inline-flex;align-items:center;gap:4px;background:#eff6ff;color:#1d4ed8;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;margin:2px">${m}<span style="background:#2563eb;color:#fff;border-radius:4px;padding:0 5px;font-size:10px">${c}</span></span>`).join('');
   const now=new Date();
-  const expiring=equips.filter(e=>e.warrantyEnd&&Math.ceil((new Date(e.warrantyEnd)-now)/(864e5))<=60).length;
+  const expiring=equips.filter(e=>{if(!e.warrantyEnd)return false;const _dd=Math.ceil((new Date(e.warrantyEnd)-now)/(864e5));return _dd>0&&_dd<=60;}).length;   // 이미 만료(_dd<=0)는 제외
   // 소모품 실적 (CONS.hospitals 연동)
   const hospCons = CONS.hospitals?.[name];
   const ytdMo = Object.keys(CONS['monthly'+_curYear()]||{}).map(Number).filter(m=>m>=1&&m<=12);
@@ -9495,6 +9495,8 @@ function handleEquipExcel(input) {
       };
 
       const existingSerials = new Set(DB.d.equipments.map(e=>e.serial).filter(Boolean));
+      const existingKeys = new Set(DB.d.equipments.map(e=>_eqNorm(e.custName)+'|'+_eqNorm(e.model)+'|'+String(e.delivDate||'').slice(0,10)));   // 시리얼 없는 행 재업로드 중복 방지용 복합키
+      const _batchKeys = new Set();
 
       const newItems=[], dupItems=[];
       filtered.forEach(r => {
@@ -9516,8 +9518,9 @@ function handleEquipExcel(input) {
           const dt = new Date(obj.delivDate); dt.setFullYear(dt.getFullYear()+1);
           obj.warrantyEnd = dt.toISOString().split('T')[0];
         }
-        if(serial && existingSerials.has(serial)) dupItems.push(obj);
-        else newItems.push(obj);
+        const _ck=_eqNorm(obj.custName)+'|'+_eqNorm(obj.model)+'|'+String(obj.delivDate||'').slice(0,10);
+        if(serial ? existingSerials.has(serial) : (existingKeys.has(_ck)||_batchKeys.has(_ck))) dupItems.push(obj);
+        else { newItems.push(obj); if(!serial) _batchKeys.add(_ck); }
       });
 
       _excelPending = newItems;
@@ -9590,7 +9593,7 @@ let _schDoneOnly=false, _schDoneMode='week', _schDoneRef=null, _schNoDim=false;
 let _schRef=null;   // 오늘/이번주 뷰의 기준일(null=오늘)
 function _schShift(d){ const unit=(_schView==='week')?7:1; const p=(_schRef||_schTodayStr()).split('-').map(Number); const dt=new Date(p[0],p[1]-1,p[2]); dt.setDate(dt.getDate()+d*unit); _schRef=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); renderSchedule(); }
 function _schNavBtns(){ return '<button class="btn btn-sm btn-outline-secondary" onclick="_schShift(-1)"><i class="bi bi-chevron-left"></i></button> <button class="btn btn-sm btn-outline-secondary" onclick="_schRef=null;renderSchedule()">오늘</button> <button class="btn btn-sm btn-outline-secondary" onclick="_schShift(1)"><i class="bi bi-chevron-right"></i></button>'; }
-function _schShowDoneOnly(){ _schEnterDrill(); _schDoneOnly=true; _schOverdueOnly=false; _schDoneRef=(_schView==='week'&&_schRef)?_schRef:_schTodayStr(); renderSchedule(); }
+function _schShowDoneOnly(){ _schEnterDrill(); _schDoneOnly=true; _schOverdueOnly=false; _schDoneRef=(((_schView==='week'||_schView==='today')&&_schRef)?_schRef:_schTodayStr()); renderSchedule(); }   // 통계바 완료 주(_navWk)와 기준일 정합
 function _schDoneModeSet(m){ _schDoneMode=m; renderSchedule(); }
 function _schDoneNav(d){ const p=(_schDoneRef||_schTodayStr()).split('-').map(Number); const dt=new Date(p[0],p[1]-1,p[2]); dt.setDate(dt.getDate()+d*(_schDoneMode==='week'?7:1)); _schDoneRef=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); renderSchedule(); }
 const _SCH_COL={'방문':'#2563eb','콜':'#0891b2','데모':'#7c3aed','A/S':'#ea580c','기타':'#64748b','후속':'#64748b','견적발송':'#7c3aed','계약검토':'#7c3aed'};
@@ -11731,7 +11734,7 @@ function renderDevVariance(){
   var seg=function(cur){ var o=[['cum','누계'],['mon','월별']]; return '<div style="display:inline-flex;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden">'+o.map(function(x,i){return '<button onclick="_setDevVarMode(\''+x[0]+'\')" style="border:none;'+(i?'border-left:1px solid #e2e8f0;':'')+'padding:5px 14px;font-size:12px;cursor:pointer;background:'+(cur===x[0]?'#2563eb':'#fff')+';color:'+(cur===x[0]?'#fff':'#475569')+'">'+x[1]+'</button>';}).join('')+'</div>'; };
   var body='';
   if(_devVarMode==='cum'){
-    var losers=dAll.filter(function(r){return r.d<0;}).slice(0,6);
+    var losers=dAll.filter(function(r){return r.d<0;}).sort(function(a,b){return a.d-b.d;}).slice(0,6);   // 감소액 큰 순(가장 음수부터)
     var gainers=dAll.filter(function(r){return r.d>0;}).slice(0,6);
     var _totD=pAll.reduce(function(s,r){return s+(r.d||0);},0);
     body='<div style="font-size:10px;color:#94a3b8;margin-bottom:6px"><i class="bi bi-info-circle me-1"></i>행을 클릭하면 그 제품/대리점이 어디서 왜 증감했는지 상세 분해가 열립니다 · 좌·우는 같은 총증감('+_dvFmtW(_totD)+')을 제품/담당 두 축으로 나눈 것 — 각 열은 |증감|≥1천만 상위만 표시</div>'
