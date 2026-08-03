@@ -634,6 +634,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   <!-- 대시보드 -->
   <!-- 매출 종합 현황 -->
   <div id="page-sales-overview" class="page active">
+    <div id="my-perf"></div>
     <div class="page-header" style="border-bottom:2px solid #16324f;padding-bottom:14px;align-items:flex-end">
       <div>
         <div style="font-size:11px;font-weight:800;letter-spacing:.14em;color:#94a3b8">WONTECH · SALES OVERVIEW</div>
@@ -3380,7 +3381,33 @@ function _ovPeriodChange() {
 }
 
 let _ovChart = null;
+function _renderMyPerf(){
+  var el=document.getElementById('my-perf'); if(!el)return;
+  var me=''; try{ me=(currentUserName()||'').trim(); }catch(e){}
+  var reps={}; try{ reps=_repsByMgr((typeof DEVICE!=='undefined'&&DEVICE.hospitals)||{}); }catch(e){}
+  var _n=function(s){return String(s||'').replace(/^\s*\d+\s*[.\-]\s*/,'').replace(/\s+/g,'').toLowerCase();};
+  var myKey=null; if(me) Object.keys(reps).forEach(function(k){ if(_n(k)===_n(me)) myKey=k; });
+  if(!myKey){ el.innerHTML=''; return; }
+  var arr=Object.keys(reps).map(function(k){return {n:k,v:reps[k].y2026||0,p:reps[k].y2025||0};}).filter(function(x){return x.v>0||x.p>0;});
+  arr.sort(function(a,b){return b.v-a.v;});
+  var mine=reps[myKey], myV=mine.y2026||0, myP=mine.y2025||0, tot=arr.length;
+  var rank=arr.findIndex(function(x){return x.n===myKey;})+1;
+  var avg=tot?arr.reduce(function(s,x){return s+x.v;},0)/tot:0;
+  var vsAvg=avg>0?Math.round((myV/avg-1)*100):0;
+  var yoy=myP>0?Math.round((myV/myP-1)*100):null;
+  var won=function(v){v=Number(v)||0;return v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만':String(Math.round(v));};
+  var kpi=function(l,v,c){return '<div style="flex:1;text-align:center;min-width:0"><div style="font-size:19px;font-weight:800;color:'+(c||'#fff')+';line-height:1.1;white-space:nowrap">'+v+'</div><div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:3px">'+l+'</div></div>';};
+  el.innerHTML='<div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);border-radius:16px;padding:17px 22px;margin-bottom:16px;color:#fff;box-shadow:0 4px 14px rgba(37,99,235,.25)">'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><i class="bi bi-person-badge-fill"></i><b style="font-size:14.5px">'+_escH(me)+' 님의 제품(장비) 실적</b><span style="font-size:11px;opacity:.75;margin-left:auto">올해 누계 · 담당자별 장비 기준</span></div>'
+    +'<div style="display:flex;gap:6px;background:rgba(255,255,255,.13);border-radius:12px;padding:12px 4px">'
+    +kpi('올해 매출',won(myV)+'원','#fff')
+    +kpi('팀 내 순위','<b>'+rank+'</b>위 <span style="font-size:12px;opacity:.7">/'+tot+'</span>','#fff')
+    +kpi('팀평균 대비',(vsAvg>=0?'+':'')+vsAvg+'%',vsAvg>=0?'#bbf7d0':'#fecaca')
+    +kpi('전년 대비',yoy==null?'-':(yoy>=0?'▲':'▼')+Math.abs(yoy)+'%',yoy==null?'#fff':yoy>=0?'#bbf7d0':'#fecaca')
+    +'</div></div>';
+}
 function renderSalesOverview() {
+  try{_renderMyPerf();}catch(e){}
   const fmtW = v => (v=Number(v||0))>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만원':Math.round(v).toLocaleString()+'원';
   _injectPeriodCtrl('ov');
   const P=_getPeriod('ov'), spanMs=_spanMonths(P), prevMs=_spanMonths(_yoyShift(P));
