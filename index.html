@@ -1401,6 +1401,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <input type="text" id="search-cust" class="form-control form-control-sm" style="max-width:280px" placeholder="병원명·지역·담당 검색..." oninput="renderCustomers()">
       <select id="cust-sales-filter" class="form-select form-select-sm" style="max-width:180px" onchange="renderCustomers()" title="담당 영업사원으로 콜스케줄 필터"><option value="">담당영업 전체</option></select>
       <button id="cust-mine-btn" class="btn btn-sm btn-outline-primary" style="font-size:12px" onclick="_custMine()"><i class="bi bi-person-check me-1"></i>내 거래처</button>
+      <button class="btn btn-sm" style="font-size:12px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;font-weight:600" onclick="_unassignedOpen()"><i class="bi bi-person-x me-1"></i>미배정 정리</button>
       <span id="cust-count" class="text-muted" style="font-size:12px"></span>
     </div>
     <div id="cust-body"></div>
@@ -1421,8 +1422,12 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <button class="btn btn-primary btn-sm" onclick="openModal('equip')"><i class="bi bi-plus-lg me-1"></i>장비 추가</button>
       </div>
     </div>
-    <div class="mb-3">
+    <div class="mb-2">
       <input type="text" id="search-equip" class="form-control" placeholder="병원명, 모델명, 시리얼번호, 담당자 검색..." oninput="filterEquip()">
+    </div>
+    <div class="mb-2 d-flex gap-2 align-items-center flex-wrap">
+      <button id="eq-exp-btn" onclick="_eqToggleExp()" class="btn btn-sm" style="font-size:12px;background:#fff7ed;border:1px solid #fed7aa;color:#c2410c;font-weight:700;border-radius:8px"><i class="bi bi-shield-exclamation me-1"></i>보증 만료 임박 <span id="eq-exp-n" style="font-weight:800">0</span></button>
+      <span style="font-size:11px;color:#94a3b8">60일 내 만료 · A/S·재계약 영업 기회 (클릭=필터)</span>
     </div>
     <div id="equip-result-info" class="text-muted mb-2" style="font-size:12px"></div>
     <div class="card"><div class="card-body p-0"><table class="table table-hover mb-0">
@@ -9110,13 +9115,18 @@ function _autoEquip(){
 }
 function _allEquip(){ return (DB.d.equipments||[]).concat(_autoEquip()); }
 function _allEquipFor(name){ return _allEquip().filter(function(e){ return e.custName===name; }); }
+function _eqToggleExp(){ window._eqExpOnly=!window._eqExpOnly; filterEquip(); }
 function filterEquip(){
   const kw=(document.getElementById('search-equip').value||'').toLowerCase();
   const _base=_allEquip();
   const filtered=kw
     ?_base.filter(e=>(e.custName||'').toLowerCase().includes(kw)||(e.model||'').toLowerCase().includes(kw)||(e.serial||'').toLowerCase().includes(kw)||(e.sales||'').toLowerCase().includes(kw))
     :_base;
-  const result=[...filtered].sort((a,b)=>new Date(b.delivDate||0)-new Date(a.delivDate||0));
+  const _now=new Date(); _now.setHours(0,0,0,0);
+  const _isExp=e=>{ if(!e.warrantyEnd)return false; const dd=Math.ceil((new Date(e.warrantyEnd)-_now)/864e5); return dd>0&&dd<=60; };
+  try{ const _b=document.getElementById('eq-exp-n'); if(_b)_b.textContent=_base.filter(_isExp).length.toLocaleString(); const _bt=document.getElementById('eq-exp-btn'); if(_bt)_bt.style.boxShadow=window._eqExpOnly?'0 0 0 2px #f97316':''; }catch(_e){}
+  const _f2 = window._eqExpOnly ? filtered.filter(_isExp) : filtered;
+  const result=[..._f2].sort((a,b)=> window._eqExpOnly ? (new Date(a.warrantyEnd||0)-new Date(b.warrantyEnd||0)) : (new Date(b.delivDate||0)-new Date(a.delivDate||0)));
   const _autoN=result.filter(e=>e._auto).length;
   document.getElementById('equip-result-info').innerHTML=(kw?`${result.length.toLocaleString()}건 검색됨`:`전체 ${result.length.toLocaleString()}건`)+(_autoN?` <span style="font-size:11px;color:#d97706;font-weight:600">· 회계기반 추정 ${_autoN.toLocaleString()}건 포함</span>`:'');
   const el=document.getElementById('equip-list');
@@ -12667,6 +12677,32 @@ function _schRoute(ds){
   document.getElementById('sch-route-ov').style.display='block';
 }
 function _schRouteClose(){ var o=document.getElementById('sch-route-ov'); if(o)o.style.display='none'; }
+</script>
+<!-- 담당 미배정 정리 -->
+<div id="unasgn-ov" style="display:none;position:fixed;inset:0;z-index:20000;background:rgba(15,23,42,.45)" onclick="if(event.target===this)_unasgnClose()">
+  <div style="max-width:500px;margin:9vh auto 0;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
+    <div style="display:flex;align-items:center;gap:8px;padding:14px 18px;border-bottom:1px solid #eef2f7"><i class="bi bi-person-x-fill" style="color:#b91c1c"></i><b id="unasgn-ttl" style="font-size:14px;color:#0f172a">담당 미배정 거래처</b><span style="flex:1"></span><button onclick="_unasgnClose()" style="border:0;background:none;color:#94a3b8;font-size:16px;cursor:pointer">✕</button></div>
+    <div id="unasgn-body" style="max-height:66vh;overflow:auto;padding:10px 16px 14px"></div>
+  </div>
+</div>
+<script>
+function _unassignedOpen(){
+  var rows=[], seen={};
+  try{ [window.CONS,window.DEVICE].forEach(function(S){ if(!S||!S.hospitals)return; Object.keys(S.hospitals).forEach(function(n){ if(seen[n])return; seen[n]=1; var mgr=(typeof _repOf==='function'?(_repOf(n)||'').trim():''); if(mgr)return; var y=0; try{ y=(((CONS.hospitals||{})[n]||{}).y2026||0)+(((DEVICE.hospitals||{})[n]||{}).y2026||0); }catch(e){} if(y>0) rows.push({n:n,y:y}); }); }); }catch(e){}
+  rows.sort(function(a,b){return b.y-a.y;});
+  var won=function(v){v=Number(v)||0;return v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만':String(Math.round(v));};
+  var ttl=document.getElementById('unasgn-ttl'); if(ttl)ttl.textContent='담당 미배정 거래처 · '+rows.length+'곳';
+  var body=document.getElementById('unasgn-body'); if(!body)return;
+  if(!rows.length){ body.innerHTML='<div style="padding:26px;text-align:center;color:#16a34a;font-size:13.5px;font-weight:600"><i class="bi bi-check-circle" style="font-size:22px;display:block;margin-bottom:6px"></i>매출 있는 거래처는 모두 담당이 배정돼 있습니다 👍</div>'; }
+  else{ body.innerHTML='<div style="font-size:11.5px;color:#94a3b8;margin-bottom:10px;line-height:1.5">올해 매출이 있는데 <b>담당 영업이 없는</b> 거래처입니다. 병원을 눌러 상세에서 담당을 배정하세요(파트장 권한).</div>'
+    +rows.slice(0,200).map(function(r){ return '<div onclick="_unasgnGo(\''+_jsArg(r.n)+'\')" style="display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid #f1f5f9;cursor:pointer">'
+      +'<i class="bi bi-building" style="color:#cbd5e1;flex-shrink:0"></i><span style="flex:1;min-width:0;font-size:13.5px;font-weight:600;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_escH(r.n)+'</span>'
+      +'<span style="font-size:12.5px;font-weight:700;color:#0891b2;flex-shrink:0">'+won(r.y)+'원</span><i class="bi bi-chevron-right" style="color:#cbd5e1;font-size:12px;flex-shrink:0"></i></div>'; }).join('')
+    +(rows.length>200?'<div style="font-size:11px;color:#94a3b8;margin-top:8px">매출 상위 200곳 표시 (총 '+rows.length+'곳)</div>':''); }
+  document.getElementById('unasgn-ov').style.display='block';
+}
+function _unasgnGo(n){ _unasgnClose(); try{ showHospitalDetail(n); }catch(e){} }
+function _unasgnClose(){ var o=document.getElementById('unasgn-ov'); if(o)o.style.display='none'; }
 </script>
 </body>
 </html>
