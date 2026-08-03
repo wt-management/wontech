@@ -1402,6 +1402,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <select id="cust-sales-filter" class="form-select form-select-sm" style="max-width:180px" onchange="renderCustomers()" title="담당 영업사원으로 콜스케줄 필터"><option value="">담당영업 전체</option></select>
       <button id="cust-mine-btn" class="btn btn-sm btn-outline-primary" style="font-size:12px" onclick="_custMine()"><i class="bi bi-person-check me-1"></i>내 거래처</button>
       <button class="btn btn-sm" style="font-size:12px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;font-weight:600" onclick="_unassignedOpen()"><i class="bi bi-person-x me-1"></i>미배정 정리</button>
+      <button class="btn btn-sm" style="font-size:12px;background:#fefce8;border:1px solid #fde68a;color:#a16207;font-weight:600" onclick="_dqOpen()"><i class="bi bi-clipboard-check me-1"></i>데이터 점검</button>
       <span id="cust-count" class="text-muted" style="font-size:12px"></span>
     </div>
     <div id="cust-body"></div>
@@ -12786,6 +12787,44 @@ async function _igGuardSched(cust, date, type, excludeId){
   }catch(e){ return cust; }   // 가드 오류 시 저장은 막지 않음
   return cust;
 }
+</script>
+<!-- 데이터 품질 점검 -->
+<div id="dq-ov" style="display:none;position:fixed;inset:0;z-index:20000;background:rgba(15,23,42,.45)" onclick="if(event.target===this)_dqClose()">
+  <div style="max-width:540px;margin:8vh auto 0;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
+    <div style="display:flex;align-items:center;gap:8px;padding:14px 18px;border-bottom:1px solid #eef2f7"><i class="bi bi-clipboard-check-fill" style="color:#a16207"></i><b style="font-size:14px;color:#0f172a">데이터 품질 점검</b><span style="flex:1"></span><button onclick="_dqClose()" style="border:0;background:none;color:#94a3b8;font-size:16px;cursor:pointer">✕</button></div>
+    <div id="dq-body" style="max-height:68vh;overflow:auto;padding:12px 16px 16px"></div>
+  </div>
+</div>
+<script>
+function _dqCalc(){
+  var un=[], dup=[], seen={};
+  try{
+    var known=window._IG.known();
+    (DB.d.logs||[]).forEach(function(l){ if(!l||(l.kind!=='cdu'&&l.kind!=='schedule'))return; var n=(l.custName||'').trim(); if(!n||seen[n])return; seen[n]=1; if(!known[n]){ var hc=window._IG.hospCheck(n); un.push({n:n, suggest:((hc.suggest||[])[0]||'')}); } });
+    var byKey={}; (DB.d.logs||[]).forEach(function(l){ if(!l||l.kind!=='schedule')return; var c=(l.custName||'').trim(), dt=String(l.date||'').slice(0,10), tp=(l.type||''); if(!c||!dt)return; var k=c+'|'+dt+'|'+tp; (byKey[k]=byKey[k]||[]).push(l); });
+    Object.keys(byKey).forEach(function(k){ if(byKey[k].length>1){ var p=k.split('|'); dup.push({cust:p[0],date:p[1],type:p[2],n:byKey[k].length}); } });
+  }catch(e){}
+  return {un:un, dup:dup};
+}
+function _dqOpen(){
+  var r=_dqCalc(), body=document.getElementById('dq-body'); if(!body)return;
+  var sec=function(t,n,col){ return '<div style="font-size:12.5px;font-weight:800;color:'+col+';margin:14px 0 6px;display:flex;align-items:center;gap:6px"><span style="width:18px;height:18px;border-radius:5px;background:'+col+'1a;color:'+col+';display:inline-flex;align-items:center;justify-content:center;font-size:11px">'+n+'</span>'+t+'</div>'; };
+  var html='';
+  if(!r.un.length&&!r.dup.length){ html='<div style="padding:24px;text-align:center;color:#16a34a;font-size:13.5px;font-weight:600"><i class="bi bi-check-circle" style="font-size:22px;display:block;margin-bottom:6px"></i>발견된 데이터 이상이 없습니다 👍</div>'; }
+  else{
+    html+=sec('미매칭 거래처명 (방문·일정 기록)',r.un.length,'#dc2626');
+    if(r.un.length){ html+='<div style="font-size:11.5px;color:#94a3b8;margin-bottom:6px">기록엔 있으나 등록 거래처명과 안 맞는 이름 — 오타/표기차이면 매출·장비가 따로 잡힙니다. 원본 기록의 병원명을 교정하세요.</div>'
+      +r.un.slice(0,60).map(function(x){ return '<div style="display:flex;align-items:center;gap:8px;padding:7px 2px;border-bottom:1px solid #f1f5f9"><i class="bi bi-exclamation-circle" style="color:#f59e0b;flex-shrink:0"></i><span style="flex:1;min-width:0;font-size:13px;font-weight:600;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_escH(x.n)+'</span>'+(x.suggest?'<span style="font-size:11.5px;color:#0369a1;flex-shrink:0">→ '+_escH(x.suggest)+' ?</span>':'<span style="font-size:11px;color:#cbd5e1;flex-shrink:0">유사 없음</span>')+'</div>'; }).join('')
+      +(r.un.length>60?'<div style="font-size:11px;color:#94a3b8;margin-top:6px">상위 60건 (총 '+r.un.length+')</div>':''); }
+    else html+='<div style="font-size:12px;color:#94a3b8;padding:2px 0 4px">이상 없음</div>';
+    html+=sec('중복 의심 일정 (같은 거래처·날짜·유형)',r.dup.length,'#7c3aed');
+    if(r.dup.length){ html+=r.dup.slice(0,40).map(function(x){ return '<div style="display:flex;align-items:center;gap:8px;padding:7px 2px;border-bottom:1px solid #f1f5f9"><i class="bi bi-files" style="color:#7c3aed;flex-shrink:0"></i><span style="flex:1;min-width:0;font-size:13px;font-weight:600;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_escH(x.cust)+' <span style="font-weight:400;color:#94a3b8">'+_escH(x.date)+' · '+_escH(x.type)+'</span></span><span style="font-size:12px;font-weight:800;color:#7c3aed;flex-shrink:0">'+x.n+'건</span></div>'; }).join(''); }
+    else html+='<div style="font-size:12px;color:#94a3b8;padding:2px 0 4px">이상 없음</div>';
+  }
+  body.innerHTML=html;
+  document.getElementById('dq-ov').style.display='block';
+}
+function _dqClose(){ var o=document.getElementById('dq-ov'); if(o)o.style.display='none'; }
 </script>
 </body>
 </html>
