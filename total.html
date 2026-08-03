@@ -1920,7 +1920,7 @@ function _rptHero(g,rows,pend){
 }
 // ── 드릴다운 ──
 function _tgtMo(dept,item){ const o={}; (SALEST||[]).forEach(r=>{ if(r.dept===dept&&r.item===item&&+r.year===2026) o[+r.month]=(o[+r.month]||0)+Number(r.amount||0); }); return o; }
-function _drillSeg(dept,item){
+function _drillSeg(dept,item,F,T){ F=F||1; T=T||12; const _smE=o=>{let s=0;for(let m=F;m<=T;m++)s+=Number((o&&o[m])||0);return s;};
   const C=_rptCache, custs={},prods={},pendRows=[]; let mo26={},mo25={},pend={},tgt={};
   if(dept==='서지컬'){
     mo26=(CONS.etcDept2026||{})['서지컬']||{}; mo25=(CONS.etcDept2025||{})['서지컬']||{};
@@ -1932,23 +1932,23 @@ function _drillSeg(dept,item){
     for(let m=1;m<=12;m++){ const a=(Number(e26[m])||0)-(Number(s26[m])||0); if(a) mo26[m]=a;
       const b=(Number(e25[m])||0)-(Number(s25[m])||0); if(b) mo25[m]=b; }
     Object.entries(CONS.etcDept2026||{}).forEach(([k,o])=>{ if(k==='서지컬') return;
-      let s=0; for(const m in o) s+=Number(o[m])||0; if(s>0) prods[k==='기타'?'의료기기·기타':k]=s; });
+      const s=_smE(o); if(s>0) prods[k==='기타'?'의료기기·기타':k]=s; });
     return {mo26,mo25,pend:{},tgt:{},custs:{},prods,pendRows:[]};
   }
   if(dept==='국내영업'){
     const cl=item==='제품'?C.kpC:C.kcC; mo26=(cl&&cl.y26)||{}; mo25=(cl&&cl.y25)||{};
     pend=(C.pend&&C.pend.kr&&C.pend.kr[item])||{}; tgt=_tgtMo('국내영업',item);
     const src=item==='제품'?DEVICE:CONS;
-    Object.entries(src.hospitals||{}).forEach(([nm,h])=>{ const v=Number(h.y2026)||0; if(v>0) custs[nm]=v; });
-    Object.entries(src.products2026||{}).forEach(([p,v])=>{ prods[p]=Number(v)||0; });
+    Object.entries(src.hospitals||{}).forEach(([nm,h])=>{ const v=_smE(h.m2026); if(v>0) custs[nm]=v; });
+    if(item==='제품'&&src.prodMo2026){ Object.entries(src.prodMo2026).forEach(([p,mm])=>{ const v=_smE(mm); if(v) prods[p]=v; }); }
+    else { Object.values(src.hospitals||{}).forEach(h=>{ (h.txns2026||[]).forEach(t=>{ const mo=Number(t[0])||0; if(mo>=F&&mo<=T){ const p=t[2],a=Number(t[3])||0; if(p&&a) prods[p]=(prods[p]||0)+a; } }); }); }
     (ILBO_PEND||[]).forEach(p=>{ if(p.region!=='해외'&&_pendKrItem(p.product)===item) pendRows.push(p); });
   }else{
     const ri=(item==='기타·미분류')?'기타':item;
     mo26=(C.reg26&&C.reg26[ri])||{}; mo25=(C.reg25&&C.reg25[ri])||{};
     pend=(C.pend&&C.pend.intl&&C.pend.intl[ri])||{}; tgt=_tgtMo('해외영업',ri);
-    Object.entries(INTL.countries||{}).forEach(([cc,c])=>{ let inReg=false;
-      Object.entries(c.clientData||{}).forEach(([nm,cd])=>{ if(_regionOf(cc,nm)===ri){ custs[nm]=(custs[nm]||0)+(Number(cd.total)||0); inReg=true; } });
-      if(inReg) Object.entries(c.prods||{}).forEach(([p,v])=>prods[p]=(prods[p]||0)+(Number(v)||0));
+    Object.entries(INTL.countries||{}).forEach(([cc,c])=>{
+      Object.entries(c.clientData||{}).forEach(([nm,cd])=>{ if(_regionOf(cc,nm)!==ri) return; const v=_smE(cd.m); if(v) custs[nm]=(custs[nm]||0)+v; (cd.txns||[]).forEach(tx=>{ const dm=Number(String(tx[0]||'').slice(5,7))||0; if(dm>=F&&dm<=T){ const p=tx[1],a=Number(tx[3])||0; if(p&&a) prods[p]=(prods[p]||0)+a; } }); });
     });
     (ILBO_PEND||[]).forEach(p=>{ if(p.region==='해외'&&_pendRegion(p.country)===ri) pendRows.push(p); });
   }
@@ -1971,8 +1971,9 @@ function openDrill(dk,_f,_t){
   const _dbgEl=document.getElementById('rpt-dbg');
   if(_dbgEl&&_dbgEl.parentElement!==document.body) document.body.appendChild(_dbgEl);
   const parts=String(dk).split('|'), dept=parts[0], item=parts[1];
-  const seg=_drillSeg(dept,item), P=_rptPeriods();
+  const P=_rptPeriods();
   const F=(_f!=null?_f:P.hf), T=(_t!=null?_t:P.ht);
+  const seg=_drillSeg(dept,item,F,T);
   const sm=(o,f,t)=>{let s=0;for(let m=f;m<=t;m++)s+=Number((o||{})[m]||0);return s;};
   const act=sm(seg.mo26,F,T)+sm(seg.pend,F,T), prev=sm(seg.mo25,F,T), tg=sm(seg.tgt,F,T);
   const ach=tg>0?act/tg*100:null, grw=prev>0?(act/prev-1)*100:null;
@@ -2130,10 +2131,10 @@ function renderQuery(){
   // 헤드라인 = 회계+미반영(보고기준) — 종합/매출현황과 통일. 성장률은 회계 like-for-like. (아래 분해표 items는 회계 기준)
   const _f=qState.f,_t=qState.t,_pg=_pendingAgg(2026);
   const _incC=qState.cat==='all'||qState.cat==='소모품',_incD=qState.cat==='all'||qState.cat==='장비';
-  const _iSplit=function(mo){ var v=sumMo(mo,_f,_t); if(qState.cat==='all') return v; var rc=Object.values(INTL.prods_cons||{}).reduce(function(a,x){return a+(+x||0);},0),rd=Object.values(INTL.prods_dev||{}).reduce(function(a,x){return a+(+x||0);},0),rs=rc+rd; if(rs<=0) return qState.cat==='장비'?v:0; return v*((qState.cat==='장비'?rd:rc)/rs); };
+  const _iSplit=function(mo,mix){ var v=sumMo(mo,_f,_t); if(qState.cat==='all') return v; var _mx=mix||INTL; var rc=Object.values(_mx.prods_cons||{}).reduce(function(a,x){return a+(+x||0);},0),rd=Object.values(_mx.prods_dev||{}).reduce(function(a,x){return a+(+x||0);},0),rs=rc+rd; if(rs<=0) return qState.cat==='장비'?v:0; return v*((qState.cat==='장비'?rd:rc)/rs); };
   let _accF=0,_accP=0,_pendF=0;
   if(qState.ch!=='intl'){ if(_incC){_accF+=sumMo(CONS.monthly2026,_f,_t);_accP+=sumMo(CONS.monthly2025,_f,_t);_pendF+=sumMo(_pg.consMonthly,_f,_t);} if(_incD){_accF+=sumMo(DEVICE.monthly2026,_f,_t);_accP+=sumMo(DEVICE.monthly2025,_f,_t);_pendF+=sumMo(_pg.devMonthly,_f,_t);} }
-  if(qState.ch!=='dom'){ _accF+=_iSplit(INTL.monthly);_accP+=_iSplit((INTL.data2025||{}).monthly);_pendF+=_iSplit(_pg.intlMonthly); }
+  if(qState.ch!=='dom'){ _accF+=_iSplit(INTL.monthly);_accP+=_iSplit((INTL.data2025||{}).monthly, INTL.data2025);_pendF+=_iSplit(_pg.intlMonthly); }
   // 기타(의료기기·서지컬·B2C·고객만족): 전사·전체 조회일 때만 합산 — 종합(totalI)과 숫자 정합
   const _etcF=(qState.ch==='all'&&qState.cat==='all')?sumMo(CONS.etcMonthly2026,_f,_t):0;
   const _etcP=(qState.ch==='all'&&qState.cat==='all')?sumMo(CONS.etcMonthly2025,_f,_t):0;
