@@ -5110,14 +5110,18 @@ function consParseExcel(input) {
         const _all26E = _sj(sheet26name);
         const _domAll = {};
         _all26E.forEach(r => { if(r['국내외']==='국내'){ const _m=monthNum(r['월']); const _a=Number(r[_amKeyE(r)]||0); if(_m&&_a) _domAll[_m]=(_domAll[_m]||0)+_a; } });
+        const _isHwASE = r => r['국내외']==='해외' && /A\/S/i.test(String(r['구분#4']||''));   // 해외 A/S = 사업부기준 고객만족(해외영업서 제외)
+        const _hwAsMoE = {};
+        _all26E.forEach(r => { if(_isHwASE(r)){ const _m=monthNum(r['월']); const _a=Number(r[_amKeyE(r)]||0); if(_m&&_a) _hwAsMoE[_m]=(_hwAsMoE[_m]||0)+_a; } });
         const _etcMo = {};
-        for(let _em=1; _em<=12; _em++){ const _ev=Math.round((_domAll[_em]||0)-(a26.monthly[_em]||0)-(devFull.monthly2026[_em]||0)); if(_ev) _etcMo[_em]=_ev; }
+        for(let _em=1; _em<=12; _em++){ const _ev=Math.round((_domAll[_em]||0)-(a26.monthly[_em]||0)-(devFull.monthly2026[_em]||0)+(_hwAsMoE[_em]||0)); if(_ev) _etcMo[_em]=_ev; }   // +해외 A/S(고객만족)
         CONS.etcMonthly2026 = _etcMo;
         if(!CONS.etcMonthly2025) CONS.etcMonthly2025 = {};
         const _isConsE = r => r['구분#2']==='소모품' && r['국내외']==='국내';
         const _isDevE  = r => (r['구분#2']==='제품군'||r['구분#2']==='의료기기') && r['국내외']==='국내';
         const _dept = {'서지컬':{},'B2C':{},'고객만족':{},'기타':{}};
         _all26E.forEach(r => { if(r['국내외']!=='국내'||_isConsE(r)||_isDevE(r)) return; const _m=monthNum(r['월']); const _a=Number(r[_amKeyE(r)]||0); if(!_m||!_a) return; const _d=String(r['사용부서']||''); const _b=/지컬/.test(_d)?'서지컬':(/B2C/i.test(_d)?'B2C':(/고객만족|CS/.test(_d)?'고객만족':'기타')); _dept[_b][_m]=(_dept[_b][_m]||0)+_a; });
+        _all26E.forEach(r => { if(_isHwASE(r)){ const _m=monthNum(r['월']); const _a=Number(r[_amKeyE(r)]||0); if(_m&&_a) _dept['고객만족'][_m]=(_dept['고객만족'][_m]||0)+_a; } });   // 해외 A/S → 고객만족
         for(let _em=1; _em<=12; _em++){ let _bs=0; for(const _bk in _dept) _bs+=(_dept[_bk][_em]||0); const _adj=(_etcMo[_em]||0)-_bs; if(Math.round(_adj)) _dept['기타'][_em]=(_dept['기타'][_em]||0)+_adj; }
         Object.keys(_dept).forEach(_k => { const _o={}; Object.keys(_dept[_k]).forEach(_m => { const _v=Math.round(_dept[_k][_m]); if(_v)_o[_m]=_v; }); _dept[_k]=_o; });
         CONS.etcDept2026 = _dept;
@@ -5147,7 +5151,7 @@ function consParseExcel(input) {
 
       // ── 해외 데이터 집계 및 저장 ────────────────────────────────
       setMsg('해외 매출 데이터 집계 중...');
-      const _intlRows = sn => _sj(sn).filter(r => r['국내외'] === '해외');
+      const _intlRows = sn => _sj(sn).filter(r => r['국내외'] === '해외' && !/A\/S/i.test(String(r['구분#4']||'')));   // 해외 A/S 제외(고객만족으로 편입)
       const _ri25 = _intlRows(sheet25name), _ri26 = _intlRows(sheet26name);
       const _aggIntl = (r25i, r26i) => {
         const mo={},mu={},mq={},pr={},pc={},pd={},pm={},pmq={},pq={},ct={},rp={};

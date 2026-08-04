@@ -268,7 +268,11 @@ function build(sheets, existing){
   var _incl=function(r){return !EXCL_DEPT.test(String(r['사용부서']||''));};
   var consR=rows26.filter(function(r){return r['구분#2']==='소모품'&&r['국내외']==='국내'&&_incl(r);});
   var devR =rows26.filter(function(r){return (r['구분#2']==='제품군'||r['구분#2']==='의료기기')&&r['국내외']==='국내'&&_incl(r);});
-  var intlR=rows26.filter(function(r){return r['국내외']==='해외';});
+  // 해외 A/S소모품 = 회계상 해외법인 부서지만 사업부 기준(회계팀 일보)은 '고객만족'. 해외영업 실적서 제외하고 아래 기타(고객만족)로 편입.
+  var _isHwAS=function(r){return r['국내외']==='해외'&&/A\/S/i.test(String(r['구분#4']||''));};
+  var intlR=rows26.filter(function(r){return r['국내외']==='해외'&&!_isHwAS(r);});
+  var _hwAsMo={};
+  rows26.forEach(function(r){ if(_isHwAS(r)){ var _hm=monthNum(r['월']); var _ha=num(r['금액']); if(_hm&&_ha) _hwAsMo[_hm]=(_hwAsMo[_hm]||0)+_ha; } });
   // updatedAt: 소모품 2026 날짜 max (없으면 전체 rows26 max)
   var dates=consR.map(function(r){return r['날짜'];}).filter(Boolean);
   if(!dates.length) dates=rows26.map(function(r){return r['날짜'];}).filter(Boolean);
@@ -303,7 +307,7 @@ function build(sheets, existing){
   var _domAll={};
   rows26.forEach(function(r){ if(r['국내외']==='국내'){ var _m=monthNum(r['월']); var _a=num(r['금액']); if(_m&&_a) _domAll[_m]=(_domAll[_m]||0)+_a; } });
   var _etcMo={};
-  for(var _em=1;_em<=12;_em++){ var _ev=Math.round((_domAll[_em]||0)-(a26.monthly[_em]||0)-(d26.monthly2026[_em]||0)); if(_ev) _etcMo[_em]=_ev; }
+  for(var _em=1;_em<=12;_em++){ var _ev=Math.round((_domAll[_em]||0)-(a26.monthly[_em]||0)-(d26.monthly2026[_em]||0)+(_hwAsMo[_em]||0)); if(_ev) _etcMo[_em]=_ev; }   // +해외 A/S(고객만족)
   CONS.etcMonthly2026=_etcMo; CONS.etcMonthly2025=exMain.etcMonthly2025||{};
   // 기타를 사용부서별로 분리(서지컬/B2C/고객만족/기타=의료기기·조정) — 매출현황 서지컬 행 표시용. 버킷합≠잔차분은 '기타'로 흡수해 etcMonthly와 정합 유지.
   var _incSet=new Set(); consR.forEach(function(r){_incSet.add(r);}); devR.forEach(function(r){_incSet.add(r);});
@@ -312,6 +316,7 @@ function build(sheets, existing){
     var _m2=monthNum(r['월']); var _a2=num(r['금액']); if(!_m2||!_a2) return;
     var _d2=String(r['사용부서']||''); var _b=/지컬/.test(_d2)?'서지컬':(/B2C/i.test(_d2)?'B2C':(/고객만족|CS/.test(_d2)?'고객만족':'기타'));
     _dept[_b][_m2]=(_dept[_b][_m2]||0)+_a2; });
+  rows26.forEach(function(r){ if(_isHwAS(r)){ var _hm2=monthNum(r['월']); var _ha2=num(r['금액']); if(_hm2&&_ha2) _dept['고객만족'][_hm2]=(_dept['고객만족'][_hm2]||0)+_ha2; } });   // 해외 A/S → 고객만족
   for(var _em2=1;_em2<=12;_em2++){ var _bs=0; for(var _bk in _dept) _bs+=(_dept[_bk][_em2]||0); var _adj=(_etcMo[_em2]||0)-_bs; if(Math.round(_adj)) _dept['기타'][_em2]=(_dept['기타'][_em2]||0)+_adj; }
   Object.keys(_dept).forEach(function(_k){ var _o={}; Object.keys(_dept[_k]).forEach(function(_m3){ var _v3=Math.round(_dept[_k][_m3]); if(_v3) _o[_m3]=_v3; }); _dept[_k]=_o; });
   CONS.etcDept2026=_dept; CONS.etcDept2025=exMain.etcDept2025||{};
