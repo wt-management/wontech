@@ -1533,7 +1533,7 @@ function _pendingAgg(yr){
 function buildSelectors(){
   const mOpts=Array.from({length:12},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+'월</option>').join('');
   ['ov-from','ov-to','q-from','q-to'].forEach(id=>{document.getElementById(id).innerHTML=mOpts;});
-  const lastMo=_lastDataMonth();   // 회계 데이터가 있는 마지막 월(빈 진행월 제외 — 전년비 왜곡 방지)
+  const lastMo=(typeof _curMonth==='function'?_curMonth():_lastDataMonth());   // 달력 현재월 자동 반영(월 바뀌면 즉시 전환) — 월초 빈달은 '월별 추이'·'당월 매출 관리'로 보완
   document.getElementById('ov-from').value=1; document.getElementById('ov-to').value=lastMo;
   document.getElementById('q-from').value=1; document.getElementById('q-to').value=lastMo;
   qState.f=1; qState.t=lastMo;
@@ -1741,7 +1741,7 @@ function renderOps(){
 }
 
 // ── 전사 종합 ────────────────────────────────────────────
-function ovSetPeriod(f,t){ if(t==='ytd')t=(typeof _lastDataMonth==='function'?_lastDataMonth():12); var a=document.getElementById('ov-from'),b=document.getElementById('ov-to'); if(a)a.value=f; if(b)b.value=t; renderOverview(); }
+function ovSetPeriod(f,t){ if(t==='ytd')t=(typeof _curMonth==='function'?_curMonth():(typeof _lastDataMonth==='function'?_lastDataMonth():12)); var a=document.getElementById('ov-from'),b=document.getElementById('ov-to'); if(a)a.value=f; if(b)b.value=t; renderOverview(); }
 function renderOverview(){
   const f=+document.getElementById('ov-from').value, t=+document.getElementById('ov-to').value;
   const pend=_pendingAgg(2026);   // 예정분(국내+해외 미반영) — 항상 계산
