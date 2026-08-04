@@ -1432,6 +1432,38 @@ async function afterLogin(user){
 
 // ── 데이터 로드 ──────────────────────────────────────────
 let _loadErr=false;
+// A/S소모품(고객만족) 해외영업 실적서 제외 — 회계팀 사업부 기준. 종합에선 아래에서 기타(고객만족)로 이동시켜 전사 총액 보존.
+function _stripAS(I){
+  if(!I||typeof I!=='object'||I._asStripped) return I;
+  var AS='A/S소모품';
+  var hasTx=false;
+  if(I.countries){ var _ks=Object.keys(I.countries);
+    for(var i=0;i<_ks.length&&!hasTx;i++){ var _cd=I.countries[_ks[i]].clientData||{}; var _cks=Object.keys(_cd);
+      for(var j=0;j<_cks.length;j++){ if(((_cd[_cks[j]]||{}).txns||[]).length){ hasTx=true; break; } } } }
+  if(hasTx){
+    var nMo={}, nTot=0;
+    Object.keys(I.countries).forEach(function(cn){ var c=I.countries[cn]; var ct=0, cm={};
+      Object.keys(c.clientData||{}).forEach(function(ck){ var cd=c.clientData[ck]; if(!cd) return;
+        var t=0, mm={}, pr={}, tx=(cd.txns||[]).filter(function(x){ return x[1]!==AS; });
+        tx.forEach(function(x){ var a=Number(x[3])||0; t+=a; var mo=parseInt(String(x[0]).slice(5,7),10); if(mo)mm[mo]=(mm[mo]||0)+a; if(x[1])pr[x[1]]=(pr[x[1]]||0)+a; });
+        cd.txns=tx; cd.total=Math.round(t); cd.m=mm; cd.prods=pr; ct+=t; Object.keys(mm).forEach(function(m){ cm[m]=(cm[m]||0)+mm[m]; });
+      });
+      c.total=Math.round(ct); c.m=cm; if(c.prods)delete c.prods[AS];
+      nTot+=ct; Object.keys(cm).forEach(function(m){ nMo[m]=(nMo[m]||0)+cm[m]; });
+    });
+    Object.keys(nMo).forEach(function(m){ nMo[m]=Math.round(nMo[m]); });
+    I.monthly=nMo; I.total=Math.round(nTot);
+  } else {
+    var asMo=(I.prodMo&&I.prodMo[AS])||{}; var s=0;
+    if(I.monthly){ Object.keys(asMo).forEach(function(m){ if(I.monthly[m]!=null){ I.monthly[m]=Math.round(I.monthly[m]-asMo[m]); s+=asMo[m]; } }); }
+    if(typeof I.total==='number') I.total=Math.round(I.total-s);
+    if(I.countries){ Object.keys(I.countries).forEach(function(cn){ var c=I.countries[cn];
+      if(c.prods&&c.prods[AS]!=null){ if(typeof c.total==='number')c.total=Math.round(c.total-c.prods[AS]); delete c.prods[AS]; } }); }
+  }
+  ['products','prods_cons','prods_dev','prodQty','prodMo','prodMoQty'].forEach(function(k){ if(I[k]&&I[k][AS]!=null) delete I[k][AS]; });
+  if(I.reps){ Object.keys(I.reps).forEach(function(sl){ var rp=I.reps[sl]; if(rp&&rp.prods&&rp.prods[AS]!=null){ if(typeof rp.total==='number')rp.total=Math.round(rp.total-rp.prods[AS]); delete rp.prods[AS]; } }); }
+  I._asStripped=true; return I;
+}
 async function loadAll(){
   _loadErr=false;
   try{
@@ -1444,6 +1476,16 @@ async function loadAll(){
     DEVICE=(d.data&&d.data.data)||{};
     const ib=(i.data&&i.data.data)||{};
     INTL=Object.assign({}, ib.INTL2026||{}, {data2025:ib.INTL2025||{}, updatedAt:ib.updatedAt||''});
+    // 해외 A/S소모품 → 해외영업서 빼고 기타(고객만족)로 이동 (회계팀 사업부 정합 · 전사 총액 불변 · 재업로드 후엔 A/S 부재로 자동 무동작)
+    try{
+      var _asMo=(INTL.prodMo&&INTL.prodMo['A/S소모품'])?Object.assign({},INTL.prodMo['A/S소모품']):{};
+      var _asMo25=(INTL.data2025&&INTL.data2025.prodMo&&INTL.data2025.prodMo['A/S소모품'])?Object.assign({},INTL.data2025.prodMo['A/S소모품']):{};
+      _stripAS(INTL); if(INTL.data2025)_stripAS(INTL.data2025);
+      CONS.etcMonthly2026=CONS.etcMonthly2026||{}; CONS.etcDept2026=CONS.etcDept2026||{}; CONS.etcDept2026['고객만족']=CONS.etcDept2026['고객만족']||{};
+      Object.keys(_asMo).forEach(function(m){ CONS.etcMonthly2026[m]=(CONS.etcMonthly2026[m]||0)+_asMo[m]; CONS.etcDept2026['고객만족'][m]=(CONS.etcDept2026['고객만족'][m]||0)+_asMo[m]; });
+      CONS.etcMonthly2025=CONS.etcMonthly2025||{}; CONS.etcDept2025=CONS.etcDept2025||{}; CONS.etcDept2025['고객만족']=CONS.etcDept2025['고객만족']||{};
+      Object.keys(_asMo25).forEach(function(m){ CONS.etcMonthly2025[m]=(CONS.etcMonthly2025[m]||0)+_asMo25[m]; CONS.etcDept2025['고객만족'][m]=(CONS.etcDept2025['고객만족'][m]||0)+_asMo25[m]; });
+    }catch(_ae){ console.warn('A/S 이동 실패',_ae); }
   }catch(e){ console.warn('cons_cache load', e); _loadErr=true; }
   try{ const {data:pd}=await _sb.from('pending_sales').select('*'); PENDING=pd||[]; }catch(e){ PENDING=[]; }
   try{ const {data:ip}=await _sb.from('cons_cache').select('data').eq('key','ilbo_pending').maybeSingle(); ILBO_PEND=((ip&&ip.data&&ip.data.rows)||[]).filter(function(p){return p.status!=='반영됨'&&p.status!=='취소';}); }catch(e){ ILBO_PEND=[]; }
