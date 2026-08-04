@@ -1806,8 +1806,19 @@ function renderOverview(){
   // 이번달 회계+예정
   renderThisMonth();
 
+  // 전월까지 누계(1~데이터월) — 달력 당월이 회계 미반영(빈 달)일 때 왜곡 만회용 병기
+  var _prevBand=null;
+  try{ var _lm=(typeof _lastDataMonth==='function'?_lastDataMonth():t);
+    if(t>_lm && _lm>=1){
+      var _pTotC=sumMo(CONS.monthly2026,1,_lm)+sumMo(DEVICE.monthly2026,1,_lm)+sumMo(INTL.monthly,1,_lm)+sumMo(CONS.etcMonthly2026,1,_lm);
+      var _pPend=sumMo(pend.consMonthly,1,_lm)+sumMo(pend.devMonthly,1,_lm)+sumMo(pend.intlMonthly,1,_lm);
+      var _pTotPrev=sumMo(CONS.monthly2025,1,_lm)+sumMo(DEVICE.monthly2025,1,_lm)+sumMo(INTL.data2025&&INTL.data2025.monthly,1,_lm)+sumMo(CONS.etcMonthly2025,1,_lm);
+      var _mTot=((CONS.monthly2026&&CONS.monthly2026[_lm])||0)+((DEVICE.monthly2026&&DEVICE.monthly2026[_lm])||0)+((INTL.monthly&&INTL.monthly[_lm])||0)+((CONS.etcMonthly2026&&CONS.etcMonthly2026[_lm])||0);
+      _prevBand={pm:_lm, mono:_mTot, cum:_pTotC+_pPend, cumC:_pTotC, cumPrev:_pTotPrev};
+    }
+  }catch(e){}
   // 스코어보드 히어로 + 인사이트 (이미 계산된 로컬만 전달)
-  try{ _renderScoreboard(f,t,{totalC,totalI,totalPrev,allPend,domC,domI,domPrev,intl,intlPend,intlI,intlPrev,etcC,devTot,consTot}); }catch(e){ console.warn('scoreboard',e); }
+  try{ _renderScoreboard(f,t,{totalC,totalI,totalPrev,allPend,domC,domI,domPrev,intl,intlPend,intlI,intlPrev,etcC,devTot,consTot}, _prevBand); }catch(e){ console.warn('scoreboard',e); }
 }
 function renderChannelMix(f,t){
   const pend=_pendingAgg(2026);
@@ -2253,7 +2264,7 @@ function _sbCat(d){
   return '<div class="sb-cell sm"><div class="sb-l"><i class="bi bi-boxes"></i>장비 vs 소모품 <span style="font-size:9.5px;color:#475569">미반영 포함</span></div>'+
     row('장비',dev,'#7c3aed')+row('소모품',cons,'#0891b2')+'</div>';
 }
-function _renderScoreboard(f,t,d){
+function _renderScoreboard(f,t,d,prevBand){
   const host=document.getElementById('ov-hero');
   if(!host) return;
   const hb=v=>v===null?'<b>-</b>':(v>=0?'<b class="up">▲'+Math.abs(v).toFixed(1)+'%</b>':'<b class="dn">▼'+Math.abs(v).toFixed(1)+'%</b>');
@@ -2280,7 +2291,14 @@ function _renderScoreboard(f,t,d){
       +'<div class="sb-s">'+hb(pct(d.intl,d.intlPrev))+' · 비중 '+intlShare+'%</div>'
       +'<div class="sb-s" style="font-size:10.5px;margin-top:1px">회계 '+fmtW(d.intl)+' + 미반영 '+fmtW(d.intlI-d.intl)+'</div></div>'
     +_sbCat(d)
-    +'</div>';
+    +'</div>'
+    +(prevBand?('<div style="display:flex;flex-wrap:wrap;align-items:center;gap:7px 18px;margin-top:12px;padding-top:11px;border-top:1px solid var(--hero-line);font-size:12px;color:var(--hero-sub)">'
+      +'<span style="font-weight:800;color:var(--hero-ink);background:rgba(255,255,255,.55);border:1px solid var(--hero-line);border-radius:7px;padding:3px 11px">전월 · '+prevBand.pm+'월</span>'
+      +'<span>단월 <b style="color:var(--hero-ink);font-size:13.5px">'+fmtW(prevBand.mono)+'</b></span>'
+      +'<span>전월까지 누계<span style="color:var(--hero-sub)">(1~'+prevBand.pm+'월)</span> <b style="color:var(--hero-ink);font-size:13.5px">'+fmtW(prevBand.cum)+'</b></span>'
+      +'<span>전년 동기比 '+hb(pct(prevBand.cumC,prevBand.cumPrev))+'</span>'
+      +'<span style="margin-left:auto;font-size:11px;color:var(--hero-sub)"><i class="bi bi-info-circle me-1"></i>당월 '+t+'월은 회계 반영 전(빈 달) · 전월 기준 실질치</span>'
+      +'</div>'):'');
 }
 function renderThisMonth(){
   const tmo=_curMonth();   // 보고 기준월(데이터 없는 새 달로 롤오버 방지)
