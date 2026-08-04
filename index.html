@@ -3389,6 +3389,26 @@ function _ovPeriodChange() {
 }
 
 let _ovChart = null;
+function _ovSbCss(){ if(document.getElementById('ovsb-css'))return; var st=document.createElement('style'); st.id='ovsb-css'; st.textContent=''
+  +'.ovsb{background:linear-gradient(135deg,#eef5ff 0%,#f7fbff 55%,#eafaf6 130%);border-radius:16px;padding:17px 22px 15px;color:#1c2534;margin-bottom:14px;box-shadow:0 8px 24px rgba(15,23,42,.10)}'
+  +'.ovsb-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px;flex-wrap:wrap}'
+  +'.ovsb-title{font-size:12px;font-weight:700;color:#5b7591;letter-spacing:.04em}'
+  +'.ovsb-note{font-size:11px;color:#5b7591}'
+  +'.ovsb-grid{display:grid;grid-template-columns:1.05fr 1.05fr 1.15fr 1.1fr .9fr .9fr;gap:0}'
+  +'.ovsb-cell{padding:2px 16px 0;border-left:1px solid rgba(15,42,67,.1);min-width:0}'
+  +'.ovsb-cell:first-child{padding-left:0;border-left:none}'
+  +'.ovsb-l{font-size:11px;font-weight:600;color:#5b7591;display:flex;align-items:center;gap:5px;white-space:nowrap}'
+  +'.ovsb-l i{color:#0f766e}'
+  +'.ovsb-v{font-size:1.95rem;font-weight:750;line-height:1.08;margin:5px 0 3px;color:#1c2534;font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:-.01em}'
+  +'.ovsb-sm .ovsb-v{font-size:1.45rem}'
+  +'.ovsb-s{font-size:11px;color:#5b7591;line-height:1.5}'
+  +'.ovsb-gauge{height:8px;background:rgba(148,163,184,.22);border-radius:99px;position:relative;margin:11px 0 6px}'
+  +'.ovsb-gauge .fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#14b8a6,#5eead4);max-width:100%}'
+  +'.ovsb-gauge .pace{position:absolute;top:-3px;width:2px;height:14px;background:#d97706;border-radius:2px}'
+  +'.ovsb-clk{cursor:pointer;border-radius:10px;transition:background .15s ease}'
+  +'.ovsb-clk:hover{background:rgba(148,163,184,.10)}'
+  +'@media(max-width:960px){.ovsb-grid{grid-template-columns:1fr 1fr;gap:14px 0}.ovsb-cell{border-left:none;padding-left:0}.ovsb-cell:nth-child(even){border-left:1px solid rgba(15,42,67,.1);padding-left:16px}.ovsb-v{font-size:1.7rem}}';
+  document.head.appendChild(st); }
 function _renderMyPerf(){
   var el=document.getElementById('my-perf'); if(!el)return;
   var me=''; try{ me=(currentUserName()||'').trim(); }catch(e){}
@@ -3517,12 +3537,24 @@ function renderSalesOverview() {
     +'<span style="font-size:13.5px;color:#475569">제품 <b style="color:#182230">'+fmtW(_pmDevV)+'</b> · 소모품 <b style="color:#182230">'+fmtW(_pmConsV)+'</b></span>'
     +'<span style="margin-left:auto;font-size:12px;color:#94a3b8;flex-shrink:0">전년 '+fmtW(_pmPrev)+' '+badge(_pmYoy)+'</span>'
   +'</div>';
-  const _ovKpiHtml='<div class="cdud" style="padding:15px 20px;margin:0">'
-    +'<div style="display:flex;flex-wrap:wrap;align-items:stretch;padding:2px 0 2px">'
-      +_ovHalf('당월 · '+_endM+'월', fmtW(_moVal), _moSub, "openOvMonth("+_endM+","+_endY+")", _ovMini('제품',_moDevC,_moDevPend,_moDevPrev,"openOvMonth("+_endM+","+_endY+")"), _ovMini('소모품',_moConsC,_moConsPend,_moConsPrev,"openOvMonth("+_endM+","+_endY+")"), false)
-      +_ovHalf('누계 · '+_endY+'년 '+_endM+'월까지(YTD)', fmtW(_ytdVal), _ytdSub, "openOvCategory('all','ov')", _ovMini('제품',_ytdDevC,_ytdDevPend,_ytdDevPrev,"openOvCategory('dev','ov')"), _ovMini('소모품',_ytdConsC,_ytdConsPend,_ytdConsPrev,"openOvCategory('cons','ov')"), true)
+  const _ytdDevV=incPend?(_ytdDevC+_ytdDevPend):_ytdDevC, _ytdConsV=incPend?(_ytdConsC+_ytdConsPend):_ytdConsC;
+  var _yTgt=0,_cTgt=0; try{ (DB.d.targets||[]).forEach(function(tg){ var y=String(tg.ym||'').slice(0,4), mm=parseInt(String(tg.ym||'').slice(5,7),10)||0, a=Number(tg.target)||0; if(y===String(_endY)){ _yTgt+=a; if(mm>=1&&mm<=_endM)_cTgt+=a; } }); }catch(e){}
+  const _yAch=_yTgt>0?(_ytdVal/_yTgt*100):null, _cAch=_cTgt>0?(_ytdVal/_cTgt*100):null, _pace=Math.round(_endM/12*100);
+  _ovSbCss();
+  const _sbC=(cls,lab,ic,val,sub,click)=>'<div class="ovsb-cell'+cls+' ovsb-clk" onclick="'+click+'"><div class="ovsb-l"><i class="bi '+ic+'"></i>'+lab+' <span style="color:#94a3b8">›</span></div><div class="ovsb-v">'+val+'</div><div class="ovsb-s">'+sub+'</div></div>';
+  const _gauge=_yTgt>0
+    ? '<div class="ovsb-gauge"><div class="fill" style="width:'+Math.min(_yAch,100).toFixed(1)+'%"></div><div class="pace" style="left:'+_pace+'%"></div></div><div class="ovsb-s">연간 목표 '+fmtW(_yTgt)+' · 누적달성 '+(_cAch==null?'-':_cAch.toFixed(1)+'%')+' · <b style="color:#d97706">시간진도 '+_pace+'%</b></div>'
+    : '<div class="ovsb-s" style="margin-top:12px;color:#94a3b8">담당자별 목표(targets) 미적재 — 성과 탭에서 등록 시 표시</div>';
+  const _ovKpiHtml='<div class="ovsb">'
+    +'<div class="ovsb-head"><span class="ovsb-title"><i class="bi bi-lightning-charge-fill me-1"></i>한국영업 종합 · 당월·전월·누계</span><span class="ovsb-note">실적 = 회계 + 미반영 · 기준일 '+_escH(CONS.updatedAt||DEVICE.updatedAt||'')+'</span></div>'
+    +'<div class="ovsb-grid">'
+      +_sbC('','당월 · '+_endM+'월','bi-calendar-check', fmtW(_moVal), '회계 '+fmtW(_moC)+(incPend&&_moPend>0?' + 미반영 '+fmtW(_moPend):'')+' · 전년 '+fmtW(_moPrev)+' '+badge(_moYoy), 'openOvMonth('+_endM+','+_endY+')')
+      +_sbC('','전월 · '+_pmM+'월','bi-calendar-minus', fmtW(_pmVal), '제품 '+fmtW(_pmDevV)+' · 소모품 '+fmtW(_pmConsV)+' · 전년 '+fmtW(_pmPrev)+' '+badge(_pmYoy), 'openOvMonth('+_pmM+','+_pmY+')')
+      +_sbC('','누계 · '+_endM+'월까지','bi-graph-up-arrow', fmtW(_ytdVal), '회계 '+fmtW(_ytdC)+(incPend&&_ytdPend>0?' + 미반영 '+fmtW(_ytdPend):'')+' · 전년 '+fmtW(_ytdPrev)+' '+badge(_ytdYoy), "openOvCategory('all','ov')")
+      +'<div class="ovsb-cell ovsb-clk" onclick="openOvCategory(\'all\',\'ov\')"><div class="ovsb-l"><i class="bi bi-bullseye"></i>연간 목표 진도</div><div class="ovsb-v">'+(_yAch==null?'–':_yAch.toFixed(1)+'%')+'</div>'+_gauge+'</div>'
+      +_sbC(' ovsb-sm','제품 · 연간','bi-box-seam', fmtW(_ytdDevV), '회계 '+fmtW(_ytdDevC)+' '+badge(_ytdDevC>0&&_ytdDevPrev>0?(_ytdDevC/_ytdDevPrev-1)*100:null), "openOvCategory('dev','ov')")
+      +_sbC(' ovsb-sm','소모품 · 연간','bi-capsule', fmtW(_ytdConsV), '회계 '+fmtW(_ytdConsC)+' '+badge(_ytdConsC>0&&_ytdConsPrev>0?(_ytdConsC/_ytdConsPrev-1)*100:null), "openOvCategory('cons','ov')")
     +'</div>'
-    +_pmBand
   +'</div>';
   const _ovKpiEl=document.getElementById('ov-kpi'); if(_ovKpiEl){ _ovKpiEl.className='mb-3'; _ovKpiEl.innerHTML=_ovKpiHtml; }
 
