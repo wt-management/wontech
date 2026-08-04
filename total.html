@@ -203,6 +203,39 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
   body{overflow-x:hidden}
 }
 /* ── 전역 PDF 추출 + 인쇄 ── */
+/* ══ 목표 달성률: 임원 가독성 레이아웃(큰 글씨·문서형 표) ══ */
+.gx-head{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:4px 2px 14px;border-bottom:3px solid #16324f;margin-bottom:16px}
+.gx-head-l{font-size:20px;font-weight:800;color:#141c28;letter-spacing:-.01em}
+.gx-head-l .gx-per{font-size:14px;font-weight:600;color:#5b6878;margin-left:6px}
+.gx-head-r{display:flex;align-items:baseline;gap:14px}
+.gx-big{font-size:44px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.gx-head-s{font-size:16px;color:#37414f}
+.gx-head-s b{color:#141c28;font-weight:700}
+.gx-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:24px}
+.gx-fact{background:#f7f9fc;border:1px solid #dde5ef;border-radius:10px;padding:13px 16px;display:flex;flex-direction:column;gap:4px}
+.gx-fact .l{font-size:14px;font-weight:600;color:#4a5666}
+.gx-fact .v{font-size:24px;font-weight:800;color:#141c28;font-variant-numeric:tabular-nums;line-height:1.1}
+.gx-sec{font-size:18px;font-weight:800;color:#141c28;margin:26px 0 10px;padding-bottom:7px;border-bottom:2px solid #16324f}
+.gx-tbl{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.gx-tbl thead th{font-size:14px;font-weight:700;color:#4a5666;background:#f2f5f9;padding:11px 14px;text-align:right;white-space:nowrap;border-bottom:1px solid #cfd9e5}
+.gx-tbl thead th.l{text-align:left}
+.gx-tbl td{padding:15px 14px;font-size:16px;border-bottom:1px solid #e7edf4;white-space:nowrap}
+.gx-nm{font-weight:700;color:#141c28;text-align:left;font-size:17px}
+.gx-arw{color:#93a1b3;margin-left:7px;font-weight:400}
+.gx-n{text-align:right;font-weight:700;color:#141c28}
+.gx-mut{color:#5b6878;font-weight:600}
+.gx-pc{text-align:right;font-size:20px;font-weight:800;min-width:150px}
+.gx-track{display:inline-block;width:74px;height:9px;background:#e7edf4;border-radius:5px;overflow:hidden;margin-left:11px;vertical-align:middle}
+.gx-fill{display:block;height:100%;border-radius:5px}
+.gx-sum td{background:#eef3f9;font-size:17px;border-bottom:2px solid #c8d5e4}
+.gx-sum .gx-nm{font-size:18px}
+.gx-item:hover td{background:#f7fafd}
+.gx-ins{margin-top:22px;background:#fffdf3;border:1px solid #f0dfa8;border-left:5px solid #e0a800;border-radius:10px;padding:16px 20px;font-size:16px;line-height:1.75;color:#3a3220}
+@media(max-width:820px){
+  .gx-big{font-size:34px}.gx-head-l{font-size:17px}
+  .gx-tbl thead th:nth-child(3),.gx-tbl td:nth-child(3){display:none}
+  .gx-tbl td{padding:12px 9px;font-size:15px}.gx-pc{min-width:auto;font-size:18px}.gx-track{display:none}
+}
 #pdf-fab{position:fixed;bottom:18px;right:18px;z-index:90;background:#475569;color:#fff;border:0;border-radius:22px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(15,23,42,.28)}
 #pdf-fab:hover{background:#334155}
 @media print{
@@ -2556,16 +2589,18 @@ function renderGoals(){
   const achCol=_achCol(achC);
   const dTot={act:S(dom,'act'),pnd:S(dom,'pnd'),tgt:S(dom,'tgt'),act25:S(dom,'act25')};
   const iTot={act:S(intl,'act'),pnd:S(intl,'pnd'),tgt:S(intl,'tgt'),act25:S(intl,'act25')};
-  // ── 상단 요약 스트립 (히어로·KPI 4장·합계 카드 통합, 여백 제거) ──
-  let h='<div class="g-top"><div class="g-top-main"><div class="g-top-k">전사 목표 달성률 <span style="font-weight:500;color:#94a3b8">· 1~'+t+'월 누적</span></div>'+
-    '<div class="g-top-vr"><span class="g-top-v" style="color:'+achCol+'">'+(achC==null?'-':achC.toFixed(0)+'%')+'</span><span class="g-top-s">실적 '+fmtW(totAct)+' / 목표 '+fmtW(totTgt)+'</span></div></div>'+
-    '<div class="g-top-stats">'+
-      [['예정 포함 전망',(achP==null?'-':achP.toFixed(0)+'%'),_achCol(achP)],
-       ['100%까지 필요',(need>0?fmtW(need):'0원'),need>0?'#dc2626':'#16a34a'],
-       ['미달 갭 합계',(gapSum>0?fmtW(gapSum):'0원'),gapSum>0?'#dc2626':'#16a34a']].map(function(s){
-         return '<div class="g-st"><div class="k">'+s[0]+'</div><div class="v" style="color:'+s[2]+'">'+s[1]+'</div></div>';}).join('')+
-      '<div class="g-st"><div class="k">미달 / 초과 부문</div><div class="v"><span style="color:#dc2626">'+short.length+'</span> <span style="color:#cbd5e1;font-weight:500">/</span> <span style="color:#16a34a">'+over.length+'</span></div></div>'+
-    '</div></div>';
+  // ══ 임원용 문서형 레이아웃(큰 글씨·표 중심) ══
+  const _w=v=>fmtW(v);
+  let h='<div class="gx-head">'+
+    '<div class="gx-head-l">전사 목표 달성률 <span class="gx-per">1~'+t+'월 누적</span></div>'+
+    '<div class="gx-head-r"><span class="gx-big" style="color:'+achCol+'">'+(achC==null?'-':achC.toFixed(0)+'%')+'</span>'+
+      '<span class="gx-head-s">실적 <b>'+_w(totAct)+'</b> &nbsp;/&nbsp; 목표 <b>'+_w(totTgt)+'</b></span></div></div>'+
+    '<div class="gx-facts">'+
+      '<div class="gx-fact"><span class="l">100%까지 필요</span><span class="v" style="color:'+(need>0?'#c0392b':'#0f766e')+'">'+(need>0?_w(need):'달성')+'</span></div>'+
+      '<div class="gx-fact"><span class="l">예정 포함 전망</span><span class="v">'+(achP==null?'-':achP.toFixed(0)+'%')+'</span></div>'+
+      '<div class="gx-fact"><span class="l">목표 미달 부문</span><span class="v" style="color:'+(short.length?'#c0392b':'#0f766e')+'">'+short.length+'개</span></div>'+
+      '<div class="gx-fact"><span class="l">목표 초과 부문</span><span class="v" style="color:#0f766e">'+over.length+'개</span></div>'+
+    '</div>';
   // 공통 계산
   const _calc=x=>{ const actC=x.tgt>0?x.act/x.tgt*100:null, a=x.act+x.pnd, r=x.tgt>0?a/x.tgt*100:null, gap=x.tgt>0?x.act-x.tgt:null, col=_achCol(actC), bcol=_achBar(actC);
     const rc=actC==null?0:Math.min(actC,100), rg=r==null?0:Math.min(Math.max(r-actC,0),100-rc), yoy=(x.act25>0)?pct(x.act,x.act25):null;
@@ -2591,14 +2626,30 @@ function renderGoals(){
           '<span class="gc-meta"><span class="gc-gap" style="color:'+c.gcol+'">'+c.gapH+'</span>'+projH+' <span class="gc-sub">· 전년</span> '+yoyH+'</span></div>'+
       '</div></div>'; };
   const rk=x=>x.tgt>0?x.act/x.tgt:9;
-  h+='<div class="g-sec">국내 영업 <span style="font-weight:500;color:#94a3b8;font-size:11px">· 위험(미달) 순</span></div>'+
-    band('국내 합계',dTot)+'<div class="g-cards">'+dom.slice().sort((a,b)=>rk(a)-rk(b)).map(card).join('')+'</div>';
-  h+='<div class="g-sec">해외 영업 (지역·법인) <span style="font-weight:500;color:#94a3b8;font-size:11px">· 위험(미달) 순</span></div>'+
-    band('해외 합계',iTot)+'<div class="g-cards">'+intl.slice().sort((a,b)=>rk(a)-rk(b)).map(card).join('')+'</div>';
+  // 표 1행 = 부문 1개(큰 글씨·좌측 정렬 이름·우측 정렬 숫자)
+  const gxRow=(x,isSum)=>{ const c=_calc(x);
+    const pcCol=c.actC==null?'#64748b':(c.actC>=100?'#0f766e':c.actC>=70?'#182230':c.actC>=50?'#b45309':'#c0392b');
+    const gapTxt=c.gap==null?'–':(c.gap>=0?'+'+fmtW(c.gap):'−'+fmtW(-c.gap));
+    const gapCol=c.gap==null?'#64748b':(c.gap>=0?'#0f766e':'#c0392b');
+    const yoyTxt=(c.yoy===null)?'–':((c.yoy>=0?'▲':'▼')+Math.abs(c.yoy).toFixed(1)+'%');
+    const yoyCol=(c.yoy===null)?'#94a3b8':(c.yoy>=0?'#0f766e':'#c0392b');
+    return '<tr class="'+(isSum?'gx-sum':'gx-item')+'"'+((!isSum&&x.dk)?(' onclick="openDrill(\''+_jsAttr(x.dk)+'\',1,'+t+')" style="cursor:pointer"'):'')+'>'+
+      '<td class="gx-nm">'+esc(x.label)+((!isSum&&x.dk)?'<span class="gx-arw">›</span>':'')+'</td>'+
+      '<td class="gx-n">'+_w(x.act)+'</td>'+
+      '<td class="gx-n gx-mut">'+_w(x.tgt)+'</td>'+
+      '<td class="gx-pc"><span style="color:'+pcCol+'">'+(c.actC==null?'–':c.actC.toFixed(0)+'%')+'</span>'+
+        '<span class="gx-track"><span class="gx-fill" style="width:'+c.rc.toFixed(1)+'%;background:'+(c.actC>=100?'#0f766e':c.actC>=70?'#93b4f4':c.actC>=50?'#f0b429':'#e07a70')+'"></span></span></td>'+
+      '<td class="gx-n" style="color:'+gapCol+';font-weight:700">'+gapTxt+'</td>'+
+      '<td class="gx-n" style="color:'+yoyCol+'">'+yoyTxt+'</td></tr>'; };
+  const gxTable=(title,sum,rows)=>'<div class="gx-sec">'+title+'</div>'+
+    '<table class="gx-tbl"><thead><tr><th class="l">부문</th><th>실적</th><th>목표</th><th>달성률</th><th>미달 / 초과</th><th>전년비</th></tr></thead>'+
+    '<tbody>'+gxRow(sum,true)+rows.slice().sort((a,b)=>rk(a)-rk(b)).map(x=>gxRow(x,false)).join('')+'</tbody></table>';
+  h+=gxTable('국내 영업',Object.assign({label:'국내 합계'},dTot),dom);
+  h+=gxTable('해외 영업 (지역·법인)',Object.assign({label:'해외 합계'},iTot),intl);
   const y2=short.slice(0,2).reduce((s,x)=>s-x.gap,0);
-  h+='<div class="exec-ins"><i class="bi bi-lightbulb-fill me-1" style="color:#f59e0b"></i>전사 <b>'+(achC==null?'-':achC.toFixed(0)+'%')+'</b> 달성, 100%까지 <b>'+fmtW(need)+'</b> 부족'+
-    (short.length?(' · 부족분의 <b>'+(gapSum>0?Math.round(y2/gapSum*100):0)+'%</b>가 <b style="color:#dc2626">'+short[0].label+(short[1]?' · '+short[1].label:'')+'</b>에서 발생 → 집중 드라이브'):'')+
-    (over.length?(' · <b style="color:#16a34a">'+over[0].label+'</b> '+over[0].r.toFixed(0)+'% → 목표 상향 검토'):'')+'</div>';
+  h+='<div class="gx-ins"><b>요약</b> · 전사 '+(achC==null?'-':achC.toFixed(0)+'%')+' 달성, 목표까지 <b style="color:#c0392b">'+fmtW(need)+'</b> 부족'+
+    (short.length?('<br>부족분의 <b>'+(gapSum>0?Math.round(y2/gapSum*100):0)+'%</b>가 <b style="color:#c0392b">'+esc(short[0].label)+(short[1]?' · '+esc(short[1].label):'')+'</b>에서 발생 → 집중 관리 필요'):'')+
+    (over.length?('<br><b style="color:#0f766e">'+esc(over[0].label)+'</b> '+over[0].r.toFixed(0)+'% 초과 달성 → 목표 상향 검토'):'')+'</div>';
   document.getElementById('goals-body').innerHTML=h;
 }
 function _goalMini(label,act,tgt){ const r=tgt>0?act/tgt*100:null; return '<div class="g-mini"><div class="g-ml">'+label+'</div><div class="g-mr" style="color:'+_achCol(r)+'">'+(r==null?'-':r.toFixed(0)+'%')+'</div><div class="muted" style="font-size:11px">'+fmtW(act)+' / '+fmtW(tgt)+'</div></div>'; }
