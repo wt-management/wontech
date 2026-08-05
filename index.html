@@ -11789,13 +11789,15 @@ function _dvBuild(){
   // '2025년'단독·'최근 12개월'·'2025~현재' 등 연도경계/비-2026 선택도 정확(전엔 txns2026을 무조건 올해로 봄).
   var curK={}; _cur.forEach(function(x){curK[x.y+'-'+x.m]=1;});
   var preK={}; _prev.forEach(function(x){preK[x.y+'-'+x.m]=1;});
-  var scan=function(txns,yr,keys,side,dl){ (txns||[]).forEach(function(t){ var mo=+t[0]; if(!keys[yr+'-'+mo])return; var p=t[3]||'기타', v=Number(t[4]||0), q=Number(t[5]||0); if(side==='a'&&t[1]&&t[1]>asOf)asOf=t[1];
+  // 입사일 컷오프: 거래의 (연-월)이 현담당 입사 이전이면 전임자로 귀속(신규입사자 유령 전년매출 방지) — 드릴/증감분해에도 동일 적용
+  var _ownerOf=function(hn,h,yr,mo){ var cur=repOf(hn,h); if(cur==='미지정'||cur==='미배정')return cur; var jm=(typeof _repJoinMo==='function')?_repJoinMo(cur):0; if(jm&&mo&&(yr*12+mo)<jm){ var pre=(typeof _repPredecessor==='function')?_repPredecessor(hn,h,cur):cur; return pre||'전임자(미상)'; } return cur; };
+  var scan=function(txns,yr,keys,side,hn,h){ (txns||[]).forEach(function(t){ var mo=+t[0]; if(!keys[yr+'-'+mo])return; var dl=_ownerOf(hn,h,yr,mo); var p=t[3]||'기타', v=Number(t[4]||0), q=Number(t[5]||0); if(side==='a'&&t[1]&&t[1]>asOf)asOf=t[1];
     acc(prod,p,side,v,q); acc(dealer,dl,side,v,q); acc2(pByD,p,dl,side,v,q); acc2(dByP,dl,p,side,v,q);
     acc2(pMon,p,mo,side,v,q); acc2(dMon,dl,mo,side,v,q); acc2(mProd,mo,p,side,v,q); acc2(mDealer,mo,dl,side,v,q);
     mQty[side][mo]=(mQty[side][mo]||0)+q; }); };
-  Object.keys(Hs).forEach(function(hn){ var h=Hs[hn]||{}; var dl=repOf(hn,h);
-    scan(h.txns2026,2026,curK,'a',dl); scan(h.txns2025,2025,curK,'a',dl);
-    scan(h.txns2026,2026,preK,'b',dl); scan(h.txns2025,2025,preK,'b',dl); });
+  Object.keys(Hs).forEach(function(hn){ var h=Hs[hn]||{};
+    scan(h.txns2026,2026,curK,'a',hn,h); scan(h.txns2025,2025,curK,'a',hn,h);
+    scan(h.txns2026,2026,preK,'b',hn,h); scan(h.txns2025,2025,preK,'b',hn,h); });
   // ── 회계 미반영(국내 device) 2026 'a'측 가산 + pa(미반영분) 별도 추적 ──
   var _pend=(typeof ILBO_PEND!=='undefined'&&ILBO_PEND)||[];
   var _devset={}; try{ ['products2026','products2025','prods_dev'].forEach(function(k){ Object.keys((DEVICE&&DEVICE[k])||{}).forEach(function(n){_devset[n]=1;}); }); }catch(e){}
