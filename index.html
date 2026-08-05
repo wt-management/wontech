@@ -4423,7 +4423,9 @@ function renderDashboard() {
   const yoy=accPre>0?((acc/accPre-1)*100):null, devYoy=devAccPre>0?((devAcc/devAccPre-1)*100):null, consYoy=consAccPre>0?((consAcc/consAccPre-1)*100):null;
   let momPct=null;
   if(_dashPeriodType!=='year'&&!String(_dashPeriodType).startsWith('Q')){
-    const _mo=Number(_dashPeriodType), _pm=_mo===1?12:_mo-1, _py=_mo===1?_dashYear-1:_dashYear;
+    // 폴백된 실제 표시월(yms) 기준으로 전월 비교 — _dashPeriodType(달력월 8)을 쓰면 폴백된 7월 acc를 7월과 비교해 항상 0%가 되는 버그 방지
+    const _ymp=String(yms[0]||'').split('-'); const _mo=Number(_ymp[1])||Number(_dashPeriodType); const _my=Number(_ymp[0])||_dashYear;
+    const _pm=_mo===1?12:_mo-1, _py=_mo===1?_my-1:_my;
     const _prevAcc=((DEVICE['monthly'+_py]||{})[_pm]||0)+((CONS['monthly'+_py]||{})[_pm]||0);
     if(_prevAcc>0) momPct=((acc/_prevAcc-1)*100);
   }
@@ -6943,7 +6945,7 @@ function renderCDUTarget(){
   });
   due.sort((a,b)=>b.amt-a.amt);
   // B. 휴면 장비: 팁 쓰는 장비(Oligio·Tightan) 보유 병원인데 올해 팁 매출 0 또는 급감
-  var mm=Math.max(1,(typeof _dataMaxMonth==='function'?_dataMaxMonth():6));
+  var mm=Math.max(1,Math.min((typeof _dataMaxMonth==='function'?_dataMaxMonth():6),(typeof _lastAcctMonth==='function'?_lastAcctMonth():12)));   // 데이터 있는 최신월로 캡(연환산 과소·전년동기 왜곡 방지)
   var tipDev=/oligio|tightan/i;
   var dormant=[], drop=[];
   Object.keys(DVH).forEach(function(n){
@@ -7272,7 +7274,8 @@ function renderCDUReport(vs){
   var avg=prices.length?Math.round(prices.reduce((s,p)=>s+p,0)/prices.length):0, mx=prices.length?Math.max.apply(null,prices):0, mn=prices.length?Math.min.apply(null,prices):0;
   // ── 매출 연결(한국영업 CRM: 병원별 올해 팁 매출) — 활동을 '돈'으로 환산 ──
   var _rk=n=>_cduResolveHosp(n)||('__'+_cduNorm(n)); // 중복집계 방지용 정규화 키
-  var _mmC=Math.max(1,(typeof _dataMaxMonth==='function'?_dataMaxMonth():6));
+  // 전년동기·연환산 분모 = 회계 데이터 있는 최신월(7)로 캡 — 달력월(8)을 쓰면 전년 2025 8월이 더 합산돼 YoY 왜곡·연환산 과소
+  var _mmC=Math.max(1,(function(){ var dm=(typeof _dataMaxMonth==='function'?_dataMaxMonth():6); var lm=(typeof _lastAcctMonth==='function'?_lastAcctMonth():dm); return Math.min(dm,lm); })());
   var _prevYtd=function(r){ var m=r.m2025||{}, s=0; for(var i=1;i<=_mmC;i++) s+=Number(m[i]||0); return s; };
   var uniqRev={}, visitedRev=0, visitedRev25=0, visitedRevPrev=0, matched=0, seenKey={};
   vs.forEach(function(v){ var n=(v.custName||'').trim(); if(!n||uniqRev[n]!=null) return; var r=_cduRev(n), rk=_rk(n); uniqRev[n]=r.y2026||0; if(!seenKey[rk]){ seenKey[rk]=1; visitedRev+=(r.y2026||0); visitedRev25+=(r.y2025||0); visitedRevPrev+=_prevYtd(r); if(r.y2026>0||r.y2025>0) matched++; } });
@@ -8022,7 +8025,7 @@ function renderCDUWeekly(){
   var exclN=exclList.length;
   var vs=vsAll.filter(v=>!_cduWkExcl[v.id])
     .sort((a,b)=>_hasFb(a)-_hasFb(b)||String(a.date).localeCompare(String(b.date))||String(a.sales||'').localeCompare(String(b.sales||''),'ko'));
-  var mmW=Math.max(1,(typeof _dataMaxMonth==='function'?_dataMaxMonth():6));
+  var mmW=Math.max(1,Math.min((typeof _dataMaxMonth==='function'?_dataMaxMonth():6),(typeof _lastAcctMonth==='function'?_lastAcctMonth():12)));   // 데이터 있는 최신월로 캡
   var prevOf=function(n){ var m=(_cduRev(n).m2025)||{}, s=0; for(var i=1;i<=mmW;i++) s+=Number(m[i]||0); return s; };
   var hs={}; vs.forEach(v=>{ var n=(v.custName||'').trim(); if(n)hs[n]=1; });
   var prices=vs.map(v=>Number(v.price)||0).filter(p=>p>0);
