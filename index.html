@@ -11542,13 +11542,12 @@ function renderDeviceSales() {
     if (!prods.length) return '<div class="text-muted" style="font-size:13px">데이터 없음</div>';
     const yrng = rng.map(x=>({y:x.y-1,m:x.m}));   // 전년 동기
     const sp=(p,r,f)=>r.reduce((s,x)=>s+((f(x.y)[p]||{})[x.m]||0),0);
-    const data = prods.map(p => ({
-      key: p,
-      v26: sp(p,rng,prodMoY),
-      v25: sp(p,yrng,prodMoY),
-      qty: sp(p,rng,prodMoQtyY),
-      qty25: sp(p,yrng,prodMoQtyY),
-    })).filter(p=>p.v26>0||p.v25>0).sort((a,b)=>b.v26-a.v26);
+    // canon 통합(Oligio ES→Oligio) + 미반영 가산 = 보고기준(KPI·증감분해와 동일 대수/매출)
+    const _agg={};
+    prods.forEach(p=>{ const ck=_cpn(p); const o=_agg[ck]||(_agg[ck]={key:ck,v26:0,v25:0,qty:0,qty25:0}); o.v26+=sp(p,rng,prodMoY); o.v25+=sp(p,yrng,prodMoY); o.qty+=sp(p,rng,prodMoQtyY); o.qty25+=sp(p,yrng,prodMoQtyY); });
+    try{ var _pnd=(typeof ILBO_PEND!=='undefined'&&ILBO_PEND)||[]; var _dset={}; ['products2026','products2025','prods_dev'].forEach(k=>Object.keys((DEVICE&&DEVICE[k])||{}).forEach(n=>{_dset[_cpn(n)]=1;})); var _smo={}; rng.forEach(x=>{ if(x.y===_curYear())_smo[x.m]=1; });
+      _pnd.forEach(r=>{ if(!r||(r.region&&r.region!=='국내')||r.status==='반영됨'||r.status==='취소')return; var pp=_cpn(r.product||''); if(!pp||/tip|팁|cartridge|카트리지|소모|a\/s/i.test(pp)||!_dset[pp])return; var mo=parseInt(String(r.expectedDate||r.date||'').slice(5,7),10); if(!_smo[mo])return; var o=_agg[pp]||(_agg[pp]={key:pp,v26:0,v25:0,qty:0,qty25:0}); o.v26+=(Number(r.amount)||0); o.qty+=(Number(r.qty)||0); }); }catch(e){}
+    const data = Object.values(_agg).filter(p=>p.v26>0||p.v25>0).sort((a,b)=>b.v26-a.v26);
     const maxV = Math.max(...data.map(p=>p.v26))||1;
     const rngStr = rng.map(x=>x.y+'.'+x.m).join(',');
     const totV = data.reduce((s,p)=>s+p.v26,0)||1, totQ=data.reduce((s,p)=>s+p.qty,0), totV25=data.reduce((s,p)=>s+p.v25,0);
