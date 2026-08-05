@@ -3300,7 +3300,12 @@ function _dashPeriodYMs() {
     const q=Number(p[1]), start=(q-1)*3+1;
     return { yms:[0,1,2].map(i=>ym(y,start+i)), ymsFull:[0,1,2].map(i=>ym(y,start+i)), label:`${y}년 ${q}분기` };
   }
-  const mo=Number(p);
+  let mo=Number(p);
+  // 당월(달력월) 선택인데 회계 미도래(데이터 0)면 최신 데이터월로 폴백 → 월초 대시보드 ▼100%·0원 방지
+  if(y===curY && mo===curM && typeof _lastAcctMonth==='function'){
+    const _lm=_lastAcctMonth();
+    if(_lm>=1 && _lm<mo && ((CONS['monthly'+y]||{})[mo]||0)===0 && ((DEVICE['monthly'+y]||{})[mo]||0)===0) mo=_lm;
+  }
   return { yms:[ym(y,mo)], ymsFull:[ym(y,mo)], label:`${y}년 ${mo}월` };
 }
 
@@ -3324,6 +3329,15 @@ function _dataMaxMonth(){
   const ms=[].concat(Object.keys(CONS['monthly'+CY]||{}),Object.keys(DEVICE['monthly'+CY]||{})).map(Number).filter(m=>m>=1&&m<=12);
   return ms.length?Math.max.apply(null,ms):12;
 }
+// 실제 회계데이터가 있는 현재연도 최신월(YoY like-for-like 비교용). 당월이 아직 회계 미도래(0)면 그 전월. 표시용 _dataMaxMonth(달력월)과 별개.
+function _lastAcctMonth(){
+  const CY=_curYear();
+  var C=CONS['monthly'+CY]||{}, D=DEVICE['monthly'+CY]||{};
+  var ms=[]; for(var m=1;m<=12;m++){ if((Number(C[m])||0)!==0 || (Number(D[m])||0)!==0) ms.push(m); }
+  return ms.length?Math.max.apply(null,ms):_dataMaxMonth();
+}
+// YoY 비교 유효 최종월: 조회 to(t)와 실제데이터월 중 작은 값(2026 to=8이라도 데이터 7월까지면 양년도 1~7로 비교 → 빈 당월 왜곡 제거)
+function _yoyCapMonth(t){ try{ return Math.min(Number(t)||12, _lastAcctMonth()); }catch(e){ return t; } }
 function _renderPrefix(p){ const fn=window[_RENDERFN[p]]; if(fn) fn(); }
 function _gvN(id,d){ const e=document.getElementById(id); return e?(parseInt(e.value)||d):d; }
 function _normPeriod(sy,sm,ey,em){ if(ey<sy||(ey===sy&&em<sm)){ let t; t=sy;sy=ey;ey=t; t=sm;sm=em;em=t; } const cross=(sy!==ey); const lab=cross?(String(sy).slice(2)+'.'+sm+'~'+String(ey).slice(2)+'.'+em):(sm===em?sm+'월':sm+'-'+em+'월'); return {sy:sy,sm:sm,ey:ey,em:em,cross:cross,label:lab}; }
@@ -3520,12 +3534,16 @@ function renderSalesOverview() {
   const _moPend=(_endY===2026)?(_consPendM(_endM)+_devPendM(_endM)):0;
   const _moVal=incPend?(_moC+_moPend):_moC;
   const _moPrev=(_mCY(CONS,_endY-1)[_endM]||0)+(_mCY(DEVICE,_endY-1)[_endM]||0);
-  const _moYoy=_moPrev>0?(_moC/_moPrev-1)*100:null;
+  // 당월이 회계 미도래(진행중, 회계 0)면 전년비 배지 무의미(▼100% 방지) → null
+  const _moInProg=(_endY===_curYear() && typeof _lastAcctMonth==='function' && _endM>_lastAcctMonth() && _moC===0);
+  const _moYoy=(_moInProg||!(_moPrev>0))?null:(_moC/_moPrev-1)*100;
   const _moDevC=_mCY(DEVICE,_endY)[_endM]||0, _moConsC=_mCY(CONS,_endY)[_endM]||0;
   const _moDevPend=(_endY===2026)?_devPendM(_endM):0, _moConsPend=(_endY===2026)?_consPendM(_endM):0;
   const _moDevPrev=_mCY(DEVICE,_endY-1)[_endM]||0, _moConsPrev=_mCY(CONS,_endY-1)[_endM]||0;
   let _ytdC=0,_ytdPend=0,_ytdPrev=0,_ytdDevC=0,_ytdConsC=0,_ytdDevPend=0,_ytdConsPend=0,_ytdDevPrev=0,_ytdConsPrev=0;
-  for(let _m=1;_m<=_endM;_m++){ var _dv=_mCY(DEVICE,_endY)[_m]||0,_cn=_mCY(CONS,_endY)[_m]||0; _ytdDevC+=_dv;_ytdConsC+=_cn;_ytdC+=_dv+_cn; if(_endY===2026){var _dp=_devPendM(_m),_cp=_consPendM(_m);_ytdDevPend+=_dp;_ytdConsPend+=_cp;_ytdPend+=_dp+_cp;} var _dq=_mCY(DEVICE,_endY-1)[_m]||0,_cq=_mCY(CONS,_endY-1)[_m]||0; _ytdDevPrev+=_dq;_ytdConsPrev+=_cq;_ytdPrev+=_dq+_cq; }
+  // 전년 누계는 올해 데이터 있는 월까지만(like-for-like). 8월인데 회계 7월까지면 전년도 1~7만 → YoY 왜곡 제거
+  var _capM=(_endY===_curYear()&&typeof _yoyCapMonth==='function')?_yoyCapMonth(_endM):_endM;
+  for(let _m=1;_m<=_endM;_m++){ var _dv=_mCY(DEVICE,_endY)[_m]||0,_cn=_mCY(CONS,_endY)[_m]||0; _ytdDevC+=_dv;_ytdConsC+=_cn;_ytdC+=_dv+_cn; if(_endY===2026){var _dp=_devPendM(_m),_cp=_consPendM(_m);_ytdDevPend+=_dp;_ytdConsPend+=_cp;_ytdPend+=_dp+_cp;} if(_m<=_capM){ var _dq=_mCY(DEVICE,_endY-1)[_m]||0,_cq=_mCY(CONS,_endY-1)[_m]||0; _ytdDevPrev+=_dq;_ytdConsPrev+=_cq;_ytdPrev+=_dq+_cq; } }
   const _ytdVal=incPend?(_ytdC+_ytdPend):_ytdC;
   const _ytdYoy=_ytdPrev>0?(_ytdC/_ytdPrev-1)*100:null;
   const _ovFact=(lab,repV,accV,prevV,yo,click)=>'<div class="cdud-fact clk" onclick="'+click+'"><span>'+lab+'</span><b>'+repV+'</b><i>회계 '+accV+' · 전년 '+prevV+' '+badge(yo)+'</i></div>';
@@ -5210,7 +5228,10 @@ function renderConsumables() {
 
   // 기간 필터 (범위 셀렉터+프리셋, 연도경계) — 차트는 연단위 유지, KPI·제품표만 기간연동
   _injectPeriodCtrl('cons');
-  const P=_getPeriod('cons'), spanMs=_spanMonths(P), prevMs=_spanMonths(_yoyShift(P));
+  const P=_getPeriod('cons'), spanMs=_spanMonths(P);
+  // 전년 비교 월을 올해 데이터 있는 월까지만(like-for-like) → 빈 당월 YoY 왜곡 제거
+  const _cCapM=(function(){ try{ var _cmx=spanMs.length?Math.max.apply(null,spanMs.map(function(z){return z.m;})):0; if(spanMs.length&&spanMs[spanMs.length-1].y===_curYear()&&typeof _lastAcctMonth==='function'&&_cmx>_lastAcctMonth()) return _lastAcctMonth(); }catch(e){} return 13; })();
+  const prevMs=_spanMonths(_yoyShift(P)).filter(function(x){ return x.m<=_cCapM; });
   const _consYr=P.ey, _consPrevYr=_consYr-1;
   const _lastSpan=spanMs[spanMs.length-1]||{y:2026,m:_dataMaxMonth()};
   const _moM=_lastSpan.m;
@@ -11411,7 +11432,9 @@ function renderDeviceSales() {
   const P  = _getPeriod('dev');
   const PP = _yoyShift(P);
   const spanMs = _spanMonths(P);   // [{y,m}]
-  const prevMs = _spanMonths(PP);
+  // 전년 비교 월을 올해 데이터 있는 월까지만(like-for-like): 8월인데 회계 7월까지면 전년 8월 제외 → YoY 왜곡 제거
+  const _dvCapM=(function(){ try{ var _cmx=spanMs.length?Math.max.apply(null,spanMs.map(function(z){return z.m;})):0; if(spanMs.length&&spanMs[spanMs.length-1].y===_curYear()&&typeof _lastAcctMonth==='function'&&_cmx>_lastAcctMonth()) return _lastAcctMonth(); }catch(e){} return 13; })();
+  const prevMs = _spanMonths(PP).filter(function(x){ return x.m<=_dvCapM; });
   const moY        = y => (DEVICE['monthly'+y]||{});
   const prodMoY    = y => (DEVICE['prodMo'+y]||{});
   const prodMoQtyY = y => y===2026 ? (DEVICE.prodMoQty2026||{})  : y===2025 ? (DEVICE.prodMoQty2025||{})  : {};
@@ -11795,7 +11818,9 @@ function _dvBuild(){
   // 연도-인지 스캔: 선택기간의 (연-월) 키에 맞는 거래만 집계. txns2025/2026 양쪽을 모두 훑어
   // '2025년'단독·'최근 12개월'·'2025~현재' 등 연도경계/비-2026 선택도 정확(전엔 txns2026을 무조건 올해로 봄).
   var curK={}; _cur.forEach(function(x){curK[x.y+'-'+x.m]=1;});
-  var preK={}; _prev.forEach(function(x){preK[x.y+'-'+x.m]=1;});
+  // 전년 비교 월을 올해 데이터 있는 월까지만(like-for-like) — 8월인데 회계 7월까지면 전년도 8월 제외 → 증감·YoY 왜곡 제거
+  var _dvCap=13; try{ var _cmx=curM.length?Math.max.apply(null,curM):0; if(_cur.length&&_cur[_cur.length-1].y===_curYear()&&typeof _lastAcctMonth==='function'&&_cmx>_lastAcctMonth()) _dvCap=_lastAcctMonth(); }catch(e){}
+  var preK={}; _prev.forEach(function(x){ if(x.m<=_dvCap) preK[x.y+'-'+x.m]=1; });
   // 입사일 컷오프: 거래의 (연-월)이 현담당 입사 이전이면 전임자로 귀속(신규입사자 유령 전년매출 방지) — 드릴/증감분해에도 동일 적용
   var _ownerOf=function(hn,h,yr,mo){ var cur=repOf(hn,h); if(cur==='미지정'||cur==='미배정')return cur; var jm=(typeof _repJoinMo==='function')?_repJoinMo(cur):0; if(jm&&mo&&(yr*12+mo)<jm){ var pre=(typeof _repPredecessor==='function')?_repPredecessor(hn,h,cur):cur; return pre||'전임자(미상)'; } return cur; };
   var scan=function(txns,yr,keys,side,hn,h){ (txns||[]).forEach(function(t){ var mo=+t[0]; if(!keys[yr+'-'+mo])return; var dl=_ownerOf(hn,h,yr,mo); var p=t[3]||'기타', v=Number(t[4]||0), q=Number(t[5]||0); if(side==='a'&&t[1]&&t[1]>asOf)asOf=t[1];
