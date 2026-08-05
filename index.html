@@ -5289,7 +5289,8 @@ function renderConsumables() {
   document.getElementById('cons-kpi').innerHTML = '<div class="wt-band">'+kpiData.map((k,i)=>{
     const badge = (k.chg!==null && k.chg!==undefined) ? ' '+chgBadge(k.chg,false) : '';
     if(k.hero){
-      return '<div class="wt-hero" style="cursor:pointer" onclick="_consKpiDrill('+i+')"><span class="l"><i class="bi '+k.icon+' me-1"></i>소모품 합계 · '+P.label+'</span><b>'+k.value+'</b><span class="s">'+k.sub+badge+'</span>'+(k.sub2||'')+_rbCons+'</div>';
+      const _cRep=total2026ytd+consPendYtd, _cYoY=total2025ytd>0?(_cRep/total2025ytd-1)*100:null;
+      return '<div class="wt-hero" style="cursor:pointer" onclick="_consKpiDrill('+i+')"><span class="l"><i class="bi '+k.icon+' me-1"></i>소모품 합계 · '+P.label+(consPendYtd>0?' <span style="font-size:10px;color:#7c3aed;font-weight:700">보고기준</span>':'')+'</span><b>'+fmtB(_cRep)+'</b><span class="s">'+(consPendYtd>0?'<span style="color:#7c3aed;font-weight:700">미반영 +'+fmtB(consPendYtd)+' 포함</span> · ':'')+k.sub+((_cYoY!==null)?' '+chgBadge(_cYoY,false):'')+'</span>'+(k.sub2||'')+_rbCons+'</div>';
     }
     return '<div class="wt-fact" onclick="_consKpiDrill('+i+')"><span class="l">'+_stripP(k.label)+'</span><b>'+k.value+'</b><span class="s">'+k.sub+badge+'</span>'+(k.sub2||'')+'</div>';
   }).join('')+'</div>';
@@ -11450,7 +11451,7 @@ function renderDeviceSales() {
   document.getElementById('dev-kpi').innerHTML = noData
     ? `<div class="card p-4 text-center text-muted mb-3"><i class="bi bi-cloud-upload me-2"></i>소모품 메뉴에서 Excel 업로드 후 데이터가 표시됩니다</div>`
     : '<div class="wt-band">'
-      +'<div class="wt-hero" style="cursor:pointer" onclick="openOvCategory(\'dev\',\'dev\')"><span class="l">누계 매출 · '+P.label+'</span><b>'+fmtW(ytdCur)+'</b><span class="s">'+(_prevFull?'전년 동기 '+fmtW(ytdPrev)+' '+chgBadge(yoy):'연도경계 누적')+'</span>'+devSub2+_rbDev+'</div>'
+      +'<div class="wt-hero" style="cursor:pointer" onclick="openOvCategory(\'dev\',\'dev\')"><span class="l">누계 매출 · '+P.label+(devPendYtd>0?' <span style="font-size:10px;color:#7c3aed;font-weight:700">보고기준</span>':'')+'</span><b>'+fmtW(ytdCur+devPendYtd)+'</b><span class="s">'+(devPendYtd>0?'<span style="color:#7c3aed;font-weight:700">미반영 +'+fmtW(devPendYtd)+' 포함</span> · ':'')+(_prevFull?'전년 동기 '+fmtW(ytdPrev)+' '+chgBadge((ytdPrev>0&&_prevFull)?((ytdCur+devPendYtd)/ytdPrev-1)*100:null):'연도경계 누적')+'</span>'+devSub2+_rbDev+'</div>'
       
       
       +'<div class="wt-fact" onclick="openOvCategory(\'dev\',\'dev\')"><span class="l">1위 제품 <i class="bi bi-search" style="font-size:9px;color:#cbd5e1"></i></span><b style="font-size:15px;display:block;overflow:hidden;text-overflow:ellipsis">'+_ovEsc(topP[0])+'</b><span class="s">'+fmtW(topP[1])+' · 비중 '+topShare.toFixed(0)+'%</span></div>'
