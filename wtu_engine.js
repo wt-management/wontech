@@ -65,7 +65,7 @@ function transformRaw(sheets, CM){
       var um=USD.exec(jeok); var usd=um?parseFloat(um[1].replace(/,/g,'')):0;
       out.push({'월':mo,'금액':net,'국내외':region,'구분#2':cat,'구분#4':prod,'구분#1':prod,
         '분기':mo?(Math.floor((mo-1)/3)+1):null,'거래처명':cust,'담당자':row['담당자2'],
-        '수량':row['수량'],'USD':usd,'날짜':dt,'사용부서':dept});
+        '수량':row['수량'],'USD':usd,'날짜':dt,'사용부서':dept,'적요':jeok});
     });
   });
   return out;
@@ -257,6 +257,41 @@ function mergeDevReps(existing,new26){
   return out;
 }
 
+// ───────── 장비현황 재구축 (대리점→적요납품처 귀속·보상판매 수량0제외·시리얼전개·코드통합·중복제거) ─────────
+var _EQMODEL_CANON={'OLG':'Oligio','OLG X':'Oligio X','OLG K':'Oligio Kiss','THE OLG.':'Oligio','VL':'V-Laser','AV':'AVVIO','SR':'ASR','PA-Pro':'Pastelle Pro','Andy':'Pico Andy','US TT':'Ultraskin Tightan','LA':'Lavieen','MAJT':'Picocare Majesty','Alex':'Pico Alex','SD':'SANDRO Dual'};
+function _eqCanonModel(m){ m=String(m||'').trim(); return _EQMODEL_CANON[m]||m; }
+var _EQ_CLINIC=/의원|병원|피부과|성형외과|클리닉|메디|의료재단|한방/;
+function _eqDeliv(jeok){ var s=String(jeok||'').replace(/\s*보상판매[\s\S]*$/,''); var m=s.match(/\/\s*([가-힣][가-힣A-Za-z0-9()\s]+?)\s*$/); var d=m?m[1].trim():''; return _EQ_CLINIC.test(d)?d:''; }
+function _eqSerials(jeok,qty){ jeok=String(jeok||''); var m=jeok.match(/#\s*([0-9][0-9~,\-\s#]*?)\s*\^/)||jeok.match(/#\s*([0-9][0-9~,\-\s#]*)/); if(!m) return []; var spec=m[1]; var rng=spec.match(/^\s*(\d+)\s*~\s*(\d+)\s*$/); var lst=[]; if(rng){ for(var x=+rng[1];x<=+rng[2]&&lst.length<qty+5;x++) lst.push(''+x); } else { lst=(spec.match(/\d+/g)||[]); } return lst; }
+function _eqHnorm(s){ return String(s||'').replace(/[\s()（）\[\]·.,_\/\-]/g,'').replace(/점$/,'').toLowerCase(); }
+function _eqPlusYr(ds){ if(!ds||ds.length<10) return ''; return (parseInt(ds.slice(0,4),10)+1)+ds.slice(4); }
+var _EQ_EXCL_DEPT=/지컬|B2C|CS|연구|구매팀|인사|총무/;   // aggDevice와 동일: B2C(헤어빔)·지컬·CS·비영업 지원부서 제외
+// rows=transformRaw 결과, hospNames=정규화 기준 병원명, exEquip=기존 equip_rebuilt.rows(2025 보존용), devModels=실장비 모델집합(canon)
+function buildEquip(rows, hospNames, exEquip, devModels){
+  var HMAP={}; (hospNames||[]).forEach(function(h){ var k=_eqHnorm(h); if(k && !(k in HMAP)) HMAP[k]=h; });
+  var NAMEFIX={'더바른의원 아산':'더바른의원 아산점'};
+  function canonHosp(n){ n=String(n||'').trim(); if(NAMEFIX[n]) n=NAMEFIX[n]; return HMAP[_eqHnorm(n)]||n; }
+  var DM=devModels||{};
+  var out=[];
+  (rows||[]).forEach(function(r){
+    if(r['국내외']!=='국내') return;                                 // 국내만
+    if(_EQ_EXCL_DEPT.test(String(r['사용부서']||''))) return;         // B2C·지컬·CS 등 제외
+    var model=_eqCanonModel(r['구분#4']); if(!DM[model]) return;      // 실장비 모델만(팁·소모품·헤어빔 자동 제외)
+    var qty=pint(r['수량']); if(!(qty>0)) return;                     // 보상판매(수량0 크레딧) 자동 제외
+    var amt=num(r['금액']); if(amt/qty < 1000000) return;             // 대당<100만 = 벌크 카트리지를 장비명으로 오기표한 것·반품 → 제외(실장비는 대당 수천만)
+    var jeok=String(r['적요']||''); var d=_eqDeliv(jeok);              // 대리점 적요 납품처
+    var clinic=canonHosp(d||r['거래처명']);
+    var sers=_eqSerials(jeok,qty); var ds=dsOf(r['날짜'])||'';
+    for(var i=0;i<qty;i++){
+      out.push({custName:clinic,model:model,serial:(sers[i]||''),delivDate:ds,warrantyEnd:_eqPlusYr(ds),status:'정상',sales:String(r['담당자']||'').replace(/^\d+\./,''),note:(d?('대리점('+r['거래처명']+')'):''),_yr:'2026'});
+    }
+  });
+  (exEquip||[]).forEach(function(e){ if(String(e&&e._yr)==='2025') out.push(e); });   // 정규 업로드는 2026만 → 2025는 기존 보존
+  var seen={}, fin=[];                                                                 // 같은 병원+모델+시리얼 = 회계 이중입력 → 1개만
+  out.forEach(function(e){ var s=e.serial; if(s){ var k=e.custName+'|'+e.model+'|'+s; if(seen[k]) return; seen[k]=1; } fin.push(e); });
+  return fin;
+}
+
 // ───────── 메인 빌드 ─────────
 // existing = {main, device, intl} (기존 cons_cache data). 반환 {main, device, intl, summary}
 function build(sheets, existing){
@@ -338,7 +373,13 @@ function build(sheets, existing){
   // rev=내용해시 → 같은날 재기록해도 클라이언트 캐시 자동갱신(updatedAt 표시용 유지)
   var _hash=function(s){ var h=5381,i=s.length; while(i) h=(h*33)^s.charCodeAt(--i); return (h>>>0).toString(36); };
   [CONS,DEVICE,INTL].forEach(function(o){ delete o.rev; o.rev=updatedAt+'#'+_hash(JSON.stringify(o)); });
-  return {main:CONS, device:DEVICE, intl:INTL, summary:summary};
+  // 장비현황 자동 재구축: 2026=업로드분 파싱, 2025=기존 equip_rebuilt 보존 병합
+  var _eqHosp=Object.keys(CONS.hospitals||{}).concat(Object.keys(DEVICE.hospitals||{}));
+  var _devModels={};   // 실장비 모델집합 = aggDevice 산출 제품(저단가·소모품 제외된 진짜 장비) canon
+  [d26.products2026, exDev.products2026, exDev.products2025].forEach(function(o){ Object.keys(o||{}).forEach(function(p){ _devModels[_eqCanonModel(p)]=1; }); });
+  var _eqRows=buildEquip(rows26, _eqHosp, (existing.equip_rebuilt&&existing.equip_rebuilt.rows)||[], _devModels);
+  summary.equip=_eqRows.length;
+  return {main:CONS, device:DEVICE, intl:INTL, equip_rebuilt:{rows:_eqRows, builtFrom:'parser '+updatedAt, count:_eqRows.length}, summary:summary};
 }
 
 var WTU={ build:build, transformRaw:transformRaw, buildCatMap:buildCatMap,

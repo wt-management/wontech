@@ -286,11 +286,11 @@ async function handleFile(file){
     const sheets=wb.SheetNames.map(sn=>({name:sn,rows:XLSX.utils.sheet_to_json(wb.Sheets[sn],{defval:null})}));
     log('시트: '+wb.SheetNames.join(', '));
     log('기존 cons_cache 조회(2025 머지·분류 기준)...');
-    const [main,device,intl,sp,ilboAcc,ilboPend]=await Promise.all(['main','device','intl','sales_portfolio','ilbo_acc','ilbo_pending'].map(async k=>{
+    const [main,device,intl,sp,ilboAcc,ilboPend,equipReb]=await Promise.all(['main','device','intl','sales_portfolio','ilbo_acc','ilbo_pending','equip_rebuilt'].map(async k=>{
       const {data}=await _sb.from('cons_cache').select('data').eq('key',k).maybeSingle(); return data?data.data:{};
     }));
     log('변환·집계 중...');
-    BUILT=WTU.build(sheets,{main,device,intl});
+    BUILT=WTU.build(sheets,{main,device,intl,equip_rebuilt:equipReb});   // equip_rebuilt: 2025 보존용
     // Sales Portfolio 집계(회계분) — 2025는 기존 blob 유지, 미반영은 사이트에서 live 가산
     try{
       const rows26=WTU.transformRaw(sheets, WTU.buildCatMap(main,device,intl));
@@ -393,6 +393,7 @@ async function doWrite(){
   const btn=document.getElementById('confirmBtn'); btn.disabled=true; btn.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span>적재 중...';
   try{
     const writes=[['main',BUILT.main],['device',BUILT.device],['intl',BUILT.intl]];
+    if(BUILT.equip_rebuilt&&BUILT.equip_rebuilt.rows&&BUILT.equip_rebuilt.rows.length) writes.push(['equip_rebuilt',BUILT.equip_rebuilt]);  // 장비현황 자동 재구축(대리점귀속·보상제외·시리얼전개)
     if(BUILT.sp) writes.push(['sales_portfolio',BUILT.sp]);
     if(BUILT.ilbo) writes.push(['ilbo_acc',BUILT.ilbo]);
     if(_pendFromFile) writes.push(['ilbo_pending',_pendFromFile]);            // 미반영치 파일 올렸으면 전체 교체
