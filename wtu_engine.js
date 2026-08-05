@@ -41,7 +41,7 @@ function catOf(prod,CM){
   return '제품군';
 }
 // 제품명 별칭 통일 — 회계 원본 표기 흔들림(버전 접미사)을 대표명으로 정규화. 새 흔들림 발견 시 여기 추가
-var PROD_ALIAS={'Ultraskin Tightan II':'Ultraskin Tightan','SANDRO Dual-N':'SANDRO Dual'};
+var PROD_ALIAS={'SANDRO Dual-N':'SANDRO Dual'};   // 타이탄 II(2천만 프리미엄)와 타이탄(500만 신규모델)은 다른 제품 → 통합 안 함
 function normProd(p){ p=String(p||'').trim(); return PROD_ALIAS[p]||p; }
 function prodName(proj){ var s=String(proj||''); var i=s.indexOf('.'); return normProd(i>=0?s.slice(i+1).trim():s.trim()); }
 

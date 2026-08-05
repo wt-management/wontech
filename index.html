@@ -12039,7 +12039,8 @@ function renderDevReps() {
     const cust = _rs?Object.keys(_rs.cust).length:0;
     const topProd = _rs?(Object.entries(_rs.prods).sort((a,b)=>b[1]-a[1])[0]?.[0]||''):'';
     return {name, rep, cur, pre, qty, cust, topProd, yoy: (pre>0&&_devPrevFull)?(cur/pre-1)*100:null, isTeam:_isKorSales(name)};
-  }).filter(e=> _flt==='team'?e.isTeam : _flt==='dealer'?!e.isTeam : true)
+  }).filter(e=> !/^전임자\(미상\)$|^미지정$|^미배정$/.test(e.name))   // 입사전 미매칭 귀속분 등 정체불명 행은 표시 제외(합계엔 남음)
+    .filter(e=> _flt==='team'?e.isTeam : _flt==='dealer'?!e.isTeam : true)
     .sort((a,b)=>b.cur-a.cur);
 
   // rank table
