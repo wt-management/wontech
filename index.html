@@ -9186,6 +9186,9 @@ function _autoEqReset(){ _autoEqCache=null; }
 function _eqNorm(s){ return String(s==null?'':s).replace(/\s+/g,'').toLowerCase(); }
 function _eqPlusYear(d){ try{ var x=new Date(String(d)+'T00:00:00'); x.setFullYear(x.getFullYear()+1); return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'); }catch(e){ return ''; } }
 var _EQ_NONDEV=/A\/S|소모품|tip|cartridge|의료기기|부속|파트|part/i;
+// 등록장비 코드명 → 회계 풀네임 통합(같은 병원+월 공동출현 데이터로 추론). 보유모델·목록의 이중 라벨(Oligio+OLG) 제거.
+var _MODEL_CANON={'OLG':'Oligio','OLG X':'Oligio X','OLG K':'Oligio Kiss','THE OLG.':'Oligio','THE OLG':'Oligio','VL':'V-Laser','AV':'AVVIO','SR':'ASR','PA-Pro':'Pastelle Pro','PA':'Pastelle','Andy':'Pico Andy','US TT':'Ultraskin Tightan','LA':'Lavieen','MAJT':'Picocare Majesty','Alex':'Pico Alex','SD':'SANDRO Dual','PI450':'Picocare 450','PI450s':'Picocare 450'};
+function _canonEqModel(m){ m=String(m||'').trim(); return _MODEL_CANON[m]||m; }
 function _autoEquip(){
   if(_autoEqCache) return _autoEqCache;
   var out=[];
@@ -9307,7 +9310,7 @@ function showHospitalDetail(name){
   })();
   // 모델별 집계
   const models={};
-  equips.forEach(e=>{models[e.model||'미상']=(models[e.model||'미상']||0)+1;});
+  equips.forEach(e=>{const _mn=_canonEqModel(e.model)||'미상';models[_mn]=(models[_mn]||0)+1;});
   const modelTags=Object.entries(models).sort((a,b)=>b[1]-a[1]).map(([m,c])=>`<span style="display:inline-flex;align-items:center;gap:4px;background:#eff6ff;color:#1d4ed8;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;margin:2px">${m}<span style="background:#2563eb;color:#fff;border-radius:4px;padding:0 5px;font-size:10px">${c}</span></span>`).join('');
   const now=new Date();
   const expiring=equips.filter(e=>{if(!e.warrantyEnd)return false;const _dd=Math.ceil((new Date(e.warrantyEnd)-now)/(864e5));return _dd>0&&_dd<=60;}).length;   // 이미 만료(_dd<=0)는 제외
