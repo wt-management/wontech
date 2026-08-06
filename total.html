@@ -2421,7 +2421,7 @@ function renderQuery(){
     const row='<div class="drow" onclick="qToggle('+idx+')">'+
       '<span><span class="dl-dot" style="display:inline-block;margin-right:6px;background:'+_yoyCol(x.y)+'"></span>'+esc(x.name)+((x.tag&&qState.tab!=='prod')?' <span style="font-size:10px;color:#94a3b8">'+x.tag+'</span>':'')+
         '<div style="display:flex;align-items:center;gap:8px;margin-top:5px">'+divBar(x.d,maxAbs)+(x.d>0?'<span style="font-size:10px;color:#94a3b8">성장기여 '+contrib+'%</span>':'')+'</div></span>'+
-      '<span style="text-align:right;font-weight:700">'+fmtW(x.val)+'</span>'+
+      '<span style="text-align:right;font-weight:700">'+fmtW(x.val)+(x.qty>0?'<div style="font-size:11px;color:#64748b;font-weight:600;margin-top:2px">'+x.qty.toLocaleString()+'대</div>':'')+'</span>'+
       '<span style="text-align:right;color:#64748b">'+fmtW(x.prev||0)+'</span>'+
       '<span style="text-align:right;color:'+_yoyCol(x.y)+';font-weight:700">'+(x.y===null?'신규':arrow(x.y))+'</span>'+
     '</div>';
@@ -2436,10 +2436,11 @@ function renderQuery(){
       const list=G.filter(x=>(x.tag||'기타')===gname);
       if(!list.length)return;
       const gv=list.reduce((s,x)=>s+x.val,0), gp=list.reduce((s,x)=>s+(x.prev||0),0), gd=gv-gp, gy=pct(gv,gp);
+      const gq=list.reduce((s,x)=>s+(x.qty||0),0);
       _rowsHtml+='<div class="drow" style="background:#f8fafc;font-weight:800;cursor:default;border-top:2px solid '+gcol+'">'+
         '<span style="color:'+gcol+'"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+gcol+';margin-right:7px"></span>'+gname+
-          ' <span style="font-size:10.5px;font-weight:500;color:#94a3b8">'+list.length+'개 · 비중 '+(tot>0?Math.round(gv/_accF*100):0)+'%</span></span>'+
-        '<span style="text-align:right">'+fmtW(gv)+'</span>'+
+          ' <span style="font-size:10.5px;font-weight:500;color:#94a3b8">'+list.length+'개 · 비중 '+(tot>0?Math.round(gv/_accF*100):0)+'%'+(gq>0?' · '+gq.toLocaleString()+'대':'')+'</span></span>'+
+        '<span style="text-align:right">'+fmtW(gv)+(gq>0?'<div style="font-size:11px;color:#64748b;font-weight:600;margin-top:2px">'+gq.toLocaleString()+'대</div>':'')+'</span>'+
         '<span style="text-align:right;color:#64748b;font-weight:600">'+fmtW(gp)+'</span>'+
         '<span style="text-align:right;color:'+_yoyCol(gy)+'">'+(gy===null?'신규':arrow(gy))+' <span style="font-size:10px;font-weight:600">'+fmtD(gd)+'</span></span></div>';
       _rowsHtml+=list.map(x=>_qrow(x,idxOf.get(x))).join('');
@@ -2460,17 +2461,27 @@ function _qProducts(){
   const map=_productMap(f,t,null);
   const cols={'장비':DEV_PURPLE,'소모품':CONS_CYAN,'기타':'#64748b'};
   const prevMap=_productMapPrev(f,t);
+  const qmap=_productQtyMap(f,t);
   let arr=Object.entries(map).map(([n,o])=>{
     const dom=o.dom, intl=o.intl;
     const val=qState.ch==='dom'?dom:qState.ch==='intl'?intl:dom+intl;
     const pv=prevMap[n]||{dom:0,intl:0};
     const prev=qState.ch==='dom'?pv.dom:qState.ch==='intl'?pv.intl:pv.dom+pv.intl;
-    return {name:n,cat:o.cat,val,prev,dom,intl,color:cols[o.cat]||'#64748b'};
+    const qq=qmap[n]||{dom:0,intl:0};
+    const qty=qState.ch==='dom'?qq.dom:qState.ch==='intl'?qq.intl:qq.dom+qq.intl;
+    return {name:n,cat:o.cat,val,prev,dom,intl,qty,qtyDom:qq.dom,qtyIntl:qq.intl,color:cols[o.cat]||'#64748b'};
   });
   if(qState.cat!=='all') arr=arr.filter(x=>x.cat===qState.cat);
   arr=arr.filter(x=>x.val>0).sort((a,b)=>b.val-a.val);
   arr.forEach(x=>{ x.tag=x.cat; x.detail=_prodDetail(x); });
   return arr;
+}
+/* 제품별 수량(대수) — 국내 장비(prodMoQty2026) + 해외(prodMoQty). 월별 데이터라 조회기간과 정확히 연동 */
+function _productQtyMap(f,t){
+  const m={}, add=(n,k,v)=>{ if(!n||!v)return; if(!m[n])m[n]={dom:0,intl:0}; m[n][k]+=v; };
+  Object.entries((typeof DEVICE!=='undefined'&&DEVICE.prodMoQty2026)||{}).forEach(([n,mo])=>add(n,'dom',sumMo(mo,f,t)));
+  Object.entries((typeof INTL!=='undefined'&&INTL.prodMoQty)||{}).forEach(([n,mo])=>add(n,'intl',sumMo(mo,f,t)));
+  return m;
 }
 function _productMapPrev(f,t){
   const map={};
@@ -2484,8 +2495,71 @@ function _productMapPrev(f,t){
   names.forEach(n=>{ let v=pm[n]?sumMo(pm[n],f,t):((i25.products&&i25.products[n]||0)*intlSc); add(n,'intl',v); });
   return map;
 }
+/* 제품 상세내역 조회 — 월별 금액·대수, 국내/해외 분해, 국가별 */
+function openProdDetail(name){
+  const f=qState.f, t=qState.t;
+  const items=(typeof _qItems!=='undefined'?_qItems:[]).filter(x=>x.name===name);
+  const x=items[0]; if(!x){ return; }
+  const devMo=(DEVICE.prodMo2026&&DEVICE.prodMo2026[name])||{};
+  const intlMo=(INTL.prodMo&&INTL.prodMo[name])||{};
+  // 소모품(CONS)은 제품×월 원자료가 없어 월 매출 비중으로 안분 — 추정 표기
+  let consMo={}, _consEst=false;
+  { const cTot=(CONS.products2026||{})[name]||0;
+    if(cTot>0){ const mm=CONS.monthly2026||{}; let tot=0; for(let m=1;m<=12;m++)tot+=(+mm[m]||0);
+      if(tot>0){ _consEst=true; for(let m=1;m<=12;m++){ const s=(+mm[m]||0)/tot; if(s>0)consMo[m]=cTot*s; } } } }
+  const devQ=(DEVICE.prodMoQty2026&&DEVICE.prodMoQty2026[name])||{}, intlQ=(INTL.prodMoQty&&INTL.prodMoQty[name])||{};
+  const rows=[]; let sV=0,sQ=0,sD=0,sI=0;
+  for(let m=f;m<=t;m++){
+    const dv=(+devMo[m]||0)+(+consMo[m]||0), iv=(+intlMo[m]||0), q=(+devQ[m]||0)+(+intlQ[m]||0);
+    if(dv||iv||q){ rows.push({m,dom:dv,intl:iv,tot:dv+iv,qty:q}); sV+=dv+iv; sQ+=q; sD+=dv; sI+=iv; }
+  }
+  const cts=[]; Object.entries(INTL.countries||{}).forEach(([cn,c])=>{ const v=(c.prods&&c.prods[name])||0; if(v>0)cts.push([cn,v]); });
+  cts.sort((a,b)=>b[1]-a[1]);
+  const th='padding:9px 12px;font-size:12px;font-weight:700;color:#475569;background:#f6f8fb;border-bottom:1px solid #dde5ef;white-space:nowrap';
+  const td='padding:9px 12px;font-size:13.5px;border-bottom:1px solid #eef2f7;font-variant-numeric:tabular-nums;white-space:nowrap';
+  let html='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'+
+    ['총 매출|'+fmtW(sV)+'|#182230','총 대수|'+(sQ?sQ.toLocaleString()+'대':'–')+'|#182230',
+     '국내|'+fmtW(sD)+'|'+DOM_BLUE,'해외|'+fmtW(sI)+'|'+INTL_TEAL,
+     '평균 단가|'+(sQ>0?fmtW(sV/sQ):'–')+'|#7c3aed'].map(s=>{const [l,v,c]=s.split('|');
+      return '<div style="flex:1;min-width:110px;background:#f8fafc;border:1px solid #e4e8ef;border-radius:9px;padding:9px 12px"><div style="font-size:11px;color:#64748b;font-weight:600">'+l+'</div><div style="font-size:17px;font-weight:800;color:'+c+';font-variant-numeric:tabular-nums;margin-top:2px">'+v+'</div></div>';}).join('')+'</div>';
+  html+='<div style="font-size:13px;font-weight:800;color:#182230;margin:0 0 7px">월별 내역 <span style="font-weight:500;color:#94a3b8">· '+f+'~'+t+'월</span>'+
+    (_consEst?'<span style="font-weight:500;color:#b45309;font-size:11px;margin-left:8px">※ 소모품 월별은 월 매출 비중 안분 추정</span>':'')+'</div>'+
+    '<div style="overflow:auto;max-height:44vh;border:1px solid #e4e8ef;border-radius:10px"><table style="width:100%;border-collapse:collapse">'+
+    '<thead><tr><th style="'+th+';text-align:left">월</th><th style="'+th+';text-align:right">국내</th><th style="'+th+';text-align:right">해외</th><th style="'+th+';text-align:right">합계</th><th style="'+th+';text-align:right">대수</th></tr></thead><tbody>'+
+    (rows.length?rows.map(r=>'<tr><td style="'+td+';font-weight:700">'+r.m+'월</td>'+
+      '<td style="'+td+';text-align:right;color:#475569">'+(r.dom?fmtW(r.dom):'–')+'</td>'+
+      '<td style="'+td+';text-align:right;color:#475569">'+(r.intl?fmtW(r.intl):'–')+'</td>'+
+      '<td style="'+td+';text-align:right;font-weight:700">'+fmtW(r.tot)+'</td>'+
+      '<td style="'+td+';text-align:right;font-weight:700;color:'+(r.qty?'#182230':'#cbd5e1')+'">'+(r.qty?r.qty.toLocaleString()+'대':'–')+'</td></tr>').join('')
+      :'<tr><td colspan="5" style="'+td+';text-align:center;color:#94a3b8">해당 기간 내역 없음</td></tr>')+
+    '<tr><td style="'+td+';font-weight:800;background:#f6f8fb">합계</td><td style="'+td+';text-align:right;font-weight:800;background:#f6f8fb">'+fmtW(sD)+'</td><td style="'+td+';text-align:right;font-weight:800;background:#f6f8fb">'+fmtW(sI)+'</td><td style="'+td+';text-align:right;font-weight:800;background:#f6f8fb">'+fmtW(sV)+'</td><td style="'+td+';text-align:right;font-weight:800;background:#f6f8fb">'+(sQ?sQ.toLocaleString()+'대':'–')+'</td></tr>'+
+    '</tbody></table></div>';
+  if(cts.length){
+    const cmax=cts[0][1];
+    html+='<div style="font-size:13px;font-weight:800;color:#182230;margin:16px 0 7px">해외 국가별</div>'+
+      cts.slice(0,10).map(c=>miniBar(c[0],c[1],cmax,INTL_TEAL)).join('');
+  }
+  const tEl=document.getElementById('ovd-title'), bEl=document.getElementById('ovd-body'), mEl=document.getElementById('ovDetailModal');
+  if(tEl) tEl.textContent=name+' · 상세내역';
+  if(bEl) bEl.innerHTML=html;
+  if(mEl) mEl.style.display='flex';
+}
 function _prodDetail(x){
-  let html='<div class="row g-3">';
+  let html='';
+  // 수량·평균단가 요약 스트립
+  if(x.qty>0){
+    const avg=x.qty>0?x.val/x.qty:0;
+    const chip=(l,v,c)=>'<span style="display:inline-flex;align-items:baseline;gap:5px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 11px"><span style="font-size:11px;color:#64748b;font-weight:600">'+l+'</span><b style="font-size:14px;color:'+(c||'#182230')+';font-variant-numeric:tabular-nums">'+v+'</b></span>';
+    html+='<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px;align-items:center">'+
+      chip('총 대수',x.qty.toLocaleString()+'대')+
+      (x.qtyDom>0?chip('국내',x.qtyDom.toLocaleString()+'대',DOM_BLUE):'')+
+      (x.qtyIntl>0?chip('해외',x.qtyIntl.toLocaleString()+'대',INTL_TEAL):'')+
+      chip('평균 단가',fmtW(avg))+
+      '<button onclick="event.stopPropagation();openProdDetail('+'\x27'+_jsAttr(x.name)+'\x27'+')" style="margin-left:auto;font-family:inherit;font-size:12px;font-weight:700;color:#0f766e;background:#fff;border:1px solid #99d3cb;border-radius:8px;padding:5px 13px;cursor:pointer"><i class="bi bi-list-ul me-1"></i>상세내역 조회</button></div>';
+  } else {
+    html+='<div style="text-align:right;margin-bottom:9px"><button onclick="event.stopPropagation();openProdDetail('+'\x27'+_jsAttr(x.name)+'\x27'+')" style="font-family:inherit;font-size:12px;font-weight:700;color:#0f766e;background:#fff;border:1px solid #99d3cb;border-radius:8px;padding:5px 13px;cursor:pointer"><i class="bi bi-list-ul me-1"></i>상세내역 조회</button></div>';
+  }
+  html+='<div class="row g-3">';
   html+='<div class="col-md-5"><div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px">채널 구성</div>'+
     miniBar('국내',x.dom,Math.max(x.dom,x.intl,1),DOM_BLUE)+miniBar('해외',x.intl,Math.max(x.dom,x.intl,1),INTL_TEAL)+'</div>';
   // 해외 국가별
