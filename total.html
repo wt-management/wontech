@@ -2421,7 +2421,7 @@ function renderQuery(){
     const row='<div class="drow" onclick="qToggle('+idx+')">'+
       '<span><span class="dl-dot" style="display:inline-block;margin-right:6px;background:'+_yoyCol(x.y)+'"></span>'+esc(x.name)+((x.tag&&qState.tab!=='prod')?' <span style="font-size:10px;color:#94a3b8">'+x.tag+'</span>':'')+
         '<div style="display:flex;align-items:center;gap:8px;margin-top:5px">'+divBar(x.d,maxAbs)+(x.d>0?'<span style="font-size:10px;color:#94a3b8">성장기여 '+contrib+'%</span>':'')+'</div></span>'+
-      '<span style="text-align:right;font-weight:700">'+fmtW(x.val)+(x.qty>0?'<div style="font-size:11px;color:#64748b;font-weight:600;margin-top:2px">'+x.qty.toLocaleString()+'대</div>':'')+'</span>'+
+      '<span style="text-align:right;font-weight:700">'+fmtW(x.val)+(x.qty>0?'<div style="font-size:11px;color:#64748b;font-weight:600;margin-top:2px"'+(x.qtyNote?' title="'+esc(x.qtyNote)+' 기준"':'')+'>'+x.qty.toLocaleString()+'대'+(x.qtyNote?' <span style="color:#b0bcca;font-weight:500">'+esc(x.qtyNote)+'</span>':'')+'</div>':'')+'</span>'+
       '<span style="text-align:right;color:#64748b">'+fmtW(x.prev||0)+'</span>'+
       '<span style="text-align:right;color:'+_yoyCol(x.y)+';font-weight:700">'+(x.y===null?'신규':arrow(x.y))+'</span>'+
     '</div>';
@@ -2587,7 +2587,8 @@ function _qGeo(){
       const detail='<div class="row g-3"><div class="col-md-6"><div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px">구분</div>'+
         (incDev?miniBar('장비',devV,Math.max(consV,devV,1),DEV_PURPLE):'')+(incCons?miniBar('소모품',consV,Math.max(consV,devV,1),CONS_CYAN):'')+'</div>'+
         '<div class="col-md-6"><div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px">국내 제품 Top</div>'+_domTopProds(f,t,qState.cat)+'</div></div>';
-      out.push({name:'🇰🇷 국내',tag:'전체',val:dom,prev:domPrev,color:DOM_BLUE,detail});
+      const _dq=incDev?Object.values(DEVICE.prodMoQty2026||{}).reduce((s,mo)=>s+sumMo(mo,f,t),0):0;
+      out.push({name:'🇰🇷 국내',tag:'전체',val:dom,prev:domPrev,qty:_dq,color:DOM_BLUE,detail});
     }
   }
   if(qState.ch!=='dom'){
@@ -2595,16 +2596,26 @@ function _qGeo(){
     Object.entries(INTL.countries||{}).forEach(([cn,c])=>{
       const val=sumMo(c.m,f,t);
       if(val<=0) return;
+      const _qty=_intlCountryQty(c,f,t);
       const c25=(i25.countries&&i25.countries[cn])||{};
       const prev=sumMo(c25.m,f,t);
       const prods=Object.entries(c.prods||{}).sort((a,b)=>b[1]-a[1]);
       const pmax=prods.length?prods[0][1]:1;
       const detail='<div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px">제품별 (상위)</div>'+
         (prods.length?prods.slice(0,5).map(p=>miniBar(p[0],p[1],pmax,INTL_TEAL)).join(''):'<span style="font-size:12px;color:#94a3b8">데이터 없음</span>');
-      out.push({name:cn,tag:'해외',val,prev,color:INTL_TEAL,detail});
+      out.push({name:cn,tag:'해외',val,prev,qty:_qty,color:INTL_TEAL,detail});
     });
   }
   return out.sort((a,b)=>b.val-a.val);
+}
+/* 해외 국가 대수 — clientData.txns [date,product,qty,amount,usd] 에서 기간 합산 */
+function _intlCountryQty(c,f,t){
+  let q=0;
+  Object.values((c&&c.clientData)||{}).forEach(cd=>{
+    (cd.txns||[]).forEach(tx=>{ const mo=parseInt(String(tx[0]||'').slice(5,7),10);
+      if(mo>=f&&mo<=t) q+=(+tx[2]||0); });
+  });
+  return q;
 }
 function _domTopProds(f,t,cat){
   cat=cat||'all';
@@ -2626,6 +2637,11 @@ function _qReps(){
     if(incCons) _repAcc(CONS.reps,CONS.monthly2026,f,t).forEach(r=>{ add(r.n,'dom',r.v); out[r.n].dom2=(out[r.n].dom2||0); _mergeProds(out[r.n].prods,r.prods); });
     if(incCons){ const p=_repAcc((CONS.data2025&&CONS.data2025.reps)||null,CONS.monthly2025,f,t); p.forEach(r=>{ if(!out[r.n]) add(r.n,'dom',0); out[r.n].domPrev+=r.v; }); }
     if(incDev) _repAcc(DEVICE.reps,DEVICE.monthly2026,f,t).forEach(r=>{ add(r.n,'dom',r.v); _mergeProds(out[r.n].prods,r.prods); });
+    // 담당자별 국내 장비 대수: qty2026(연간)을 조회기간 금액비중으로 안분
+    if(incDev) Object.entries(DEVICE.reps||{}).forEach(([n,r])=>{ const nm=_repBase(n); if(!out[nm])return;
+      const yq=+((r&&r.qty2026)||0); if(!yq)return;
+      const yv=sumMo((r&&r.m2026)||{},1,12), pv=sumMo((r&&r.m2026)||{},f,t);
+      out[nm].qtyDev=(out[nm].qtyDev||0)+(yv>0?Math.round(yq*(pv/yv)):0); });
     if(incDev){ const p=Object.entries(DEVICE.reps||{}).map(([n,r])=>({n:_repBase(n),v:sumMo((r&&r.m2025)||{},f,t)})); p.forEach(r=>{ if(!(r.v>0)) return; if(!out[r.n]) add(r.n,'dom',0); out[r.n].domPrev+=r.v; }); }
   }
   if(qState.ch!=='dom'){
@@ -2641,7 +2657,7 @@ function _qReps(){
       miniBar('국내',r.dom,Math.max(r.dom,r.intl,1),DOM_BLUE)+miniBar('해외',r.intl,Math.max(r.dom,r.intl,1),INTL_TEAL)+'</div>'+
       '<div class="col-md-7"><div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px">제품별 (상위)</div>'+
       (prods.length?prods.slice(0,5).map(p=>miniBar(p[0],p[1],pmax,'#0f766e')).join(''):'<span style="font-size:12px;color:#94a3b8">데이터 없음</span>')+'</div></div>';
-    return {name:r.name,val,prev,color:'#7c3aed',detail};
+    return {name:r.name,val,prev,qty:r.qtyDev||0,qtyNote:'국내 장비',color:'#7c3aed',detail};
   });
   arr=arr.filter(x=>x.val>0).sort((a,b)=>b.val-a.val);
   return arr;
