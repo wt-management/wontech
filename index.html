@@ -1845,6 +1845,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       </div>
       <div id="devrep-insight" style="display:flex;gap:8px;flex-wrap:wrap"></div>
     </div>
+    <div id="capa-view" class="mb-3"></div>
     <div id="dev-variance"></div>
     <!-- 전체 순위 테이블 -->
     <div class="card p-0">
@@ -12020,7 +12021,38 @@ function renderDevVariance(){
   }
   host.innerHTML='<div class="card p-3"><div style="display:flex;align-items:center;margin-bottom:8px"><span style="font-size:13px;font-weight:800"><i class="bi bi-graph-up-arrow me-1" style="color:#2563eb"></i>매출 증감 분해 <span style="font-size:10px;font-weight:400;color:#94a3b8">· 전년 동기 대비 · 클릭 시 상세</span></span><span style="margin-left:auto">'+seg(_devVarMode)+'</span></div>'+head+body+'</div>';
 }
+// ── 월별 케파(목표) 달성 현황 ── 월 40억(장비30=대리점21+직판9, 소모품10). 대리점=6곳 담당, 나머지 직판
+var _CAPA_DEALER_RE=/유니메디|드림메드|이지온|에스비메디|씽씽|라이트스톤|리이트스톤/;
+function renderCapa(){
+  var host=document.getElementById('capa-view'); if(!host) return;
+  try{
+    var CAPA={dealer:21e8,direct:9e8,cons:10e8}, CAPA_TOT=40e8;
+    var lm=(typeof _lastAcctMonth==='function')?_lastAcctMonth():7; if(lm<1)lm=1;
+    var mo={}; for(var m=1;m<=lm;m++) mo[m]={dealer:0,direct:0,cons:0};
+    Object.keys(DEVICE.hospitals||{}).forEach(function(hn){ var h=DEVICE.hospitals[hn]||{};
+      var owner=(typeof _repOf==='function'?_repOf(hn):'')||(typeof _sN==='function'?_sN(h.sales||''):(h.sales||''));
+      var isD=_CAPA_DEALER_RE.test(String(owner)); var m26=h.m2026||{};
+      for(var m=1;m<=lm;m++){ var v=Number(m26[m])||0; if(!v)continue; if(isD)mo[m].dealer+=v; else mo[m].direct+=v; } });
+    var cm=(CONS&&CONS.monthly2026)||{}; for(var m=1;m<=lm;m++) mo[m].cons=Number(cm[m])||0;
+    var sum={dealer:0,direct:0,cons:0}; for(var m=1;m<=lm;m++){ sum.dealer+=mo[m].dealer; sum.direct+=mo[m].direct; sum.cons+=mo[m].cons; }
+    var W=function(v){ return (v/1e8).toFixed(1); }, pc=function(a,c){ return c>0?Math.round(a/c*100):0; };
+    var col=function(p){ return p>=100?'#16a34a':(p>=80?'#d97706':'#dc2626'); }, bg=function(p){ return p>=100?'rgba(22,163,74,.10)':(p>=80?'rgba(217,119,6,.10)':'rgba(220,38,38,.08)'); };
+    var cell=function(a,c){ var p=pc(a,c); return '<td style="padding:7px 9px;text-align:right;background:'+bg(p)+'"><div style="font-weight:800;color:#1c2534;font-size:12.5px">'+W(a)+'억</div><div style="height:5px;background:rgba(148,163,184,.22);border-radius:3px;margin:3px 0 2px;overflow:hidden"><div style="width:'+Math.min(p,140)+'%;max-width:100%;height:100%;background:'+col(p)+'"></div></div><div style="font-size:10.5px;font-weight:800;color:'+col(p)+'">'+p+'%</div></td>'; };
+    var tile=function(lab,a,cap){ var c=cap*lm, p=pc(a,c), df=a-c; return '<div style="flex:1;min-width:128px;background:#fff;border:1px solid #e6ebf2;border-radius:12px;padding:12px 14px"><div style="font-size:11px;color:#64748b;font-weight:700">'+lab+' <span style="color:#94a3b8;font-weight:500">케파 '+W(c)+'억</span></div><div style="font-size:1.5rem;font-weight:800;color:#1c2534;line-height:1.15;margin:4px 0 3px">'+W(a)+'<span style="font-size:12px;color:#94a3b8">억</span></div><div style="height:7px;background:rgba(148,163,184,.2);border-radius:99px;overflow:hidden"><div style="width:'+Math.min(p,100)+'%;height:100%;background:'+col(p)+'"></div></div><div style="font-size:11px;font-weight:800;color:'+col(p)+';margin-top:3px">달성 '+p+'% <span style="color:#94a3b8;font-weight:500">('+(df>=0?'+':'')+W(df)+'억)</span></div></div>'; };
+    var totA=sum.dealer+sum.direct+sum.cons, last=mo[lm];
+    var ins=[['대리점',last.dealer,CAPA.dealer],['직판',last.direct,CAPA.direct],['소모품',last.cons,CAPA.cons]].map(function(x){ var d=x[1]-x[2]; return '<b style="color:'+(d>=0?'#16a34a':'#dc2626')+'">'+x[0]+' '+(d>=0?'+':'')+W(d)+'억</b>'; }).join(' · ');
+    var rows=''; for(var m=1;m<=lm;m++){ var t=mo[m].dealer+mo[m].direct+mo[m].cons; rows+='<tr><td style="padding:7px 9px;font-weight:800;color:#475569;text-align:center">'+m+'월</td>'+cell(mo[m].dealer,CAPA.dealer)+cell(mo[m].direct,CAPA.direct)+cell(mo[m].cons,CAPA.cons)+cell(t,CAPA_TOT)+'</tr>'; }
+    var TH=function(l,c){ return '<th style="padding:4px 9px 8px;text-align:right;border-bottom:2px solid #e7ebf0">'+l+'<br><span style="font-weight:400;color:#94a3b8">케파 '+c+'</span></th>'; };
+    host.innerHTML='<div class="card p-3">'
+      +'<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px"><span style="font-size:14px;font-weight:800"><i class="bi bi-speedometer2 me-1" style="color:#0d9488"></i>월별 케파(목표) 달성 현황 <span style="font-size:10px;font-weight:600;color:#0d9488;background:#ccfbf1;border-radius:5px;padding:1px 6px">1~'+lm+'월</span></span><span style="font-size:11px;color:#94a3b8">월 케파 40억 = 장비 30(대리점 21+직판 9) + 소모품 10 · 대리점 6곳(유니메디랩·드림메드·이지온메드·에스비메디칼·씽씽메디·라이트스톤)</span></div>'
+      +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">'+tile('장비 대리점',sum.dealer,CAPA.dealer)+tile('장비 직판',sum.direct,CAPA.direct)+tile('소모품',sum.cons,CAPA.cons)+tile('전체',totA,CAPA_TOT)+'</div>'
+      +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:520px"><thead><tr style="font-size:11px;color:#5a6675;font-weight:700"><th style="padding:4px 9px 8px;border-bottom:2px solid #e7ebf0">월</th>'+TH('장비 대리점','21억')+TH('장비 직판','9억')+TH('소모품','10억')+TH('전체','40억')+'</tr></thead><tbody>'+rows+'</tbody></table></div>'
+      +'<div style="margin-top:10px;font-size:11.5px;color:#64748b"><i class="bi bi-lightbulb-fill me-1" style="color:#f59e0b"></i>'+lm+'월 케파 대비: '+ins+' <span style="color:#cbd5e1">· 초록 달성 · 주황 80%↑ · 빨강 부족</span></div>'
+    +'</div>';
+  }catch(e){ host.innerHTML=''; console.warn('capa',e); }
+}
 function renderDevReps() {
+  try{ renderCapa(); }catch(_ce){ console.warn('capa',_ce); }
   var _cb=document.getElementById('claim-badge'); if(_cb){ var _pc=((typeof MGR_CLAIMS!=='undefined'?MGR_CLAIMS:[])||[]).filter(function(c){return c.status==='pending';}).length; _cb.textContent=_pc; _cb.style.display=_pc?'':'none'; }
   const fmtW = v => (v=Number(v||0))>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만원':Math.round(v).toLocaleString()+'원';
   _injectPeriodCtrl('devrep');
