@@ -12071,30 +12071,32 @@ function renderCapa(){
     var cm25=(CONS&&CONS.monthly2025)||{}; for(var m=1;m<=lm;m++) mo25[m].cons=Number(cm25[m])||0;
     var sum25={dealer:0,direct:0,cons:0}; for(var m=1;m<=lm;m++){ sum25.dealer+=mo25[m].dealer; sum25.direct+=mo25[m].direct; sum25.cons+=mo25[m].cons; }
 
-    // ── 기여자 상세 테이블(한 줄에 2명, 클릭 시 담당 상세) ──
+    // ── 기여자 상세 테이블(좌/우 열 우선 · 정확히 50% 양분 · 클릭 상세) ──
     var ctbl=function(list, capMo, roleLbl){
       if(!list.length) return '<div style="font-size:12px;color:#94a3b8;padding:6px 2px">해당 기간 실적 담당 없음</div>';
       var chSum=list.reduce(function(s,e){return s+e.y26;},0)||1;
-      var entCells=function(e,i){
-        if(!e) return '<td colspan="7"></td>';
+      var entRow=function(e,rank){
         var yoyS=e.yoy==null?'신규':(e.yoy>=0?'▲':'▼')+Math.abs(e.yoy).toFixed(0)+'%', yoyC=e.yoy==null?'#0891b2':e.yoy>=0?'#16a34a':'#dc2626';
         var share=e.y26/chSum*100, avg=e.y26/lm, down=e.yoy!=null&&e.yoy<=-20, up=e.yoy!=null&&e.yoy>=20;
         var badge=down?'<span style="font-size:9px;font-weight:800;color:#dc2626;background:#fef2f2;border-radius:4px;padding:0 4px;margin-left:4px">부진</span>':(up?'<span style="font-size:9px;font-weight:800;color:#16a34a;background:#f0fdf4;border-radius:4px;padding:0 4px;margin-left:4px">성장</span>':'');
-        var oc='onclick="showDevRepDetail(\''+_jsArg(e.name)+'\')"', cs='cursor:pointer;padding:5px 8px;'+(down?'background:rgba(220,38,38,.05);':(up?'background:rgba(22,163,74,.045);':''));
-        return '<td '+oc+' style="'+cs+'color:#94a3b8;font-size:11px;text-align:center">'+(i+1)+'</td>'
-          +'<td '+oc+' style="'+cs+'font-weight:700;font-size:12px;color:#334155">'+esc(e.name)+badge+'</td>'
-          +'<td '+oc+' style="'+cs+'text-align:right;font-size:11px;color:#94a3b8">'+W(e.y25)+'</td>'
-          +'<td '+oc+' style="'+cs+'text-align:right;font-size:12.5px;font-weight:800">'+W(e.y26)+'억</td>'
-          +'<td '+oc+' style="'+cs+'text-align:right;font-size:11px;font-weight:700;color:'+yoyC+'">'+yoyS+'</td>'
-          +'<td '+oc+' style="'+cs+'text-align:right;font-size:11px;color:#475569">'+W(avg)+'</td>'
-          +'<td '+oc+' style="'+cs+'min-width:80px"><div style="display:flex;align-items:center;gap:5px"><div style="flex:1;height:6px;background:#eef2f7;border-radius:3px;overflow:hidden;min-width:32px"><div style="width:'+Math.min(share,100)+'%;height:100%;background:#6366f1"></div></div><span style="font-size:10px;color:#64748b;min-width:24px;text-align:right">'+share.toFixed(0)+'%</span></div></td>';
+        var tint=down?'background:rgba(220,38,38,.05)':(up?'background:rgba(22,163,74,.045)':'');
+        return '<tr onclick="showDevRepDetail(\''+_jsArg(e.name)+'\')" style="cursor:pointer;border-top:1px solid #f1f5f9;'+tint+'" onmouseover="this.style.filter=\'brightness(.97)\'" onmouseout="this.style.filter=\'\'">'
+          +'<td style="padding:5px 7px;color:#94a3b8;font-size:11px;text-align:center">'+rank+'</td>'
+          +'<td style="padding:5px 7px;font-weight:700;font-size:12px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(e.name)+badge+'</td>'
+          +'<td style="padding:5px 7px;text-align:right;font-size:11px;color:#94a3b8">'+W(e.y25)+'</td>'
+          +'<td style="padding:5px 7px;text-align:right;font-size:12px;font-weight:800">'+W(e.y26)+'억</td>'
+          +'<td style="padding:5px 7px;text-align:right;font-size:11px;font-weight:700;color:'+yoyC+'">'+yoyS+'</td>'
+          +'<td style="padding:5px 7px;text-align:right;font-size:11px;color:#475569">'+W(avg)+'</td>'
+          +'<td style="padding:5px 7px"><div style="display:flex;align-items:center;gap:5px"><div style="flex:1;height:6px;background:#eef2f7;border-radius:3px;overflow:hidden;min-width:26px"><div style="width:'+Math.min(share,100)+'%;height:100%;background:#6366f1"></div></div><span style="font-size:10px;color:#64748b;min-width:22px;text-align:right">'+share.toFixed(0)+'%</span></div></td></tr>';
       };
-      var thg='<th style="padding:3px 8px 7px">#</th><th style="padding:3px 8px 7px;text-align:left">'+roleLbl+'</th><th style="padding:3px 8px 7px;text-align:right">2025</th><th style="padding:3px 8px 7px;text-align:right">2026</th><th style="padding:3px 8px 7px;text-align:right">YoY</th><th style="padding:3px 8px 7px;text-align:right">월평균</th><th style="padding:3px 8px 7px;text-align:left">기여도</th>';
-      var rows='';
-      for(var i=0;i<list.length;i+=2){ rows+='<tr style="border-top:1px solid #f1f5f9">'+entCells(list[i],i)+'<td style="width:10px;padding:0;background:#f1f5f9"></td>'+entCells(list[i+1],i+1)+'</tr>'; }
-      return '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:720px">'
-        +'<thead><tr style="font-size:10.5px;color:#64748b;font-weight:700;border-bottom:2px solid #eef2f7">'+thg+'<th style="width:10px;padding:0;border-left:1px solid #e2e8f0"></th>'+thg+'</tr></thead>'
-        +'<tbody>'+rows+'</tbody></table></div>';
+      var COLG='<colgroup><col style="width:24px"><col><col style="width:42px"><col style="width:54px"><col style="width:56px"><col style="width:42px"><col style="width:84px"></colgroup>';
+      var THEAD='<thead><tr style="font-size:10.5px;color:#64748b;font-weight:700;border-bottom:2px solid #eef2f7"><th style="padding:3px 7px 7px;text-align:center">#</th><th style="padding:3px 7px 7px;text-align:left">'+roleLbl+'</th><th style="padding:3px 7px 7px;text-align:right">2025</th><th style="padding:3px 7px 7px;text-align:right">2026</th><th style="padding:3px 7px 7px;text-align:right">YoY</th><th style="padding:3px 7px 7px;text-align:right">월평균</th><th style="padding:3px 7px 7px;text-align:left">기여도</th></tr></thead>';
+      var mk=function(items,start){ var r=items.map(function(e,j){return entRow(e,start+j+1);}).join(''); return '<table style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;table-layout:fixed">'+COLG+THEAD+'<tbody>'+r+'</tbody></table>'; };
+      var half=Math.ceil(list.length/2), L=list.slice(0,half), R=list.slice(half);
+      return '<div style="overflow-x:auto"><div style="display:grid;grid-template-columns:1fr 1fr;min-width:680px">'
+        +'<div style="min-width:0">'+mk(L,0)+'</div>'
+        +'<div style="min-width:0;border-left:1px solid #e2e8f0">'+mk(R,half)+'</div>'
+      +'</div></div>';
     };
     // ── 채널 카드 래퍼 ──
     var chCard=function(icon,icc,title,a,capMo,body){ var c=capMo*lm,p=pc(a,c),df=a-c;
