@@ -12300,15 +12300,13 @@ function showDevRepDetail(repName) {
       <button onclick="document.getElementById('devrep-modal').style.display='none'" style="border:none;background:none;font-size:24px;color:#64748b;cursor:pointer;line-height:1;padding:4px">&times;</button>
     </div>
     <div style="overflow-y:auto;flex:1;padding:16px 20px">
-      <div class="row g-3 mb-3">
-        <div class="col-md-5">
-          <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:8px"><i class="bi bi-box-seam me-1"></i>제품별 실적</div>
-          ${prodsHtml}
-        </div>
-        <div class="col-md-7">
-          <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:8px"><i class="bi bi-graph-up me-1"></i>월별 추이</div>
-          <div style="position:relative;height:200px"><canvas id="${chartId}"></canvas></div>
-        </div>
+      <div class="mb-3">
+        <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:8px"><i class="bi bi-box-seam me-1"></i>제품별 실적</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 24px">${prodsHtml}</div>
+      </div>
+      <div class="mb-3">
+        <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:8px"><i class="bi bi-graph-up me-1"></i>월별 추이</div>
+        <div style="position:relative;height:210px"><canvas id="${chartId}"></canvas></div>
       </div>
       <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:8px"><i class="bi bi-calendar3 me-1"></i>월별 매출 · 전년 비교 <span style="font-size:10px;font-weight:400;color:#94a3b8">(선택 기간)</span></div>
       <div style="max-height:280px;overflow-y:auto;margin-bottom:18px;border:1px solid #eef2f7;border-radius:10px">${monHtml}</div>
