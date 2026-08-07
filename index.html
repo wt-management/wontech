@@ -1860,11 +1860,10 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <div style="overflow-x:auto">
         <table class="table table-hover table-sm mb-0">
           <thead class="table-light" style="position:sticky;top:0">
-            <tr>
-              <th>#</th><th>담당자</th>
-              <th class="text-end">2025 YTD</th><th class="text-end">2026 YTD</th>
-              <th class="text-end">YoY</th><th class="text-end">대수(2026)</th>
-              <th class="text-end">거래처수</th><th>주력 제품</th>
+            <tr style="font-size:11px">
+              <th>#</th><th>담당자</th><th class="text-end">2025</th><th class="text-end">2026</th><th class="text-end">YoY</th><th class="text-end">대수</th><th class="text-end">거래처</th>
+              <th style="width:10px;padding:0;border-left:1px solid #e2e8f0"></th>
+              <th>#</th><th>담당자</th><th class="text-end">2025</th><th class="text-end">2026</th><th class="text-end">YoY</th><th class="text-end">대수</th><th class="text-end">거래처</th>
             </tr>
           </thead>
           <tbody id="devrep-rank-table"></tbody>
@@ -12088,21 +12087,25 @@ function renderDevReps() {
     .filter(e=> _flt==='team'?e.isTeam : _flt==='dealer'?!e.isTeam : true)
     .sort((a,b)=>b.cur-a.cur);
 
-  // rank table
-  document.getElementById('devrep-rank-table').innerHTML = entries.map((e,i) => {
+  // rank table — 한 행에 담당자 2명(좌/우) 콤팩트 배치
+  const _cellFor = (e,i) => {
+    if(!e) return '<td colspan="7"></td>';
     const yoyStr = e.yoy===null?'-':(e.yoy>=0?'▲':'▼')+Math.abs(e.yoy).toFixed(1)+'%';
-    const yoyCol = e.yoy===null?'#64748b':e.yoy>=0?'#16a34a':'#dc2626';
-    return `<tr style="cursor:pointer" onclick="showDevRepDetail('${_jsArg(e.name)}')" title="클릭하면 상세 보기">
-      <td style="color:#64748b;font-size:11px">${i+1}</td>
-      <td style="font-size:12px;font-weight:700;color:${e.isTeam?'#1d4ed8':'#334155'}">${_devRepName(e)}</td>
-      <td class="text-end" style="font-size:12px">${fmtW(e.pre)}</td>
-      <td class="text-end" style="font-size:12px;font-weight:700">${fmtW(e.cur)}</td>
-      <td class="text-end" style="font-size:12px;color:${yoyCol};font-weight:600">${yoyStr}</td>
-      <td class="text-end" style="font-size:12px">${e.qty}대</td>
-      <td class="text-end" style="font-size:12px">${e.cust}개사</td>
-      <td style="font-size:11px;color:#6b7280">${e.topProd||'-'}</td>
-    </tr>`;
-  }).join('') || '<tr><td colspan="8" class="text-center text-muted py-3">데이터 없음</td></tr>';
+    const yoyCol = e.yoy===null?'#94a3b8':e.yoy>=0?'#16a34a':'#dc2626';
+    const oc = `onclick="showDevRepDetail('${_jsArg(e.name)}')"`, cs='cursor:pointer;padding:.28rem .5rem;';
+    return `<td ${oc} style="${cs}color:#94a3b8;font-size:11px">${i+1}</td>
+      <td ${oc} style="${cs}font-size:12px;font-weight:700;color:${e.isTeam?'#1d4ed8':'#334155'}">${_devRepName(e)}</td>
+      <td ${oc} class="text-end" style="${cs}font-size:11.5px;color:#94a3b8">${fmtW(e.pre)}</td>
+      <td ${oc} class="text-end" style="${cs}font-size:12px;font-weight:700">${fmtW(e.cur)}</td>
+      <td ${oc} class="text-end" style="${cs}font-size:11.5px;color:${yoyCol};font-weight:600">${yoyStr}</td>
+      <td ${oc} class="text-end" style="${cs}font-size:11.5px">${e.qty}대</td>
+      <td ${oc} class="text-end" style="${cs}font-size:11.5px">${e.cust}개사</td>`;
+  };
+  let _rankRows='';
+  for(let i=0;i<entries.length;i+=2){
+    _rankRows += `<tr title="클릭하면 상세 보기">${_cellFor(entries[i],i)}<td style="width:10px;padding:0;background:#f1f5f9"></td>${_cellFor(entries[i+1],i+1)}</tr>`;
+  }
+  document.getElementById('devrep-rank-table').innerHTML = _rankRows || '<tr><td colspan="15" class="text-center text-muted py-3">데이터 없음</td></tr>';
   _devLastEntries = entries.map(function(e){ return {name:e.name, cur:e.cur, pre:e.pre, isTeam:e.isTeam}; });
   _renderDevInsight(); renderDevChart(); try{renderDevVariance();}catch(e){console.error(e);}
 }
