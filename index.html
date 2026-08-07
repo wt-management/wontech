@@ -804,10 +804,9 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <span id="dash-period-desc" style="font-size:12px;color:#64748b;font-weight:600"></span>
     </div>
 
-    <!-- KPI 행 + 파이프라인 퍼널(우측 소형) -->
-    <div style="display:flex;gap:14px;align-items:stretch;flex-wrap:wrap;margin-bottom:16px">
-      <div class="wt-band" id="dash-kpi-band" style="flex:1 1 520px;margin-bottom:0;min-width:0"></div>
-      <div class="card" style="width:300px;flex:0 0 auto;padding:13px 15px"><div class="fw-bold mb-2" style="font-size:13px">매출 구성 <span style="font-size:10px;font-weight:400;color:#94a3b8">보고기준</span></div><div id="dash-funnel"></div><div id="dash-funnel-summary" class="mt-2 pt-2" style="border-top:1px solid #f3f4f6"></div></div>
+    <!-- 매출 요약(한 줄) -->
+    <div style="margin-bottom:16px">
+      <div class="wt-band" id="dash-kpi-band" style="margin-bottom:0"></div>
     </div>
 
     <!-- 매출 전망 바 -->
@@ -840,6 +839,16 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
           </div>
         </div>
         <div id="action-board" style="max-height:280px;overflow-y:auto"></div>
+      </div>
+    </div>
+
+    <!-- 팀원별 현황(파트장) -->
+    <div class="mb-4" id="dash-team-section">
+      <div class="card p-0">
+        <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+          <div class="fw-bold" style="font-size:14px"><i class="bi bi-people-fill me-2" style="color:#2563eb"></i>팀원별 현황 <span style="font-size:11px;font-weight:400;color:#94a3b8">· 지연 많은 순 · 이름 클릭 시 실적 상세</span></div>
+        </div>
+        <div id="dash-team-board" style="overflow-x:auto"></div>
       </div>
     </div>
 
@@ -4449,13 +4458,8 @@ function renderDashboard() {
   const _chg=(c)=>c==null?'':' <b style="color:'+(c>=0?'#16a34a':'#dc2626')+'">'+(c>=0?'▲':'▼')+Math.abs(c).toFixed(0)+'%</b>';
   const band=document.getElementById('dash-kpi-band');
   if(band) band.innerHTML=
-     '<div class="wt-hero" onclick="showPage(\'sales-overview\')" style="cursor:pointer"><span class="l"><i class="bi bi-bar-chart-fill me-1" style="color:#2563eb"></i>매출 (보고기준)</span><b>'+fmtAmt(rep)+'</b><span class="s">회계 '+fmtAmt(acc)+(pend>0?' · 미반영 +'+fmtAmt(pend):'')+' · 전년 '+fmtAmt(accPre)+_chg(yoy)+'</span></div>'
-    +'<div class="wt-fact" onclick="showPage(\'device-sales\')" style="cursor:pointer"><span class="l"><i class="bi bi-cpu me-1" style="color:#2563eb"></i>제품(장비)</span><b>'+fmtAmt(devRep)+'</b><span class="s">회계 '+fmtAmt(devAcc)+' · 전년比'+_chg(devYoy)+'</span></div>'
-    +'<div class="wt-fact" onclick="showPage(\'consumables\')" style="cursor:pointer"><span class="l"><i class="bi bi-capsule me-1" style="color:#2563eb"></i>소모품</span><b>'+fmtAmt(consRep)+'</b><span class="s">회계 '+fmtAmt(consAcc)+' · 전년比'+_chg(consYoy)+'</span></div>'
+     '<div class="wt-hero" onclick="showPage(\'sales-overview\')" style="cursor:pointer;flex:1 1 340px"><span class="l"><i class="bi bi-bar-chart-fill me-1" style="color:#2563eb"></i>매출 (보고기준)</span><b>'+fmtAmt(rep)+'</b><span class="s">제품 '+fmtAmt(devRep)+' · 소모품 '+fmtAmt(consRep)+' · 회계 '+fmtAmt(acc)+(pend>0?' · 미반영 +'+fmtAmt(pend):'')+' · 전년'+_chg(yoy)+(momPct!=null?' · 전월 <b style="color:'+(momPct>=0?"#16a34a":"#dc2626")+'">'+(momPct>=0?'+':'')+momPct.toFixed(0)+'%</b>':'')+'</span></div>'
     +'<div class="wt-fact" onclick="showPage(\'pending\')" style="cursor:pointer"><span class="l"><i class="bi bi-hourglass-split me-1" style="color:#7c3aed"></i>미반영(예정)</span><b>'+fmtAmt(pend)+'</b><span class="s">회계 반영 전 · 클릭 상세</span></div>'
-    +(momPct!=null
-        ? '<div class="wt-fact"><span class="l"><i class="bi bi-arrow-left-right me-1" style="color:#2563eb"></i>전월 대비</span><b style="color:'+(momPct>=0?'#16a34a':'#dc2626')+'">'+(momPct>=0?'+':'')+momPct.toFixed(0)+'%</b><span class="s">회계 기준</span></div>'
-        : '<div class="wt-fact"><span class="l"><i class="bi bi-graph-up-arrow me-1" style="color:#2563eb"></i>전년 대비</span><b style="color:'+(yoy==null?'#374151':yoy>=0?'#16a34a':'#dc2626')+'">'+(yoy==null?'-':(yoy>=0?'+':'')+yoy.toFixed(0)+'%')+'</b><span class="s">회계 기준 동기比</span></div>')
     +'<div class="wt-fact" onclick="openWarrantyDetail()" style="cursor:pointer" title="클릭하면 상세"><span class="l"><i class="bi bi-shield-exclamation me-1" style="color:#ea580c"></i>보증만료 임박</span><b id="kpi-warranty">-</b><span class="s">30일 이내 · 클릭 상세</span></div>';
   const revBar=document.getElementById('dash-revenue-bar'); if(revBar) revBar.style.display='none';
 
@@ -4545,6 +4549,32 @@ function renderDashboard() {
 
   // KPI 카드 5종 클릭 → 수주관리(딜 상세)
   ['kpi-confirmed','kpi-expected','kpi-total-forecast','kpi-winrate','kpi-pipe-balance'].forEach(function(id){ var el=document.getElementById(id); var card=el&&el.closest('.wt-hero,.wt-fact,.kpi-card'); if(card&&!card.getAttribute('onclick')){ card.setAttribute('onclick',"showPage('sales')"); card.setAttribute('title','클릭하면 수주관리로 이동'); } });
+
+  // ── 팀원별 현황(파트장 관리): 최근월/누계 실적 · 지연 · 오늘 일정 ──
+  try{ var _tb=document.getElementById('dash-team-board');
+    if(_tb){
+      var _mgrReps=(typeof _repsByMgr==='function')?_repsByMgr(DEVICE.hospitals||{}):{};
+      var _lam=(typeof _lastAcctMonth==='function')?_lastAcctMonth():(new Date().getMonth()+1);
+      var _tn={}; Object.keys(_mgrReps).forEach(function(n){ if(typeof _isKorSales==='function'&&_isKorSales(n)) _tn[n]=1; });
+      [].concat(overdueItems,todayItems).forEach(function(x){ if(x.sales&&typeof _isKorSales==='function'&&_isKorSales(x.sales)) _tn[x.sales]=1; });
+      var _fmtW2=function(v){ v=Number(v||0); return v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4)+'만':Math.round(v)+''; };
+      var _team=Object.keys(_tn).map(function(nm){
+        var od=overdueItems.filter(function(x){return x.sales===nm;}).length;
+        var td=todayItems.filter(function(x){return x.sales===nm;}).length;
+        var mm=(((_mgrReps[nm]||{}).m2026)||{}), rev=mm[_lam]||0, ytd=0; for(var k in mm){ ytd+=mm[k]||0; }
+        return {nm:nm,od:od,td:td,rev:rev,ytd:ytd};
+      }).sort(function(a,b){ return b.od-a.od || b.ytd-a.ytd; });
+      _tb.innerHTML=_team.length?('<table style="width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums"><thead><tr style="font-size:10.5px;color:#64748b;font-weight:700;background:#f8fafc"><th style="padding:6px 14px;text-align:left">담당자</th><th style="padding:6px 12px;text-align:right">'+_lam+'월 실적</th><th style="padding:6px 12px;text-align:right">누계 실적</th><th style="padding:6px 12px;text-align:center">지연</th><th style="padding:6px 12px;text-align:center">오늘 일정</th></tr></thead><tbody>'
+        +_team.map(function(t){ var hot=t.od>=5; return '<tr onclick="showDevRepDetail(\''+_jsArg(t.nm)+'\')" style="cursor:pointer;border-top:1px solid #f1f5f9;'+(hot?'background:rgba(220,38,38,.045)':'')+'" onmouseover="this.style.filter=\'brightness(.97)\'" onmouseout="this.style.filter=\'\'" title="클릭하면 실적 상세">'
+          +'<td style="padding:6px 14px;font-weight:700;color:#334155">'+_escH(t.nm)+' <i class="bi bi-search" style="font-size:8px;color:#cbd5e1"></i></td>'
+          +'<td style="padding:6px 12px;text-align:right;font-weight:700">'+_fmtW2(t.rev)+'</td>'
+          +'<td style="padding:6px 12px;text-align:right;color:#475569">'+_fmtW2(t.ytd)+'</td>'
+          +'<td style="padding:6px 12px;text-align:center"><b style="color:'+(t.od>0?'#dc2626':'#cbd5e1')+'">'+t.od+'</b></td>'
+          +'<td style="padding:6px 12px;text-align:center"><b style="color:'+(t.td>0?'#2563eb':'#cbd5e1')+'">'+t.td+'</b></td>'
+        +'</tr>'; }).join('')+'</tbody></table>')
+        :'<div class="text-muted text-center py-4" style="font-size:13px">팀원 데이터 없음</div>';
+    }
+  }catch(_te){ console.warn('team',_te); }
 
   // 리더보드 제거됨 — 요소 없으면 여기서 종료(현황판 렌더 끝)
   if(!document.getElementById('leaderboard')) return;
