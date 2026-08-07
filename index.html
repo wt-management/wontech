@@ -12118,8 +12118,9 @@ function renderCapa(){
     var mCell=function(a,c,prev,q,q25,hasQty){ var p=pc(a,c);
       var left='<span style="font-size:10px;font-weight:600;color:#8b95a3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">’25 '+W(prev)+'억'+(hasQty?'·'+q25+'대':'')+'</span>';
       var right='<span style="display:inline-flex;align-items:baseline;gap:9px;white-space:nowrap;flex:none"><b style="font-size:12.5px;color:#1c2534;min-width:50px;text-align:right">'+W(a)+'억</b><b style="font-size:11px;color:'+col(p)+';min-width:38px;text-align:right">'+p+'%</b><span style="font-size:10.5px;color:#5b6675;min-width:30px;text-align:right">'+(hasQty?q+'대':'')+'</span><span style="min-width:44px;text-align:right">'+yoyMini(a,prev)+'</span></span>';
-      return '<td style="padding:5px 12px;border-bottom:1px solid #eef2f5;background:'+bg(p)+'"><div style="display:flex;align-items:baseline;gap:10px"><span style="flex:1;min-width:0;display:flex">'+left+'</span>'+right+'</div></td>'; };
-    var SP='<td style="padding:0;background:#fff"></td>', SPH='<th style="padding:0;background:#fff"></th>';
+      var fill=Math.min(p,100);
+      return '<td style="padding:5px 12px 6px;border-bottom:1px solid #eef2f5;vertical-align:middle"><div style="display:flex;align-items:baseline;gap:10px"><span style="flex:1;min-width:0;display:flex">'+left+'</span>'+right+'</div><div style="margin-top:5px;height:3px;border-radius:2px;background:#edf1f5;overflow:hidden"><div style="width:'+fill+'%;height:100%;background:'+col(p)+';opacity:.85"></div></div></td>'; };
+    var SP='<td style="padding:0;border-left:1px solid #e8edf2"></td>', SPH='<th style="padding:0;border-left:1px solid #e8edf2"></th>';
     var TH=function(l,c){ return '<th style="padding:4px 11px 7px;text-align:center;border-bottom:2px solid #e7ebf0">'+l+' <span style="font-weight:400;color:#b6c0cc">· '+c+'</span></th>'; };
     // 월 행(평면)
     var mRow=function(m){ var t=mo[m].dealer+mo[m].direct+mo[m].cons, tq=moQ[m].dealer+moQ[m].direct, tq25=moQ25[m].dealer+moQ25[m].direct;
