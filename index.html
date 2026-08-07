@@ -741,6 +741,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <button class="anatab" data-sub="device-reps" onclick="showPage('device-reps')"><i class="bi bi-person-badge"></i>담당자별</button>
       <button class="anatab" data-sub="cons-hospitals" onclick="showPage('cons-hospitals')"><i class="bi bi-building-check"></i>병원별</button>
       <button class="anatab" data-sub="region" onclick="showPage('region')"><i class="bi bi-geo-alt"></i>지역별</button>
+      <button class="anatab" data-sub="capa" onclick="showPage('capa')"><i class="bi bi-speedometer2"></i>Capa 분석</button>
     </div>
     <div class="wt-mast">
       <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-geo-alt me-2"></i>지역별 매출 분석 <span style="font-size:12px;font-weight:400;color:#64748b">시도 · 구군</span></div></div>
@@ -1668,6 +1669,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <button class="anatab" data-sub="device-reps" onclick="showPage('device-reps')"><i class="bi bi-person-badge"></i>담당자별</button>
       <button class="anatab" data-sub="cons-hospitals" onclick="showPage('cons-hospitals')"><i class="bi bi-building-check"></i>병원별</button>
       <button class="anatab" data-sub="region" onclick="showPage('region')"><i class="bi bi-geo-alt"></i>지역별</button>
+      <button class="anatab" data-sub="capa" onclick="showPage('capa')"><i class="bi bi-speedometer2"></i>Capa 분석</button>
     </div>
     <div class="wt-mast">
       <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-building-check me-2"></i>병원별 영업 인텔리전스</div>
@@ -1822,6 +1824,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <button class="anatab" data-sub="device-reps" onclick="showPage('device-reps')"><i class="bi bi-person-badge"></i>담당자별</button>
       <button class="anatab" data-sub="cons-hospitals" onclick="showPage('cons-hospitals')"><i class="bi bi-building-check"></i>병원별</button>
       <button class="anatab" data-sub="region" onclick="showPage('region')"><i class="bi bi-geo-alt"></i>지역별</button>
+      <button class="anatab" data-sub="capa" onclick="showPage('capa')"><i class="bi bi-speedometer2"></i>Capa 분석</button>
     </div>
     <div class="wt-mast">
       <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-person-badge me-2"></i>담당자별 매출 현황</div><div style="font-size:11.5px;color:#94a3b8;margin-top:3px">담당자·대리점 실적은 <b style="color:#64748b">장비 기준</b> · 소모품은 담당자가 없어 <b style="color:#64748b">합계 매출에만 반영</b> → 합계 = 종합 전체와 일치</div></div>
@@ -1845,7 +1848,6 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       </div>
       <div id="devrep-insight" style="display:flex;gap:8px;flex-wrap:wrap"></div>
     </div>
-    <div id="capa-view" class="mb-3"></div>
     <div id="dev-variance"></div>
     <!-- 전체 순위 테이블 -->
     <div class="card p-0">
@@ -1870,6 +1872,20 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         </table>
       </div>
     </div>
+  </div>
+
+  <!-- Capa(케파) 달성 분석 -->
+  <div id="page-capa" class="page">
+    <div class="ana-tabs">
+      <button class="anatab" data-sub="device-reps" onclick="showPage('device-reps')"><i class="bi bi-person-badge"></i>담당자별</button>
+      <button class="anatab" data-sub="cons-hospitals" onclick="showPage('cons-hospitals')"><i class="bi bi-building-check"></i>병원별</button>
+      <button class="anatab" data-sub="region" onclick="showPage('region')"><i class="bi bi-geo-alt"></i>지역별</button>
+      <button class="anatab" data-sub="capa" onclick="showPage('capa')"><i class="bi bi-speedometer2"></i>Capa 분석</button>
+    </div>
+    <div class="wt-mast">
+      <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-speedometer2 me-2"></i>Capa(케파) 달성 분석</div><div style="font-size:11.5px;color:#94a3b8;margin-top:3px">월 케파 40억(장비 30 = 대리점 21 + 직판 9, 소모품 10) 대비 <b style="color:#64748b">채널·담당자별 달성/부진</b>을 진단</div></div>
+    </div>
+    <div id="capa-view"></div>
   </div>
 
   <!-- 거래처 현황 (숨김 — 병원별 분석으로 통합) -->
@@ -3106,7 +3122,7 @@ async function _bootApp(access) {
   await _loadEqRebuilt();
   var _nav=(performance.getEntriesByType('navigation')[0]||{}).type;   // reload=새로고침 / back_forward=복귀 / navigate=신규진입
   var _sv=sessionStorage.getItem('wt_page');
-  var _validPage=function(k){ return !!(k && document.getElementById('page-'+k) && !(k==='device-reps' && typeof _isMgr!=='undefined' && !_isMgr) && !((k==='cons-hospitals'||k==='region') && typeof _isMgr!=='undefined' && !_isMgr) && !(k==='dashboard' && typeof _isMgr!=='undefined' && !(_isMgr||_isStrat))); };   // 담당자별분석=파트장, 현황판=파트장+영업전략파트
+  var _validPage=function(k){ return !!(k && document.getElementById('page-'+k) && !(k==='device-reps' && typeof _isMgr!=='undefined' && !_isMgr) && !((k==='cons-hospitals'||k==='region'||k==='capa') && typeof _isMgr!=='undefined' && !_isMgr) && !(k==='dashboard' && typeof _isMgr!=='undefined' && !(_isMgr||_isStrat))); };   // 담당자별분석=파트장, 현황판=파트장+영업전략파트
   var _hp=(location.hash||'').replace(/^#/,'');   // 딥링크 해시(#페이지키)
   var _t = _validPage(_hp) ? _hp
          : ((_nav==='reload'||_nav==='back_forward') && _validPage(_sv)) ? _sv
@@ -3175,7 +3191,7 @@ function showPage(name, el, noPush) {
   // 담당자별 분석=파트장/관리자, 현황판=파트장/관리자+영업전략파트 (그 외 팀원 → 종합현황)
   if(name==='device-reps' && typeof _isMgr!=='undefined' && !_isMgr){ name='sales-overview'; el=null; }
   if(name==='dashboard' && typeof _isMgr!=='undefined' && !(_isMgr||_isStrat)){ name='sales-overview'; el=null; }
-  if((name==='cons-hospitals'||name==='region') && typeof _isMgr!=='undefined' && !_isMgr){ name='sales-overview'; el=null; }
+  if((name==='cons-hospitals'||name==='region'||name==='capa') && typeof _isMgr!=='undefined' && !_isMgr){ name='sales-overview'; el=null; }
   sessionStorage.setItem('wt_page', name);
   if(name!=='schedule'){ try{ _schDayFromMonth=false; _schDrillSnap=null; _schOverdueOnly=false; _schDoneOnly=false; }catch(e){} }
   if(!noPush && !(history.state && history.state.page===name)) history.pushState({page: name}, '', location.href.split('#')[0] + '#' + name);   // 같은 페이지 중복 push 금지(재클릭 시 엔트리 누적 방지)
@@ -3188,7 +3204,7 @@ function showPage(name, el, noPush) {
   else { const links = document.querySelectorAll('.nav-link');
     const _navLbl={'sales-overview':'종합',dashboard:'현황판',sales:'수주관리',quotes:'견적서/ROI',schedule:'일정',cdu:'CDU',roi:'견적서/ROI · ROI 계산기',speech:'Sales Speech',customers:'고객사',equipments:'장비',logs:'상담일지',products:'제품',consumables:'소모품 매출','cons-hospitals':'병원별','device-sales':'제품 매출','device-reps':'담당자별',region:'지역별 분석',pending:'회계 미반영 매출','cons-accounts':'거래처'}[name]||'';
     if(_navLbl) links.forEach(l=>{ if(l.textContent.trim().includes(_navLbl)) l.classList.add('active'); }); }
-  try{ var _GRP={'nav-analysis':['device-reps','cons-hospitals','region'],'nav-custequip':['customers','equipments'],'nav-salesmix':['consumables','device-sales']};
+  try{ var _GRP={'nav-analysis':['device-reps','cons-hospitals','region','capa'],'nav-custequip':['customers','equipments'],'nav-salesmix':['consumables','device-sales']};
     var _gid=null; for(var _k in _GRP){ if(_GRP[_k].indexOf(name)>=0){ _gid=_k; break; } }
     if(_gid){ document.querySelectorAll('.nav-link').forEach(function(a){a.classList.remove('active');}); var _g=document.getElementById(_gid); if(_g){ var _l=_g.querySelector('.nav-link'); if(_l)_l.classList.add('active'); } }
     document.querySelectorAll('.anatab').forEach(function(b){ b.classList.toggle('on', b.dataset.sub===name); });
@@ -3213,6 +3229,7 @@ function showPage(name, el, noPush) {
   else if(name==='device-reps') renderDevReps();
   else if(name==='cons-accounts') renderConsAccounts();
   else if(name==='region') renderRegion();
+  else if(name==='capa') renderCapa();
   else if(name==='pending') _loadIlboPending();
   else if(name==='feedback') renderFeedbackPage();
 }
@@ -12020,38 +12037,104 @@ function renderDevVariance(){
   }
   host.innerHTML='<div class="card p-3"><div style="display:flex;align-items:center;margin-bottom:8px"><span style="font-size:13px;font-weight:800"><i class="bi bi-graph-up-arrow me-1" style="color:#2563eb"></i>매출 증감 분해 <span style="font-size:10px;font-weight:400;color:#94a3b8">· 전년 동기 대비 · 클릭 시 상세</span></span><span style="margin-left:auto">'+seg(_devVarMode)+'</span></div>'+head+body+'</div>';
 }
-// ── 월별 케파(목표) 달성 현황 ── 월 40억(장비30=대리점21+직판9, 소모품10). 대리점=6곳 담당, 나머지 직판
+// ── Capa(케파) 달성 분석 ── 월 40억(장비30=대리점21+직판9, 소모품10). 대리점=6곳 담당(_repOf), 나머지 직판
 var _CAPA_DEALER_RE=/유니메디|드림메드|이지온|에스비메디|씽씽|라이트스톤|리이트스톤/;
 function renderCapa(){
   var host=document.getElementById('capa-view'); if(!host) return;
   try{
     var CAPA={dealer:21e8,direct:9e8,cons:10e8}, CAPA_TOT=40e8;
     var lm=(typeof _lastAcctMonth==='function')?_lastAcctMonth():7; if(lm<1)lm=1;
-    var mo={}; for(var m=1;m<=lm;m++) mo[m]={dealer:0,direct:0,cons:0};
-    Object.keys(DEVICE.hospitals||{}).forEach(function(hn){ var h=DEVICE.hospitals[hn]||{};
-      var owner=(typeof _repOf==='function'?_repOf(hn):'')||(typeof _sN==='function'?_sN(h.sales||''):(h.sales||''));
-      var isD=_CAPA_DEALER_RE.test(String(owner)); var m26=h.m2026||{};
-      for(var m=1;m<=lm;m++){ var v=Number(m26[m])||0; if(!v)continue; if(isD)mo[m].dealer+=v; else mo[m].direct+=v; } });
-    var cm=(CONS&&CONS.monthly2026)||{}; for(var m=1;m<=lm;m++) mo[m].cons=Number(cm[m])||0;
-    var sum={dealer:0,direct:0,cons:0}; for(var m=1;m<=lm;m++){ sum.dealer+=mo[m].dealer; sum.direct+=mo[m].direct; sum.cons+=mo[m].cons; }
     var W=function(v){ return (v/1e8).toFixed(1); }, pc=function(a,c){ return c>0?Math.round(a/c*100):0; };
     var col=function(p){ return p>=100?'#16a34a':(p>=80?'#d97706':'#dc2626'); }, bg=function(p){ return p>=100?'rgba(22,163,74,.10)':(p>=80?'rgba(217,119,6,.10)':'rgba(220,38,38,.08)'); };
-    var cell=function(a,c){ var p=pc(a,c); return '<td style="padding:7px 9px;text-align:right;background:'+bg(p)+'"><div style="font-weight:800;color:#1c2534;font-size:12.5px">'+W(a)+'억</div><div style="height:5px;background:rgba(148,163,184,.22);border-radius:3px;margin:3px 0 2px;overflow:hidden"><div style="width:'+Math.min(p,140)+'%;max-width:100%;height:100%;background:'+col(p)+'"></div></div><div style="font-size:10.5px;font-weight:800;color:'+col(p)+'">'+p+'%</div></td>'; };
-    var tile=function(lab,a,cap){ var c=cap*lm, p=pc(a,c), df=a-c; return '<div style="flex:1;min-width:128px;background:#fff;border:1px solid #e6ebf2;border-radius:12px;padding:12px 14px"><div style="font-size:11px;color:#64748b;font-weight:700">'+lab+' <span style="color:#94a3b8;font-weight:500">케파 '+W(c)+'억</span></div><div style="font-size:1.5rem;font-weight:800;color:#1c2534;line-height:1.15;margin:4px 0 3px">'+W(a)+'<span style="font-size:12px;color:#94a3b8">억</span></div><div style="height:7px;background:rgba(148,163,184,.2);border-radius:99px;overflow:hidden"><div style="width:'+Math.min(p,100)+'%;height:100%;background:'+col(p)+'"></div></div><div style="font-size:11px;font-weight:800;color:'+col(p)+';margin-top:3px">달성 '+p+'% <span style="color:#94a3b8;font-weight:500">('+(df>=0?'+':'')+W(df)+'억)</span></div></div>'; };
+    var esc=(typeof _dvEsc==='function')?_dvEsc:function(s){return String(s==null?'':s);};
+    var NOISE=/^전임자\(미상\)$|^미지정$|^미배정$/;
+    // 담당(_repOf)별 월별 장비실적 집계 → 대리점/직판 분류
+    var reps=(typeof _repsByMgr==='function')?_repsByMgr(DEVICE.hospitals||{}):{};
+    var dealers=[], directs=[];
+    Object.keys(reps).forEach(function(nm){ var o=reps[nm]||{}; var m26=o.m2026||{}, m25=o.m2025||{};
+      var y26=0,y25=0; for(var m=1;m<=lm;m++){ y26+=Number(m26[m])||0; y25+=Number(m25[m])||0; }
+      if(y26===0 && y25===0) return;   // 장비 실적 없는 담당(소모품 전담 등) 제외
+      var e={name:nm, m26:m26, m25:m25, y26:y26, y25:y25, qty:Number(o.qty2026)||0, yoy:(y25>0?(y26/y25-1)*100:null)};
+      if(_CAPA_DEALER_RE.test(nm)) dealers.push(e); else directs.push(e); });
+    dealers.sort(function(a,b){return b.y26-a.y26;}); directs.sort(function(a,b){return b.y26-a.y26;});
+    // 월별 채널 합계
+    var mo={}; for(var m=1;m<=lm;m++) mo[m]={dealer:0,direct:0,cons:0};
+    dealers.forEach(function(e){ for(var m=1;m<=lm;m++) mo[m].dealer+=Number(e.m26[m])||0; });
+    directs.forEach(function(e){ for(var m=1;m<=lm;m++) mo[m].direct+=Number(e.m26[m])||0; });
+    var cm=(CONS&&CONS.monthly2026)||{}; for(var m=1;m<=lm;m++) mo[m].cons=Number(cm[m])||0;
+    var sum={dealer:0,direct:0,cons:0}; for(var m=1;m<=lm;m++){ sum.dealer+=mo[m].dealer; sum.direct+=mo[m].direct; sum.cons+=mo[m].cons; }
     var totA=sum.dealer+sum.direct+sum.cons, last=mo[lm];
-    var ins=[['대리점',last.dealer,CAPA.dealer],['직판',last.direct,CAPA.direct],['소모품',last.cons,CAPA.cons]].map(function(x){ var d=x[1]-x[2]; return '<b style="color:'+(d>=0?'#16a34a':'#dc2626')+'">'+x[0]+' '+(d>=0?'+':'')+W(d)+'억</b>'; }).join(' · ');
-    var rows=''; for(var m=1;m<=lm;m++){ var t=mo[m].dealer+mo[m].direct+mo[m].cons; rows+='<tr><td style="padding:7px 9px;font-weight:800;color:#475569;text-align:center">'+m+'월</td>'+cell(mo[m].dealer,CAPA.dealer)+cell(mo[m].direct,CAPA.direct)+cell(mo[m].cons,CAPA.cons)+cell(t,CAPA_TOT)+'</tr>'; }
+
+    // ── 미니 월별 추이 막대 ──
+    var mbar=function(e,mx){ var s=''; for(var m=1;m<=lm;m++){ var v=Number(e.m26[m])||0; var h=v>0?Math.max(3,Math.round(v/mx*22)):2; s+='<span title="'+m+'월 '+W(v)+'억" style="display:inline-block;width:6px;height:'+h+'px;background:'+(v>0?'#0d9488':'#e5e7eb')+';border-radius:1px;margin-right:2px;vertical-align:bottom"></span>'; } return '<span style="display:inline-flex;align-items:flex-end;height:24px">'+s+'</span>'; };
+    // ── 기여자 상세 테이블 ──
+    var ctbl=function(list, capMo, roleLbl){
+      if(!list.length) return '<div style="font-size:12px;color:#94a3b8;padding:6px 2px">해당 기간 실적 담당 없음</div>';
+      var chSum=list.reduce(function(s,e){return s+e.y26;},0)||1, mx=1;
+      list.forEach(function(e){ for(var m=1;m<=lm;m++) mx=Math.max(mx,Number(e.m26[m])||0); });
+      var rows=list.map(function(e,i){
+        var yoyS=e.yoy==null?'신규':(e.yoy>=0?'▲':'▼')+Math.abs(e.yoy).toFixed(0)+'%', yoyC=e.yoy==null?'#0891b2':e.yoy>=0?'#16a34a':'#dc2626';
+        var share=e.y26/chSum*100, avg=e.y26/lm;
+        var down=e.yoy!=null&&e.yoy<=-20, up=e.yoy!=null&&e.yoy>=20;
+        var tint=down?'background:rgba(220,38,38,.05)':(up?'background:rgba(22,163,74,.045)':'');
+        var badge=down?'<span style="font-size:9px;font-weight:800;color:#dc2626;background:#fef2f2;border-radius:4px;padding:0 4px;margin-left:5px">부진</span>':(up?'<span style="font-size:9px;font-weight:800;color:#16a34a;background:#f0fdf4;border-radius:4px;padding:0 4px;margin-left:5px">성장</span>':'');
+        return '<tr style="border-top:1px solid #f1f5f9;'+tint+'">'
+          +'<td style="padding:6px 8px;color:#94a3b8;font-size:11px;text-align:center">'+(i+1)+'</td>'
+          +'<td style="padding:6px 8px;font-weight:700;font-size:12px;color:#334155">'+esc(e.name)+badge+'</td>'
+          +'<td style="padding:6px 8px;text-align:right;font-size:11.5px;color:#94a3b8">'+W(e.y25)+'억</td>'
+          +'<td style="padding:6px 8px;text-align:right;font-size:12.5px;font-weight:800">'+W(e.y26)+'억</td>'
+          +'<td style="padding:6px 8px;text-align:right;font-size:11.5px;font-weight:700;color:'+yoyC+'">'+yoyS+'</td>'
+          +'<td style="padding:6px 8px;text-align:right;font-size:11.5px;color:#475569">'+W(avg)+'억</td>'
+          +'<td style="padding:6px 8px;min-width:96px"><div style="display:flex;align-items:center;gap:6px"><div style="flex:1;height:6px;background:#eef2f7;border-radius:3px;overflow:hidden;min-width:40px"><div style="width:'+Math.min(share,100)+'%;height:100%;background:#6366f1"></div></div><span style="font-size:10.5px;color:#64748b;min-width:26px;text-align:right">'+share.toFixed(0)+'%</span></div></td>'
+          +'<td style="padding:6px 8px">'+mbar(e,mx)+'</td></tr>';
+      }).join('');
+      return '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:600px">'
+        +'<thead><tr style="font-size:10.5px;color:#64748b;font-weight:700;border-bottom:2px solid #eef2f7"><th style="padding:3px 8px 7px">#</th><th style="padding:3px 8px 7px;text-align:left">'+roleLbl+'</th><th style="padding:3px 8px 7px;text-align:right">2025</th><th style="padding:3px 8px 7px;text-align:right">2026</th><th style="padding:3px 8px 7px;text-align:right">YoY</th><th style="padding:3px 8px 7px;text-align:right">월평균</th><th style="padding:3px 8px 7px;text-align:left">채널 기여도</th><th style="padding:3px 8px 7px;text-align:left">월별추이(1~'+lm+'월)</th></tr></thead>'
+        +'<tbody>'+rows+'</tbody></table></div>';
+    };
+    // ── 채널 카드 래퍼 ──
+    var chCard=function(icon,icc,title,a,capMo,body){ var c=capMo*lm,p=pc(a,c),df=a-c;
+      return '<div class="card p-3 mb-3"><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px">'
+        +'<span style="font-size:13.5px;font-weight:800"><i class="bi '+icon+' me-1" style="color:'+icc+'"></i>'+title+'</span>'
+        +'<span style="font-size:13px;font-weight:800;color:'+col(p)+'">달성 '+p+'%</span>'
+        +'<span style="font-size:11px;color:#94a3b8">'+W(a)+'억 / 케파 '+W(c)+'억 <b style="color:'+(df>=0?'#16a34a':'#dc2626')+'">('+(df>=0?'+':'')+W(df)+'억)</b></span>'
+        +'</div>'+body+'</div>'; };
+
+    // 1) 요약 타일 + 월별 히트맵
+    var tile=function(lab,a,cap){ var c=cap*lm,p=pc(a,c),df=a-c; return '<div style="flex:1;min-width:128px;background:#fff;border:1px solid #e6ebf2;border-radius:12px;padding:12px 14px"><div style="font-size:11px;color:#64748b;font-weight:700">'+lab+' <span style="color:#94a3b8;font-weight:500">케파 '+W(c)+'억</span></div><div style="font-size:1.5rem;font-weight:800;color:#1c2534;line-height:1.15;margin:4px 0 3px">'+W(a)+'<span style="font-size:12px;color:#94a3b8">억</span></div><div style="height:7px;background:rgba(148,163,184,.2);border-radius:99px;overflow:hidden"><div style="width:'+Math.min(p,100)+'%;height:100%;background:'+col(p)+'"></div></div><div style="font-size:11px;font-weight:800;color:'+col(p)+';margin-top:3px">달성 '+p+'% <span style="color:#94a3b8;font-weight:500">('+(df>=0?'+':'')+W(df)+'억)</span></div></div>'; };
+    var cell=function(a,c){ var p=pc(a,c); return '<td style="padding:7px 9px;text-align:right;background:'+bg(p)+'"><div style="font-weight:800;color:#1c2534;font-size:12.5px">'+W(a)+'억</div><div style="height:5px;background:rgba(148,163,184,.22);border-radius:3px;margin:3px 0 2px;overflow:hidden"><div style="width:'+Math.min(p,140)+'%;max-width:100%;height:100%;background:'+col(p)+'"></div></div><div style="font-size:10.5px;font-weight:800;color:'+col(p)+'">'+p+'%</div></td>'; };
     var TH=function(l,c){ return '<th style="padding:4px 9px 8px;text-align:right;border-bottom:2px solid #e7ebf0">'+l+'<br><span style="font-weight:400;color:#94a3b8">케파 '+c+'</span></th>'; };
-    host.innerHTML='<div class="card p-3">'
-      +'<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px"><span style="font-size:14px;font-weight:800"><i class="bi bi-speedometer2 me-1" style="color:#0d9488"></i>월별 케파(목표) 달성 현황 <span style="font-size:10px;font-weight:600;color:#0d9488;background:#ccfbf1;border-radius:5px;padding:1px 6px">1~'+lm+'월</span></span><span style="font-size:11px;color:#94a3b8">월 케파 40억 = 장비 30(대리점 21+직판 9) + 소모품 10 · 대리점 6곳(유니메디랩·드림메드·이지온메드·에스비메디칼·씽씽메디·라이트스톤)</span></div>'
+    var hmRows=''; for(var m=1;m<=lm;m++){ var t=mo[m].dealer+mo[m].direct+mo[m].cons; hmRows+='<tr><td style="padding:7px 9px;font-weight:800;color:#475569;text-align:center">'+m+'월</td>'+cell(mo[m].dealer,CAPA.dealer)+cell(mo[m].direct,CAPA.direct)+cell(mo[m].cons,CAPA.cons)+cell(t,CAPA_TOT)+'</tr>'; }
+    var overview='<div class="card p-3 mb-3">'
+      +'<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px"><span style="font-size:14px;font-weight:800"><i class="bi bi-speedometer2 me-1" style="color:#0d9488"></i>월별 케파 달성 현황 <span style="font-size:10px;font-weight:600;color:#0d9488;background:#ccfbf1;border-radius:5px;padding:1px 6px">1~'+lm+'월 누계</span></span><span style="font-size:11px;color:#94a3b8">월 케파 40억 = 장비 30(대리점 21+직판 9) + 소모품 10</span></div>'
       +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">'+tile('장비 대리점',sum.dealer,CAPA.dealer)+tile('장비 직판',sum.direct,CAPA.direct)+tile('소모품',sum.cons,CAPA.cons)+tile('전체',totA,CAPA_TOT)+'</div>'
-      +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:520px"><thead><tr style="font-size:11px;color:#5a6675;font-weight:700"><th style="padding:4px 9px 8px;border-bottom:2px solid #e7ebf0">월</th>'+TH('장비 대리점','21억')+TH('장비 직판','9억')+TH('소모품','10억')+TH('전체','40억')+'</tr></thead><tbody>'+rows+'</tbody></table></div>'
-      +'<div style="margin-top:10px;font-size:11.5px;color:#64748b"><i class="bi bi-lightbulb-fill me-1" style="color:#f59e0b"></i>'+lm+'월 케파 대비: '+ins+' <span style="color:#cbd5e1">· 초록 달성 · 주황 80%↑ · 빨강 부족</span></div>'
-    +'</div>';
-  }catch(e){ host.innerHTML=''; console.warn('capa',e); }
+      +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:520px"><thead><tr style="font-size:11px;color:#5a6675;font-weight:700"><th style="padding:4px 9px 8px;border-bottom:2px solid #e7ebf0">월</th>'+TH('장비 대리점','21억')+TH('장비 직판','9억')+TH('소모품','10억')+TH('전체','40억')+'</tr></thead><tbody>'+hmRows+'</tbody></table></div>'
+      +'<div style="margin-top:9px;font-size:10.5px;color:#cbd5e1">초록 달성 100%↑ · 주황 80%↑ · 빨강 부족</div></div>';
+
+    // 2) 종합 진단
+    var chArr=[['대리점',sum.dealer,CAPA.dealer],['직판',sum.direct,CAPA.direct],['소모품',sum.cons,CAPA.cons]];
+    var worst=chArr.slice().sort(function(a,b){return pc(a[1],a[2]*lm)-pc(b[1],b[2]*lm);})[0];
+    var bl=[];
+    bl.push('전체 달성률 <b style="color:'+col(pc(totA,CAPA_TOT*lm))+'">'+pc(totA,CAPA_TOT*lm)+'%</b> · 누계 '+W(totA)+'억 / 케파 '+W(CAPA_TOT*lm)+'억. 가장 부족한 채널 <b style="color:'+col(pc(worst[1],worst[2]*lm))+'">'+worst[0]+' '+pc(worst[1],worst[2]*lm)+'%</b> (누계 '+W(worst[1]-worst[2]*lm)+'억).');
+    if(dealers.length){ var dTop=dealers[0]; var dY=dealers.filter(function(e){return e.yoy!=null;}); var dGrow=dY.slice().sort(function(a,b){return b.yoy-a.yoy;})[0]; var dDrop=dY.slice().sort(function(a,b){return a.yoy-b.yoy;})[0];
+      bl.push('대리점 최대 기여 <b>'+esc(dTop.name)+'</b> '+W(dTop.y26)+'억'+(dGrow&&dGrow.yoy>0?' · 최고 성장 <b style="color:#16a34a">'+esc(dGrow.name)+' +'+dGrow.yoy.toFixed(0)+'%</b>':'')+(dDrop&&dDrop.yoy<0?' · 최대 부진 <b style="color:#dc2626">'+esc(dDrop.name)+' '+dDrop.yoy.toFixed(0)+'%</b>':'')+'.'); }
+    if(directs.length){ var xTeam=directs.filter(function(e){return !NOISE.test(e.name);}); var xTop=xTeam[0]||directs[0];
+      bl.push('직판 최대 기여 <b>'+esc(xTop.name)+'</b> '+W(xTop.y26)+'억 · 직판 담당 '+xTeam.length+'명.'); }
+    var insMo=[['대리점',last.dealer,CAPA.dealer],['직판',last.direct,CAPA.direct],['소모품',last.cons,CAPA.cons]].map(function(x){ var d=x[1]-x[2]; return '<b style="color:'+(d>=0?'#16a34a':'#dc2626')+'">'+x[0]+' '+(d>=0?'+':'')+W(d)+'억</b>'; }).join(' · ');
+    bl.push(lm+'월 단월 케파 대비: '+insMo+'.');
+    var diag='<div class="card p-3 mb-3" style="background:#fbfdff"><div style="font-size:13.5px;font-weight:800;margin-bottom:9px"><i class="bi bi-clipboard2-pulse me-1" style="color:#e11d48"></i>종합 진단</div><ul style="margin:0;padding-left:18px;font-size:12px;color:#475569;line-height:1.9">'+bl.map(function(t){return '<li>'+t+'</li>';}).join('')+'</ul></div>';
+
+    // 3) 소모품 월별(담당자 없음)
+    var consChips=''; for(var m=1;m<=lm;m++){ var p=pc(mo[m].cons,CAPA.cons); consChips+='<div style="flex:1;min-width:60px;text-align:center;background:'+bg(p)+';border-radius:8px;padding:7px 4px"><div style="font-size:10px;color:#94a3b8">'+m+'월</div><div style="font-size:13px;font-weight:800;color:#1c2534">'+W(mo[m].cons)+'</div><div style="font-size:10px;font-weight:800;color:'+col(p)+'">'+p+'%</div></div>'; }
+    var consBody='<div style="display:flex;gap:6px;flex-wrap:wrap">'+consChips+'</div><div style="margin-top:8px;font-size:11px;color:#94a3b8">소모품은 담당자 배정이 없어 월 합계 기준으로만 평가합니다(월 케파 10억).</div>';
+
+    host.innerHTML=overview+diag
+      +chCard('bi-shop','#7c3aed','장비 대리점 채널 · 대리점 6곳',sum.dealer,CAPA.dealer,ctbl(dealers,CAPA.dealer,'대리점'))
+      +chCard('bi-person-badge','#2563eb','장비 직판 채널 · 영업 담당',sum.direct,CAPA.direct,ctbl(directs.filter(function(e){return !NOISE.test(e.name);}),CAPA.direct,'담당자'))
+      +chCard('bi-capsule','#0d9488','소모품 채널',sum.cons,CAPA.cons,consBody);
+  }catch(e){ host.innerHTML='<div class="card p-3" style="color:#dc2626">케파 분석 로드 오류</div>'; console.warn('capa',e); }
 }
 function renderDevReps() {
-  try{ renderCapa(); }catch(_ce){ console.warn('capa',_ce); }
   var _cb=document.getElementById('claim-badge'); if(_cb){ var _pc=((typeof MGR_CLAIMS!=='undefined'?MGR_CLAIMS:[])||[]).filter(function(c){return c.status==='pending';}).length; _cb.textContent=_pc; _cb.style.display=_pc?'':'none'; }
   const fmtW = v => (v=Number(v||0))>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만원':Math.round(v).toLocaleString()+'원';
   _injectPeriodCtrl('devrep');
