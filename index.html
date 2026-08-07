@@ -7242,7 +7242,7 @@ function _cduHospAuto(force){
   if(rep) setIf('cd-sales',rep);
   setIf('cdv-doctor', hi.doctor||pv('doctor'));
   if(_hist.length){ setIf('cd-dealer',pv('dealer')); setIf('cd-dcount',pv('doctorCount')); setIf('cd-proc',pv('mainProc')); setIf('cd-comp',pv('competitor')); setIf('cd-chan',pv('channels')); setIf('cd-price',pv('price')); setIf('cd-contact-profile',pv('contactProfile'));
-    setP('cd-shots',pv('shots'),'300'); setP('cd-oli-basic',pv('oliBasic'),'1'); setIf('cd-oli-x',pv('oliX')); setIf('cd-oli-kiss',pv('oliKiss')); setP('cdv-region',pv('region'),'국내'); }
+    setP('cd-shots',pv('shots'),'300'); setIf('cd-oli-x',pv('oliX')); setIf('cd-oli-kiss',pv('oliKiss')); setP('cdv-region',pv('region'),'국내'); }
   if(info){ var b=[];
     if(rep) b.push('담당 <b>'+_cduEsc(rep)+'</b>');
     if(rev.y2026) b.push('올해 팁매출 <b>'+_cduWon(rev.y2026)+'원</b>'); else if(rev.y2025) b.push('작년 팁매출 <b>'+_cduWon(rev.y2025)+'원</b>');
