@@ -1883,7 +1883,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <button class="anatab" data-sub="capa" onclick="showPage('capa')"><i class="bi bi-speedometer2"></i>Capa 분석</button>
     </div>
     <div class="wt-mast">
-      <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-speedometer2 me-2"></i>Capa(케파) 달성 분석</div><div style="font-size:11.5px;color:#94a3b8;margin-top:3px">월 케파 40억(장비 30 = 대리점 21 + 직판 9, 소모품 10) 대비 <b style="color:#64748b">채널·담당자별 달성/부진</b>을 진단</div></div>
+      <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-speedometer2 me-2"></i>Capa 달성 분석</div><div style="font-size:11.5px;color:#94a3b8;margin-top:3px">월 케파 40억(장비 30 = 대리점 21 + 직판 9, 소모품 10) 대비 <b style="color:#64748b">채널·담당자별 달성/부진</b>을 진단</div></div>
     </div>
     <div id="capa-view"></div>
   </div>
@@ -12129,7 +12129,7 @@ function renderCapa(){
     hmRows+='<tr style="border-top:2px solid #cbd5e1;background:#f6f8fb"><td style="padding:7px 11px;font-weight:800;color:#0f172a;font-size:12.5px">누계</td>'+mCell(sum.dealer,CAPA.dealer*lm,sum25.dealer,sumQ.dealer,sumQ25.dealer,true)+SP+mCell(sum.direct,CAPA.direct*lm,sum25.direct,sumQ.direct,sumQ25.direct,true)+SP+mCell(sum.cons,CAPA.cons*lm,sum25.cons,0,0,false)+SP+mCell(totA,CAPA_TOT*lm,sum25.dealer+sum25.direct+sum25.cons,sumQ.dealer+sumQ.direct,sumQ25.dealer+sumQ25.direct,true)+'</tr>';
     var COLG='<colgroup><col style="width:64px"><col><col style="width:10px"><col><col style="width:10px"><col><col style="width:10px"><col></colgroup>';
     var overview='<div class="card p-3 mb-3">'
-      +'<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:11px"><span style="font-size:14px;font-weight:800"><i class="bi bi-speedometer2 me-1" style="color:#0d9488"></i>월별 케파 달성 현황 <span style="font-size:10px;font-weight:600;color:#0d9488;background:#ccfbf1;border-radius:5px;padding:1px 6px">1~'+lm+'월</span></span><span style="font-size:11px;color:#94a3b8">월 케파 40억 = 장비 30(대리점 21+직판 9) + 소모품 10</span></div>'
+      +'<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:11px"><span style="font-size:14px;font-weight:800"><i class="bi bi-speedometer2 me-1" style="color:#0d9488"></i>월별 Capa 달성 현황 <span style="font-size:10px;font-weight:600;color:#0d9488;background:#ccfbf1;border-radius:5px;padding:1px 6px">1~'+lm+'월</span></span><span style="font-size:11px;color:#94a3b8">월 케파 40억 = 장비 30(대리점 21+직판 9) + 소모품 10</span></div>'
       +'<div style="overflow-x:auto"><div style="min-width:1200px">'
       +'<div style="display:grid;grid-template-columns:64px 1fr 10px 1fr 10px 1fr 10px 1fr;margin-bottom:12px"><div></div><div>'+tile('장비 대리점',sum.dealer,CAPA.dealer,sum25.dealer)+'</div><div></div><div>'+tile('장비 직판',sum.direct,CAPA.direct,sum25.direct)+'</div><div></div><div>'+tile('소모품',sum.cons,CAPA.cons,sum25.cons)+'</div><div></div><div>'+tile('전체',totA,CAPA_TOT,sum25.dealer+sum25.direct+sum25.cons)+'</div></div>'
       +'<table style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;table-layout:fixed">'+COLG+'<thead><tr style="font-size:11px;color:#5a6675;font-weight:700"><th style="padding:4px 11px 7px;text-align:left;border-bottom:2px solid #e7ebf0">월</th>'+TH('장비 대리점','케파 21억')+SPH+TH('장비 직판','케파 9억')+SPH+TH('소모품','케파 10억')+SPH+TH('전체','케파 40억')+'</tr></thead><tbody>'+hmRows+'</tbody></table>'
