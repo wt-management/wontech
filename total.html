@@ -1518,6 +1518,7 @@ const SUPABASE_URL='https://mhfacbsittfdkknwybhc.supabase.co';
 const SUPABASE_KEY='sb_publishable_aPMOOWAlyJlMcP1ZM_gpPA_jlrcvCRd';
 const _sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
+let _canPortfolio=false;   // Sales Portfolio 메뉴 열람 권한(이관 전 기준 유지)
 let CONS={}, DEVICE={}, INTL={}, PENDING=[], TARGETS=[], ILBO_PEND=[], _user=null;
 let SALEST=[], REGMAP={pair:{},name:{},country:{}};   // 매출목표 + 거래처→지역 매핑
 let _ovChart=null;
@@ -1660,6 +1661,10 @@ async function afterLogin(user){
     return;
   }
   _user={email:user.email,name:profile?.display_name||user.email.split('@')[0],position:profile?.position||'',dept:profile?.dept||''};
+  // Sales Portfolio는 별도 사이트에서 이관된 메뉴 — 원래 기준(portfolio 권한자·관리자)을 그대로 유지한다.
+  // 전사 종합에 들어왔다는 이유만으로 열리면 기존에 못 보던 사람에게 새로 열리게 됨.
+  _canPortfolio = isMaster || profile?.role==='admin' || access.includes('portfolio') || access.includes('all');
+  if(!_canPortfolio){ var _np=document.getElementById('nav-portfolio'); if(_np) _np.style.display='none'; }
   document.getElementById('login-screen').style.display='none';
   document.getElementById('u-nm').textContent=_user.position?(_user.name+' '+_user.position):_user.name;
   document.getElementById('u-em').textContent=_user.dept||_user.email;
@@ -1876,7 +1881,7 @@ function showPage(name,el,push){
   try{ _paintExecSel(name); }catch(_){}
   if(window.innerWidth<=820) toggleNav(false);
   if(name==='query') renderQuery();
-  if(name==='portfolio') renderPortfolio();
+  if(name==='portfolio'){ if(!_canPortfolio){ showPage('sales-overview'); return; } renderPortfolio(); }   // 메뉴를 숨겨도 딥링크로 들어올 수 있어 여기서도 막음
   if(name==='report') renderReport();
   if(name==='export') renderExport();
   if(name==='corps') renderCorps();
