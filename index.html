@@ -11889,7 +11889,9 @@ function _dvBuild(){
   var _pend=(typeof ILBO_PEND!=='undefined'&&ILBO_PEND)||[];
   var _devset={}; try{ ['products2026','products2025','prods_dev'].forEach(function(k){ Object.keys((DEVICE&&DEVICE[k])||{}).forEach(function(n){_devset[n]=1;}); }); }catch(e){}
   var _canon=function(p){ return (typeof _canonProd==='function')?_canonProd(p):p; };
-  var _isDevP=function(p){ if(/tip|팁|cartridge|카트리지|소모품|face ?tip/i.test(String(p)))return false; return !!(_devset[p]||prod[p]); };
+  // 소모품이 아니면 장비로 본다. 등록 제품목록(_devset)에 없다고 빼면 표기가 다른 건(Avvio·V Laser·
+  // Majesty)과 '기타' 조정분(마이너스)이 통째로 누락돼 미반영 합계가 실제보다 커진다(8.05억 vs 7.53억).
+  var _isDevP=function(p){ return !/tip|팁|cartridge|카트리지|소모품|face ?tip/i.test(String(p)); };
   _pend.forEach(function(r){ if(!r||(r.region&&r.region!=='국내'))return; var p=_canon(r.product||''); if(!p||!_isDevP(p))return; var ed=String(r.expectedDate||r.date||''); var mo=parseInt(ed.slice(5,7),10); if(!mo||curM.indexOf(mo)<0)return;
     var dl=((typeof _repOf==='function'&&_repOf(r.customer))||'')||'미배정'; var v=Number(r.amount||0), q=Number(r.qty||0); if(!v)return;
     accP(prod,p,v,q); accP(dealer,dl,v,q); acc2P(pByD,p,dl,v,q); acc2P(dByP,dl,p,v,q); acc2P(pMon,p,mo,v,q); acc2P(dMon,dl,mo,v,q); acc2P(mProd,mo,p,v,q); acc2P(mDealer,mo,dl,v,q);
