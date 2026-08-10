@@ -218,6 +218,55 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .gx-sec{font-size:17px;font-weight:800;color:#141c28;margin:0 0 8px;padding-bottom:6px;border-bottom:2px solid #16324f}
 .gx-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 26px;align-items:start}
 @media(max-width:1520px){.gx-grid{grid-template-columns:1fr;gap:0}}
+.op-lede{font-size:14.5px;color:#37414f;line-height:1.75;background:#f7f9fc;border-left:3px solid #16324f;padding:13px 17px;border-radius:0 8px 8px 0;margin-bottom:18px}
+.op-lede b{color:#141c28;font-weight:800}
+.op-lede .op-em{font-weight:800}
+.op-axes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
+@media(max-width:1180px){.op-axes{grid-template-columns:1fr}}
+.op-axis{background:#fff;border:1px solid #e4e8ef;border-radius:12px;padding:15px 18px 16px;position:relative;overflow:hidden}
+.op-axis:before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:#94a3b8}
+.op-axis.ok:before{background:#0f766e}.op-axis.warn:before{background:#d97706}.op-axis.bad:before{background:#dc2626}
+.op-axis-h{display:flex;align-items:center;gap:7px;margin-bottom:9px}
+.op-axis-t{font-size:13px;font-weight:800;color:#4a5666}
+.op-badge{margin-left:auto;font-size:11px;font-weight:800;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.op-badge.ok{background:#e6f5f2;color:#0f766e}.op-badge.warn{background:#fef4e6;color:#b45309}.op-badge.bad{background:#fdeaea;color:#b91c1c}
+.op-axis-v{font-size:31px;font-weight:800;color:#141c28;font-variant-numeric:tabular-nums;line-height:1.12;letter-spacing:-.02em}
+.op-axis-v small{font-size:15px;font-weight:700;margin-left:2px}
+.op-axis-s{font-size:12.5px;color:#5b6878;margin-top:8px;line-height:1.6}
+.op-axis-s b{color:#141c28;font-weight:700}
+.op-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 26px;align-items:start}
+@media(max-width:1080px){.op-grid{grid-template-columns:1fr;gap:0}}
+.op-sec{margin-bottom:24px}
+.op-sec-h{display:flex;align-items:baseline;gap:8px;font-size:14px;font-weight:800;color:#1c2534;padding-bottom:8px;border-bottom:2px solid #16324f;margin-bottom:13px}
+.op-sec-h .n{margin-left:auto;font-size:11.5px;font-weight:500;color:#94a3b8}
+.op-row{display:flex;align-items:center;gap:10px;padding:8.5px 2px;border-bottom:1px solid #eef2f7;font-size:13px}
+.op-row:last-child{border-bottom:0}
+.op-row .rk{width:17px;font-size:11px;font-weight:800;color:#b6c0cd;font-variant-numeric:tabular-nums}
+.op-row .nm{font-weight:700;color:#1c2534;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.op-row .mt{font-size:11.5px;color:#94a3b8;white-space:nowrap;font-weight:500}
+.op-row .vl{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;color:#141c28}
+.op-fn{display:flex;align-items:center;gap:11px;padding:7px 2px;font-size:13px}
+.op-fn .lb{width:74px;font-weight:700;color:#37414f;white-space:nowrap}
+.op-fn .br{flex:1;height:9px;border-radius:5px;background:#eef2f7;overflow:hidden}
+.op-fn .br i{display:block;height:100%;border-radius:5px;background:#2563eb}
+.op-fn .vl{width:96px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:#141c28;white-space:nowrap}
+.op-spark{display:flex;align-items:flex-end;gap:2px;height:56px;margin:4px 0 10px}
+.op-spark i{flex:1;background:#cfe0f5;border-radius:2px 2px 0 0;min-height:2px}
+.op-spark i.last{background:#2563eb}
+.op-mix{display:flex;height:12px;border-radius:6px;overflow:hidden;margin:2px 0 9px}
+.op-mix i{display:block;height:100%}
+.op-lgd{display:flex;flex-wrap:wrap;gap:4px 15px;font-size:11.5px;color:#5b6878;margin-bottom:12px}
+.op-lgd s{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:5px;text-decoration:none}
+.op-q{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.op-qc{border:1px solid #e4e8ef;border-radius:10px;padding:11px 13px;background:#fff;text-decoration:none;display:block}
+.op-qc:hover{border-color:#b9c6d6;background:#fbfcfe}
+.op-qc .l{font-size:11.5px;font-weight:700;color:#64748b}
+.op-qc .v{font-size:22px;font-weight:800;color:#141c28;font-variant-numeric:tabular-nums;margin-top:1px;line-height:1.2}
+.op-qc .v small{font-size:12px;font-weight:700;margin-left:1px}
+.op-qc .s{font-size:11px;color:#94a3b8;margin-top:2px}
+.op-links{display:flex;gap:8px;flex-wrap:wrap}
+.op-links a{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid #d5dde8;border-radius:9px;padding:8px 14px;font-size:12.5px;font-weight:600;color:#37414f;text-decoration:none}
+.op-links a:hover{border-color:#16324f;color:#16324f}
 .gx-tbl{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
 .gx-tbl thead th{font-size:13.5px;font-weight:700;color:#4a5666;background:#f2f5f9;padding:8px 13px;text-align:right;white-space:nowrap;border-bottom:1px solid #cfd9e5}
 .gx-tbl thead th.l{text-align:left}
@@ -1726,59 +1775,172 @@ function renderOvOps(){
     cells+'</div>';
 }
 
-// ── 전사 운영현황 렌더 ──
-function _opsCard(label,val,unit,sub,color,href){
-  return '<div class="kpi-card"'+(href?' style="cursor:pointer" onclick="location.href=\''+href+'\'"':'')+'>'+
-    '<div class="kpi-label">'+label+'</div>'+
-    '<div class="kpi-value" style="color:'+(color||'#1c2534')+'">'+val+(unit?'<span style="font-size:13px;font-weight:700;margin-left:2px">'+unit+'</span>':'')+'</div>'+
-    '<div class="kpi-sub">'+(sub||'')+'</div></div>';
+// ── 전사 운영현황 (경영진용) ─────────────────────────────
+function _opE8(v){ return ((v||0)/1e8).toFixed(1); }
+function _opN(v){ return Math.round(v||0).toLocaleString(); }
+function _opEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function _opSec(title,icon,inner,note){
+  return '<div class="op-sec"><div class="op-sec-h"><i class="bi '+icon+'" style="color:#16324f"></i>'+title+
+    (note?'<span class="n">'+_opEsc(note)+'</span>':'')+'</div>'+inner+'</div>';
 }
-function _opsSec(title,icon,inner,note){
-  return '<div style="margin-bottom:22px"><div style="display:flex;align-items:baseline;gap:8px;font-size:14px;font-weight:800;color:#1c2534;padding-bottom:8px;border-bottom:2px solid #16324f;margin-bottom:12px">'+
-    '<i class="bi '+icon+'" style="color:#0f766e"></i>'+title+(note?'<span style="margin-left:auto;font-size:11px;font-weight:500;color:#94a3b8">'+note+'</span>':'')+'</div>'+inner+'</div>';
+function _opAxis(tone,title,val,unit,badge,sub){
+  return '<div class="op-axis '+tone+'"><div class="op-axis-h"><span class="op-axis-t">'+title+'</span>'+
+    '<span class="op-badge '+tone+'">'+badge+'</span></div>'+
+    '<div class="op-axis-v">'+val+(unit?'<small>'+unit+'</small>':'')+'</div>'+
+    '<div class="op-axis-s">'+sub+'</div></div>';
+}
+function _opQ(href,label,val,unit,sub){
+  return '<a class="op-qc" href="'+href+'"><div class="l">'+label+'</div>'+
+    '<div class="v">'+val+(unit?'<small>'+unit+'</small>':'')+'</div><div class="s">'+_opEsc(sub||'')+'</div></a>';
 }
 function renderOps(){
   const el=document.getElementById('ops-body'); if(!el)return;
   if(!OPS.loaded){ el.innerHTML='<div style="color:#94a3b8;font-size:13px;padding:30px;text-align:center">불러오는 중…</div>'; return; }
-  const k=opsKpi(), e8=v=>((v||0)/1e8).toFixed(1), fmt=v=>Math.round(v||0).toLocaleString();
-  const G='display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px';
+  const k=opsKpi(), e8=_opE8, fmt=_opN;
   let h='';
-  // 1) 채권·수금
-  if(k.arAmt!=null){ h+=_opsSec('채권 · 수금','bi-cash-stack',
-    '<div style="'+G+'">'+
-    _opsCard('국내 미수금 잔액',e8(k.arAmt),'억',k.arCnt+'개 거래처','#b45309','https://wt-management.github.io/wt-receivables/')+
-    _opsCard('관리필요 채권',e8(k.arRisk),'억','지연·장기체납 '+k.arRiskCnt+'건 (충당 차감)',k.arRisk>0?'#dc2626':'#15803d','https://wt-management.github.io/wt-receivables/')+
-    _opsCard('대손 처리액',e8(k.arBadAmt),'억','누적 기준')+
-    '</div>','기준일 '+(k.arAsOf||'-')); }
-  // 2) 수주·납품 파이프라인
-  const pipeInner='<div style="'+G+'">'+
-    (k.plCnt!=null?_opsCard('해외 수주 파이프라인',e8(k.plAmt),'억',k.plCnt+'건 · 확률가중 '+e8(k.plW)+'억 (USD@'+k.plFx+')','#2563eb','https://wt-management.github.io/wontech-intl/'):'')+
-    (k.kcUndel!=null?_opsCard('국내 미납품',k.kcUndel,'건','전체 '+k.kcTot+'건 중',k.kcUndel?'#dc2626':'#15803d','https://wt-management.github.io/wt-kor-sales/'):'')+
-    (k.exReady!=null?_opsCard('출고 대기',k.exReady,'건','수출 진행 '+fmt(k.exTot)+'건 누적','#d97706','https://wt-management.github.io/wt-export/'):'')+
-    (k.demoUp!=null?_opsCard('예정 데모',k.demoUp,'건','총 '+k.demoAll+'건 등록','#0891b2','https://wt-management.github.io/demo-schedule/'):'')+
-    '</div>';
-  h+=_opsSec('수주 · 납품 · 출고','bi-truck',pipeInner);
-  // 3) 정산·자산
-  const setInner='<div style="'+G+'">'+
-    (k.kcCoup!=null?_opsCard('쿠폰·적립금 미지급',k.kcCoup,'건','납품완료 후 미지급',k.kcCoup?'#d97706':'#15803d','https://wt-management.github.io/wt-kor-sales/'):'')+
-    (k.tdUncol!=null?_opsCard('보상장비 미회수',k.tdUncol,'건','등록 '+fmt(k.tdItems)+'대 중',k.tdUncol?'#dc2626':'#15803d','https://wt-management.github.io/wt-tradein/'):'')+
-    '</div>';
-  if(k.kcCoup!=null||k.tdUncol!=null) h+=_opsSec('정산 · 자산 회수','bi-ticket-perforated',setInner,k.tdAsOf?('보상장비 기준 '+k.tdAsOf):'');
-  // 4) 해외 법인
-  if(k.usAmt!=null||k.thAmt!=null){ h+=_opsSec('해외 법인 (2026 누계)','bi-buildings',
-    '<div style="'+G+'">'+
-    (k.usAmt!=null?_opsCard('미국법인 매출',e8(k.usAmt),'억',k.usCnt+'건 · USD@'+((OPS.us&&OPS.us.rate)||1450),'#4f46e5','https://wt-management.github.io/wt-corps/us.html'):'')+
-    (k.thAmt!=null?_opsCard('태국법인 매출',e8(k.thAmt),'억',k.thCnt+'건 · THB@'+((OPS.th&&OPS.th.rate)||38),'#0891b2','https://wt-management.github.io/wt-corps/th.html'):'')+
-    '</div>','법인 자체 입력 기준(회계 매출과 별도)'); }
-  // 5) 사이트 바로가기
+
+  // ── 채권 추세(주간) 계산 ──────────────────────────────
+  let W=[], arDelta=null, arFirst=null, collSum=null;
+  try{ W=(OPS.ar&&Array.isArray(OPS.ar.weekly))?OPS.ar.weekly.slice():[]; }catch(e){ W=[]; }
+  if(W.length>1){ arFirst=+W[0].ar||0; arDelta=(+W[W.length-1].ar||0)-arFirst; collSum=(+W[W.length-1].coll||0)-(+W[0].coll||0); }
+
+  // ── 대기 항목 합계(운영 병목) ─────────────────────────
+  const waitItems=[];
+  if(k.kcUndel!=null) waitItems.push({n:'미납품',c:k.kcUndel});
+  if(k.exReady!=null) waitItems.push({n:'출고 대기',c:k.exReady});
+  if(k.kcCoup!=null) waitItems.push({n:'쿠폰·적립금 미지급',c:k.kcCoup});
+  if(k.tdUncol!=null) waitItems.push({n:'보상장비 미회수',c:k.tdUncol});
+  const waitTot=waitItems.reduce((s,x)=>s+x.c,0);
+
+  // ── 헤드라인 진단 ─────────────────────────────────────
+  const lede=[];
+  if(k.arAmt!=null){
+    let t='국내 미수채권은 <b>'+e8(k.arAmt)+'억</b>이며, 이 중 회수가 지연된 <b>관리필요 채권이 '+e8(k.arRisk)+'억('+k.arRiskCnt+'건)</b>입니다.';
+    if(arDelta!=null) t+=' 연초 대비 <b>'+(arDelta<0?e8(-arDelta)+'억 감소':e8(arDelta)+'억 증가')+'</b>했습니다.';
+    lede.push(t);
+  }
+  if(waitTot) lede.push('납품·출고·정산이 끝나지 않아 <b>대기 중인 건이 '+fmt(waitTot)+'건</b> 있습니다.');
+  if(k.plW!=null) lede.push('해외 수주 파이프라인의 확률가중 기대금액은 <b>'+e8(k.plW)+'억</b>입니다.');
+  if(lede.length) h+='<div class="op-lede">'+lede.join(' ')+'</div>';
+
+  // ── 3대 경영 축 ───────────────────────────────────────
+  let axes='';
+  if(k.arAmt!=null){
+    const rt=k.arAmt?k.arRisk/k.arAmt:0;
+    const tone=rt>=.25?'bad':(rt>=.12?'warn':'ok');
+    const badge=tone==='bad'?'위험 집중':(tone==='warn'?'주의':'양호');
+    let sub='관리필요 <b>'+e8(k.arRisk)+'억</b> · 전체의 <b>'+(rt*100).toFixed(0)+'%</b> · '+k.arCnt+'개 거래처';
+    if(arDelta!=null) sub+='<br>연초 대비 '+(arDelta<0?'<b style="color:#0f766e">'+e8(-arDelta)+'억 감소</b>':'<b style="color:#b91c1c">'+e8(arDelta)+'억 증가</b>');
+    axes+=_opAxis(tone,'자금 회수',e8(k.arAmt),'억',badge,sub);
+  }
+  if(waitTot){
+    const tone=waitTot>=200?'bad':(waitTot>=50?'warn':'ok');
+    axes+=_opAxis(tone,'운영 대기',fmt(waitTot),'건',tone==='ok'?'원활':(tone==='warn'?'적체':'적체 심화'),
+      waitItems.map(x=>x.n+' <b>'+fmt(x.c)+'</b>').join(' · '));
+  }
+  if(k.plW!=null){
+    const near=(OPS.pl&&OPS.pl.deals||[]).filter(d=>(+d.prob||0)>=60).reduce((s,d)=>s+(+d.amount||0)*1380,0);
+    axes+=_opAxis(near>0?'ok':'warn','미래 수주',e8(k.plW),'억','확률가중',
+      '진행 <b>'+k.plCnt+'건</b> · 총액 '+e8(k.plAmt)+'억<br>수주확률 60% 이상 <b>'+e8(near)+'억</b>');
+  }
+  if(axes) h+='<div class="op-axes">'+axes+'</div>';
+
+  // ── 좌: 채권 / 우: 수주 파이프라인 ────────────────────
+  let L='', R='';
+  if(k.arAmt!=null){
+    let inner='';
+    if(W.length>1){
+      const mx=Math.max.apply(null,W.map(x=>+x.ar||0))||1;
+      inner+='<div class="op-spark">'+W.map((x,i)=>'<i class="'+(i===W.length-1?'last':'')+'" style="height:'+Math.max(2,Math.round((+x.ar||0)/mx*100))+'%" title="'+_opEsc(x.d)+' · '+e8(x.ar)+'억"></i>').join('')+'</div>';
+      inner+='<div style="font-size:11.5px;color:#94a3b8;margin-bottom:12px">'+_opEsc(W[0].d)+' → '+_opEsc(W[W.length-1].d)+' 주간 잔액 추이'+
+        (collSum?' · 기간 회수 <b style="color:#0f766e">'+e8(collSum)+'억</b>':'')+'</div>';
+    }
+    const TY=[['정상채권','#0f766e'],['미분류','#94a3b8'],['지연채권','#d97706'],['장기체납채권','#dc2626'],['회수불가채권','#64748b']];
+    const last=W.length?W[W.length-1]:null;
+    if(last&&last.types){
+      const tot=TY.reduce((s,t)=>s+((last.types[t[0]]||{}).ar||0),0)||1;
+      inner+='<div class="op-mix">'+TY.map(t=>{ const v=(last.types[t[0]]||{}).ar||0; return v?'<i style="width:'+(v/tot*100).toFixed(2)+'%;background:'+t[1]+'"></i>':''; }).join('')+'</div>';
+      inner+='<div style="font-size:12px;font-weight:800;color:#4a5666;margin:2px 0 4px">유형별 잔액 <span style="font-weight:500;color:#94a3b8">(충당금 차감 전)</span></div>';
+      inner+='<div class="op-lgd">'+TY.map(t=>{ const o=last.types[t[0]]||{}; return o.ar?'<span><s style="background:'+t[1]+'"></s>'+t[0]+' '+e8(o.ar)+'억('+o.cnt+')</span>':''; }).join('')+'</div>';
+    }
+    // 관리필요 상위
+    try{
+      const ED=OPS.arEdits||{};
+      const RS=(OPS.ar.rows||[]).map(r=>{ const e=ED[r.rid]; if(!e||e.type===undefined||e.type==='')return r; const c=Object.assign({},r); c.type=e.type; return c; })
+        .filter(r=>r.type==='지연채권'||r.type==='장기체납채권')
+        .map(r=>({n:r.name,v:(+r.ar||0)-(+r.prov||0),t:r.type,e:r.elapsed,m:r.mgr}))
+        .filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,6);
+      if(RS.length){
+        inner+='<div style="font-size:12px;font-weight:800;color:#4a5666;margin:4px 0 2px">회수 지연 상위 거래처</div>';
+        inner+=RS.map((x,i)=>'<div class="op-row"><span class="rk">'+(i+1)+'</span>'+
+          '<span class="nm">'+_opEsc(x.n)+'</span>'+
+          '<span class="mt">'+_opEsc(x.m||'-')+' · '+_opEsc(x.e||'-')+'</span>'+
+          '<span class="vl" style="color:'+(x.t==='장기체납채권'?'#b91c1c':'#b45309')+'">'+e8(x.v)+'억</span></div>').join('');
+      }
+    }catch(e){}
+    L=_opSec('채권 회수 현황','bi-cash-stack',inner,'기준일 '+(k.arAsOf||'-'));
+  }
+  if(k.plCnt!=null&&OPS.pl&&Array.isArray(OPS.pl.deals)){
+    const D=OPS.pl.deals, ST=['리드','딜러접촉','데모/샘플','견적(RFQ)','계약/PO','선적/납품'];
+    const agg={}; D.forEach(d=>{ const s=String(d.stage||'기타'); (agg[s]=agg[s]||{c:0,a:0}); agg[s].c++; agg[s].a+=(+d.amount||0)*1380; });
+    const order=ST.filter(s=>agg[s]).concat(Object.keys(agg).filter(s=>ST.indexOf(s)<0));
+    const mx=Math.max.apply(null,order.map(s=>agg[s].a))||1;
+    let inner=order.map(s=>'<div class="op-fn"><span class="lb">'+_opEsc(s)+'</span>'+
+      '<span class="br"><i style="width:'+(agg[s].a/mx*100).toFixed(1)+'%"></i></span>'+
+      '<span class="vl">'+e8(agg[s].a)+'억 · '+agg[s].c+'건</span></div>').join('');
+    // 임박 액션
+    try{
+      const t=new Date(); t.setHours(0,0,0,0);
+      const soon=D.filter(d=>{ const x=new Date(String(d.nextDate||'').slice(0,10)); return !isNaN(x)&&(x-t)/864e5<=21; })
+        .sort((a,b)=>String(a.nextDate).localeCompare(String(b.nextDate))).slice(0,5);
+      if(soon.length){
+        inner+='<div style="font-size:12px;font-weight:800;color:#4a5666;margin:14px 0 2px">다음 액션 임박</div>';
+        inner+=soon.map(d=>'<div class="op-row"><span class="nm">'+_opEsc(d.country||'-')+' · '+_opEsc(d.dealer||d.product||'')+'</span>'+
+          '<span class="mt">'+_opEsc(d.nextAction||'')+'</span>'+
+          '<span class="vl" style="font-size:12px;color:#2563eb">'+_opEsc(String(d.nextDate||'').slice(5))+'</span></div>').join('');
+      }
+    }catch(e){}
+    R=_opSec('해외 수주 파이프라인','bi-diagram-3',inner,'USD@1380 환산');
+  }
+  if(L||R) h+='<div class="op-grid">'+(L||'<div></div>')+(R||'<div></div>')+'</div>';
+
+  // ── 좌: 운영 대기 / 우: 해외법인 ──────────────────────
+  let L2='', R2='';
+  if(waitTot||k.demoUp!=null){
+    let q='';
+    if(k.kcUndel!=null) q+=_opQ('https://wt-management.github.io/wt-kor-sales/','국내 미납품',fmt(k.kcUndel),'건','전체 '+fmt(k.kcTot)+'건 중 · '+e8(k.kcUndelAmt)+'억');
+    if(k.exReady!=null) q+=_opQ('https://wt-management.github.io/wt-export/','출고 대기',fmt(k.exReady),'건','수출 누적 '+fmt(k.exTot)+'건');
+    if(k.kcCoup!=null) q+=_opQ('https://wt-management.github.io/wt-kor-sales/','쿠폰·적립금 미지급',fmt(k.kcCoup),'건','납품완료 후 미지급');
+    if(k.tdUncol!=null) q+=_opQ('https://wt-management.github.io/wt-tradein/','보상장비 미회수',fmt(k.tdUncol),'건','등록 '+fmt(k.tdItems)+'대 중');
+    if(k.demoUp!=null) q+=_opQ('https://wt-management.github.io/demo-schedule/','예정 데모',fmt(k.demoUp),'건','총 '+fmt(k.demoAll)+'건 등록');
+    L2=_opSec('처리 대기 항목','bi-hourglass-split','<div class="op-q">'+q+'</div>',k.tdAsOf?('보상장비 기준 '+k.tdAsOf):'');
+  }
+  if(k.usAmt!=null||k.thAmt!=null){
+    const tot=(k.usAmt||0)+(k.thAmt||0)||1;
+    let inner='';
+    inner+='<div class="op-mix">'+
+      (k.usAmt?'<i style="width:'+((k.usAmt/tot)*100).toFixed(1)+'%;background:#4f46e5"></i>':'')+
+      (k.thAmt?'<i style="width:'+((k.thAmt/tot)*100).toFixed(1)+'%;background:#0891b2"></i>':'')+'</div>';
+    inner+='<div class="op-lgd">'+
+      (k.usAmt!=null?'<span><s style="background:#4f46e5"></s>미국 '+e8(k.usAmt)+'억</span>':'')+
+      (k.thAmt!=null?'<span><s style="background:#0891b2"></s>태국 '+e8(k.thAmt)+'억</span>':'')+'</div>';
+    let q='';
+    if(k.usAmt!=null) q+=_opQ('https://wt-management.github.io/wt-corps/us.html','미국법인 매출',e8(k.usAmt),'억',k.usCnt+'건 · USD@'+((OPS.us&&OPS.us.rate)||1450));
+    if(k.thAmt!=null) q+=_opQ('https://wt-management.github.io/wt-corps/th.html','태국법인 매출',e8(k.thAmt),'억',k.thCnt+'건 · THB@'+((OPS.th&&OPS.th.rate)||38));
+    R2=_opSec('해외 법인 (2026 누계)','bi-buildings',inner+'<div class="op-q">'+q+'</div>','법인 자체 입력 기준 · 회계 매출과 별도');
+  }
+  if(L2||R2) h+='<div class="op-grid">'+(L2||'<div></div>')+(R2||'<div></div>')+'</div>';
+
+  // ── 사이트 바로가기 ───────────────────────────────────
   const links=[['한국 영업','bi-flag','https://wt-management.github.io/wontech/'],['해외 영업','bi-globe','https://wt-management.github.io/wontech-intl/'],
     ['국내 매출현황','bi-clipboard-data','https://wt-management.github.io/wt-kor-sales/'],['미수금','bi-cash-coin','https://wt-management.github.io/wt-receivables/'],
     ['해외수출','bi-airplane','https://wt-management.github.io/wt-export/'],['장비 통합관리','bi-hdd-stack','https://wt-management.github.io/demo-schedule/'],
     ['보상판매','bi-arrow-repeat','https://wt-management.github.io/wt-tradein/'],['일일매출보고','bi-receipt','https://wt-management.github.io/wt-consumables/ilbo.html'],
     ['일본법인','bi-building','https://wt-management.github.io/wtj-management/'],['Sales Portfolio','bi-pie-chart','https://wt-management.github.io/sales-portfolio/']];
-  h+=_opsSec('전 사이트 바로가기','bi-grid-3x3-gap','<div style="display:flex;gap:8px;flex-wrap:wrap">'+
-    links.map(l=>'<a href="'+l[2]+'" style="display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid #d5dde8;border-radius:9px;padding:8px 14px;font-size:12.5px;font-weight:600;color:#475569;text-decoration:none"><i class="bi '+l[1]+'" style="color:#0f766e"></i>'+l[0]+'</a>').join('')+'</div>');
-  if(OPS.kc===null) h+='<div style="font-size:11.5px;color:#94a3b8;margin-top:4px"><i class="bi bi-info-circle me-1"></i>국내 계약 상세(미납품·쿠폰)는 영업전략파트 권한이 있어야 표시됩니다</div>';
+  h+=_opSec('전 사이트 바로가기','bi-grid-3x3-gap','<div class="op-links">'+
+    links.map(l=>'<a href="'+l[2]+'"><i class="bi '+l[1]+'"></i>'+l[0]+'</a>').join('')+'</div>');
+
+  if(OPS.kc===null) h+='<div style="font-size:11.5px;color:#94a3b8;margin-top:4px"><i class="bi bi-info-circle me-1"></i>국내 계약 상세(미납품·쿠폰)는 영업전략파트 권한이 있어야 표시됩니다.</div>';
   el.innerHTML=h;
 }
 
