@@ -67,8 +67,20 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .seg button.on{background:#0f766e;color:#fff}
 .qtab{padding:7px 14px;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;border-bottom:2px solid transparent}
 .qtab.on{color:#0f766e;border-bottom-color:#0f766e}
-.drow{display:grid;grid-template-columns:1.7fr .9fr .8fr .7fr;gap:8px;padding:9px 10px;font-size:13px;align-items:center;cursor:pointer;border-bottom:1px solid #f1f5f9}
+.q-sh{display:flex;align-items:center;gap:8px}
+.q-sh .b{flex:1;height:7px;border-radius:4px;background:#eef2f7;overflow:hidden}
+.q-sh .b i{display:block;height:100%;border-radius:4px;background:#c7d7ee}
+.q-sh .p{width:38px;text-align:right;font-size:11.5px;color:#8fa0b4;font-variant-numeric:tabular-nums}
+.q-conc{display:flex;flex-wrap:wrap;align-items:center;gap:6px 22px;font-size:12.5px;color:#5b6878;background:#f7f9fc;border:1px solid #eef2f7;border-radius:9px;padding:9px 15px;margin-bottom:12px}
+.q-conc b{color:#141c28;font-weight:800}
+.drow-h{display:grid;grid-template-columns:minmax(150px,340px) minmax(140px,1fr) 132px 112px 104px}
+.drow{display:grid;grid-template-columns:minmax(150px,340px) minmax(140px,1fr) 132px 112px 104px;gap:10px;padding:7px 12px;font-size:13px;align-items:center;cursor:pointer;border-bottom:1px solid #f1f5f9}
+.drow>span:first-child{min-width:0}
 .drow:hover{background:#f8fafc}
+@media(max-width:1240px){
+  .drow,.drow-h{grid-template-columns:minmax(130px,1fr) 116px 100px 92px}
+  .drow .q-sh,.drow-h>span:nth-child(2){display:none}
+}
 .det{padding:11px 14px 15px;background:#f8fafc;border-bottom:1px solid #eef2f7}
 .page{display:none}
 .page.on{display:block}
@@ -1185,7 +1197,7 @@ document.getElementById('wt-fb-send').onclick=function(){var t=document.getEleme
     </div>
 
     <div class="exec-hero" id="q-head"></div>
-    <div class="row g-2 mb-3" id="q-kpi"></div>
+    <div id="q-kpi"></div>
     <div class="card p-3 mb-3"><div style="font-size:13.5px;font-weight:800;margin-bottom:10px"><i class="bi bi-arrow-left-right me-1" style="color:#4f46e5"></i>성장 ↔ 하락 <span style="font-weight:500;color:#94a3b8;font-size:11.5px">· 전년 동기 대비 증감액 상위</span></div><div id="q-dual"></div></div>
 
     <div class="card">
@@ -1194,8 +1206,8 @@ document.getElementById('wt-fb-send').onclick=function(){var t=document.getEleme
         <div class="qtab" id="qt-geo" onclick="qState.tab='geo';syncTab();renderQuery()">국가·지역별</div>
         <div class="qtab" id="qt-rep" onclick="qState.tab='rep';syncTab();renderQuery()">담당자별</div>
       </div>
-      <div style="display:grid;grid-template-columns:1.7fr .9fr .8fr .7fr;gap:8px;padding:9px 10px 7px;font-size:11px;color:#94a3b8;border-bottom:1px solid #eef2f7">
-        <span id="qh-name">제품</span><span style="text-align:right">당기</span><span style="text-align:right">전년</span><span style="text-align:right">YoY</span>
+      <div class="drow-h" style="gap:10px;padding:8px 12px 7px;font-size:11px;color:#94a3b8;border-bottom:1px solid #eef2f7">
+        <span id="qh-name">제품</span><span>구성비</span><span style="text-align:right">당기</span><span style="text-align:right">전년</span><span style="text-align:right">YoY</span>
       </div>
       <div id="q-rows"></div>
     </div>
@@ -2143,6 +2155,15 @@ function renderOvProds(f,t,pend){
 }
 
 // 제품 통합 맵: {name:{dom, intl, cat}}
+// 해외 제품 분류 보조: 국내 제품목록 대조 → 이름 패턴(팁·카트리지류=소모품) → 나머지는 장비
+let _dcDev=null,_dcCons=null;
+function _domCat(n){
+  if(!_dcDev){ _dcDev=new Set(Object.keys((typeof DEVICE!=="undefined"&&DEVICE.products2026)||{})); _dcCons=new Set(Object.keys((typeof CONS!=="undefined"&&CONS.products2026)||{})); }
+  if(_dcCons.has(n)) return '소모품';
+  if(_dcDev.has(n)) return '장비';
+  if(/(tip|cartridge|카트리지|팁)/i.test(n)) return '소모품';
+  return '장비';
+}
 function _productMap(f,t,pend){
   const map={};
   const add=(n,key,val,cat)=>{ if(!n) return; if(!map[n]) map[n]={dom:0,intl:0,cat:cat}; map[n][key]+=val; if(cat&&map[n].cat==='기타') map[n].cat=cat; };
@@ -2160,7 +2181,9 @@ function _productMap(f,t,pend){
   names.forEach(n=>{
     let v;
     if(pm[n]) v=sumMo(pm[n],f,t); else v=(INTL.products[n]||0)*intlScale;
-    const cat=devSet.has(n)?'장비':consSet.has(n)?'소모품':'기타';
+    // 분류 우선순위: 파서가 저장한 전체 분류맵 → 해외 상위목록 → 국내 제품목록 → 이름 패턴
+    // (prods_dev/prods_cons는 상위 10개만이라 이것만으로는 대부분 제품이 기타로 떨어짐)
+    const cat=(INTL.prodCat&&INTL.prodCat[n])||(devSet.has(n)?'장비':consSet.has(n)?'소모품':_domCat(n));
     add(n,'intl',v,cat);
   });
   return map;
@@ -2528,7 +2551,7 @@ function _monthTarget(mo){
 }
 
 // ── 상세 조회 ────────────────────────────────────────────
-const qState={f:1,t:5,ch:'all',cat:'all',tab:'prod',open:{}};
+const qState={f:1,t:5,ch:'all',cat:'all',tab:'prod',open:{},fold:{}};
 function syncQ(){
   document.querySelectorAll('#q-ch button').forEach(b=>b.classList.toggle('on',b.getAttribute('data-v')===qState.ch));
   document.querySelectorAll('#q-cat button').forEach(b=>b.classList.toggle('on',b.getAttribute('data-v')===qState.cat));
@@ -2568,13 +2591,16 @@ function renderQuery(){
     '<div class="eh-v">'+fmtW(tot)+' <span style="font-size:1rem">'+(totY===null?'':badge(totY))+'</span> <span style="font-size:1rem;color:'+(totDelta>=0?'#16a34a':'#e11d48')+'">'+fmtD(totDelta)+'</span></div>'+
     '<div class="eh-l" style="color:#94a3b8;font-weight:500">전년 동기 '+fmtW(totPrev)+' · 회계 '+fmtW(_accF)+' + 미반영 '+fmtW(_pendF)+(_etcF>0?' <span style="color:#94a3b8">(기타 '+fmtW(_etcF)+' 포함)</span>':'')+' <span style="color:#94a3b8">· 아래 분해는 회계 확정 기준</span></div>'+
     execNarr(G.map(x=>({name:x.name,delta:x.d,val:x.val,prev:x.prev})));
-  document.getElementById('q-kpi').innerHTML=[
-    {l:'전년 동기 대비 순증감',v:fmtD(totDelta),c:_yoyCol(totY)},
-    {l:'급성장 / 급락 항목',v:'<span style="color:#15803d">'+surge+'</span> / <span style="color:#b91c1c">'+plunge+'</span>',c:'#0f172a'},
-    {l:'성장 항목 비율',v:ratio+'%',c:ratio>=50?'#16a34a':'#f59e0b'},
-    {l:'조회 항목',v:items.length+'개',c:'#7c3aed'},
-  ].map(c=>'<div class="col-6 col-md-3"><div class="kpi-card acc-card" style="padding:13px 15px;border-left-color:'+c.c+'"><div class="kpi-label">'+c.l+'</div><div class="kpi-value" style="font-size:1.2rem;color:'+c.c+'">'+c.v+'</div></div></div>').join('');
+  // 상위 집중도 — 카드 4장 대신 한 줄로(값이 헤드라인과 중복되고 여백만 차지했음)
+  const _s5=G.slice().sort((a,b)=>b.val-a.val).slice(0,5), _s5v=_s5.reduce((s,x)=>s+x.val,0), _gv=G.reduce((s,x)=>s+Math.max(0,x.val),0)||1;
+  document.getElementById('q-kpi').innerHTML='<div class="q-conc">'+
+    '<span>조회 <b>'+items.length+'개</b></span>'+
+    '<span>성장 <b style="color:#15803d">'+grewN+'개</b> · 하락 <b style="color:#b91c1c">'+(items.length-grewN)+'개</b></span>'+
+    '<span>상위 5개가 전체의 <b>'+Math.round(_s5v/_gv*100)+'%</b></span>'+
+    '<span style="color:#94a3b8;font-weight:500">'+_s5.map(x=>esc(x.name)).slice(0,3).join(' · ')+' …</span>'+
+  '</div>';
   const maxAbs=Math.max(1,...G.map(x=>Math.abs(x.d)));
+  const _gvAll=G.reduce((s2,x)=>s2+Math.max(0,x.val),0);   // 구성비 분모(조회 항목 합계)
   const top=G.filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,5), bot=G.filter(x=>x.d<0).sort((a,b)=>a.d-b.d).slice(0,5);
   const drow=x=>'<div class="dl-row"><span class="dl-dot" style="background:'+_yoyCol(x.y)+'"></span><span class="dl-name">'+esc(x.name)+'</span>'+divBar(x.d,maxAbs)+'<span class="dl-d" style="color:'+_yoyCol(x.y)+'">'+fmtD(x.d)+'</span><span class="dl-sub">'+(x.y===null?'신규':arrow(x.y))+'</span></div>';
   document.getElementById('q-dual').innerHTML=dualList(top,bot,drow);
@@ -2583,11 +2609,36 @@ function renderQuery(){
     const row='<div class="drow" onclick="qToggle('+idx+')">'+
       '<span><span class="dl-dot" style="display:inline-block;margin-right:6px;background:'+_yoyCol(x.y)+'"></span>'+esc(x.name)+((x.tag&&qState.tab!=='prod')?' <span style="font-size:10px;color:#94a3b8">'+x.tag+'</span>':'')+
         '<div style="display:flex;align-items:center;gap:8px;margin-top:5px">'+divBar(x.d,maxAbs)+(x.d>0?'<span style="font-size:10px;color:#94a3b8">성장기여 '+contrib+'%</span>':'')+'</div></span>'+
+      '<span class="q-sh"><span class="b"><i style="width:'+Math.min(100,(_gvAll>0?x.val/_gvAll*100:0)).toFixed(1)+'%"></i></span><span class="p">'+(_gvAll>0?(x.val/_gvAll*100).toFixed(1):'0.0')+'%</span></span>'+
       '<span style="text-align:right;font-weight:700">'+fmtW(x.val)+(x.qty>0?'<div style="font-size:11px;color:#64748b;font-weight:600;margin-top:2px"'+(x.qtyNote?' title="'+esc(x.qtyNote)+' 기준"':'')+'>'+x.qty.toLocaleString()+'대'+(x.qtyNote?' <span style="color:#b0bcca;font-weight:500">'+esc(x.qtyNote)+'</span>':'')+'</div>':'')+'</span>'+
       '<span style="text-align:right;color:#64748b">'+fmtW(x.prev||0)+'</span>'+
       '<span style="text-align:right;color:'+_yoyCol(x.y)+';font-weight:700">'+(x.y===null?'신규':arrow(x.y))+'</span>'+
     '</div>';
     return row+(qState.open[idx]?'<div class="det">'+(x.detail||'상세 없음')+'</div>':'');
+  };
+  // 소액 항목 접기: 하위 항목 합이 전체의 3% 미만이면 한 줄로 묶음(최소 5개는 항상 표시)
+  const _qFold=(list,idxOf,key)=>{
+    const arr=list.slice().sort((a,b)=>b.val-a.val);
+    const gt=arr.reduce((s,x)=>s+Math.max(0,x.val),0)||1;
+    let cut=arr.length,acc=0;
+    for(let i=arr.length-1;i>=0;i--){ acc+=Math.max(0,arr[i].val); if(acc/gt>0.03){ cut=i+1; break; } }
+    cut=Math.max(cut,5);
+    if(arr.length-cut<3) cut=arr.length;
+    let out=arr.slice(0,cut).map(x=>_qrow(x,idxOf.get(x))).join('');
+    const rest=arr.slice(cut);
+    if(rest.length){
+      const rv=rest.reduce((s,x)=>s+x.val,0), rp=rest.reduce((s,x)=>s+(x.prev||0),0), ry=pct(rv,rp);
+      const opened=!!qState.fold[key];
+      out+='<div class="drow" style="background:#fcfdfe;cursor:pointer" onclick="qFold('+_jsArg(key)+')">'+
+        '<span style="color:#64748b;font-weight:600"><i class="bi bi-chevron-'+(opened?'down':'right')+'" style="font-size:10px;margin-right:6px"></i>그 외 '+rest.length+'개'+
+          ' <span style="font-size:10.5px;font-weight:500;color:#a8b3c1">비중 '+(rv/gt*100).toFixed(1)+'% · 클릭하면 펼쳐집니다</span></span>'+
+        '<span class="q-sh"><span class="b"><i style="width:'+(_gvAll>0?Math.min(100,rv/_gvAll*100):0).toFixed(1)+'%"></i></span><span class="p">'+(_gvAll>0?(rv/_gvAll*100).toFixed(1):'0.0')+'%</span></span>'+
+        '<span style="text-align:right;color:#64748b;font-weight:700">'+fmtW(rv)+'</span>'+
+        '<span style="text-align:right;color:#94a3b8">'+fmtW(rp)+'</span>'+
+        '<span style="text-align:right;color:'+_yoyCol(ry)+';font-weight:700">'+(ry===null?'신규':arrow(ry))+'</span></div>';
+      if(opened) out+=rest.map(x=>_qrow(x,idxOf.get(x))).join('');
+    }
+    return out;
   };
   let _rowsHtml='';
   if(qState.tab==='prod'){
@@ -2602,13 +2653,14 @@ function renderQuery(){
       _rowsHtml+='<div class="drow" style="background:#f8fafc;font-weight:800;cursor:default;border-top:2px solid '+gcol+'">'+
         '<span style="color:'+gcol+'"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+gcol+';margin-right:7px"></span>'+gname+
           ' <span style="font-size:10.5px;font-weight:500;color:#94a3b8">'+list.length+'개 · 비중 '+(tot>0?Math.round(gv/_accF*100):0)+'%'+(gq>0?' · '+gq.toLocaleString()+'대':'')+'</span></span>'+
+        '<span class="q-sh"><span class="b"><i style="width:'+(_gvAll>0?Math.min(100,gv/_gvAll*100):0).toFixed(1)+'%;background:'+gcol+'"></i></span><span class="p" style="color:'+gcol+'">'+(_gvAll>0?(gv/_gvAll*100).toFixed(0):0)+'%</span></span>'+
         '<span style="text-align:right">'+fmtW(gv)+(gq>0?'<div style="font-size:11px;color:#64748b;font-weight:600;margin-top:2px">'+gq.toLocaleString()+'대</div>':'')+'</span>'+
         '<span style="text-align:right;color:#64748b;font-weight:600">'+fmtW(gp)+'</span>'+
         '<span style="text-align:right;color:'+_yoyCol(gy)+'">'+(gy===null?'신규':arrow(gy))+' <span style="font-size:10px;font-weight:600">'+fmtD(gd)+'</span></span></div>';
-      _rowsHtml+=list.map(x=>_qrow(x,idxOf.get(x))).join('');
+      _rowsHtml+=_qFold(list,idxOf,gname);
     });
   } else {
-    _rowsHtml=G.map((x,idx)=>_qrow(x,idx)).join('');
+    _rowsHtml=_qFold(G,new Map(G.map((x,i)=>[x,i])),qState.tab);
   }
   document.getElementById('q-rows').innerHTML=_rowsHtml||'<div class="text-muted" style="font-size:12px;padding:14px">데이터 없음</div>';
   const top3=G.filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,3).reduce((s,x)=>s+x.d,0);
@@ -2616,7 +2668,17 @@ function renderQuery(){
   _qItems=items;
 }
 let _qItems=[];
+// onclick 인자 안전 인코딩 — 따옴표·역슬래시·꺾쇠를 이스케이프해 속성 밖으로 새지 않게 함
+function _jsArg(v){
+  var t=String(v==null?'':v);
+  t=t.split('\\').join('\\\\');
+  t=t.split("'").join("\\'");
+  t=t.split('"').join('&quot;');
+  t=t.split('<').join('\\u003c');
+  return "'"+t+"'";
+}
 function qToggle(i){ qState.open[i]=!qState.open[i]; renderQuery(); }
+function qFold(k){ qState.fold[k]=!qState.fold[k]; renderQuery(); }
 
 function _qProducts(){
   const f=qState.f,t=qState.t;

@@ -5243,7 +5243,8 @@ function consParseExcel(input) {
         const tn=(o,n=12)=>Object.fromEntries(Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,n));
         const fct=m=>Object.fromEntries(Object.entries(m).sort((a,b)=>b[1].total-a[1].total).map(([k,v])=>[k,{total:Math.round(v.total),usd:Math.round(v.usd),orders:v.orders,clients:v.clients.size,prods:tn(v.prods,4),m:v.m}]));
         const frp=m=>Object.fromEntries(Object.entries(m).sort((a,b)=>b[1].total-a[1].total).map(([k,v])=>[k,{total:Math.round(v.total),usd:Math.round(v.usd),orders:v.orders,countries:v.cset.size,clients:v.clients.size,prods:tn(v.prods,4),m:v.m}]));
-        const mk=(mm,mu,mq,pm2,pc2,pd2,pmm,pmqm,pqm,ctm,rpm)=>({monthly:mm,monthly_usd:mu,monthly_qty:mq,total:Object.values(mm).reduce((s,v)=>s+v,0),total_usd:Object.values(mu).reduce((s,v)=>s+v,0),products:tn(pm2),prods_cons:tn(pc2,10),prods_dev:tn(pd2,10),prodQty:tn(pqm),prodMo:pmm,prodMoQty:pmqm,countries:fct(ctm),reps:frp(rpm)});
+        const _mkCat=(pc2,pd2)=>{var o={};Object.keys(pd2||{}).forEach(function(k){o[k]='장비';});Object.keys(pc2||{}).forEach(function(k){ if(!o[k]||(+pc2[k]||0)>(+pd2[k]||0)) o[k]='소모품'; });return o;};
+        const mk=(mm,mu,mq,pm2,pc2,pd2,pmm,pmqm,pqm,ctm,rpm)=>({monthly:mm,prodCat:_mkCat(pc2,pd2),monthly_usd:mu,monthly_qty:mq,total:Object.values(mm).reduce((s,v)=>s+v,0),total_usd:Object.values(mu).reduce((s,v)=>s+v,0),products:tn(pm2),prods_cons:tn(pc2,10),prods_dev:tn(pd2,10),prodQty:tn(pqm),prodMo:pmm,prodMoQty:pmqm,countries:fct(ctm),reps:frp(rpm)});
         return{r26:mk(mo,mu,mq,pr,pc,pd,pm,pmq,pq,ct,rp),r25:mk(mo25,mu25,mq25,pr25,pc25,pd25,pm25,pmq25,pq25,ct25,rp25)};
       };
       const _intlRes = _aggIntl(_ri25, _ri26);
