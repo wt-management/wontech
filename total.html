@@ -147,6 +147,35 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 #page-portfolio .btn{border-radius:8px}
 /* WT-DEEP-v3 프리미엄 타이포 일관 */
 .kpi-value,.lux-num,.stat-num,.stat-value,.metric-value,.metric-num,.big-num,.num-lg,.hero-num,.summary-num,.card-num{font-variant-numeric:tabular-nums;letter-spacing:-.018em}
+/* 매출 상세 — 헤드라인 우측 공백 활용(2단) + 항목 2열 배치 + 막대 제거 */
+.qd-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:14px;align-items:stretch;margin-bottom:12px}
+@media(max-width:1240px){.qd-top{grid-template-columns:1fr}}
+.qd-top .exec-hero{margin-bottom:0;height:100%}
+.qd-top .qd-dual{margin-bottom:0;height:100%}
+.qd-hd{display:grid;grid-template-columns:repeat(2,minmax(0,1fr) 96px 78px 66px);gap:0 26px;padding:8px 12px 7px;font-size:11px;color:#94a3b8;border-bottom:1px solid #eef2f7}
+.qd-hd span:nth-child(2),.qd-hd span:nth-child(3),.qd-hd span:nth-child(4),.qd-hd span:nth-child(6),.qd-hd span:nth-child(7),.qd-hd span:nth-child(8){text-align:right}
+.qd-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr) 96px 78px 66px);gap:0 26px}
+.qd-c{display:grid;grid-template-columns:subgrid;grid-column:span 4;align-items:center;padding:6px 12px;border-bottom:1px solid #f4f7fa;font-size:13px;cursor:pointer}
+.qd-c:hover{background:#f8fafc}
+.qd-c .n{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:#1c2534}
+.qd-c .n .sh{font-size:10.5px;color:#a8b3c1;font-weight:500;margin-left:5px}
+.qd-c .n .tg{font-size:10px;color:#94a3b8;font-weight:500}
+.qd-c .v,.qd-c .p,.qd-c .y{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.qd-c .v{font-weight:700}
+.qd-c .v b{display:block;font-size:10.5px;color:#64748b;font-weight:600}
+.qd-c .p{color:#64748b}
+.qd-c .y{font-weight:700}
+.qd-gh{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) 96px 78px 66px;align-items:center;background:#f8fafc;font-weight:800;padding:7px 12px;font-size:13px}
+.qd-gh .v,.qd-gh .p,.qd-gh .y{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.qd-gh .v b{display:block;font-size:10.5px;color:#64748b;font-weight:600}
+.qd-gh .p{color:#64748b;font-weight:600}
+.qd-gh .y b{display:block;font-size:10px;font-weight:600}
+.qd-gh.fold{background:#fcfdfe;font-weight:600;color:#64748b;cursor:pointer;border-top:0}
+.qd-grid .det{grid-column:1/-1}
+@media(max-width:1240px){
+  .qd-hd,.qd-grid{grid-template-columns:minmax(0,1fr) 96px 78px 66px}
+  .qd-hd .d2{display:none}
+}
 .q-conc{display:flex;flex-wrap:wrap;align-items:center;gap:6px 22px;font-size:12.5px;color:#5b6878;background:#f7f9fc;border:1px solid #eef2f7;border-radius:9px;padding:9px 15px;margin-bottom:12px}
 .q-conc b{color:#141c28;font-weight:800}
 .drow-h{display:grid;grid-template-columns:minmax(150px,340px) minmax(140px,1fr) 132px 112px 104px}
@@ -189,6 +218,35 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .ovd-body{padding:14px 18px}
 /* 이번달 관리 카드 */
 .tm-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+/* 당월 매출 관리 — 카드 3장 대신 밀집 스트립(목표·전년비·페이스 포함) */
+/* 경영 운영지표 밴드 — 셀이 늘어나며 생기던 여백을 없애고 지표·판단정보 추가 */
+.ovo-band{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));background:#fff;border:1px solid #e4e8ef;border-radius:12px;overflow:hidden}
+.ovo-c{padding:11px 15px;border-left:1px solid #eef2f7;min-width:0}
+.ovo-c:first-child{border-left:0}
+.ovo-c:hover{background:#fafbfd}
+.ovo-c .l{font-size:11px;font-weight:700;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ovo-c .v{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1.2;margin-top:1px}
+.ovo-c .v small{font-size:11px;font-weight:700;margin-left:1px}
+.ovo-c .s{font-size:10.5px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.ovo-c .s b{color:#4a5666;font-weight:700}
+.tm-strip{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;display:grid;grid-template-columns:auto 1fr;gap:6px 26px;align-items:center}
+@media(max-width:900px){.tm-strip{grid-template-columns:1fr}}
+.tm-strip .tm-main{min-width:150px}
+.tm-strip .tm-main .l{font-size:11.5px;color:#6b7280;font-weight:700}
+.tm-strip .tm-main .v{font-size:30px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.tm-strip .tm-main .s{font-size:12px;color:#5b6878;margin-top:2px}
+.tm-strip .tm-main .s b{color:#141c28;font-weight:800}
+.tm-items{display:flex;flex-wrap:wrap;gap:8px 26px;align-items:baseline}
+.tm-items .it{font-size:12.5px;color:#5b6878;display:inline-flex;align-items:baseline;gap:5px;white-space:nowrap}
+.tm-items .it i{font-size:12px}
+.tm-items .it b{color:#141c28;font-weight:800;font-variant-numeric:tabular-nums}
+.tm-items .it em{font-style:normal;font-size:11px;color:#94a3b8;margin-left:2px}
+.tm-bar{grid-column:1/-1;position:relative;height:10px;border-radius:5px;background:#eef2f7;overflow:hidden;margin-top:4px}
+.tm-bar i{position:absolute;top:0;bottom:0;left:0;display:block;border-radius:5px}
+.tm-bar .f{opacity:.35}
+.tm-bar .c{background:#16324f}
+.tm-bar .p{position:absolute;top:-2px;bottom:-2px;width:2px;background:#64748b;border-radius:1px}
+.tm-cap{grid-column:1/-1;font-size:11px;color:#a8b3c1}
 .tm-box{background:#fff;border-radius:12px;padding:14px 16px;border:1px solid #e2e8f0}
 .tm-box.accent{border-color:#99f6e4;background:linear-gradient(180deg,#f0fdfa,#fff)}
 .tm-box .tm-l{font-size:11px;color:#6b7280;font-weight:600}
@@ -292,6 +350,12 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 }
 /* ── 전역 PDF 추출 + 인쇄 ── */
 /* ══ 목표 달성률: 임원 가독성 레이아웃(큰 글씨·문서형 표) ══ */
+.gx-land{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 14px;background:#f7f9fc;border:1px solid #e4e8ef;border-left:4px solid #16324f;border-radius:0 9px 9px 0;padding:11px 16px;margin-bottom:14px}
+.gx-land .l{font-size:12px;font-weight:800;color:#5b6878;letter-spacing:.02em}
+.gx-land .v{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.gx-land .s{font-size:13.5px;color:#37414f}
+.gx-land .s b{font-weight:800}
+.gx-land .m{margin-left:auto;font-size:11.5px;color:#94a3b8}
 .gx-head{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:2px 2px 10px;border-bottom:3px solid #16324f;margin-bottom:12px}
 .gx-head-l{font-size:20px;font-weight:800;color:#141c28;letter-spacing:-.01em}
 .gx-head-l .gx-per{font-size:14px;font-weight:600;color:#5b6878;margin-left:6px}
@@ -306,46 +370,6 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .gx-sec{font-size:17px;font-weight:800;color:#141c28;margin:0 0 8px;padding-bottom:6px;border-bottom:2px solid #16324f}
 .gx-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 26px;align-items:start}
 @media(max-width:1520px){.gx-grid{grid-template-columns:1fr;gap:0}}
-/* ===== 경영 진단(전무급 임원용) ===== */
-.exd-hero{background:#fff;border:1px solid #e4e8ef;border-left:5px solid #16324f;border-radius:12px;padding:20px 24px 22px;margin-bottom:20px}
-.exd-hero-t{font-size:12px;font-weight:800;letter-spacing:.06em;color:#8fa0b4;margin-bottom:6px}
-.exd-hero-v{font-size:42px;font-weight:800;color:#141c28;letter-spacing:-.03em;line-height:1.05;font-variant-numeric:tabular-nums}
-.exd-hero-v small{font-size:19px;font-weight:700;margin-left:3px}
-.exd-hero-s{font-size:15px;color:#37414f;margin-top:9px;line-height:1.65}
-.exd-hero-s b{color:#141c28;font-weight:800}
-.exd-track{margin-top:16px}
-.exd-bar{position:relative;height:26px;border-radius:6px;background:#eef2f7;overflow:hidden}
-.exd-bar i{position:absolute;top:0;bottom:0;left:0;display:block}
-.exd-bar .a{background:#16324f}
-.exd-bar .b{background:#b9c9dc}
-.exd-bar .g{position:absolute;top:-3px;bottom:-3px;width:3px;background:#dc2626;border-radius:2px}
-.exd-lg{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:12px;color:#5b6878;margin-top:8px}
-.exd-lg s{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:6px;text-decoration:none}
-.exd-lg b{color:#141c28;font-weight:700}
-.exd-div{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:22px}
-@media(max-width:900px){.exd-div{grid-template-columns:1fr}}
-.exd-dc{background:#fff;border:1px solid #e4e8ef;border-radius:12px;padding:15px 18px}
-.exd-dc-h{display:flex;align-items:baseline;gap:8px;margin-bottom:9px}
-.exd-dc-n{font-size:14px;font-weight:800;color:#1c2534}
-.exd-dc-r{margin-left:auto;font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
-.exd-dc-s{font-size:12.5px;color:#5b6878;margin-top:7px}
-.exd-dc-s b{color:#141c28;font-weight:700}
-.exd-mini{height:9px;border-radius:5px;background:#eef2f7;overflow:hidden;position:relative}
-.exd-mini i{display:block;height:100%;border-radius:5px}
-.exd-sec{margin-bottom:22px}
-.exd-sec-h{display:flex;align-items:baseline;gap:8px;font-size:14px;font-weight:800;color:#1c2534;padding-bottom:8px;border-bottom:2px solid #16324f;margin-bottom:12px}
-.exd-sec-h .n{margin-left:auto;font-size:11.5px;font-weight:500;color:#94a3b8}
-.exd-row{display:grid;grid-template-columns:minmax(120px,1fr) 1fr 92px;gap:10px;align-items:center;padding:8px 2px;border-bottom:1px solid #eef2f7;font-size:13px}
-.exd-row:last-child{border-bottom:0}
-.exd-row .nm{font-weight:700;color:#1c2534;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.exd-row .bw{height:8px;border-radius:4px;background:#f1f5f9;overflow:hidden}
-.exd-row .bw i{display:block;height:100%;border-radius:4px}
-.exd-row.tight{grid-template-columns:minmax(0,1fr) auto auto}
-.exd-row .mt{font-size:11.5px;color:#94a3b8;font-weight:500;white-space:nowrap}
-.exd-row .vl{text-align:right;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
-.exd-note{font-size:12px;color:#5b6878;background:#f7f9fc;border:1px solid #eef2f7;border-radius:9px;padding:10px 15px;display:flex;flex-wrap:wrap;gap:6px 20px;align-items:center}
-.exd-note b{color:#141c28;font-weight:800}
-.exd-note a{color:#16324f;font-weight:700;text-decoration:underline;cursor:pointer}
 .op-lede{font-size:14.5px;color:#37414f;line-height:1.75;background:#f7f9fc;border-left:3px solid #16324f;padding:13px 17px;border-radius:0 8px 8px 0;margin-bottom:18px}
 .op-lede b{color:#141c28;font-weight:800}
 .op-lede .op-em{font-weight:800}
@@ -1205,7 +1229,6 @@ document.getElementById('wt-fb-send').onclick=function(){var t=document.getEleme
   <div class="nav-wrap">
     <div class="nav-label">경영 현황</div>
     <a class="nav-link active" id="nav-overview" onclick="showPage('overview',this)"><i class="bi bi-grid-1x2"></i>전사 종합</a>
-    <a class="nav-link" id="nav-ops" onclick="showPage('ops',this)"><i class="bi bi-clipboard-pulse"></i>경영 진단</a>
     <a class="nav-link" id="nav-query" onclick="showPage('query',this)"><i class="bi bi-zoom-in"></i>매출 상세</a>
     <a class="nav-link" id="nav-corps" onclick="showPage('corps',this)"><i class="bi bi-buildings"></i>법인·수출</a>
     <div class="nav-label" style="margin-top:12px">임원 리포트</div>
@@ -1296,9 +1319,6 @@ document.getElementById('wt-fb-send').onclick=function(){var t=document.getEleme
   </div>
 
   <!-- ===== 경영 진단 (매출 외 경영축 통합) ===== -->
-  <div id="page-ops" class="page">
-    <div id="ops-body"><div style="color:#94a3b8;font-size:13px;padding:30px;text-align:center">불러오는 중…</div></div>
-  </div>
 
   <!-- ===== 상세 조회 ===== -->
   <div id="page-portfolio" class="page">
@@ -1330,9 +1350,11 @@ document.getElementById('wt-fb-send').onclick=function(){var t=document.getEleme
       <span class="fchip">구분</span><div class="seg" id="q-cat"></div>
     </div>
 
+    <div class="qd-top">
     <div class="exec-hero" id="q-head"></div>
+    <div class="card p-3 qd-dual"><div style="font-size:13.5px;font-weight:800;margin-bottom:10px"><i class="bi bi-arrow-left-right me-1" style="color:#4f46e5"></i>성장 ↔ 하락 <span style="font-weight:500;color:#94a3b8;font-size:11.5px">· 전년 동기 대비 증감액 상위</span></div><div id="q-dual"></div></div>
+    </div>
     <div id="q-kpi"></div>
-    <div class="card p-3 mb-3"><div style="font-size:13.5px;font-weight:800;margin-bottom:10px"><i class="bi bi-arrow-left-right me-1" style="color:#4f46e5"></i>성장 ↔ 하락 <span style="font-weight:500;color:#94a3b8;font-size:11.5px">· 전년 동기 대비 증감액 상위</span></div><div id="q-dual"></div></div>
 
     <div class="card">
       <div style="display:flex;gap:6px;padding:6px 12px 0;border-bottom:1px solid #f1f5f9">
@@ -1340,10 +1362,11 @@ document.getElementById('wt-fb-send').onclick=function(){var t=document.getEleme
         <div class="qtab" id="qt-geo" onclick="qState.tab='geo';syncTab();renderQuery()">국가·지역별</div>
         <div class="qtab" id="qt-rep" onclick="qState.tab='rep';syncTab();renderQuery()">담당자별</div>
       </div>
-      <div class="drow-h" style="gap:10px;padding:8px 12px 7px;font-size:11px;color:#94a3b8;border-bottom:1px solid #eef2f7">
-        <span id="qh-name">제품</span><span>구성비</span><span style="text-align:right">당기</span><span style="text-align:right">전년</span><span style="text-align:right">YoY</span>
+      <div class="qd-hd">
+        <span id="qh-name">제품</span><span>당기</span><span>전년</span><span>YoY</span>
+        <span class="d2" id="qh-name2">제품</span><span class="d2">당기</span><span class="d2">전년</span><span class="d2">YoY</span>
       </div>
-      <div id="q-rows"></div>
+      <div id="q-rows" class="qd-grid"></div>
     </div>
     <div class="exec-ins" id="q-insight"></div>
     <div style="font-size:11px;color:#94a3b8;margin-top:8px"><i class="bi bi-info-circle me-1"></i>국내 제품·담당자는 월 분포 데이터가 없어 기간 비중으로 환산 표시됩니다. 월별 합계·해외 항목은 실제 월 데이터 기준입니다.</div>
@@ -1840,7 +1863,6 @@ function showPage(name,el,push){
   if(name==='units') renderUnits();
   if(name==='leaderboard') renderLeaderboard();
   if(name==='customers') renderCustomers();
-  if(name==='ops') renderOps();
   // WT_NAV[1] 히스토리 적재 — 같은 키 중복 push 금지(같은 메뉴 재클릭 시 엔트리 누적 방지)
   if(push!==false && !(history.state && history.state.p===name)){ try{ history.pushState({p:name},'','#p='+name); }catch(_){} }
 }
@@ -1901,191 +1923,33 @@ function opsKpi(){
 function renderOvOps(){
   const el=document.getElementById('ov-ops'); if(!el)return;
   if(!OPS.loaded){ el.innerHTML=''; return; }
-  const k=opsKpi(), e8=v=>((v||0)/1e8).toFixed(1), fmt=v=>Math.round(v||0).toLocaleString();
-  const it=(lb,val,unit,sub,color)=>'<div style="flex:1;min-width:132px;padding:0 14px;border-left:1px solid #e4e8ef">'+
-    '<div style="font-size:11px;font-weight:700;color:#64748b;white-space:nowrap">'+lb+'</div>'+
-    '<div style="font-size:19px;font-weight:800;color:'+(color||'#182230')+';font-variant-numeric:tabular-nums;white-space:nowrap;margin-top:2px">'+val+
-      (unit?'<span style="font-size:11px;font-weight:700;margin-left:1px">'+unit+'</span>':'')+'</div>'+
-    '<div style="font-size:10.5px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(sub||'')+'</div></div>';
-  // 경영진 관점 4대 지표만(금액 중심) — 실무 디테일은 '경영 진단'에서
+  const k=opsKpi(), e8=v=>((v||0)/1e8).toFixed(1);
+  // 연초 대비 미수 증감(주간 시계열) — 회수가 되고 있는지 판단용
+  let arDelta=null;
+  try{ const W=(OPS.ar&&OPS.ar.weekly)||[]; if(W.length>1) arDelta=(+W[W.length-1].ar||0)-(+W[0].ar||0); }catch(e){}
+  // 수주확률 60% 이상 파이프라인(실현 가능성 높은 몫)
+  let plHi=null;
+  try{ plHi=((OPS.pl&&OPS.pl.deals)||[]).filter(d=>(+d.prob||0)>=60).reduce((a,d)=>a+(+d.amount||0)*1380,0); }catch(e){}
+  const cell=(lb,val,unit,sub,color,href)=>'<div class="ovo-c"'+(href?' onclick="location.href=\''+href+'\'" style="cursor:pointer"':'')+'>'+
+    '<div class="l">'+lb+'</div>'+
+    '<div class="v" style="color:'+(color||'#182230')+'">'+val+(unit?'<small>'+unit+'</small>':'')+'</div>'+
+    '<div class="s">'+(sub||'')+'</div></div>';
   let cells='';
-  if(k.arAmt!=null) cells+=it('국내 미수채권',e8(k.arAmt),'억','관리필요 '+e8(k.arRisk)+'억 · '+k.arRiskCnt+'건',k.arRisk>0?'#b45309':'#15803d');
-  if(k.kcUndelAmt!=null) cells+=it('국내 수주잔량',e8(k.kcUndelAmt),'억','미납품 '+k.kcUndel+'건','#2563eb');
-  if(k.plW!=null) cells+=it('해외 파이프라인',e8(k.plW),'억','확률가중 · '+k.plCnt+'건 진행','#2563eb');
-  if(k.usAmt!=null||k.thAmt!=null) cells+=it('해외법인 매출',e8((k.usAmt||0)+(k.thAmt||0)),'억','미국+태국 2026 누계','#4f46e5');
+  if(k.arAmt!=null) cells+=cell('국내 미수채권',e8(k.arAmt),'억',
+    '관리필요 <b>'+e8(k.arRisk)+'억</b>'+(arDelta!=null?' · 연초비 <b style="color:'+(arDelta<0?'#0f766e':'#c0392b')+'">'+(arDelta<0?'-':'+')+e8(Math.abs(arDelta))+'억</b>':''),
+    k.arRisk>0?'#b45309':'#15803d','https://wt-management.github.io/wt-receivables/');
+  if(k.arBadAmt!=null) cells+=cell('대손 처리액',e8(k.arBadAmt),'억','누적 기준','#64748b','https://wt-management.github.io/wt-receivables/');
+  if(k.kcUndelAmt!=null) cells+=cell('국내 수주잔량',e8(k.kcUndelAmt),'억','미납품 <b>'+k.kcUndel+'건</b> / 전체 '+k.kcTot+'건','#2563eb','https://wt-management.github.io/wt-kor-sales/');
+  if(k.plW!=null) cells+=cell('해외 파이프라인',e8(k.plW),'억',
+    '진행 <b>'+k.plCnt+'건</b>'+(plHi!=null?' · 확률60%↑ <b>'+e8(plHi)+'억</b>':''),'#2563eb','https://wt-management.github.io/wontech-intl/');
+  if(k.usAmt!=null||k.thAmt!=null) cells+=cell('해외법인 매출',e8((k.usAmt||0)+(k.thAmt||0)),'억',
+    '미국 <b>'+e8(k.usAmt||0)+'</b> · 태국 <b>'+e8(k.thAmt||0)+'</b>','#4f46e5','https://wt-management.github.io/wt-corps/us.html');
+  if(k.tdUncol!=null) cells+=cell('보상장비 미회수',k.tdUncol,'건','등록 '+(k.tdItems||0).toLocaleString()+'대 중',k.tdUncol?'#b45309':'#15803d','https://wt-management.github.io/wt-tradein/');
+  if(k.kcCoup!=null) cells+=cell('쿠폰·적립금 미지급',k.kcCoup,'건','납품완료 후 미지급',k.kcCoup?'#b45309':'#15803d','https://wt-management.github.io/wt-kor-sales/');
   if(!cells){ el.innerHTML=''; return; }
-  el.innerHTML='<div style="background:#fff;border:1px solid #e4e8ef;border-radius:12px;padding:14px 10px;display:flex;align-items:stretch;flex-wrap:wrap;gap:8px 0">'+
-    '<div style="flex:0 0 auto;padding:0 16px 0 8px;display:flex;flex-direction:column;justify-content:center">'+
-      '<div style="font-size:10px;font-weight:800;letter-spacing:.12em;color:#94a3b8">OPERATIONS</div>'+
-      '<div style="font-size:13px;font-weight:800;color:#182230">경영 운영지표</div>'+
-      '<a onclick="showPage(\'ops\')" style="font-size:11px;color:#0f766e;font-weight:700;cursor:pointer;text-decoration:underline">자세히 →</a></div>'+
-    cells+'</div>';
+  el.innerHTML='<div class="ovo-band">'+cells+'</div>';
 }
 
-// ── 전사 경영 진단 (전무급 이상 임원용) ─────────────────
-function _exE8(v){ return ((v||0)/1e8).toFixed(0); }
-function _exE1(v){ return ((v||0)/1e8).toFixed(1); }
-function _exEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-function _exSec(title,icon,inner,note){
-  return '<div class="exd-sec"><div class="exd-sec-h"><i class="bi '+icon+'" style="color:#16324f"></i>'+title+
-    (note?'<span class="n">'+_exEsc(note)+'</span>':'')+'</div>'+inner+'</div>';
-}
-// 연간 착지 전망 — 남은 달은 전년 계절성(전년 잔여월/전년 동기 비율)으로 추정
-function _exForecast(M){
-  var cur=function(m){ return (+(CONS.monthly2026||{})[m]||0)+(+(DEVICE.monthly2026||{})[m]||0)+(+(CONS.etcMonthly2026||{})[m]||0)+(+((INTL.monthly)||{})[m]||0); };
-  var pre=function(m){ var i25=(INTL.data2025||{}).monthly||{}; return (+(CONS.monthly2025||{})[m]||0)+(+(DEVICE.monthly2025||{})[m]||0)+(+(CONS.etcMonthly2025||{})[m]||0)+(+i25[m]||0); };
-  var ytd=0,pYtd=0,pRest=0,pAll=0;
-  for(var m=1;m<=12;m++){ if(m<=M){ ytd+=cur(m); pYtd+=pre(m); } else pRest+=pre(m); pAll+=pre(m); }
-  var ratio = pYtd>0 ? pRest/pYtd : 0;
-  return { ytd:ytd, prevYtd:pYtd, prevAll:pAll, rest:ytd*ratio, land:ytd*(1+ratio), ratio:ratio };
-}
-function _exTgt(M){
-  var y=0,ytd=0,byDept={};
-  (SALEST||[]).forEach(function(r){
-    if(+r.year!==2026) return;
-    var a=+r.amount||0; y+=a;
-    if(+r.month<=M){ ytd+=a; byDept[r.dept]=(byDept[r.dept]||0)+a; }
-  });
-  return {year:y, ytd:ytd, byDept:byDept};
-}
-function renderOps(){
-  const el=document.getElementById('ops-body'); if(!el)return;
-  if(!OPS.loaded){ el.innerHTML='<div style="color:#94a3b8;font-size:13px;padding:30px;text-align:center">불러오는 중…</div>'; return; }
-  const k=opsKpi(), e8=_exE1;
-  const M=(typeof _lastDataMonth==='function'?_lastDataMonth():8)||8;
-  const F=_exForecast(M), T=_exTgt(M);
-  let h='';
-
-  // ── 1) 연간 착지 전망 ─────────────────────────────────
-  if(T.year>0){
-    const gap=F.land-T.year, achY=T.ytd>0?F.ytd/T.ytd*100:0, achL=F.land/T.year*100;
-    const grow=F.land-F.prevAll;
-    const tone=achL>=100?'#0f766e':(achL>=90?'#b45309':'#b91c1c');
-    h+='<div class="exd-hero">'+
-      '<div class="exd-hero-t">2026년 연간 착지 전망</div>'+
-      '<div class="exd-hero-v" style="color:'+tone+'">'+_exE8(F.land)+'<small>억</small>'+
-        '<span style="font-size:17px;font-weight:700;color:#5b6878;margin-left:12px">목표 '+_exE8(T.year)+'억의 '+achL.toFixed(0)+'%</span></div>'+
-      '<div class="exd-hero-s">'+
-        M+'월까지 <b>'+_exE8(F.ytd)+'억</b>을 달성해 누계 목표의 <b>'+achY.toFixed(0)+'%</b> 수준입니다. '+
-        '남은 '+(12-M)+'개월이 전년과 같은 흐름이면 연말 <b style="color:'+tone+'">'+_exE8(F.land)+'억</b>으로 '+
-        (gap<0?'목표에 <b style="color:#b91c1c">'+_exE8(-gap)+'억 미달</b>':'목표를 <b style="color:#0f766e">'+_exE8(gap)+'억 초과</b>')+'합니다.<br>'+
-        '다만 전년 실적 '+_exE8(F.prevAll)+'억과 비교하면 '+
-        (grow>=0?'<b style="color:#0f766e">'+_exE8(grow)+'억 성장</b>':'<b style="color:#b91c1c">'+_exE8(-grow)+'억 감소</b>')+'입니다.'+
-      '</div>'+
-      '<div class="exd-track"><div class="exd-bar">'+
-        '<i class="b" style="width:'+Math.min(100,F.land/Math.max(T.year,F.land)*100).toFixed(1)+'%"></i>'+
-        '<i class="a" style="width:'+Math.min(100,F.ytd/Math.max(T.year,F.land)*100).toFixed(1)+'%"></i>'+
-        '<span class="g" style="left:'+Math.min(99.6,T.year/Math.max(T.year,F.land)*100).toFixed(1)+'%"></span>'+
-      '</div>'+
-      '<div class="exd-lg">'+
-        '<span><s style="background:#16324f"></s>'+M+'월 누계 <b>'+_exE8(F.ytd)+'억</b></span>'+
-        '<span><s style="background:#b9c9dc"></s>잔여 예상 <b>'+_exE8(F.rest)+'억</b></span>'+
-        '<span><s style="background:#dc2626"></s>연간 목표 <b>'+_exE8(T.year)+'억</b></span>'+
-      '</div></div></div>';
-  }
-
-  // ── 2) 부문별 목표 달성 ───────────────────────────────
-  const domA=sumMo(CONS.monthly2026,1,M)+sumMo(DEVICE.monthly2026,1,M);
-  const intlA=sumMo(INTL.monthly,1,M);
-  const parts=[
-    {n:'국내영업',v:domA,t:T.byDept['국내영업']||0,c:'#2563eb',url:'https://wt-management.github.io/wontech/'},
-    {n:'해외영업',v:intlA,t:T.byDept['해외영업']||0,c:'#0f766e',url:'https://wt-management.github.io/wontech-intl/'}
-  ].filter(p=>p.t>0);
-  if(parts.length){
-    h+='<div class="exd-div">'+parts.map(function(p){
-      const r=p.v/p.t*100, col=r>=100?'#0f766e':(r>=85?'#b45309':'#b91c1c');
-      return '<div class="exd-dc"><div class="exd-dc-h"><span class="exd-dc-n">'+p.n+'</span>'+
-        '<span class="exd-dc-r" style="color:'+col+'">'+r.toFixed(0)+'%</span></div>'+
-        '<div class="exd-mini"><i style="width:'+Math.min(100,r).toFixed(1)+'%;background:'+col+'"></i></div>'+
-        '<div class="exd-dc-s">'+M+'월 누계 <b>'+e8(p.v)+'억</b> · 목표 '+e8(p.t)+'억 · '+
-          (p.v-p.t>=0?'<b style="color:#0f766e">+'+e8(p.v-p.t)+'억</b>':'<b style="color:#b91c1c">'+e8(p.v-p.t)+'억</b>')+'</div></div>';
-    }).join('')+'</div>';
-  }
-
-  // ── 3) 성장 동인 / 발목 ───────────────────────────────
-  try{
-    const cm=_productMap(1,M,null), pm=_productMapPrev(1,M);
-    const list=Object.keys(cm).map(function(n){
-      const c=(cm[n].dom||0)+(cm[n].intl||0);
-      const p=((pm[n]||{}).dom||0)+((pm[n]||{}).intl||0);
-      return {n:n,d:c-p,c:c,p:p};
-    }).filter(x=>Math.abs(x.d)>1e7);
-    const up=list.filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,5);
-    const dn=list.filter(x=>x.d<0).sort((a,b)=>a.d-b.d).slice(0,5);
-    const mx=Math.max.apply(null,list.map(x=>Math.abs(x.d)).concat([1]));
-    const row=(x,col)=>'<div class="exd-row"><span class="nm">'+_exEsc(x.n)+'</span>'+
-      '<span class="bw"><i style="width:'+(Math.abs(x.d)/mx*100).toFixed(1)+'%;background:'+col+'"></i></span>'+
-      '<span class="vl" style="color:'+col+'">'+(x.d>=0?'+':'')+e8(x.d)+'억</span></div>';
-    if(up.length||dn.length){
-      h+='<div class="exd-div" style="gap:0 26px">'+
-        '<div>'+_exSec('실적을 끌어올린 제품','bi-graph-up-arrow',up.map(x=>row(x,'#0f766e')).join('')||'<div style="font-size:12px;color:#94a3b8;padding:10px 2px">해당 없음</div>','전년 동기 대비')+'</div>'+
-        '<div>'+_exSec('실적을 끌어내린 제품','bi-graph-down-arrow',dn.map(x=>row(x,'#b91c1c')).join('')||'<div style="font-size:12px;color:#94a3b8;padding:10px 2px">해당 없음</div>','전년 동기 대비')+'</div>'+
-      '</div>';
-    }
-  }catch(e){}
-
-  // ── 4) 현금 회수 / 해외법인·수주 ──────────────────────
-  let L='', R='';
-  if(k.arAmt!=null){
-    const rt=k.arAmt?k.arRisk/k.arAmt:0;
-    let inner='<div class="exd-div" style="grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'+
-      '<div class="exd-dc" style="padding:12px 14px"><div class="exd-dc-h"><span class="exd-dc-n" style="font-size:12.5px">미수채권</span></div>'+
-        '<div style="font-size:24px;font-weight:800;color:#141c28;font-variant-numeric:tabular-nums">'+e8(k.arAmt)+'<span style="font-size:13px">억</span></div>'+
-        '<div class="exd-dc-s">'+k.arCnt+'개 거래처</div></div>'+
-      '<div class="exd-dc" style="padding:12px 14px"><div class="exd-dc-h"><span class="exd-dc-n" style="font-size:12.5px">회수 위험</span></div>'+
-        '<div style="font-size:24px;font-weight:800;color:'+(rt>=.25?'#b91c1c':rt>=.12?'#b45309':'#0f766e')+';font-variant-numeric:tabular-nums">'+e8(k.arRisk)+'<span style="font-size:13px">억</span></div>'+
-        '<div class="exd-dc-s">전체의 '+(rt*100).toFixed(0)+'% · '+k.arRiskCnt+'건</div></div>'+
-      '</div>';
-    try{
-      const ED=OPS.arEdits||{};
-      const RS=(OPS.ar.rows||[]).map(function(r){ const e=ED[r.rid]; if(!e||e.type===undefined||e.type==='')return r; const c=Object.assign({},r); c.type=e.type; return c; })
-        .filter(r=>r.type==='지연채권'||r.type==='장기체납채권')
-        .map(r=>({n:r.name,v:(+r.ar||0)-(+r.prov||0),m:r.mgr,e:r.elapsed}))
-        .filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,4);
-      if(RS.length){
-        const mx=RS[0].v||1;
-        inner+='<div style="font-size:12px;font-weight:800;color:#4a5666;margin:2px 0 4px">임원 판단이 필요한 회수 지연</div>'+
-          RS.map(x=>'<div class="exd-row tight"><span class="nm">'+_exEsc(x.n)+'</span>'+
-            '<span class="mt">'+_exEsc(x.m||'-')+' · '+_exEsc(x.e||'-')+'</span>'+
-            '<span class="vl" style="color:#b45309">'+e8(x.v)+'억</span></div>').join('');
-      }
-    }catch(e){}
-    L=_exSec('현금 회수','bi-cash-stack',inner,'기준일 '+(k.arAsOf||'-'));
-  }
-  {
-    let inner='';
-    if(k.plW!=null){
-      inner+='<div class="exd-dc" style="margin-bottom:10px"><div class="exd-dc-h"><span class="exd-dc-n" style="font-size:12.5px">해외 수주 파이프라인</span>'+
-        '<span class="exd-dc-r" style="font-size:20px;color:#16324f">'+e8(k.plW)+'억</span></div>'+
-        '<div class="exd-dc-s">확률가중 · 총액 '+e8(k.plAmt)+'억 · 진행 '+k.plCnt+'건</div></div>';
-    }
-    if(k.usAmt!=null||k.thAmt!=null){
-      const tot=(k.usAmt||0)+(k.thAmt||0)||1;
-      inner+='<div class="exd-dc"><div class="exd-dc-h"><span class="exd-dc-n" style="font-size:12.5px">해외 법인 (2026 누계)</span>'+
-        '<span class="exd-dc-r" style="font-size:20px;color:#16324f">'+e8(tot)+'억</span></div>'+
-        '<div class="exd-mini" style="margin-top:6px">'+
-          (k.usAmt?'<i style="width:'+(k.usAmt/tot*100).toFixed(1)+'%;background:#4f46e5;float:left"></i>':'')+
-          (k.thAmt?'<i style="width:'+(k.thAmt/tot*100).toFixed(1)+'%;background:#0891b2;float:left"></i>':'')+'</div>'+
-        '<div class="exd-dc-s">미국 <b>'+e8(k.usAmt||0)+'억</b> · 태국 <b>'+e8(k.thAmt||0)+'억</b></div></div>';
-    }
-    if(inner) R=_exSec('미래 매출원','bi-diagram-3',inner,'USD@1380 환산');
-  }
-  if(L||R) h+='<div class="exd-div" style="gap:0 26px">'+(L?'<div>'+L+'</div>':'<div></div>')+(R?'<div>'+R+'</div>':'<div></div>')+'</div>';
-
-  // ── 5) 실무 대기(요약 한 줄) ──────────────────────────
-  const w=[];
-  if(k.kcUndel!=null) w.push('미납품 <b>'+k.kcUndel+'건</b>');
-  if(k.exReady!=null) w.push('출고 대기 <b>'+k.exReady+'건</b>');
-  if(k.kcCoup!=null) w.push('쿠폰·적립금 미지급 <b>'+k.kcCoup+'건</b>');
-  if(k.tdUncol!=null) w.push('보상장비 미회수 <b>'+k.tdUncol+'건</b>');
-  if(w.length){
-    h+='<div class="exd-note"><i class="bi bi-hourglass-split" style="color:#94a3b8"></i>'+
-      '<span style="font-weight:700;color:#4a5666">처리 대기</span>'+w.map(x=>'<span>'+x+'</span>').join('')+
-      '<a style="margin-left:auto" onclick="showPage(\'query\',document.getElementById(\'nav-query\'))">매출 상세 →</a></div>';
-  }
-  if(OPS.kc===null) h+='<div style="font-size:11.5px;color:#94a3b8;margin-top:8px"><i class="bi bi-info-circle me-1"></i>국내 계약 상세(미납품·쿠폰)는 영업전략파트 권한이 있어야 표시됩니다.</div>';
-  el.innerHTML=h;
-}
 
 // ── 전사 종합 ────────────────────────────────────────────
 function ovSetPeriod(f,t){ if(t==='ytd')t=(typeof _curMonth==='function'?_curMonth():(typeof _lastDataMonth==='function'?_lastDataMonth():12)); var a=document.getElementById('ov-from'),b=document.getElementById('ov-to'); if(a)a.value=f; if(b)b.value=t; renderOverview(); }
@@ -2669,16 +2533,46 @@ function renderThisMonth(){
   const manage=conf+pendMo;
   const tgt=_monthTarget(tmo);
   const rate=tgt>0?Math.round(manage/tgt*100):0;
-  document.getElementById('tm-target').textContent=tgt>0?(tmo+'월 국내목표 '+fmtW(tgt)):'';
-  document.getElementById('tm-cards').innerHTML=[
-    '<div class="tm-box clk" onclick="openOvDetail('+tmo+',\'total\')" title="'+tmo+'월 내역 조회"><div class="tm-l"><i class="bi bi-check-circle me-1" style="color:#0f172a"></i>회계 확정 (전사) <span style="color:#cbd5e1">›</span></div><div class="tm-v" style="color:#0f172a">'+fmtW(conf)+'</div><div class="tm-s">국내 '+fmtW(domConf)+' · 해외 '+fmtW(intlConf)+'</div></div>',
-    '<div class="tm-box clk" onclick="openOvDetail('+tmo+',\'total\')" title="'+tmo+'월 내역 조회(미반영 포함)"><div class="tm-l"><i class="bi bi-hourglass-split me-1" style="color:#0891b2"></i>예정분 (미반영) <span style="color:#cbd5e1">›</span></div><div class="tm-v" style="color:#0891b2">+'+fmtW(pendMo)+'</div><div class="tm-s">국내 '+(pend.countMo[tmo]||0)+'건 · 해외 '+(pend.intlCountMo[tmo]||0)+'건</div></div>',
-    '<div class="tm-box accent clk" onclick="showPage(\'goals\',document.getElementById(\'nav-goals\'))" title="목표 달성률 상세"><div class="tm-l"><i class="bi bi-bullseye me-1" style="color:#0f766e"></i>관리 합계 (확정+예정) <span style="color:#cbd5e1">›</span></div><div class="tm-v" style="color:#0f766e">'+fmtW(manage)+'</div>'+(tgt>0?('<div class="tm-s">국내목표 대비 '+rate+'%</div><div class="tm-prog"><div style="width:'+Math.min(100,rate)+'%"></div></div>'):'<div class="tm-s">확정+예정</div>')+'</div>',
-  ].join('');
+  document.getElementById('tm-target').textContent=tgt>0?(tmo+'월 전사 목표 '+fmtW(tgt)):'';
+  // 카드 3장(숫자 하나씩)은 여백만 컸음 → 목표·전년비·진척까지 담은 한 줄 스트립으로 교체
+  const _tmPrev=(CONS.monthly2025&&CONS.monthly2025[tmo]||0)+(DEVICE.monthly2025&&DEVICE.monthly2025[tmo]||0)+((INTL.data2025&&INTL.data2025.monthly&&INTL.data2025.monthly[tmo])||0);
+  const _tmYoY=_tmPrev>0?((manage/_tmPrev-1)*100):null;
+  // 당월 진척률: 오늘이 이번 달의 몇 %를 지났는지(목표 대비 페이스 판단용)
+  const _tmNow=new Date(), _tmDays=new Date(2026,tmo,0).getDate();
+  const _tmElapsed=(_tmNow.getFullYear()===2026&&(_tmNow.getMonth()+1)===tmo)?_tmNow.getDate():_tmDays;
+  const _tmPace=Math.round(_tmElapsed/_tmDays*100);
+  const _tmNeed=tgt>manage?(tgt-manage):0;
+  const _tmLeft=Math.max(0,_tmDays-_tmElapsed);
+  const _tmCol=tgt<=0?'#0f766e':(rate>=_tmPace?'#0f766e':(rate>=_tmPace*0.8?'#b45309':'#c0392b'));
+  document.getElementById('tm-cards').innerHTML=
+    '<div class="tm-strip">'+
+      '<div class="tm-main clk" onclick="openOvDetail('+tmo+',\'total\')" title="'+tmo+'월 내역 조회">'+
+        '<div class="l">관리 합계 <span style="color:#94a3b8;font-weight:500">확정+예정</span></div>'+
+        '<div class="v" style="color:'+_tmCol+'">'+fmtW(manage)+'</div>'+
+        (tgt>0?'<div class="s">'+tmo+'월 목표 <b>'+fmtW(tgt)+'</b> 대비 <b style="color:'+_tmCol+'">'+rate+'%</b></div>':'')+
+      '</div>'+
+      '<div class="tm-items">'+
+        '<span class="it"><i class="bi bi-check-circle" style="color:#0f172a"></i>회계 확정 <b>'+fmtW(conf)+'</b>'+
+          '<em>국내 '+fmtW(domConf)+' · 해외 '+fmtW(intlConf)+'</em></span>'+
+        '<span class="it"><i class="bi bi-hourglass-split" style="color:#0891b2"></i>예정분 <b style="color:#0891b2">+'+fmtW(pendMo)+'</b>'+
+          '<em>국내 '+(pend.countMo[tmo]||0)+'건 · 해외 '+(pend.intlCountMo[tmo]||0)+'건</em></span>'+
+        (_tmYoY!==null?'<span class="it"><i class="bi bi-graph-up" style="color:#64748b"></i>전년 '+tmo+'월 <b>'+fmtW(_tmPrev)+'</b>'+
+          '<em style="color:'+(_tmYoY>=0?'#0f766e':'#c0392b')+'">'+(_tmYoY>=0?'▲':'▼')+Math.abs(_tmYoY).toFixed(0)+'% · 이번 달 '+_tmPace+'% 경과</em></span>':'')+
+        (tgt>0?'<span class="it"><i class="bi bi-flag" style="color:#64748b"></i>목표까지 <b style="color:'+(_tmNeed?'#c0392b':'#0f766e')+'">'+(_tmNeed?fmtW(_tmNeed):'달성')+'</b>'+
+          '<em>'+(_tmLeft>0?'남은 '+_tmLeft+'일 · 일 '+fmtW(_tmNeed/Math.max(1,_tmLeft)):'월 마감')+'</em></span>':'')+
+      '</div>'+
+      (tgt>0?'<div class="tm-bar" title="확정+예정 vs 목표 · 세로선=이번 달 경과">'+
+        '<i class="f" style="width:'+Math.min(100,manage/tgt*100).toFixed(1)+'%;background:'+_tmCol+'"></i>'+
+        '<i class="c" style="width:'+Math.min(100,conf/tgt*100).toFixed(1)+'%"></i>'+
+        '<span class="p" style="left:'+Math.min(99.4,_tmPace)+'%"></span></div>'+
+        '<div class="tm-cap">진한 부분=회계 확정 · 옅은 부분=예정 포함 · 세로선=이번 달 '+_tmPace+'% 경과</div>':'');
 }
 function _monthTarget(mo){
   const ymKey='2026-'+String(mo).padStart(2,'0');
-  return (TARGETS||[]).filter(x=>String(x.ym||'')===ymKey).reduce((s,x)=>s+(Number(x.target)||0),0);
+  const t=(TARGETS||[]).filter(x=>String(x.ym||'')===ymKey).reduce((s,x)=>s+(Number(x.target)||0),0);
+  if(t>0) return t;
+  // targets 테이블은 현재 비어 있음 → 목표·분기 실적과 같은 소스(sales_targets)의 해당 월 전사 합계로 대체
+  return (SALEST||[]).filter(x=>+x.year===2026&&+x.month===mo).reduce((s,x)=>s+(Number(x.amount)||0),0);
 }
 
 // ── 상세 조회 ────────────────────────────────────────────
@@ -2690,7 +2584,9 @@ function syncQ(){
 }
 function syncTab(){
   ['prod','geo','rep'].forEach(k=>document.getElementById('qt-'+k).classList.toggle('on',qState.tab===k));
-  document.getElementById('qh-name').textContent={prod:'제품',geo:'국가·지역',rep:'담당자'}[qState.tab];
+  var _qhl={prod:'제품',geo:'국가·지역',rep:'담당자'}[qState.tab];
+  document.getElementById('qh-name').textContent=_qhl;
+  var _qh2=document.getElementById('qh-name2'); if(_qh2) _qh2.textContent=_qhl;   // 2열 배치의 오른쪽 헤더
   qState.open={};
 }
 /* ===== Sales Portfolio (구 sales-portfolio 사이트 이관) — 전역 충돌 방지를 위해 모듈로 격리 ===== */
@@ -3019,13 +2915,15 @@ function renderQuery(){
   document.getElementById('q-dual').innerHTML=dualList(top,bot,drow);
   const _qrow=(x,idx)=>{
     const contrib=x.d>0?Math.round(x.d/totGrowth*100):0;
-    const row='<div class="drow" onclick="qToggle('+idx+')">'+
-      '<span><span class="dl-dot" style="display:inline-block;margin-right:6px;background:'+_yoyCol(x.y)+'"></span>'+esc(x.name)+((x.tag&&qState.tab!=='prod')?' <span style="font-size:10px;color:#94a3b8">'+x.tag+'</span>':'')+
-        '<div style="display:flex;align-items:center;gap:8px;margin-top:5px">'+divBar(x.d,maxAbs)+(x.d>0?'<span style="font-size:10px;color:#94a3b8">성장기여 '+contrib+'%</span>':'')+'</div></span>'+
-      '<span class="q-sh"><span class="b"><i style="width:'+Math.min(100,(_gvAll>0?x.val/_gvAll*100:0)).toFixed(1)+'%"></i></span><span class="p">'+(_gvAll>0?(x.val/_gvAll*100).toFixed(1):'0.0')+'%</span></span>'+
-      '<span style="text-align:right;font-weight:700">'+fmtW(x.val)+(x.qty>0?'<div style="font-size:11px;color:#64748b;font-weight:600;margin-top:2px"'+(x.qtyNote?' title="'+esc(x.qtyNote)+' 기준"':'')+'>'+x.qty.toLocaleString()+'대'+(x.qtyNote?' <span style="color:#b0bcca;font-weight:500">'+esc(x.qtyNote)+'</span>':'')+'</div>':'')+'</span>'+
-      '<span style="text-align:right;color:#64748b">'+fmtW(x.prev||0)+'</span>'+
-      '<span style="text-align:right;color:'+_yoyCol(x.y)+';font-weight:700">'+(x.y===null?'신규':arrow(x.y))+'</span>'+
+    // 한 줄에 2개씩 배치 · 막대 제거(구성비·성장기여는 숫자로) — 여백을 줄이고 한 화면에 더 담기 위함
+    const share=_gvAll>0?(x.val/_gvAll*100):0;
+    const row='<div class="qd-c" onclick="qToggle('+idx+')">'+
+      '<span class="n"><span class="dl-dot" style="display:inline-block;margin-right:6px;background:'+_yoyCol(x.y)+'"></span>'+esc(x.name)+
+        ((x.tag&&qState.tab!=='prod')?' <span class="tg">'+esc(x.tag)+'</span>':'')+
+        ' <span class="sh">'+share.toFixed(1)+'%'+(contrib>=5?' · 기여 '+contrib+'%':'')+'</span></span>'+
+      '<span class="v">'+fmtW(x.val)+(x.qty>0?'<b'+(x.qtyNote?' title="'+esc(x.qtyNote)+' 기준"':'')+'>'+x.qty.toLocaleString()+'대</b>':'')+'</span>'+
+      '<span class="p">'+fmtW(x.prev||0)+'</span>'+
+      '<span class="y" style="color:'+_yoyCol(x.y)+'">'+(x.y===null?'신규':arrow(x.y))+'</span>'+
     '</div>';
     return row+(qState.open[idx]?'<div class="det">'+(x.detail||'상세 없음')+'</div>':'');
   };
@@ -3042,13 +2940,12 @@ function renderQuery(){
     if(rest.length){
       const rv=rest.reduce((s,x)=>s+x.val,0), rp=rest.reduce((s,x)=>s+(x.prev||0),0), ry=pct(rv,rp);
       const opened=!!qState.fold[key];
-      out+='<div class="drow" style="background:#fcfdfe;cursor:pointer" onclick="qFold('+_jsArg(key)+')">'+
+      out+='<div class="qd-gh fold" onclick="qFold('+_jsArg(key)+')">'+
         '<span style="color:#64748b;font-weight:600"><i class="bi bi-chevron-'+(opened?'down':'right')+'" style="font-size:10px;margin-right:6px"></i>그 외 '+rest.length+'개'+
           ' <span style="font-size:10.5px;font-weight:500;color:#a8b3c1">비중 '+(rv/gt*100).toFixed(1)+'% · 클릭하면 펼쳐집니다</span></span>'+
-        '<span class="q-sh"><span class="b"><i style="width:'+(_gvAll>0?Math.min(100,rv/_gvAll*100):0).toFixed(1)+'%"></i></span><span class="p">'+(_gvAll>0?(rv/_gvAll*100).toFixed(1):'0.0')+'%</span></span>'+
-        '<span style="text-align:right;color:#64748b;font-weight:700">'+fmtW(rv)+'</span>'+
-        '<span style="text-align:right;color:#94a3b8">'+fmtW(rp)+'</span>'+
-        '<span style="text-align:right;color:'+_yoyCol(ry)+';font-weight:700">'+(ry===null?'신규':arrow(ry))+'</span></div>';
+        '<span class="v">'+fmtW(rv)+'</span>'+
+        '<span class="p">'+fmtW(rp)+'</span>'+
+        '<span class="y" style="color:'+_yoyCol(ry)+'">'+(ry===null?'신규':arrow(ry))+'</span></div>';
       if(opened) out+=rest.map(x=>_qrow(x,idxOf.get(x))).join('');
     }
     return out;
@@ -3063,13 +2960,12 @@ function renderQuery(){
       if(!list.length)return;
       const gv=list.reduce((s,x)=>s+x.val,0), gp=list.reduce((s,x)=>s+(x.prev||0),0), gd=gv-gp, gy=pct(gv,gp);
       const gq=list.reduce((s,x)=>s+(x.qty||0),0);
-      _rowsHtml+='<div class="drow" style="background:#f8fafc;font-weight:800;cursor:default;border-top:2px solid '+gcol+'">'+
+      _rowsHtml+='<div class="qd-gh" style="border-top:2px solid '+gcol+'">'+
         '<span style="color:'+gcol+'"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+gcol+';margin-right:7px"></span>'+gname+
           ' <span style="font-size:10.5px;font-weight:500;color:#94a3b8">'+list.length+'개 · 비중 '+(tot>0?Math.round(gv/_accF*100):0)+'%'+(gq>0?' · '+gq.toLocaleString()+'대':'')+'</span></span>'+
-        '<span class="q-sh"><span class="b"><i style="width:'+(_gvAll>0?Math.min(100,gv/_gvAll*100):0).toFixed(1)+'%;background:'+gcol+'"></i></span><span class="p" style="color:'+gcol+'">'+(_gvAll>0?(gv/_gvAll*100).toFixed(0):0)+'%</span></span>'+
-        '<span style="text-align:right">'+fmtW(gv)+(gq>0?'<div style="font-size:11px;color:#64748b;font-weight:600;margin-top:2px">'+gq.toLocaleString()+'대</div>':'')+'</span>'+
-        '<span style="text-align:right;color:#64748b;font-weight:600">'+fmtW(gp)+'</span>'+
-        '<span style="text-align:right;color:'+_yoyCol(gy)+'">'+(gy===null?'신규':arrow(gy))+' <span style="font-size:10px;font-weight:600">'+fmtD(gd)+'</span></span></div>';
+        '<span class="v">'+fmtW(gv)+(gq>0?'<b>'+gq.toLocaleString()+'대</b>':'')+'</span>'+
+        '<span class="p">'+fmtW(gp)+'</span>'+
+        '<span class="y" style="color:'+_yoyCol(gy)+'">'+(gy===null?'신규':arrow(gy))+'<b>'+fmtD(gd)+'</b></span></div>';
       _rowsHtml+=_qFold(list,idxOf,gname);
     });
   } else {
@@ -3359,6 +3255,30 @@ function execNarr(items,unit){
 const _num=v=>Math.round(Number(v)||0).toLocaleString();
 
 // ── P1 목표 달성률 종합 ──
+// 연말 착지 전망 — 남은 달을 전년 계절성(전년 잔여월/전년 동기 비율)으로 추정
+// (구 「경영 진단」 페이지의 유일한 고유 지표였음 — 페이지 폐지하며 목표 화면으로 이관)
+function _gxLanding(M){
+  try{
+    var cur=function(m){ return (+(CONS.monthly2026||{})[m]||0)+(+(DEVICE.monthly2026||{})[m]||0)+(+(CONS.etcMonthly2026||{})[m]||0)+(+((INTL.monthly)||{})[m]||0); };
+    var pre=function(m){ var i25=(INTL.data2025||{}).monthly||{}; return (+(CONS.monthly2025||{})[m]||0)+(+(DEVICE.monthly2025||{})[m]||0)+(+(CONS.etcMonthly2025||{})[m]||0)+(+i25[m]||0); };
+    var ytd=0,pYtd=0,pRest=0,pAll=0;
+    for(var m=1;m<=12;m++){ if(m<=M){ ytd+=cur(m); pYtd+=pre(m); } else pRest+=pre(m); pAll+=pre(m); }
+    if(!(pYtd>0)) return "";
+    var land=ytd*(1+pRest/pYtd);
+    var tgtY=0; (SALEST||[]).forEach(function(r){ if(+r.year===2026) tgtY+=(+r.amount||0); });
+    if(!(tgtY>0)) return "";
+    var gap=land-tgtY, achL=land/tgtY*100, grow=land-pAll;
+    var col=achL>=100?"#0f766e":(achL>=90?"#b45309":"#c0392b");
+    var e=function(v){ return Math.round((v||0)/1e8).toLocaleString()+"억"; };
+    return '<div class="gx-land">'+
+      '<span class="l">연말 착지 전망</span>'+
+      '<span class="v" style="color:'+col+'">'+e(land)+'</span>'+
+      '<span class="s">연간 목표 <b>'+e(tgtY)+'</b>의 <b style="color:'+col+'">'+achL.toFixed(0)+'%</b> · '+
+        (gap<0?'<b style="color:#c0392b">'+e(-gap)+' 미달</b>':'<b style="color:#0f766e">'+e(gap)+' 초과</b>')+
+        ' · 전년 '+e(pAll)+' 대비 '+(grow>=0?'<b style="color:#0f766e">+'+e(grow)+'</b>':'<b style="color:#c0392b">-'+e(-grow)+'</b>')+'</span>'+
+      '<span class="m">남은 '+(12-M)+'개월이 전년과 같은 흐름일 때</span></div>';
+  }catch(e){ return ""; }
+}
 function renderGoals(){
   const f=1,t=_execT(), pend=_pendingAgg(2026), regMo=_intlRegionMonthly(INTL), regMo25=_intlRegionMonthly(INTL.data2025||{}), ipend=(_pendForReport().intl)||{};
   const items=[];
@@ -3389,7 +3309,7 @@ function renderGoals(){
       '<div class="gx-fact"><span class="l">예정 포함 전망</span><span class="v">'+(achP==null?'-':achP.toFixed(0)+'%')+'</span></div>'+
       '<div class="gx-fact"><span class="l">목표 미달 부문</span><span class="v" style="color:'+(short.length?'#c0392b':'#0f766e')+'">'+short.length+'개</span></div>'+
       '<div class="gx-fact"><span class="l">목표 초과 부문</span><span class="v" style="color:#0f766e">'+over.length+'개</span></div>'+
-    '</div>';
+    '</div>'+_gxLanding(t);
   // 공통 계산
   const _calc=x=>{ const actC=x.tgt>0?x.act/x.tgt*100:null, a=x.act+x.pnd, r=x.tgt>0?a/x.tgt*100:null, gap=x.tgt>0?x.act-x.tgt:null, col=_achCol(actC), bcol=_achBar(actC);
     const rc=actC==null?0:Math.min(actC,100), rg=r==null?0:Math.min(Math.max(r-actC,0),100-rc), yoy=(x.act25>0)?pct(x.act,x.act25):null;
