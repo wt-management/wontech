@@ -1992,7 +1992,12 @@ function renderOverview(){
   const periodLbl=f===t?(f+'월'):(f+'~'+t+'월');
 
   // 장비/소모품 (미반영 포함) — 국내 실데이터 + 해외 제품군 비율 환산
-  const _rc=Object.values(INTL.prods_cons||{}).reduce((a,x)=>a+(+x||0),0), _rd=Object.values(INTL.prods_dev||{}).reduce((a,x)=>a+(+x||0),0), _rs=_rc+_rd;
+  // 해외 비율은 prods_cons/prods_dev(상위 10개만 저장)로 계산하면 어긋남 → 전체 분류(_productMap)로 산출
+  let _rc=0,_rd=0;
+  try{ const _pmix=_productMap(f,t,null);
+    Object.values(_pmix).forEach(function(o){ const v=+o.intl||0; if(o.cat==='소모품') _rc+=v; else _rd+=v; });
+  }catch(e){ _rc=Object.values(INTL.prods_cons||{}).reduce((a,x)=>a+(+x||0),0); _rd=Object.values(INTL.prods_dev||{}).reduce((a,x)=>a+(+x||0),0); }
+  const _rs=_rc+_rd;
   const _intlCons=_rs>0?intlI*_rc/_rs:0, _intlDev=_rs>0?intlI*_rd/_rs:intlI;
   const devTot=(domDevC+sumMo(pend.devMonthly,f,t))+_intlDev, consTot=(domConsC+sumMo(pend.consMonthly,f,t))+_intlCons, _cd=devTot+consTot||1;
   // KPI 카드 줄은 스코어보드와 중복이라 제거 — 기타 포함 안내문만 유지 (장비vs소모품은 스코어보드 5번째 셀로 이동)
@@ -3045,6 +3050,25 @@ function _jsArg(v){
 function qToggle(i){ qState.open[i]=!qState.open[i]; renderQuery(); }
 function qFold(k){ qState.fold[k]=!qState.fold[k]; renderQuery(); }
 
+// 축별 목록에서 당기 실적이 음수인 항목(반품·매출충당)을 버리면 합계가 부풀려짐
+// → 한 줄로 묶어 표시하고 총액은 원본과 일치시킴 (제품·지역·담당자·거래처 공통)
+function _qNegFold(arr,label,byCat){
+  const pos=arr.filter(x=>x.val>0).sort((a,b)=>b.val-a.val);
+  const neg=arr.filter(x=>x.val<0).sort((a,b)=>a.val-b.val);
+  if(!neg.length) return pos;
+  // byCat=true면 원래 그룹(장비/소모품)별로 나눠 담아야 그룹 소계가 헤드라인 분해와 일치함
+  const groups={};
+  neg.forEach(function(x){ const k=byCat?(x.cat||'기타'):'_'; (groups[k]=groups[k]||[]).push(x); });
+  Object.keys(groups).forEach(function(k){
+    const g=groups[k];
+    const nv=g.reduce((a2,x)=>a2+x.val,0), np=g.reduce((a2,x)=>a2+(x.prev||0),0);
+    pos.push({name:'반품·충당 조정 ('+g.length+(label||'건')+')',val:nv,prev:np,qty:0,
+      tag:byCat?k:'',cat:byCat?k:'기타',color:'#94a3b8',
+      detail:'<div style="font-size:12.5px;color:#4a5666;line-height:1.9">당기 실적이 음수인 항목을 합산했습니다(반품·매출충당).<br>'+
+        g.slice(0,10).map(function(x){ return esc(x.name)+' '+fmtW(x.val); }).join('<br>')+'</div>'});
+  });
+  return pos;
+}
 function _qProducts(){
   const f=qState.f,t=qState.t;
   const map=_productMap(f,t,null);
@@ -3061,9 +3085,8 @@ function _qProducts(){
     return {name:n,cat:o.cat,val,prev,dom,intl,qty,qtyDom:qq.dom,qtyIntl:qq.intl,color:cols[o.cat]||'#64748b'};
   });
   if(qState.cat!=='all') arr=arr.filter(x=>x.cat===qState.cat);
-  arr=arr.filter(x=>x.val>0).sort((a,b)=>b.val-a.val);
   arr.forEach(x=>{ x.tag=x.cat; x.detail=_prodDetail(x); });
-  return arr;
+  return _qNegFold(arr,'개',true);   // 제품 탭은 장비/소모품 그룹별로 나눠 담음
 }
 /* 제품별 수량(대수) — 국내 장비(prodMoQty2026) + 해외(prodMoQty). 월별 데이터라 조회기간과 정확히 연동 */
 function _productQtyMap(f,t){
@@ -3209,16 +3232,7 @@ function _qCust(){
       '당기 <b>'+fmtW(x.val)+'</b> · 전년 <b>'+fmtW(x.prev)+'</b><br>'+
       '증감 <b style="color:'+((x.val-x.prev)>=0?'#15803d':'#b91c1c')+'">'+fmtD(x.val-x.prev)+'</b></div></div></div>';
   });
-  // 당기 실적이 음수인 거래처(반품·매출충당)를 버리면 합계가 부풀려짐 → 한 줄로 묶어 정합 유지
-  const pos=arr.filter(x=>x.val>0).sort((a,b)=>b.val-a.val);
-  const neg=arr.filter(x=>x.val<0).sort((a,b)=>a.val-b.val);
-  if(neg.length){
-    const nv=neg.reduce((a2,x)=>a2+x.val,0), np=neg.reduce((a2,x)=>a2+x.prev,0);
-    pos.push({name:'반품·충당 조정 ('+neg.length+'곳)',val:nv,prev:np,qty:0,tag:'',color:'#94a3b8',
-      detail:'<div style="font-size:12.5px;color:#4a5666;line-height:1.9">당기 실적이 음수인 거래처를 합산한 항목입니다(반품·매출충당).<br>'+
-        neg.slice(0,10).map(function(x){ return esc(x.name)+' '+fmtW(x.val); }).join('<br>')+'</div>'});
-  }
-  return pos;
+  return _qNegFold(arr,'곳');
 }
 // 신규·이탈 요약 (거래처 탭 전용)
 function _qCustFlow(){
@@ -3270,7 +3284,7 @@ function _qGeo(){
     const i25=INTL.data2025||{};
     Object.entries(INTL.countries||{}).forEach(([cn,c])=>{
       const val=sumMo(c.m,f,t);
-      if(val<=0) return;
+      if(val===0) return;   // 음수(반품·충당)는 합계 정합을 위해 포함
       const _qty=_intlCountryQty(c,f,t);
       const c25=(i25.countries&&i25.countries[cn])||{};
       const prev=sumMo(c25.m,f,t);
@@ -3281,7 +3295,7 @@ function _qGeo(){
       out.push({name:cn,tag:'해외',val,prev,qty:_qty,color:INTL_TEAL,detail});
     });
   }
-  return out.sort((a,b)=>b.val-a.val);
+  return _qNegFold(out,'곳');
 }
 /* 해외 국가 대수 — clientData.txns [date,product,qty,amount,usd] 에서 기간 합산 */
 function _intlCountryQty(c,f,t){
@@ -3334,8 +3348,7 @@ function _qReps(){
       (prods.length?prods.slice(0,5).map(p=>miniBar(p[0],p[1],pmax,'#0f766e')).join(''):'<span style="font-size:12px;color:#94a3b8">데이터 없음</span>')+'</div></div>';
     return {name:r.name,val,prev,qty:r.qtyDev||0,qtyNote:'국내 장비',color:'#7c3aed',detail};
   });
-  arr=arr.filter(x=>x.val>0).sort((a,b)=>b.val-a.val);
-  return arr;
+  return _qNegFold(arr,'명');
 }
 // reps 누적: rep.m가 있으면 기간합, 없으면 total*기간비중
 function _repAcc(reps,moRef,f,t){
