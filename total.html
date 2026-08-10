@@ -2140,8 +2140,10 @@ function _scale(o,f,t){ const full=sumMo(o,1,12); return full>0?sumMo(o,f,t)/ful
 
 function renderOvProds(f,t,pend){
   const map=_productMap(f,t,pend);
-  const all=Object.entries(map).map(([n,o])=>({n,dom:o.dom,intl:o.intl,v:o.dom+o.intl,cat:o.cat})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
-  const grand=all.reduce((s,x)=>s+x.v,0)||1;
+  const _every=Object.entries(map).map(([n,o])=>({n,dom:o.dom,intl:o.intl,v:o.dom+o.intl,cat:o.cat}));
+  const all=_every.filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+  // 비중 분모는 반품·충당(음수)까지 포함해야 회계와 맞음(목록에서만 음수를 감춘다)
+  const grand=_every.reduce((s,x)=>s+x.v,0)||1;
   const arr=all.slice(0,10);
   const max=arr.length?arr[0].v:1, top10=arr.reduce((s,x)=>s+x.v,0);
   const t10Dom=arr.reduce((s,x)=>s+x.dom,0), t10Intl=arr.reduce((s,x)=>s+x.intl,0);
