@@ -1,0 +1,44 @@
+{
+  "_설명": "한 번 고친 로직이 다른 작업에 밀려 사라지는 사고를 막기 위한 회귀 검사 목록입니다. 각 항목은 '이 코드가 파일에 남아 있어야 한다'는 뜻이며, push 할 때마다 GitHub Actions가 확인합니다. 화면을 바꾸다 항목이 깨지면 여기 사유를 적고 함께 수정하세요.",
+  "files": {
+    "index.html": [
+      {
+        "id": "parser-prodcat",
+        "must": "prodCat:_mkCat(pc2,pd2)",
+        "why": "해외 제품 분류를 전체 저장. 빠지면 상위 10개만 분류돼 나머지가 전부 '기타'로 떨어짐(2026-08-10)"
+      },
+      {
+        "id": "pending-devclass",
+        "must": "return !/tip|팁|cartridge|카트리지|소모품|face ?tip/i.test(String(p));",
+        "why": "증감분해 미반영 판정. 등록 제품목록으로 거르면 표기 다른 건과 '기타' 마이너스가 누락돼 미반영이 과대계상됨(8.05억 vs 7.53억)"
+      }
+    ],
+    "total.html": [
+      {
+        "id": "negfold",
+        "must": "function _qNegFold(arr,label,byCat){",
+        "why": "반품·충당(음수)을 버리지 않고 묶어 합계 정합 유지. 빠지면 축별 합계가 회계보다 커짐"
+      },
+      {
+        "id": "negfold-bycat",
+        "must": "_qNegFold(arr,'개',true)",
+        "why": "제품 탭은 장비/소모품 그룹별로 음수를 나눠 담아야 그룹 소계가 헤드라인 분해와 일치"
+      },
+      {
+        "id": "mix-productmap",
+        "must": "const _pmix=_productMap(f,t,null);",
+        "why": "스코어보드 장비/소모품 비율. prods_dev/prods_cons(상위10)로 계산하면 미반영 포함값이 회계값보다 작아지는 모순 발생"
+      },
+      {
+        "id": "residual-row",
+        "must": "const rv=_accF-aSum, rp=_accP-pSum;",
+        "why": "축별 커버리지 차이를 '미분류' 행으로 명시. 빠지면 탭마다 총액이 달라 보임"
+      },
+      {
+        "id": "month-target-fallback",
+        "must": "return (SALEST||[]).filter(x=>+x.year===2026&&+x.month===mo)",
+        "why": "targets 테이블이 비어 있어 당월 목표가 0으로 나오던 문제의 대체 경로"
+      }
+    ]
+  }
+}
