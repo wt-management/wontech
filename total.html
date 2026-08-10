@@ -157,6 +157,13 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .qh-conc{font-size:12px;color:#5b7591;margin-top:7px}
 .qh-conc b{color:#1c2534;font-weight:800}
 .qh-conc .nm{color:#8fa7bf;margin-left:6px}
+.cst-flow{display:flex;flex-wrap:wrap;gap:4px 22px;align-items:baseline;font-size:12.5px;color:#5b6878;font-weight:600}
+.cst-flow .it b{font-weight:800}
+.cst-flow .it em{font-style:normal;font-size:11px;color:#94a3b8;margin-left:3px}
+.cst-flow .mut{color:#94a3b8;font-weight:500;font-size:11.5px}
+.qd-gh.flow{grid-column:1/-1;display:block;background:#f7fbfa;border-top:2px solid #0f766e;font-weight:600}
+.cst-new{background:#dcfce7;color:#15803d;font-size:10px;font-weight:700;padding:1px 7px;border-radius:99px;margin-left:6px}
+.cst-lost{background:#fee2e2;color:#b91c1c;font-size:10px;font-weight:700;padding:1px 7px;border-radius:99px;margin-left:6px}
 .qd-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:14px;align-items:start;margin-bottom:12px}
 @media(max-width:1240px){.qd-top{grid-template-columns:1fr}}
 .qd-top .exec-hero{margin-bottom:0}
@@ -1369,6 +1376,7 @@ document.getElementById('wt-fb-send').onclick=function(){var t=document.getEleme
         <div class="qtab on" id="qt-prod" onclick="qState.tab='prod';syncTab();renderQuery()">제품별</div>
         <div class="qtab" id="qt-geo" onclick="qState.tab='geo';syncTab();renderQuery()">국가·지역별</div>
         <div class="qtab" id="qt-rep" onclick="qState.tab='rep';syncTab();renderQuery()">담당자별</div>
+        <div class="qtab" id="qt-cust" onclick="qState.tab='cust';syncTab();renderQuery()">거래처별</div>
       </div>
       <div class="qd-hd">
         <span id="qh-name">제품</span><span>당기</span><span>전년</span><span>YoY</span>
@@ -2591,8 +2599,8 @@ function syncQ(){
   document.getElementById('q-from').value=qState.f; document.getElementById('q-to').value=qState.t;
 }
 function syncTab(){
-  ['prod','geo','rep'].forEach(k=>document.getElementById('qt-'+k).classList.toggle('on',qState.tab===k));
-  var _qhl={prod:'제품',geo:'국가·지역',rep:'담당자'}[qState.tab];
+  ['prod','geo','rep','cust'].forEach(k=>document.getElementById('qt-'+k).classList.toggle('on',qState.tab===k));
+  var _qhl={prod:'제품',geo:'국가·지역',rep:'담당자',cust:'거래처'}[qState.tab];
   document.getElementById('qh-name').textContent=_qhl;
   var _qh2=document.getElementById('qh-name2'); if(_qh2) _qh2.textContent=_qhl;   // 2열 배치의 오른쪽 헤더
   qState.open={};
@@ -2919,6 +2927,7 @@ function renderQuery(){
   let items;
   if(qState.tab==='prod') items=_qProducts();
   else if(qState.tab==='geo') items=_qGeo();
+  else if(qState.tab==='cust') items=_qCust();
   else items=_qReps();
 
   // 헤드라인 = 회계+미반영(보고기준) — 종합/매출현황과 통일. 성장률은 회계 like-for-like. (아래 분해표 items는 회계 기준)
@@ -2938,7 +2947,7 @@ function renderQuery(){
   const G=items.map(x=>Object.assign({},x,{d:x.val-(x.prev||0),y:pct(x.val,x.prev)}));
   const grewN=G.filter(x=>x.d>0).length, surge=G.filter(x=>x.y!=null&&x.y>=30).length, plunge=G.filter(x=>x.y!=null&&x.y<=-20).length;
   const ratio=items.length?Math.round(grewN/items.length*100):0, totGrowth=G.filter(x=>x.d>0).reduce((s,x)=>s+x.d,0)||1;
-  const tabLbl=qState.tab==='prod'?'제품별':qState.tab==='geo'?'지역별':'담당자별';
+  const tabLbl=qState.tab==='prod'?'제품별':qState.tab==='geo'?'지역별':qState.tab==='cust'?'거래처별':'담당자별';
   document.getElementById('q-head').innerHTML='<div class="eh-l">'+chName+' '+tabLbl+' <span style="font-weight:500;color:#94a3b8">· '+qState.f+'~'+qState.t+'월 누적</span></div>'+
     '<div class="eh-v">'+fmtW(tot)+' <span style="font-size:1rem">'+(totY===null?'':badge(totY))+'</span> <span style="font-size:1rem;color:'+(totDelta>=0?'#16a34a':'#e11d48')+'">'+fmtD(totDelta)+'</span></div>'+
     '<div class="eh-l" style="color:#94a3b8;font-weight:500">전년 동기 '+fmtW(totPrev)+' · 회계 '+fmtW(_accF)+' + 미반영 '+fmtW(_pendF)+(_etcF>0?' <span style="color:#94a3b8">(기타 '+fmtW(_etcF)+' 포함)</span>':'')+' <span style="color:#94a3b8">· 아래 분해는 회계 확정 기준</span></div>'+
@@ -2948,6 +2957,16 @@ function renderQuery(){
   const top=G.filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,5), bot=G.filter(x=>x.d<0).sort((a,b)=>a.d-b.d).slice(0,5);
   const drow=x=>'<div class="dl-row"><span class="dl-dot" style="background:'+_yoyCol(x.y)+'"></span><span class="dl-name">'+esc(x.name)+'</span>'+divBar(x.d,maxAbs)+'<span class="dl-d" style="color:'+_yoyCol(x.y)+'">'+fmtD(x.d)+'</span><span class="dl-sub">'+(x.y===null?'신규':arrow(x.y))+'</span></div>';
   document.getElementById('q-dual').innerHTML=dualList(top,bot,drow);
+  // 축마다 커버리지가 달라(기타 사업부·담당자 미지정 등) 탭을 옮기면 총액이 달라 보임
+  // → 회계 총액과의 잔차를 '미분류' 한 줄로 명시해 모든 탭이 같은 합계로 떨어지게 함
+  (function(){
+    const aSum=G.reduce((s2,x)=>s2+x.val,0), pSum=G.reduce((s2,x)=>s2+(x.prev||0),0);
+    const rv=_accF-aSum, rp=_accP-pSum;
+    if(Math.abs(rv)<=Math.max(1e7,_accF*0.001)) return;
+    G.push({name:'미분류',val:rv,prev:rp,qty:0,tag:'기타',color:'#94a3b8',
+      d:rv-rp,y:pct(rv,rp),
+      detail:'<div style="font-size:12.5px;color:#4a5666;line-height:1.9">이 축으로 분류되지 않은 잔여분입니다. 회계 총액 <b>'+fmtW(_accF)+'</b>에서 위 항목 합계 <b>'+fmtW(aSum)+'</b>을 뺀 값으로,<br>기타 사업부(의료기기·서지컬·B2C·고객만족)나 담당자·거래처가 지정되지 않은 거래가 여기에 들어갑니다.</div>'});
+  })();
   const _qrow=(x,idx)=>{
     const contrib=x.d>0?Math.round(x.d/totGrowth*100):0;
     // 한 줄에 2개씩 배치 · 막대 제거(구성비·성장기여는 숫자로) — 여백을 줄이고 한 화면에 더 담기 위함
@@ -3006,6 +3025,8 @@ function renderQuery(){
   } else {
     _rowsHtml=_qFold(G,new Map(G.map((x,i)=>[x,i])),qState.tab);
   }
+  // 거래처 탭은 표 위에 신규·중단 요약을 먼저 보여줌(전사 종합에 없는 관점)
+  if(qState.tab==='cust') _rowsHtml='<div class="qd-gh flow">'+_qCustFlow()+'</div>'+_rowsHtml;
   document.getElementById('q-rows').innerHTML=_rowsHtml||'<div class="text-muted" style="font-size:12px;padding:14px">데이터 없음</div>';
   const top3=G.filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,3).reduce((s,x)=>s+x.d,0);
   document.getElementById('q-insight').innerHTML='<i class="bi bi-lightbulb-fill me-1" style="color:#f59e0b"></i>조회 '+items.length+'개 중 <b>'+grewN+'개 성장</b> · 성장의 <b>'+Math.round(top3/totGrowth*100)+'%</b>가 상위 3개에서 발생'+(bot.length?(' · <b style="color:#dc2626">'+esc(bot[0].name)+(bot[1]?' · '+esc(bot[1].name):'')+'</b> 역성장 → 점검'):'');
@@ -3143,6 +3164,92 @@ function _prodDetail(x){
   return html;
 }
 
+// 거래처별 — 전사 종합에는 없는 축. 국내 병원(장비+소모품 병합) + 해외 거래처(국가별 clientData)
+// 각 거래처의 월별 실적으로 조회기간을 정확히 반영하고, 전년 대비 신규·이탈까지 판정
+function _qCust(){
+  const f=qState.f,t=qState.t;
+  const incCons=qState.cat==='all'||qState.cat==='소모품', incDev=qState.cat==='all'||qState.cat==='장비';
+  const M={};
+  const put=(nm,cur,prev,prods,rep,mark)=>{
+    if(!nm) return;
+    if(!M[nm]) M[nm]={name:nm,val:0,prev:0,prods:{},rep:rep||'',mark:mark};
+    M[nm].val+=cur; M[nm].prev+=prev;
+    if(prods) Object.entries(prods).forEach(([p,v])=>{ M[nm].prods[p]=(M[nm].prods[p]||0)+(+v||0); });
+    if(rep&&!M[nm].rep) M[nm].rep=rep;
+  };
+  if(qState.ch!=='intl'){
+    if(incDev) Object.entries(DEVICE.hospitals||{}).forEach(([nm,h])=>put(nm,sumMo(h.m2026,f,t),sumMo(h.m2025,f,t),h.prods,h.sales,'국내'));
+    if(incCons) Object.entries(CONS.hospitals||{}).forEach(([nm,h])=>put(nm,sumMo(h.m2026,f,t),sumMo(h.m2025,f,t),h.prods,h.sales,'국내'));
+  }
+  if(qState.ch!=='dom'){
+    const i25=INTL.data2025||{};
+    const prev25={};
+    Object.values((i25.countries)||{}).forEach(c=>Object.entries(c.clientData||{}).forEach(([nm,d])=>{ prev25[nm]=(prev25[nm]||0)+sumMo(d.m,f,t); }));
+    Object.entries(INTL.countries||{}).forEach(([cn,c])=>{
+      Object.entries(c.clientData||{}).forEach(([nm,d])=>{
+        put(nm,sumMo(d.m,f,t),prev25[nm]||0,null,'',cn);
+        delete prev25[nm];
+      });
+    });
+    Object.entries(prev25).forEach(([nm,v])=>{ if(v>0) put(nm,0,v,null,'','해외'); });
+  }
+  let arr=Object.values(M).filter(x=>x.val!==0||x.prev!==0);   // 음수(반품·충당)도 살려야 합계가 원본과 맞음
+  arr.forEach(x=>{
+    x.tag=x.mark||'';
+    x.color='#0f766e';
+    x.qty=0;
+    const ps=Object.entries(x.prods||{}).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    const pmax=ps.length?ps[0][1]:1;
+    const st=(x.val>0&&x.prev<=0)?'<span class="cst-new">신규 거래처</span>':((x.val<=0&&x.prev>0)?'<span class="cst-lost">거래 중단</span>':'');
+    x.detail='<div class="row g-3"><div class="col-md-6">'+
+      '<div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px">제품 구성 '+st+'</div>'+
+      (ps.length?ps.map(p=>miniBar(p[0],p[1],pmax,'#0f766e')).join(''):'<span style="font-size:12px;color:#94a3b8">제품 정보 없음</span>')+'</div>'+
+      '<div class="col-md-6"><div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px">실적</div>'+
+      '<div style="font-size:12.5px;color:#4a5666;line-height:1.9">담당 <b>'+esc(x.rep||'-')+'</b><br>'+
+      '당기 <b>'+fmtW(x.val)+'</b> · 전년 <b>'+fmtW(x.prev)+'</b><br>'+
+      '증감 <b style="color:'+((x.val-x.prev)>=0?'#15803d':'#b91c1c')+'">'+fmtD(x.val-x.prev)+'</b></div></div></div>';
+  });
+  // 당기 실적이 음수인 거래처(반품·매출충당)를 버리면 합계가 부풀려짐 → 한 줄로 묶어 정합 유지
+  const pos=arr.filter(x=>x.val>0).sort((a,b)=>b.val-a.val);
+  const neg=arr.filter(x=>x.val<0).sort((a,b)=>a.val-b.val);
+  if(neg.length){
+    const nv=neg.reduce((a2,x)=>a2+x.val,0), np=neg.reduce((a2,x)=>a2+x.prev,0);
+    pos.push({name:'반품·충당 조정 ('+neg.length+'곳)',val:nv,prev:np,qty:0,tag:'',color:'#94a3b8',
+      detail:'<div style="font-size:12.5px;color:#4a5666;line-height:1.9">당기 실적이 음수인 거래처를 합산한 항목입니다(반품·매출충당).<br>'+
+        neg.slice(0,10).map(function(x){ return esc(x.name)+' '+fmtW(x.val); }).join('<br>')+'</div>'});
+  }
+  return pos;
+}
+// 신규·이탈 요약 (거래처 탭 전용)
+function _qCustFlow(){
+  try{
+    const f=qState.f,t=qState.t;
+    const incCons=qState.cat==='all'||qState.cat==='소모품', incDev=qState.cat==='all'||qState.cat==='장비';
+    const M={};
+    const put=(nm,c,p)=>{ if(!nm)return; if(!M[nm])M[nm]={c:0,p:0}; M[nm].c+=c; M[nm].p+=p; };
+    if(qState.ch!=='intl'){
+      if(incDev) Object.entries(DEVICE.hospitals||{}).forEach(([nm,h])=>put(nm,sumMo(h.m2026,f,t),sumMo(h.m2025,f,t)));
+      if(incCons) Object.entries(CONS.hospitals||{}).forEach(([nm,h])=>put(nm,sumMo(h.m2026,f,t),sumMo(h.m2025,f,t)));
+    }
+    if(qState.ch!=='dom'){
+      const i25=INTL.data2025||{}, pv={};
+      Object.values((i25.countries)||{}).forEach(c=>Object.entries(c.clientData||{}).forEach(([nm,d])=>{ pv[nm]=(pv[nm]||0)+sumMo(d.m,f,t); }));
+      Object.values(INTL.countries||{}).forEach(c=>Object.entries(c.clientData||{}).forEach(([nm,d])=>{ put(nm,sumMo(d.m,f,t),pv[nm]||0); delete pv[nm]; }));
+      Object.entries(pv).forEach(([nm,v])=>{ if(v>0) put(nm,0,v); });
+    }
+    const A=Object.entries(M);
+    const act=A.filter(([,v])=>v.c>0);
+    const nw=A.filter(([,v])=>v.c>0&&v.p<=0), lost=A.filter(([,v])=>v.c<=0&&v.p>0);
+    const nwV=nw.reduce((s,[,v])=>s+v.c,0), lostV=lost.reduce((s,[,v])=>s+v.p,0);
+    const top=lost.sort((a,b)=>b[1].p-a[1].p).slice(0,4);
+    return '<div class="cst-flow">'+
+      '<span class="it">거래 <b>'+act.length+'곳</b></span>'+
+      '<span class="it">신규 <b style="color:#15803d">'+nw.length+'곳</b> <em>+'+fmtW(nwV)+'</em></span>'+
+      '<span class="it">거래 중단 <b style="color:#b91c1c">'+lost.length+'곳</b> <em>전년 '+fmtW(lostV)+'</em></span>'+
+      (top.length?'<span class="it mut">중단 상위 '+top.map(x=>esc(x[0])+'('+fmtW(x[1].p)+')').join(' · ')+'</span>':'')+
+    '</div>';
+  }catch(e){ return ''; }
+}
 function _qGeo(){
   const f=qState.f,t=qState.t;
   const out=[];
