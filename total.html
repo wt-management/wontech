@@ -506,7 +506,8 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .muted{color:#94a3b8}
 .exec-narr{font-size:12.5px;color:#475569;margin-top:9px;line-height:1.5;font-weight:600}
 .exec-narr b.up{color:#16a34a;font-weight:800}.exec-narr b.dn{color:#e11d48;font-weight:800}
-.dual-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+/* 1fr 은 콘텐츠 최소폭이 바닥이라 긴 행이 들어오면 칸이 카드 밖으로 밀려난다 → minmax(0,·) */
+.dual-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
 @media(max-width:1100px){.dual-grid{grid-template-columns:1fr}}
 .dl-h{font-size:12.5px;font-weight:800;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #f1f5f9}
 .dl-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid #f5f7fa;font-size:12.5px}
@@ -514,6 +515,13 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .dl-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
 .dl-d{font-variant-numeric:tabular-nums;font-weight:800;width:78px;text-align:right;flex-shrink:0}
 .dl-sub{font-size:11px;color:#94a3b8;white-space:nowrap}
+/* 반쪽 카드를 다시 둘로 나눈 칸(약 230px)에는 이름·증감액·증감률이 한 줄에 못 들어간다.
+   → 이름 한 줄, 금액·증감률 한 줄로 접어 제품명이 잘리지 않게 한다. */
+.qd-dual .dl-row{display:grid;grid-template-columns:8px minmax(0,1fr);grid-template-areas:"dot name" ". val";gap:1px 8px;padding:6px 0}
+.qd-dual .dl-dot{grid-area:dot;align-self:center}
+.qd-dual .dl-name{grid-area:name}
+.qd-dual .dl-d{grid-area:val;width:auto;text-align:left;justify-self:start;font-size:12px}
+.qd-dual .dl-sub{grid-area:val;justify-self:end}
 .divbar{position:relative;height:7px;background:#f1f5f9;border-radius:4px;width:78px;flex-shrink:0;overflow:hidden}
 .divbar .dz{position:absolute;left:50%;top:0;width:1px;height:100%;background:#cbd5e1;z-index:1}
 .divbar .dfill{position:absolute;top:0;height:100%;border-radius:3px}
@@ -661,6 +669,9 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .q-seg-v{width:96px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
 .q-seg-y{width:64px;text-align:right}
 /* P4 리더보드 */
+/* 해외 담당자 표는 좁은 칸(col-lg-5)에 7열이 들어가 1100px 화면에서 카드를 밀고 나간다
+   → 표만 카드 안에서 옆으로 밀리게 하고 페이지는 안 밀리게 한다 */
+.lb-wrap{overflow-x:auto}
 .lb-table{width:100%;border-collapse:collapse;font-size:12.5px}
 .lb-table th{background:#f1f5f9;color:#475569;font-weight:700;padding:7px 8px;text-align:left;font-size:11.5px}
 .lb-table th.r,.lb-table td.r{text-align:right}
@@ -3022,7 +3033,8 @@ function renderQuery(){
   const maxAbs=Math.max(1,...G.map(x=>Math.abs(x.d)));
   const _gvAll=G.reduce((s2,x)=>s2+Math.max(0,x.val),0);   // 구성비 분모(조회 항목 합계)
   const top=G.filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,5), bot=G.filter(x=>x.d<0).sort((a,b)=>a.d-b.d).slice(0,5);
-  const drow=x=>'<div class="dl-row"><span class="dl-dot" style="background:'+_yoyCol(x.y)+'"></span><span class="dl-name">'+esc(x.name)+'</span>'+divBar(x.d,maxAbs)+'<span class="dl-d" style="color:'+_yoyCol(x.y)+'">'+fmtD(x.d)+'</span><span class="dl-sub">'+(x.y===null?'신규':arrow(x.y))+'</span></div>';
+  // 반쪽 카드를 둘로 나눈 칸이라 폭이 230px 남짓 — 발산막대까지 넣으면 이름이 설 자리가 없다
+  const drow=x=>'<div class="dl-row"><span class="dl-dot" style="background:'+_yoyCol(x.y)+'"></span><span class="dl-name">'+esc(x.name)+'</span><span class="dl-d" style="color:'+_yoyCol(x.y)+'">'+fmtD(x.d)+'</span><span class="dl-sub">'+(x.y===null?'신규':arrow(x.y))+'</span></div>';
   document.getElementById('q-dual').innerHTML=dualList(top,bot,drow);
   // 축마다 커버리지가 달라(기타 사업부·담당자 미지정 등) 탭을 옮기면 총액이 달라 보임
   // → 회계 총액과의 잔차를 '미분류' 한 줄로 명시해 모든 탭이 같은 합계로 떨어지게 함
@@ -3772,7 +3784,7 @@ function renderLeaderboard(){
       '<td class="r"><span style="display:inline-flex;align-items:center;gap:6px">'+divBar(x.d,maxAbs)+'<span style="color:'+_yoyCol(x.yoy)+';font-weight:700;min-width:48px;text-align:right">'+(x.yoy===null?'신규':arrow(x.yoy))+'</span></span></td>'+
       '<td class="r">'+x.cust+'개'+(cd?' <span style="font-size:10px;color:'+(cd>0?'#16a34a':'#dc2626')+'">'+(cd>0?'+':'')+cd+'</span>':'')+'</td>'+
       (hasQty?'<td class="r">'+_num(x.qty)+'대</td>':'<td class="r">'+(x.ctry||0)+'개국</td>')+'<td class="muted" style="font-size:11px">'+esc(x.top||'')+'</td></tr>'; }).join('');
-    return '<table class="lb-table">'+head+body+'</table>'; };
+    return '<div class="lb-wrap"><table class="lb-table">'+head+body+'</table></div>'; };
   document.getElementById('lb-dom').innerHTML=mk(rowsD,true);
   document.getElementById('lb-intl').innerHTML=mk(rowsI,false);
 }
