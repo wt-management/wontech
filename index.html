@@ -10798,7 +10798,7 @@ async function loadUserRole() {
   _isStrat = String(data?.dept||'').replace(/\s/g,'').includes('영업전략');   // 영업전략파트 → 관리자 페이지 접근 허용
   try{ window.__WT_EMAIL = (session.user.email||''); }catch(e){}   // 요청·신고 작성자 정확 표기용
   setTimeout(function(){ try{ _fbCheckResolved(); }catch(e){} }, 3000);   // 내 요청 완료 알림 팝업
-  _isMaster = session.user.email === 'pmw0406@gmail.com';
+  _isMaster = (session.user.email === 'pmw0406@gmail.com') || _isStrat;   // 마스터 = 사장님 또는 영업전략파트 전원(부서 자동판정)
   _isMgr   = _isAdmin || data?.role === 'manager';
   _meId    = session.user.id;
   _meName  = data?.display_name || session.user.email?.split('@')[0] || '';
@@ -10853,7 +10853,7 @@ function _renderLauncherCards(access) {
 }
 
 async function renderAdminUsers() {
-  try { const {data:{session:_ms}} = await _sb.auth.getSession(); if(_ms && _ms.user) _isMaster = _ms.user.email === 'pmw0406@gmail.com'; } catch(e){}
+  try { const {data:{session:_ms}} = await _sb.auth.getSession(); if(_ms && _ms.user) _isMaster = (_ms.user.email === 'pmw0406@gmail.com') || _isStrat; } catch(e){}
   const el = document.getElementById('admin-user-list');
   el.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:#64748b">불러오는 중...</td></tr>`;
   const {data: profiles} = await _sb.from('crm_profiles').select('*').order('dept').order('display_name');
