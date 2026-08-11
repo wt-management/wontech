@@ -4174,6 +4174,22 @@ function _grPct(v26,v25){ return v25>0?((v26/v25-1)*100):null; }
 function _grBadge(v26,v25){ if(!v25) return v26>0?'<span style="color:#7c3aed;font-weight:700">신규</span>':'<span style="color:#64748b">-</span>'; const p=(v26/v25-1)*100; return '<span style="color:'+(p>=0?'#16a34a':'#dc2626')+';font-weight:700">'+(p>=0?'▲':'▼')+Math.abs(p).toFixed(0)+'%</span>'; }
 function _cntNewLost(hosps){ let nw=0,lost=0; Object.values(hosps).forEach(o=>{ if(o.v26>0&&!o.v25) nw++; else if(!o.v26&&o.v25>0) lost++; }); return {nw,lost}; }
 // 병원별 기간 매출(2026/2025) + 담당자/주력제품 (CONS+DEVICE 합산)
+// 병원 거래내역에서 조회기간의 장비 대수 합계
+// txns2026/2025 = [월, 일자, 대리점, 제품, 금액, 수량] — 마지막 값이 수량
+function _txnQty(h,rng){
+  try{ if(!h) return 0;
+    var want={}; rng.forEach(function(x){ want[x.y+"-"+x.m]=1; });
+    var q=0;
+    [2025,2026].forEach(function(y){
+      (h["txns"+y]||[]).forEach(function(t){
+        if(!Array.isArray(t)||t.length<6) return;
+        if(!want[y+"-"+Number(t[0])]) return;
+        q+=Number(t[5])||0;
+      });
+    });
+    return q;
+  }catch(e){ return 0; }
+}
 function _hospPeriodVals(P){
   const cur=_spanMonths(P), prev=_spanMonths(_yoyShift(P));
   const mY=(h,y)=>(h['m'+y]||{});
@@ -4182,8 +4198,9 @@ function _hospPeriodVals(P){
   const addH=hmap=>Object.entries(hmap||{}).forEach(function(e){ const name=e[0],h=e[1];
     const v26=sv(h,cur), v25=sv(h,prev);
     if(!v26&&!v25) return;
-    if(!byName[name]) byName[name]={v26:0,v25:0,sales:'',prod:''};
+    if(!byName[name]) byName[name]={v26:0,v25:0,q26:0,q25:0,sales:'',prod:''};
     byName[name].v26+=v26; byName[name].v25+=v25;
+    byName[name].q26+=_txnQty(h,cur); byName[name].q25+=_txnQty(h,prev);   // 장비 대수(거래내역 기준)
     if(h.sales&&!byName[name].sales) byName[name].sales=h.sales;
     const pr=h.prods2026||h.prods; if(pr&&!byName[name].prod){ const t=Object.entries(pr).sort((a,b)=>b[1]-a[1])[0]; if(t) byName[name].prod=t[0]; }
   });
@@ -4195,8 +4212,8 @@ function _regionAgg(P){
   const sido={};
   Object.entries(byName).forEach(function(e){ const name=e[0],o=e[1];
     const r=_hospRegion(name); const s=(r&&r[0])?r[0]:'미분류', g=(r&&r[1])?r[1]:'(미상)';
-    if(!sido[s]) sido[s]={v26:0,v25:0,gugun:{},hosps:{}};
-    sido[s].v26+=o.v26; sido[s].v25+=o.v25; sido[s].hosps[name]=o;
+    if(!sido[s]) sido[s]={v26:0,v25:0,q26:0,q25:0,gugun:{},hosps:{}};
+    sido[s].v26+=o.v26; sido[s].v25+=o.v25; sido[s].q26+=(o.q26||0); sido[s].q25+=(o.q25||0); sido[s].hosps[name]=o;
     if(!sido[s].gugun[g]) sido[s].gugun[g]={v26:0,v25:0,hosps:{}};
     sido[s].gugun[g].v26+=o.v26; sido[s].gugun[g].v25+=o.v25; sido[s].gugun[g].hosps[name]=o;
   });
@@ -4293,8 +4310,8 @@ function renderRegion(){
     return '<tr data-s="'+String(x).replace(/"/g,'&quot;')+'" onclick="openRegionDetail(this.getAttribute(\'data-s\'))" style="cursor:pointer;transition:background .12s" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'">'
       +'<td style="padding:9px 10px;border-bottom:1px solid #f1f5f9;text-align:center">'+rankB(i)+'</td>'
       +'<td style="border-bottom:1px solid #f1f5f9;font-weight:700;color:#1e293b;white-space:nowrap">'+_ovEsc(x)+' <i class="bi bi-search" style="font-size:9px;color:#cbd5e1"></i></td>'
-      +'<td style="text-align:right;border-bottom:1px solid #f1f5f9;font-weight:800;color:'+col+';font-variant-numeric:tabular-nums;white-space:nowrap">'+_ovFmt(o.v26)+'</td>'
-      +'<td style="text-align:right;border-bottom:1px solid #f1f5f9;color:#94a3b8;font-variant-numeric:tabular-nums;white-space:nowrap">'+(o.v25?_ovFmt(o.v25):'-')+'</td>'
+      +'<td style="text-align:right;border-bottom:1px solid #f1f5f9;font-weight:800;color:'+col+';font-variant-numeric:tabular-nums;white-space:nowrap">'+_ovFmt(o.v26)+(o.q26>0?'<div style="font-size:10px;color:#94a3b8;font-weight:600">'+o.q26.toLocaleString()+'대</div>':'')+'</td>'
+      +'<td style="text-align:right;border-bottom:1px solid #f1f5f9;color:#94a3b8;font-variant-numeric:tabular-nums;white-space:nowrap">'+(o.v25?_ovFmt(o.v25):'-')+(o.q25>0?'<div style="font-size:10px;color:#c0cad6;font-weight:600">'+o.q25.toLocaleString()+'대</div>':'')+'</td>'
       +'<td style="text-align:right;border-bottom:1px solid #f1f5f9;white-space:nowrap">'+_grBadge(o.v26,o.v25)+'</td>'
       +'<td style="text-align:center;border-bottom:1px solid #f1f5f9;color:#475569;font-variant-numeric:tabular-nums">'+hc+'</td>'
       +'<td style="text-align:center;border-bottom:1px solid #f1f5f9;font-size:11px;white-space:nowrap"><span style="color:#7c3aed;font-weight:600">+'+nl.nw+'</span> <span style="color:#cbd5e1">/</span> <span style="color:#dc2626;font-weight:600">-'+nl.lost+'</span></td>'
