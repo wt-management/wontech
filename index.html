@@ -8131,7 +8131,7 @@ function renderCDUWeekly(){
       +'<td>'+(_cduEsc(v.mainProc||'')||_dash)+'</td>'
       +'<td style="text-align:center;font-weight:700;white-space:nowrap">'+(Number(v.price)>0?_cduEsc(v.price)+'천':_dash)+'</td>'
       +'<td style="color:#475569;font-size:12.5px">'+(_cduEsc(String(v.competitor||'').replace(/\//g,' / '))||_dash)+'</td>'
-      +'<td style="color:#334155">'+(function(){ var fb=_cduEsc(String(v.feedback||'').slice(0,200)); var rs=_cduReasonDisp((v.noBuyReason||'').trim()); var ac=(v.action||'').trim();
+      +'<td style="color:#334155">'+(function(){ var fb=_cduEsc(String(v.feedback||'')); var rs=_cduReasonDisp((v.noBuyReason||'').trim()); var ac=(v.action||'').trim();
           var tag=(rs?'<span style="font-size:12px;font-weight:800;color:#475569;background:#f1f5f9;border-radius:4px;padding:1px 6px;margin-right:4px">'+_cduEsc(rs)+'</span>':'')
                  +(ac?'<span style="font-size:12px;font-weight:800;color:#1d4ed8;background:#eff6ff;border-radius:4px;padding:1px 6px;margin-right:4px">→ '+_cduEsc(ac)+'</span>':'');
           return (tag||fb)?tag+(fb||''):_dash; })()+'</td>'
