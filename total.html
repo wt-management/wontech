@@ -148,6 +148,13 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 /* WT-DEEP-v3 프리미엄 타이포 일관 */
 .kpi-value,.lux-num,.stat-num,.stat-value,.metric-value,.metric-num,.big-num,.num-lg,.hero-num,.summary-num,.card-num{font-variant-numeric:tabular-nums;letter-spacing:-.018em}
 /* 매출 상세 — 헤드라인 우측 공백 활용(2단) + 항목 2열 배치 + 막대 제거 */
+/* 분해 타일 — 마지막 요소라 margin-top:auto 로 카드 바닥에 붙어 좌우 카드 높이가 맞는다 */
+.qh-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(91,117,145,.16);border:1px solid rgba(91,117,145,.16);border-radius:10px;overflow:hidden;margin-top:12px}
+@media(max-width:640px){.qh-grid{grid-template-columns:repeat(2,1fr)}}
+.qh-t{background:#fff;padding:9px 12px;display:flex;flex-direction:column;justify-content:center;min-height:56px}
+.qh-t .l{font-size:11px;font-weight:700;letter-spacing:.01em}
+.qh-t b{font-size:16px;font-weight:800;color:#1c2534;font-variant-numeric:tabular-nums;letter-spacing:-.01em;line-height:1.25}
+.qh-t .s{font-size:10.5px;color:#8fa7bf;font-weight:600}
 .qh-break{display:flex;flex-wrap:wrap;align-items:baseline;gap:5px 16px;margin-top:10px;padding-top:9px;border-top:1px solid rgba(91,117,145,.18)}
 .qh-it{font-size:12.5px;color:#5b7591;display:inline-flex;align-items:baseline;gap:5px;white-space:nowrap}
 .qh-it i{width:8px;height:8px;border-radius:2px;display:inline-block;align-self:center}
@@ -164,13 +171,18 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .qd-gh.flow{grid-column:1/-1;display:block;background:#f7fbfa;border-top:2px solid #0f766e;font-weight:600}
 .cst-new{background:#dcfce7;color:#15803d;font-size:10px;font-weight:700;padding:1px 7px;border-radius:99px;margin-left:6px}
 .cst-lost{background:#fee2e2;color:#b91c1c;font-size:10px;font-weight:700;padding:1px 7px;border-radius:99px;margin-left:6px}
-.qd-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:14px;align-items:start;margin-bottom:12px}
+.qd-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:14px;align-items:stretch;margin-bottom:12px}
 @media(max-width:1240px){.qd-top{grid-template-columns:1fr}}
-.qd-top .exec-hero{margin-bottom:0}
+.qd-top .exec-hero{margin-bottom:0;display:flex;flex-direction:column}
 .qd-top .qd-dual{margin-bottom:0}
-.qd-hd{display:grid;grid-template-columns:repeat(2,minmax(0,1fr) 96px 78px 66px);gap:0 26px;padding:8px 12px 7px;font-size:11px;color:#94a3b8;border-bottom:1px solid #eef2f7}
+/* 좌우 padding 을 컨테이너에 주면 트랙이 12px씩 좁아져 아래 데이터와 어긋난다 → 여백은 각 칸에 */
+.qd-hd{display:grid;grid-template-columns:repeat(2,minmax(0,1fr) 96px 78px 74px);gap:0 26px;padding:8px 0 7px;font-size:11px;color:#94a3b8;border-bottom:1px solid #eef2f7}
+.qd-hd>span:first-child{padding-left:12px}
+.qd-hd>span:nth-child(4){padding-right:12px}
+.qd-hd>span:nth-child(5){padding-left:12px}
+.qd-hd>span:last-child{padding-right:12px}
 .qd-hd span:nth-child(2),.qd-hd span:nth-child(3),.qd-hd span:nth-child(4),.qd-hd span:nth-child(6),.qd-hd span:nth-child(7),.qd-hd span:nth-child(8){text-align:right}
-.qd-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr) 96px 78px 66px);gap:0 26px}
+.qd-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr) 96px 78px 74px);gap:0 26px}
 .qd-c{display:grid;grid-template-columns:subgrid;grid-column:span 4;align-items:center;padding:6px 12px;border-bottom:1px solid #f4f7fa;font-size:13px;cursor:pointer}
 .qd-c:hover{background:#f8fafc}
 .qd-c .n{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:#1c2534}
@@ -195,7 +207,7 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .qd-gh.fold{background:#fcfdfe;font-weight:600;color:#64748b;cursor:pointer;border-top:0}
 .qd-grid .det{grid-column:1/-1}
 @media(max-width:1240px){
-  .qd-hd,.qd-grid{grid-template-columns:minmax(0,1fr) 96px 78px 66px}
+  .qd-hd,.qd-grid{grid-template-columns:minmax(0,1fr) 96px 78px 74px}
   .qd-hd .d2{display:none}
 }
 .q-conc{display:flex;flex-wrap:wrap;align-items:center;gap:6px 22px;font-size:12.5px;color:#5b6878;background:#f7f9fc;border:1px solid #eef2f7;border-radius:9px;padding:9px 15px;margin-bottom:12px}
@@ -1553,14 +1565,18 @@ try{
   Chart.defaults.elements.bar.borderSkipped='bottom';
 }catch(e){}
 
-const fmtW = v => { v=Number(v)||0; return v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만원':Math.round(v).toLocaleString()+'원'; };
+// 단위 판정은 절대값 기준 — 음수를 그대로 비교하면 -4.99억이 '-499,963,698원'으로 길게 찍혀 칸을 넘친다
+const fmtW = v => { v=Number(v)||0; const a=Math.abs(v);
+  return a>=1e8?(v/1e8).toFixed(1)+'억':a>=1e4?Math.round(v/1e4).toLocaleString()+'만원':Math.round(v).toLocaleString()+'원'; };
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function _jsAttr(s){return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 const sumMo = (o,f,t)=>{ if(!o) return 0; let s=0; for(let m=f;m<=t;m++) s+=Number(o[m]||0); return s; };
 const sumVals = o => o?Object.values(o).reduce((s,v)=>s+(Number(v)||0),0):0;
 const pct = (v,p)=> p>0?(v/p-1)*100:null;
 const badge = v => v===null?'':'<span style="font-size:11px;font-weight:700;color:'+(v>=0?'#16a34a':'#dc2626')+'">'+(v>=0?'▲':'▼')+Math.abs(v).toFixed(1)+'%</span>';
-const arrow = v => v===null?'-':(v>=0?'▲':'▼')+Math.abs(v).toFixed(0)+'%';
+// 999%를 넘는 증감률은 자릿수만 늘고 의미는 없어 999%+ 로 축약(칸 넘침 방지)
+const arrow = v => { if(v===null) return '-'; const a=Math.abs(v);
+  return (v>=0?'▲':'▼')+(a>999?'999%+':a.toFixed(0)+'%'); };
 
 // ── 중앙 로그인(WT_SSO) ──────────────────────────────────
 // 자체 로그인 화면은 더 이상 노출하지 않는다. 세션 없음 → 중앙(wontech)으로 ret 붙여 보냄(로그인 후 복귀).
@@ -2935,40 +2951,44 @@ async function renderPortfolio(){
   }
 }
 // 헤드라인 분해 — 채널(국내/해외)·구분(장비/소모품)을 막대 없이 수치와 비중으로
-function _qHeroBreak(f,t){
+// 헤드라인 아래 분해 — 채널·구분·집중도를 타일 6칸으로 정리한다.
+// 텍스트로 늘어놓으면 읽기 어렵고, 옆 카드(성장↔하락)와 높이도 맞지 않는다.
+function _qHeroBreak(f,t,G){
   try{
     const dom=sumMo(CONS.monthly2026,f,t)+sumMo(DEVICE.monthly2026,f,t);
     const intl=sumMo(INTL.monthly,f,t);
     const etc=sumMo(CONS.etcMonthly2026,f,t);
-    // 해외 장비/소모품은 prods_dev·prods_cons가 상위 10개만이라 합계가 어긋남
-    // → 제품별 탭과 같은 소스(_productMap, 전체 분류)로 집계
+    // 해외 장비/소모품은 상위 10개만 저장된 목록으로 나누면 어긋나므로 전체 분류를 사용
     let dev=0,cons=0;
     try{ const pm=_productMap(f,t,null);
-      Object.keys(pm).forEach(function(k){ const o2=pm[k], v=(o2.dom||0)+(o2.intl||0);
-        if(o2.cat==='소모품') cons+=v; else dev+=v; });
+      Object.keys(pm).forEach(function(k){ const o=pm[k], v=(o.dom||0)+(o.intl||0);
+        if(o.cat==='소모품') cons+=v; else dev+=v; });
     }catch(e){}
-    const tot=dom+intl+etc; if(!(tot>0)) return "";
-    const pctv=v=>Math.round(v/tot*100);
-    const it=(l,v,p,c)=>'<span class="qh-it"><i style="background:'+c+'"></i>'+l+' <b>'+fmtW(v)+'</b><em>'+p+'%</em></span>';
-    return '<div class="qh-break">'+
-      it('국내',dom,pctv(dom),'#2563eb')+it('해외',intl,pctv(intl),'#0f766e')+
-      (etc>0?it('기타',etc,pctv(etc),'#94a3b8'):'')+
-      '<span class="qh-sep"></span>'+
-      it('장비',dev,Math.round(dev/(dev+cons||1)*100),'#7c3aed')+it('소모품',cons,Math.round(cons/(dev+cons||1)*100),'#0891b2')+
+    const tot=dom+intl+etc; if(!(tot>0)) return '';
+    const p=v=>Math.round(v/tot*100)+'%';
+    const dc=dev+cons||1;
+    const tile=(lb,val,sub,col)=>'<div class="qh-t"><span class="l" style="color:'+col+'">'+lb+'</span>'+
+      '<b>'+fmtW(val)+'</b><span class="s">'+sub+'</span></div>';
+    let last='';
+    try{
+      const s5=(G||[]).slice().sort((a,b)=>b.val-a.val).slice(0,5);
+      const s5v=s5.reduce((a,x)=>a+x.val,0), gv=(G||[]).reduce((a,x)=>a+Math.max(0,x.val),0)||1;
+      const grew=(G||[]).filter(x=>x.d>0).length;
+      last='<div class="qh-t"><span class="l" style="color:#5b7591">상위 5개 집중</span>'+
+        '<b>'+Math.round(s5v/gv*100)+'%</b>'+
+        '<span class="s">'+(G||[]).length+'개 · 성장 '+grew+' / 하락 '+((G||[]).length-grew)+'</span></div>';
+    }catch(e){}
+    return '<div class="qh-grid">'+
+      tile('국내',dom,p(dom),'#2563eb')+
+      tile('해외',intl,p(intl),'#0f766e')+
+      tile('기타',etc,p(etc),'#94a3b8')+
+      tile('장비',dev,Math.round(dev/dc*100)+'%','#7c3aed')+
+      tile('소모품',cons,Math.round(cons/dc*100)+'%','#0891b2')+
+      last+
     '</div>';
-  }catch(e){ return ""; }
+  }catch(e){ return ''; }
 }
 // 상위 집중도 — 별도 줄로 빼지 않고 헤드라인 안에서 마감
-function _qHeroConc(G){
-  try{
-    const s5=G.slice().sort((a,b)=>b.val-a.val).slice(0,5);
-    const s5v=s5.reduce((a,x)=>a+x.val,0), gv=G.reduce((a,x)=>a+Math.max(0,x.val),0)||1;
-    const grew=G.filter(x=>x.d>0).length;
-    return '<div class="qh-conc">조회 <b>'+G.length+'개</b> · 성장 <b style="color:#15803d">'+grew+'</b> / 하락 <b style="color:#b91c1c">'+(G.length-grew)+'</b>'+
-      ' · 상위 5개가 전체의 <b>'+Math.round(s5v/gv*100)+'%</b> '+
-      '<span class="nm">'+s5.slice(0,3).map(x=>esc(x.name)).join(' · ')+'</span></div>';
-  }catch(e){ return ""; }
-}
 function renderQuery(){
   if(qState.f>qState.t){qState.t=qState.f;syncQ();}
   let items;
@@ -2998,7 +3018,7 @@ function renderQuery(){
   document.getElementById('q-head').innerHTML='<div class="eh-l">'+chName+' '+tabLbl+' <span style="font-weight:500;color:#94a3b8">· '+qState.f+'~'+qState.t+'월 누적</span></div>'+
     '<div class="eh-v">'+fmtW(tot)+' <span style="font-size:1rem">'+(totY===null?'':badge(totY))+'</span> <span style="font-size:1rem;color:'+(totDelta>=0?'#16a34a':'#e11d48')+'">'+fmtD(totDelta)+'</span></div>'+
     '<div class="eh-l" style="color:#94a3b8;font-weight:500">전년 동기 '+fmtW(totPrev)+' · 회계 '+fmtW(_accF)+' + 미반영 '+fmtW(_pendF)+(_etcF>0?' <span style="color:#94a3b8">(기타 '+fmtW(_etcF)+' 포함)</span>':'')+' <span style="color:#94a3b8">· 아래 분해는 회계 확정 기준</span></div>'+
-    execNarr(G.map(x=>({name:x.name,delta:x.d,val:x.val,prev:x.prev})))+_qHeroBreak(_f,_t)+_qHeroConc(G);
+    execNarr(G.map(x=>({name:x.name,delta:x.d,val:x.val,prev:x.prev})))+_qHeroBreak(_f,_t,G);
   const maxAbs=Math.max(1,...G.map(x=>Math.abs(x.d)));
   const _gvAll=G.reduce((s2,x)=>s2+Math.max(0,x.val),0);   // 구성비 분모(조회 항목 합계)
   const top=G.filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,5), bot=G.filter(x=>x.d<0).sort((a,b)=>a.d-b.d).slice(0,5);
