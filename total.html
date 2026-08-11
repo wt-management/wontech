@@ -212,6 +212,9 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .page{display:none}
 .page.on{display:block}
 /* 슬림 조회 기간 바 */
+#ov-period{margin-bottom:0;padding:6px 12px}
+#ov-period .btn{padding:2px 9px;font-size:11.5px}
+#ov-period .form-select-sm{padding:3px 24px 3px 8px;font-size:12px}
 .period-bar{display:inline-flex;align-items:center;gap:9px;background:#fff;border-radius:10px;padding:7px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px}
 .period-bar .period-label{font-size:13px;font-weight:600;color:#334155}
 .period-bar .form-select{width:auto;font-size:12px;padding:3px 26px 3px 10px;height:auto}
@@ -1301,18 +1304,18 @@ document.getElementById('wt-fb-send').onclick=function(){var t=document.getEleme
       <h5 style="font-weight:800;margin:0"><i class="bi bi-building-fill-gear me-2" style="color:#0f766e"></i><span id="page-title">전사 종합 경영현황</span></h5>
       <div id="page-subtitle" style="font-size:12px;color:#94a3b8;margin-top:3px">국내(소모품·제품) + 해외 통합</div>
     </div>
-    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><span id="exec-sel-host"></span><div style="font-size:12px;color:#64748b" id="updated-label"></div></div>
-  </div>
-
-  <!-- ===== 전사 종합 ===== -->
-  <div id="page-overview" class="page on">
-    <div class="period-bar">
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+    <div class="period-bar" id="ov-period">
       <i class="bi bi-calendar3" style="color:#0f766e"></i><span class="period-label">조회 기간</span>
       <select id="ov-from" class="form-select form-select-sm" onchange="renderOverview()"></select>
       <span class="text-muted">~</span>
       <select id="ov-to" class="form-select form-select-sm" onchange="renderOverview()"></select>
       <span style="margin-left:10px;display:inline-flex;gap:4px;flex-wrap:wrap"><button type="button" class="btn btn-outline-secondary btn-sm" onclick="ovSetPeriod(1,'ytd')">올해 YTD</button><button type="button" class="btn btn-outline-secondary btn-sm" onclick="ovSetPeriod(1,6)">상반기</button><button type="button" class="btn btn-outline-secondary btn-sm" onclick="ovSetPeriod(7,12)">하반기</button><button type="button" class="btn btn-outline-secondary btn-sm" onclick="ovSetPeriod(1,12)">연간</button></span>
-    </div>
+    </div><span id="exec-sel-host"></span><div style="font-size:12px;color:#64748b" id="updated-label"></div></div>
+  </div>
+
+  <!-- ===== 전사 종합 ===== -->
+  <div id="page-overview" class="page on">
 
     <section class="scoreboard" id="ov-hero" aria-label="전사 스코어보드"></section>
 
@@ -1889,6 +1892,7 @@ function showPage(name,el,push){
   document.getElementById('page-title').textContent=_titles[name]||'전사 종합 경영현황';
   var _mt=document.getElementById('m-title'); if(_mt) _mt.textContent=_titles[name]||'전사 종합';
   try{ _paintExecSel(name); }catch(_){}
+  try{ var _pb=document.getElementById('ov-period'); if(_pb) _pb.style.display=(name==='overview'?'':'none'); }catch(_){}   // 조회 기간은 전사 종합 전용
   if(window.innerWidth<=820) toggleNav(false);
   if(name==='query') renderQuery();
   if(name==='portfolio'){ if(!_canPortfolio){ showPage('sales-overview'); return; } renderPortfolio(); }   // 메뉴를 숨겨도 딥링크로 들어올 수 있어 여기서도 막음
