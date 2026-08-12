@@ -4972,7 +4972,7 @@ function consParseExcel(input) {
         if (/써지컬|서지컬/.test(d)) return '서지컬';
         if (/B2C/i.test(d))         return 'B2C';
         if (/CS파트/.test(d))       return '고객만족';
-        if (/한국영업|국내영업/.test(d)) return '국내영업';
+        if (/한국영업|국내영업|영업\s*\d\s*파트/.test(d)) return '국내영업';   // 구 부서명 '영업 1·2파트' 포함(19.1억)
         return '기타';
       };
 
@@ -5238,25 +5238,23 @@ function consParseExcel(input) {
       CONS.hospitals = hospMap;
       CONS.updatedAt = updatedAt;
 
-      // 기타(종합 전용): 국내전체 − 소모품 − 제품 잔차 = 서지컬·B2C·고객만족·지원부서. total.html 전사합계·서지컬행 정합 (정본 build와 동일)
+      // 기타(종합 전용) = 일보의 서지컬·B2C·고객만족·결산조정. 사용부서로 직접 가른다.
+      // 예전엔 '국내 전체 − 소모품 − 제품' 잔차로 뽑고 해외 A/S를 수동으로 옮겼는데,
+      // 축이 '국내외'라 welo(B2C·중국수출) 같은 건이 해외로 새 사업부별 금액이 일보와 갈렸다.
       try{
         const _amKeyE = r => Object.keys(r).find(k => String(k).includes('금액')) || '';
         const _all26E = _sj(sheet26name);
-        const _domAll = {};
-        _all26E.forEach(r => { if(r['국내외']==='국내'){ const _m=monthNum(r['월']); const _a=Number(r[_amKeyE(r)]||0); if(_m&&_a) _domAll[_m]=(_domAll[_m]||0)+_a; } });
-        const _isHwASE = r => r['국내외']==='해외' && /A\/S/i.test(String(r['구분#4']||''));   // 해외 A/S = 사업부기준 고객만족(해외영업서 제외)
-        const _hwAsMoE = {};
-        _all26E.forEach(r => { if(_isHwASE(r)){ const _m=monthNum(r['월']); const _a=Number(r[_amKeyE(r)]||0); if(_m&&_a) _hwAsMoE[_m]=(_hwAsMoE[_m]||0)+_a; } });
+        const _dept = {'서지컬':{},'B2C':{},'고객만족':{},'기타':{}};
         const _etcMo = {};
-        for(let _em=1; _em<=12; _em++){ const _ev=Math.round((_domAll[_em]||0)-(a26.monthly[_em]||0)-(devFull.monthly2026[_em]||0)+(_hwAsMoE[_em]||0)); if(_ev) _etcMo[_em]=_ev; }   // +해외 A/S(고객만족)
+        _all26E.forEach(r => {
+          const _d=_DIV(r); if(_d==='국내영업'||_d==='해외영업') return;
+          const _m=monthNum(r['월']); const _a=Number(r[_amKeyE(r)]||0); if(!_m||!_a) return;
+          _dept[_d][_m]=(_dept[_d][_m]||0)+_a;
+          _etcMo[_m]=(_etcMo[_m]||0)+_a;
+        });
+        Object.keys(_etcMo).forEach(_m=>{ _etcMo[_m]=Math.round(_etcMo[_m]); if(!_etcMo[_m]) delete _etcMo[_m]; });
         CONS.etcMonthly2026 = _etcMo;
         if(!CONS.etcMonthly2025) CONS.etcMonthly2025 = {};
-        const _isConsE = r => r['구분#2']==='소모품' && r['국내외']==='국내';
-        const _isDevE  = r => (r['구분#2']==='제품군'||r['구분#2']==='의료기기') && r['국내외']==='국내';
-        const _dept = {'서지컬':{},'B2C':{},'고객만족':{},'기타':{}};
-        _all26E.forEach(r => { if(r['국내외']!=='국내'||_isConsE(r)||_isDevE(r)) return; const _m=monthNum(r['월']); const _a=Number(r[_amKeyE(r)]||0); if(!_m||!_a) return; const _d=String(r['사용부서']||''); const _b=/지컬/.test(_d)?'서지컬':(/B2C/i.test(_d)?'B2C':(/고객만족|CS/.test(_d)?'고객만족':'기타')); _dept[_b][_m]=(_dept[_b][_m]||0)+_a; });
-        _all26E.forEach(r => { if(_isHwASE(r)){ const _m=monthNum(r['월']); const _a=Number(r[_amKeyE(r)]||0); if(_m&&_a) _dept['고객만족'][_m]=(_dept['고객만족'][_m]||0)+_a; } });   // 해외 A/S → 고객만족
-        for(let _em=1; _em<=12; _em++){ let _bs=0; for(const _bk in _dept) _bs+=(_dept[_bk][_em]||0); const _adj=(_etcMo[_em]||0)-_bs; if(Math.round(_adj)) _dept['기타'][_em]=(_dept['기타'][_em]||0)+_adj; }
         Object.keys(_dept).forEach(_k => { const _o={}; Object.keys(_dept[_k]).forEach(_m => { const _v=Math.round(_dept[_k][_m]); if(_v)_o[_m]=_v; }); _dept[_k]=_o; });
         CONS.etcDept2026 = _dept;
         if(!CONS.etcDept2025) CONS.etcDept2025 = {};
