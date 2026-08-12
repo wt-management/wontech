@@ -131,27 +131,31 @@ function aggDevice2026(rows26){
     var qtyForExcl=qtyRaw>0?qtyRaw:1;               // 저단가 제외 판정용(빈칸=1로 가정해 판정만)
     var qty=qtyRaw>0?qtyRaw:0;                      // 실제 대수: 빈 수량은 0(세지 않음, 재무 원본 기준) — 금액은 아래서 그대로 반영
     var mo=monthNum(r['월']); var prod=(r['구분#4']||'').trim();
+    // 저단가(부속·소액) 행은 제품 랭킹·대수만 어지럽힌다. 전에는 통째로 버려
+    // 금액까지 사라졌고 국내 합계가 회계보다 1.13억 비었다 → 금액은 살리고 품목·대수에서만 뺀다.
+    var _low=false;
     if(/hair|헤어/i.test(prod)) prod='Hair Beam';
-    else if(amt>0 && amt/qtyForExcl<1000000) return;       // 양수 저단가(팁/소모품) 제외
+    else if(amt>0 && amt/qtyForExcl<1000000) _low=true;
     var name=(r['거래처명']||'').trim(), sales=(r['담당자']||'').trim();
     var ds=dsOf(r['날짜'])||'';
-    if(mo){ monthly[mo]=(monthly[mo]||0)+amt; monthlyQty[mo]=(monthlyQty[mo]||0)+qty; }
-    if(prod){ products[prod]=(products[prod]||0)+amt; prodQty[prod]=(prodQty[prod]||0)+qty; }
-    if(mo&&prod){ prodMo[prod]=prodMo[prod]||{}; prodMo[prod][mo]=(prodMo[prod][mo]||0)+amt;
+    if(mo){ monthly[mo]=(monthly[mo]||0)+amt; if(!_low) monthlyQty[mo]=(monthlyQty[mo]||0)+qty; }
+    if(prod&&!_low){ products[prod]=(products[prod]||0)+amt; prodQty[prod]=(prodQty[prod]||0)+qty; }
+    if(mo&&prod&&!_low){ prodMo[prod]=prodMo[prod]||{}; prodMo[prod][mo]=(prodMo[prod][mo]||0)+amt;
       prodMoQty[prod]=prodMoQty[prod]||{}; prodMoQty[prod][mo]=(prodMoQty[prod][mo]||0)+qty; }
+    if(mo&&_low){ prodMo['기타 소액']=prodMo['기타 소액']||{}; prodMo['기타 소액'][mo]=(prodMo['기타 소액'][mo]||0)+amt; }
     if(name){ var dh=devHosp[name]; if(!dh){ dh={y2026:0,orders26:0,prodsAll:{},prods2026:{},m2026:{},txns2026:[],lastDate:'',sales:''}; devHosp[name]=dh; }
       dh.y2026+=amt; dh.orders26++;
-      if(prod){ dh.prodsAll[prod]=(dh.prodsAll[prod]||0)+amt; dh.prods2026[prod]=(dh.prods2026[prod]||0)+amt; }
+      if(prod&&!_low){ dh.prodsAll[prod]=(dh.prodsAll[prod]||0)+amt; dh.prods2026[prod]=(dh.prods2026[prod]||0)+amt; }
       if(mo) dh.m2026[mo]=(dh.m2026[mo]||0)+amt;
-      if(mo&&prod&&ds) dh.txns2026.push([mo,ds,name,prod,Math.round(amt),qty]);
+      if(mo&&prod&&ds&&!_low) dh.txns2026.push([mo,ds,name,prod,Math.round(amt),qty]);
       if(ds&&ds>dh.lastDate) dh.lastDate=ds;
       if(sales) dh.sales=sales;
     }
     if(sales){ var dr=devReps[sales]; if(!dr){ dr={y2026:0,c26:{},prods2026:{},m2026:{},qty2026:0}; devReps[sales]=dr; }
       dr.y2026+=amt; dr.c26[name||'?']=1;
-      if(prod) dr.prods2026[prod]=(dr.prods2026[prod]||0)+amt;
+      if(prod&&!_low) dr.prods2026[prod]=(dr.prods2026[prod]||0)+amt;
       if(mo) dr.m2026[mo]=(dr.m2026[mo]||0)+amt;
-      dr.qty2026+=qty;
+      if(!_low) dr.qty2026+=qty;
     }
   });
   Object.keys(devHosp).forEach(function(n){ var dh=devHosp[n]; dh.txns2026.sort(function(a,b){return a[1]<b[1]?-1:1;}); });
@@ -298,14 +302,24 @@ function build(sheets, existing){
   existing=existing||{}; var exMain=existing.main||{}, exDev=existing.device||{}, exIntl=existing.intl||{};
   var CM=buildCatMap(exMain,exDev,exIntl);
   var rows26=transformRaw(sheets,CM);
-  // 국내영업 제외 부서: 서지컬·B2C·CS(고객만족)·비영업 지원부서
-  var EXCL_DEPT=/지컬|B2C|CS|연구|구매팀|인사|총무/;
-  var _incl=function(r){return !EXCL_DEPT.test(String(r['사용부서']||''));};
-  var consR=rows26.filter(function(r){return r['구분#2']==='소모품'&&r['국내외']==='국내'&&_incl(r);});
-  var devR =rows26.filter(function(r){return (r['구분#2']==='제품군'||r['구분#2']==='의료기기')&&r['국내외']==='국내'&&_incl(r);});
+  // 사업부 = 회계 '사용부서'. 일보(회계)와 같은 축이라야 사업부별 금액이 맞는다.
+  // 예전엔 거래처명·부서로 만든 '국내외'로 갈라 welo(B2C사업팀·중국수출) 같은 건이
+  // 해외로 잡혀 일보와 어긋났다. 검증: 원장 부서별 1~8월 = 일보 6개 사업부 전부 0원 차이.
+  var DIV=function(r){ var d=String(r['사용부서']||'');
+    if(d.indexOf('해외법인영업')>=0) return '해외영업';
+    if(/지컬/.test(d))              return '서지컬';
+    if(/B2C/i.test(d))              return 'B2C';
+    if(/CS파트/.test(d))            return '고객만족';
+    if(/한국영업|국내영업|영업\s*\d\s*파트/.test(d)) return '국내영업';
+    return '기타';
+  };
+  var consR=rows26.filter(function(r){return r['구분#2']==='소모품'&&DIV(r)==='국내영업';});
+  // 국내영업 부서에서 소모품이 아닌 것은 전부 제품으로 본다. 제품군/의료기기만 받으면
+  // 카테고리 미등록 제품(1.13억)이 어디에도 안 잡혀 국내 합계가 일보보다 그만큼 빈다.
+  var devR =rows26.filter(function(r){return r['구분#2']!=='소모품'&&DIV(r)==='국내영업';});
   // 해외 A/S소모품 = 회계상 해외법인 부서지만 사업부 기준(회계팀 일보)은 '고객만족'. 해외영업 실적서 제외하고 아래 기타(고객만족)로 편입.
-  var _isHwAS=function(r){return r['국내외']==='해외'&&/A\/S/i.test(String(r['구분#4']||''));};
-  var intlR=rows26.filter(function(r){return r['국내외']==='해외'&&!_isHwAS(r);});
+  var _isHwAS=function(r){return false;};   // 해외CS파트가 부서로 이미 갈려 별도 제외가 필요 없다
+  var intlR=rows26.filter(function(r){return DIV(r)==='해외영업';});
   var _hwAsMo={};
   rows26.forEach(function(r){ if(_isHwAS(r)){ var _hm=monthNum(r['월']); var _ha=num(r['금액']); if(_hm&&_ha) _hwAsMo[_hm]=(_hwAsMo[_hm]||0)+_ha; } });
   // updatedAt: 소모품 2026 날짜 max (없으면 전체 rows26 max)
@@ -339,18 +353,21 @@ function build(sheets, existing){
 
   // 기타(종합 전용): 국내 전체 net − 국내소모품 − 국내제품 = 서지컬·B2C·고객만족·의료기기·지원부서.
   // 한국영업 분석(소모품/제품)엔 미포함, 종합사이트 전사 합계에만 얹음 → 회계 전체와 정합.
+  // 잔차로 역산하지 않고 사용부서로 직접 집계한다(잔차식은 축이 어긋나면 오차를 통째로 삼킨다)
   var _domAll={};
-  rows26.forEach(function(r){ if(r['국내외']==='국내'){ var _m=monthNum(r['월']); var _a=num(r['금액']); if(_m&&_a) _domAll[_m]=(_domAll[_m]||0)+_a; } });
   var _etcMo={};
-  for(var _em=1;_em<=12;_em++){ var _ev=Math.round((_domAll[_em]||0)-(a26.monthly[_em]||0)-(d26.monthly2026[_em]||0)+(_hwAsMo[_em]||0)); if(_ev) _etcMo[_em]=_ev; }   // +해외 A/S(고객만족)
+  rows26.forEach(function(r){ var _dv=DIV(r); if(_dv==='국내영업'||_dv==='해외영업') return;
+    var _m=monthNum(r['월']); var _a=num(r['금액']); if(_m&&_a) _etcMo[_m]=(_etcMo[_m]||0)+_a; });
+  Object.keys(_etcMo).forEach(function(_k){ _etcMo[_k]=Math.round(_etcMo[_k]); if(!_etcMo[_k]) delete _etcMo[_k]; });
+  var _skipOldEtc=true;
+  if(!_skipOldEtc) for(var _em=1;_em<=12;_em++){ var _ev=Math.round((_domAll[_em]||0)-(a26.monthly[_em]||0)-(d26.monthly2026[_em]||0)+(_hwAsMo[_em]||0)); if(_ev) _etcMo[_em]=_ev; }   // +해외 A/S(고객만족)
   CONS.etcMonthly2026=_etcMo; CONS.etcMonthly2025=exMain.etcMonthly2025||{};
   // 기타를 사용부서별로 분리(서지컬/B2C/고객만족/기타=의료기기·조정) — 매출현황 서지컬 행 표시용. 버킷합≠잔차분은 '기타'로 흡수해 etcMonthly와 정합 유지.
   var _incSet=new Set(); consR.forEach(function(r){_incSet.add(r);}); devR.forEach(function(r){_incSet.add(r);});
   var _dept={'서지컬':{},'B2C':{},'고객만족':{},'기타':{}};
-  rows26.forEach(function(r){ if(r['국내외']!=='국내'||_incSet.has(r)) return;
+  rows26.forEach(function(r){ var _dv2=DIV(r); if(_dv2==='국내영업'||_dv2==='해외영업') return;
     var _m2=monthNum(r['월']); var _a2=num(r['금액']); if(!_m2||!_a2) return;
-    var _d2=String(r['사용부서']||''); var _b=/지컬/.test(_d2)?'서지컬':(/B2C/i.test(_d2)?'B2C':(/고객만족|CS/.test(_d2)?'고객만족':'기타'));
-    _dept[_b][_m2]=(_dept[_b][_m2]||0)+_a2; });
+    _dept[_dv2][_m2]=(_dept[_dv2][_m2]||0)+_a2; });
   rows26.forEach(function(r){ if(_isHwAS(r)){ var _hm2=monthNum(r['월']); var _ha2=num(r['금액']); if(_hm2&&_ha2) _dept['고객만족'][_hm2]=(_dept['고객만족'][_hm2]||0)+_ha2; } });   // 해외 A/S → 고객만족
   for(var _em2=1;_em2<=12;_em2++){ var _bs=0; for(var _bk in _dept) _bs+=(_dept[_bk][_em2]||0); var _adj=(_etcMo[_em2]||0)-_bs; if(Math.round(_adj)) _dept['기타'][_em2]=(_dept['기타'][_em2]||0)+_adj; }
   Object.keys(_dept).forEach(function(_k){ var _o={}; Object.keys(_dept[_k]).forEach(function(_m3){ var _v3=Math.round(_dept[_k][_m3]); if(_v3) _o[_m3]=_v3; }); _dept[_k]=_o; });
