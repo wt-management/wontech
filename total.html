@@ -208,10 +208,27 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .qd-gh{grid-column:1/-1;display:grid;grid-template-columns:subgrid;align-items:center;background:#f8fafc;font-weight:800;padding:0;font-size:13px}
 /* 담당자별: 왼쪽=회사 직원 / 오른쪽=대리점 이라 그룹 머리도 반쪽만 차지한다 */
 .qd-gh.half{grid-column:span 4}
-/* 담당자별은 당기·전년에 대수를 같은 줄에 붙이고, 증감을 그 사이에 둔다 */
-.qd-grid.rep,.qd-hd.rep{grid-template-columns:repeat(2,minmax(0,1fr) 112px 62px 112px)}
-.qd-grid.rep .v b,.qd-grid.rep .p b{display:inline;font-size:10.5px;color:#8fa7bf;font-weight:600;margin-left:5px}
-.qd-grid.rep .p{color:#64748b}
+/* 담당자별은 좌(본사)·우(대리점)를 각각 독립 목록으로 둔다.
+   한 그리드에 섞으면 본사만 국내/해외로 나누거나 대리점만 스크롤을 걸 수 없다. */
+.qd-hd.rep{display:none}
+.qd-grid.rep{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 22px;align-items:start}
+.rp-col{min-width:0;border:1px solid #e8eef6;border-radius:12px;overflow:hidden}
+.rp-h,.rp-lbl,.rp-r{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr) 62px minmax(0,1.05fr);align-items:center;gap:0 6px}
+.rp-h{background:#f6f9fd;font-weight:800;font-size:13px;padding:9px 12px}
+.rp-lbl{padding:6px 12px;font-size:11px;color:#94a3b8;border-bottom:1px solid #eef2f7;background:#fff}
+.rp-sub{font-size:11.5px;font-weight:800;color:#41506a;background:#eef4fb;padding:6px 12px;border-top:1px solid #d7e5f5;border-bottom:1px solid #e6eef8;letter-spacing:.02em}
+.rp-b{max-height:432px;overflow-y:auto}
+.rp-r{padding:7px 12px;border-bottom:1px solid #f4f7fa;font-size:13px;cursor:pointer}
+.rp-r:hover{background:#f8fafc}
+.rp-r .n{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:#1c2534}
+.rp-r .n .sh{font-size:10.5px;color:#a8b3c1;font-weight:500;margin-left:5px}
+.rp-h .v,.rp-h .p,.rp-h .y,.rp-lbl .v,.rp-lbl .p,.rp-lbl .y,.rp-r .v,.rp-r .p,.rp-r .y{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.rp-h .y,.rp-lbl .y,.rp-r .y{text-align:center}
+.rp-r .v{font-weight:700}.rp-r .p{color:#64748b}.rp-r .y{font-weight:700}
+.rp-h b,.rp-r b,.rp-h .p b{display:inline;font-size:10.5px;color:#8fa7bf;font-weight:600;margin-left:5px}
+.rp-r .q0{color:#cbd5e1;font-weight:500;margin-left:5px;font-size:10.5px}
+.rp-note{grid-column:1/-1;font-size:11px;color:#94a3b8;padding:8px 2px 0}
+@media(max-width:900px){.qd-grid.rep{grid-template-columns:minmax(0,1fr)}}
 .qd-gh>*{padding-top:7px;padding-bottom:7px}
 .qd-gh>*:first-child{padding-left:12px}
 .qd-gh .y{padding-right:12px}
@@ -1577,6 +1594,8 @@ const _sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let _canPortfolio=false;   // Sales Portfolio 메뉴 열람 권한(이관 전 기준 유지)
 let CONS={}, DEVICE={}, INTL={}, PENDING=[], TARGETS=[], ILBO_PEND=[], ILBO_CARRY=[], _user=null;
 const STAFF_SET={};   // 회사 직원 이름 집합(국내 인사명단 + 사번이 붙은 해외 담당자)
+// 담당자별 표에서 감출 인원 — 요청(퇴사·법인계정·순위 왜곡)에 따른 제외 목록
+const _REP_HIDE={'김한결':1,'서연경':1,'박진선':1,'김한기':1,'박종덕':1,'손정환':1};
 // 해외 reps 키는 '244.김한결' 처럼 사번이 붙어 있다 → 사람이면 직원. 법인·수익인식 등은 제외.
 function _seedIntlStaff(){ try{ Object.keys((INTL&&INTL.reps)||{}).forEach(function(k){
   if(!/^\s*\d+\./.test(k)) return; const n=_repBase(k);
@@ -3176,32 +3195,40 @@ function renderQuery(){
       _rowsHtml+=_qFold(list,idxOf,gname);
     });
   } else if(qState.tab==='rep'){
-    // 왼쪽=회사 직원 / 오른쪽=대리점. 2열 그리드라 좌우를 번갈아 채워야 열이 갈린다.
-    // 김한결은 요청에 따라 목록에서 빼되(태국법인 물량이라 순위가 묻힘) 합계·비중 분모에는 남긴다.
+    // 좌=본사(국내/해외로 나눔) · 우=대리점(스크롤). 요청 제외 인원은 목록·소계에서 모두 뺀다.
     const idxOf=new Map(G.map((x,i)=>[x,i]));
-    // 미분류·수익인식처럼 사람도 대리점도 아닌 항목은 오른쪽에 함께 둔다(빼면 두 소계 합이 전사와 안 맞음)
-    const vis=G.filter(x=>x.name!=='김한결');
-    const staff=vis.filter(x=>x.grp==='직원').sort((a,b)=>b.val-a.val);
+    const hid=G.filter(x=>_REP_HIDE[x.name]);
+    const vis=G.filter(x=>!_REP_HIDE[x.name]);
+    const staff=vis.filter(x=>x.grp==='직원');
     const deal =vis.filter(x=>x.grp!=='직원').sort((a,b)=>b.val-a.val);
-    const excl=G.filter(x=>x.name==='김한결');
-    const gh=(title,list,col,note)=>{ const v=list.reduce((s,x)=>s+x.val,0), p=list.reduce((s,x)=>s+(x.prev||0),0),
-        q=list.reduce((s,x)=>s+(x.qty||0),0), qp=list.reduce((s,x)=>s+(x.qtyPrev||0),0), y=pct(v,p);
-      return '<div class="qd-gh half" style="border-top:2px solid '+col+'">'+
-        '<span style="color:'+col+';padding-left:12px"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+col+';margin-right:7px"></span>'+title+
-          ' <span style="font-size:10.5px;font-weight:500;color:#94a3b8">'+list.length+'명'+(note||'')+'</span></span>'+
-        '<span class="v">'+fmtW(v)+(q>0?'<b>'+q.toLocaleString()+'대</b>':'')+'</span>'+
+    const sDom=staff.filter(x=>x.tag!=='해외').sort((a,b)=>b.val-a.val);
+    const sInt=staff.filter(x=>x.tag==='해외').sort((a,b)=>b.val-a.val);
+    const _sum=(l,k)=>l.reduce((a,x)=>a+(x[k]||0),0);
+    // 금액이 0이면 대수 자리도 비운다(0원 – 처럼 붙으면 지저분)
+    const _q=(v,q)=>fmtW(v)+(q>0?'<b>'+q.toLocaleString()+'대</b>':(v?'<span class="q0">–</span>':''));
+    const _hd=(title,list,col,note)=>{ const v=_sum(list,'val'), p=_sum(list,'prev'), y=pct(v,p);
+      return '<div class="rp-h" style="border-top:3px solid '+col+'">'+
+        '<span style="color:'+col+'">'+title+' <span style="font-size:10.5px;font-weight:500;color:#94a3b8">'+list.length+'명'+(note||'')+'</span></span>'+
+        '<span class="v">'+_q(v,_sum(list,'qty'))+'</span>'+
         '<span class="y" style="color:'+_yoyCol(y)+'">'+(y===null?'신규':arrow(y))+'</span>'+
-        '<span class="p">'+fmtW(p)+(qp>0?'<b>'+qp.toLocaleString()+'대</b>':'')+'</span></div>'; };
-    const blank='<div class="qd-c" style="visibility:hidden;pointer-events:none"><span class="n">·</span><span class="v"></span><span class="y"></span><span class="p"></span></div>';
-    _rowsHtml=gh('회사 직원',staff,'#2563eb',excl.length?' · 김한결 '+fmtW(excl[0].val)+' 별도':'')+gh('대리점·기타',deal,'#b45309','');
-    const n=Math.max(staff.length,deal.length);
-    for(let i=0;i<n;i++){
-      // 상세는 행 뒤에 전폭으로 들어가 좌우 짝이 어긋나므로, 한 쌍을 먼저 깔고 그 아래 붙인다
-      _rowsHtml += (staff[i]?_qrow(staff[i],idxOf.get(staff[i]),true):blank)
-                 + (deal[i] ?_qrow(deal[i], idxOf.get(deal[i]), true):blank);
-      [staff[i],deal[i]].forEach(function(x){ if(x&&qState.open[idxOf.get(x)])
-        _rowsHtml+='<div class="det"><b>'+esc(x.name)+'</b>'+(x.detail||'')+'</div>'; });
-    }
+        '<span class="p">'+_q(p,_sum(list,'qtyPrev'))+'</span></div>'+
+        '<div class="rp-lbl"><span>담당자</span><span class="v">당기</span><span class="y">증감</span><span class="p">전년</span></div>'; };
+    const _row=x=>{ const i=idxOf.get(x), sh=_gvAll>0?(x.val/_gvAll*100):0;
+      return '<div class="rp-r" onclick="qToggle('+i+')" title="클릭하면 상세">'+
+        '<span class="n">'+esc(x.name)+' <span class="sh">'+sh.toFixed(1)+'%</span></span>'+
+        '<span class="v">'+_q(x.val,x.qty)+'</span>'+
+        '<span class="y" style="color:'+_yoyCol(x.y)+'">'+(x.y===null?'신규':arrow(x.y))+'</span>'+
+        '<span class="p">'+_q(x.prev||0,x.qtyPrev)+'</span></div>'+
+        (qState.open[i]?'<div class="det">'+(x.detail||'상세 없음')+'</div>':''); };
+    const _sec=(t,list)=>list.length?('<div class="rp-sub">'+t+' <span style="font-weight:600;color:#8fa7bf">'+list.length+'명 · '+fmtW(_sum(list,'val'))+'</span></div>'+list.map(_row).join('')):'';
+    const hidNote=hid.length?(' · 제외 '+hid.length+'명 '+fmtW(_sum(hid,'val'))):'';
+    _rowsHtml='<div class="rp-col">'+_hd('본사',staff,'#2563eb',hidNote)+
+        '<div class="rp-b">'+_sec('국내',sDom)+_sec('해외',sInt)+'</div></div>'+
+      '<div class="rp-col">'+_hd('대리점·기타',deal,'#b45309','')+
+        '<div class="rp-b">'+deal.map(_row).join('')+'</div></div>'+
+      '<div class="rp-note">대수는 <b>국내 장비</b> 기준입니다 — 해외 실적과 소모품은 회계 자료에 수량이 없어 <span class="q0">–</span> 로 둡니다.'+
+        (hid.length?(' · 제외: '+hid.map(x=>esc(x.name)).join('·')):'')+
+        ' · <b>미분류</b>는 회계에는 잡혔으나 담당자가 지정되지 않은 거래입니다.</div>';
   } else {
     _rowsHtml=_qFold(G,new Map(G.map((x,i)=>[x,i])),qState.tab);
   }
