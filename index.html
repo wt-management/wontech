@@ -2642,6 +2642,7 @@ let stageChart=null, salesChart=null, perfChart=null, custPerfChart=null;
 let qItemCount=0;
 let PENDING = [];   // 예정분(회계 미반영 매출)
 let ILBO_PEND = []; // 일매출일보 미반영분(국내) — 종합 KPI에 금액 합산
+let ILBO_CARRY = []; // 전월 이월 조정(마감월의 납품(선적) 잔액) — 일보에서 입력, 해당 월 실적에 가산
 
 // 해외 병원명 접두사 목록
 const FOREIGN_PFX = ['미국/','일본/','중국/','태국/','영국/','독일/','호주/','싱가포르/','베트남/','인도/','프랑스/','이탈리아/','스페인/','캐나다/','브라질/','말레이시아/','인도네시아/','필리핀/','홍콩/','대만/'];
@@ -3150,29 +3151,47 @@ async function _loadIlboPending(){
     const {data}=await _sb.from('cons_cache').select('data').eq('key','ilbo_pending').maybeSingle();
     const rows=((data&&data.data&&data.data.rows)||[]).filter(function(p){return p.region==='국내'&&p.status!=='반영됨'&&p.status!=='취소';});
     ILBO_PEND = rows;
+    ILBO_CARRY = ((data&&data.data&&data.data.carry)||[]).filter(function(c){ return c.region!=='해외' && Number(c.amount); });
     var tb=document.getElementById('ilbo-pend-tbody'),emp=document.getElementById('ilbo-pend-empty'),sum=document.getElementById('ilbo-pend-sum');
     if(!tb) return;
-    if(!rows.length){ tb.innerHTML=''; if(emp) emp.style.display='block'; if(sum) sum.textContent='· 0건'; return; }
+    if(!rows.length&&!ILBO_CARRY.length){ tb.innerHTML=''; if(emp) emp.style.display='block'; if(sum) sum.textContent='· 0건'; return; }
     if(emp) emp.style.display='none';
     var total=0;
-    tb.innerHTML=rows.map(function(p){ total+=Number(p.amount)||0; var e=function(x){return String(x==null?'':x).replace(/</g,'&lt;');}; return '<tr><td style="padding:8px 12px">'+e(p.customer)+'</td><td>'+e(p.product)+'</td><td style="text-align:center">'+(p.qty||'')+'</td><td style="text-align:right">'+(Number(p.amount)||0).toLocaleString()+'</td><td style="text-align:center">'+(p.expectedDate||'')+'</td></tr>'; }).join('');
-    if(sum) sum.textContent='· '+rows.length+'건 · '+total.toLocaleString()+'원';
+    var e=function(x){return String(x==null?'':x).replace(/</g,'&lt;');};
+    var html=rows.map(function(p){ total+=Number(p.amount)||0; return '<tr><td style="padding:8px 12px">'+e(p.customer)+'</td><td>'+e(p.product)+'</td><td style="text-align:center">'+(p.qty||'')+'</td><td style="text-align:right">'+(Number(p.amount)||0).toLocaleString()+'</td><td style="text-align:center">'+(p.expectedDate||'')+'</td></tr>'; }).join('');
+    // 전월 이월 조정 — KPI에는 들어가는데 목록에 없으면 합계가 안 맞아 보인다
+    html+=ILBO_CARRY.map(function(c){ var a=Number(c.amount)||0; total+=a;
+      return '<tr style="background:#fff7ed"><td style="padding:8px 12px;font-weight:700">전월 이월 조정</td><td>'+e(c.memo||(c.item||''))+'</td><td style="text-align:center">'+e(c.item||'')+'</td><td style="text-align:right;color:'+(a<0?'#b91c1c':'#166534')+';font-weight:700">'+a.toLocaleString()+'</td><td style="text-align:center">'+e(c.ym||'')+'</td></tr>'; }).join('');
+    tb.innerHTML=html;
+    if(sum) sum.textContent='· '+rows.length+'건'+(ILBO_CARRY.length?(' + 이월조정 '+ILBO_CARRY.length+'건'):'')+' · '+total.toLocaleString()+'원';
   }catch(e){ console.warn('ilbo pending load',e); }
 }
 function _normPname(s){ return String(s||'').replace(/[\s\[\]()\/]/g,'').toLowerCase(); }
+// 미반영 1건이 소모품인지 판정 — KPI(_ilboMonthMaps)와 제품 목록이 같은 규칙을 써야 두 화면이 어긋나지 않는다
+function _pendIsCons(r){
+  var consSet={};
+  Object.keys((typeof CONS!=='undefined'&&CONS.products2026)||{}).forEach(function(k){consSet[_normPname(k)]=1;});
+  Object.keys((typeof CONS!=='undefined'&&CONS.products2025)||{}).forEach(function(k){consSet[_normPname(k)]=1;});
+  var rc=String(r.category||r.cat||r.gubun||'');
+  if(rc.indexOf('소모')>=0) return true;
+  if(rc.indexOf('제품')>=0||rc.indexOf('장비')>=0) return false;
+  return !!consSet[_normPname(r.product)] || /tip|팁|소모품|카트리지|cartridge|gel|젤|니들|needle|cathet/i.test(String(r.product||''));
+}
 // 일매출일보 미반영분 — 소모품/제품 분류 후 월별 금액 맵(2026). 카테고리 명시 우선, 없으면 소모품 제품명 목록과 대조
 function _ilboMonthMaps(){
-  var consSet={};
-  Object.keys(CONS.products2026||{}).forEach(function(k){consSet[_normPname(k)]=1;});
-  Object.keys(CONS.products2025||{}).forEach(function(k){consSet[_normPname(k)]=1;});
   var consMo={}, devMo={};
   (ILBO_PEND||[]).forEach(function(r){
     var d=String(r.expectedDate||''); if(d.slice(0,4)!=='2026') return;
     var m=parseInt(d.slice(5,7),10); if(!m) return;
     var amt=Number(r.amount)||0;
-    var rc=String(r.category||r.cat||r.gubun||'');
-    var isCons = rc.indexOf('소모')>=0 ? true : (rc.indexOf('제품')>=0||rc.indexOf('장비')>=0) ? false : (!!consSet[_normPname(r.product)] || /tip|팁|소모품|카트리지|cartridge|gel|젤|니들|needle|cathet/i.test(String(r.product||'')));
-    if(isCons) consMo[m]=(consMo[m]||0)+amt; else devMo[m]=(devMo[m]||0)+amt;
+    if(_pendIsCons(r)) consMo[m]=(consMo[m]||0)+amt; else devMo[m]=(devMo[m]||0)+amt;
+  });
+  // 전월 이월 조정(마감월 납품(선적) 잔액) — 전사 종합과 같은 규칙으로 해당 월에 가산
+  (ILBO_CARRY||[]).forEach(function(c){
+    var ym=String(c.ym||''); if(ym.slice(0,4)!=='2026') return;
+    var m=parseInt(ym.slice(5,7),10), amt=Number(c.amount)||0;
+    if(!(m>=1&&m<=12)||!amt) return;
+    if(c.item==='소모품') consMo[m]=(consMo[m]||0)+amt; else devMo[m]=(devMo[m]||0)+amt;
   });
   return {consMo:consMo, devMo:devMo};
 }
@@ -3748,9 +3767,20 @@ function renderSalesOverview() {
   const _ovSpanProds=(src,isCons,rng)=>{ const ks={}; rng.forEach(x=>ks[x.y+'-'+x.m]=1); const out={}; Object.values(src.hospitals||{}).forEach(obj=>{ [['txns2026',2026],['txns2025',2025]].forEach(function(pr){ (obj[pr[0]]||[]).forEach(t=>{ if(!ks[pr[1]+'-'+(+t[0])])return; const prod=_cpn2(isCons?t[2]:t[3]); const amt=Number((isCons?t[3]:t[4])||0); if(prod) out[prod]=(out[prod]||0)+amt; }); }); }); return out; };
   const _ovSpanQty=(src,isCons,rng)=>{ const ks={}; rng.forEach(x=>ks[x.y+'-'+x.m]=1); const out={}; Object.values(src.hospitals||{}).forEach(obj=>{ [['txns2026',2026],['txns2025',2025]].forEach(function(pr){ (obj[pr[0]]||[]).forEach(t=>{ if(!ks[pr[1]+'-'+(+t[0])])return; const prod=_cpn2(isCons?t[2]:t[3]); const q=Number((isCons?t[4]:t[5])||0); if(prod&&q>0) out[prod]=(out[prod]||0)+q; }); }); }); return out; };
   // 미반영(pending) per-product 장비 가산 → 보고기준 통일(증감분해와 동일 기준)
-  const _ovDevPend=(rng,wantQty)=>{ const o={}; try{ var _pnd=(typeof ILBO_PEND!=='undefined'&&ILBO_PEND)||[]; var _dset={}; ['products2026','products2025','prods_dev'].forEach(k=>Object.keys((DEVICE&&DEVICE[k])||{}).forEach(n=>{_dset[_cpn2(n)]=1;})); var _smo={}; rng.forEach(x=>{ if(x.y===_curYear())_smo[x.m]=1; }); _pnd.forEach(r=>{ if(!r||(r.region&&r.region!=='국내')||r.status==='반영됨'||r.status==='취소')return; var p=_cpn2(r.product||''); if(!p||/tip|팁|cartridge|카트리지|소모|a\/s/i.test(p)||!_dset[p])return; var mo=parseInt(String(r.expectedDate||r.date||'').slice(5,7),10); if(!_smo[mo])return; o[p]=(o[p]||0)+(wantQty?(Number(r.qty)||0):(Number(r.amount)||0)); }); }catch(e){} return o; };
-  document.getElementById('ov-cons-prods').innerHTML = renderProdList(_ovSpanProds(CONS,true,spanMs), _ovSpanProds(CONS,true,prevMs), COLS, 'cons', _ovSpanQty(CONS,true,spanMs), _ovSpanQty(CONS,true,prevMs));
-  document.getElementById('ov-dev-prods').innerHTML  = renderProdList(mergeProd(_ovSpanProds(DEVICE,false,spanMs),_ovDevPend(spanMs,false)), _ovSpanProds(DEVICE,false,prevMs), COLSD, 'dev', mergeProd(_ovSpanQty(DEVICE,false,spanMs),_ovDevPend(spanMs,true)), _ovSpanQty(DEVICE,false,prevMs));
+  // 이전에는 DEVICE에 이미 있는 제품명만 통과시켜 Avvio·V Laser·Majesty 처럼
+  // 회계 실적이 아직 없는 미반영 제품이 3.5억가량 통째로 빠져 순위가 왜곡됐다.
+  // → KPI와 같은 _pendIsCons 규칙만 쓰고 제품명 화이트리스트는 없앤다.
+  const _ovPendProds=(rng,isCons,wantQty)=>{ const o={}; try{
+    var _pnd=(typeof ILBO_PEND!=='undefined'&&ILBO_PEND)||[];
+    var _smo={}; rng.forEach(x=>{ if(x.y===_curYear())_smo[x.m]=1; });
+    _pnd.forEach(r=>{ if(!r||(r.region&&r.region!=='국내')||r.status==='반영됨'||r.status==='취소')return;
+      if(_pendIsCons(r)!==isCons) return;
+      var mo=parseInt(String(r.expectedDate||r.date||'').slice(5,7),10); if(!_smo[mo])return;
+      var p=_cpn2(r.product||''); if(!p) return;
+      o[p]=(o[p]||0)+(wantQty?(Number(r.qty)||0):(Number(r.amount)||0)); });
+  }catch(e){} return o; };
+  document.getElementById('ov-cons-prods').innerHTML = renderProdList(mergeProd(_ovSpanProds(CONS,true,spanMs),_ovPendProds(spanMs,true,false)), _ovSpanProds(CONS,true,prevMs), COLS, 'cons', mergeProd(_ovSpanQty(CONS,true,spanMs),_ovPendProds(spanMs,true,true)), _ovSpanQty(CONS,true,prevMs));
+  document.getElementById('ov-dev-prods').innerHTML  = renderProdList(mergeProd(_ovSpanProds(DEVICE,false,spanMs),_ovPendProds(spanMs,false,false)), _ovSpanProds(DEVICE,false,prevMs), COLSD, 'dev', mergeProd(_ovSpanQty(DEVICE,false,spanMs),_ovPendProds(spanMs,false,true)), _ovSpanQty(DEVICE,false,prevMs));
 }
 
 // ── 종합 화면 드릴다운(클릭 상세조회) ──────────────────────────────

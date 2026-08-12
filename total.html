@@ -2941,6 +2941,9 @@ function _spMakePendNote(rows){
       var m=+d.slice(5,7);
       if(m>=1&&m<=6) inH1++; else { out++; outAmt+=(+r.amount||0); }
     });
+    // 전월 이월 조정도 하반기(7월~) 건이면 함께 빼야 다른 메뉴의 '미반영'과 금액이 갈리지 않는다
+    (ILBO_CARRY||[]).forEach(function(c){ var ym=String(c.ym||''); if(ym.slice(0,4)!=='2026') return;
+      var m=parseInt(ym.slice(5,7),10); if(m>=7&&m<=12) outAmt+=(+c.amount||0); });
     if(!inH1&&out) return '미반영 '+out+'건('+(outAmt/1e8).toFixed(1)+'억)은 3분기 이후 예정분이라 1H26 표에는 반영되지 않습니다.';
     return '';
   }catch(e){ return ''; }
