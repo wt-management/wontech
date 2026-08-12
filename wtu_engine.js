@@ -131,8 +131,10 @@ function aggDevice2026(rows26){
     var qtyForExcl=qtyRaw>0?qtyRaw:1;               // 저단가 제외 판정용(빈칸=1로 가정해 판정만)
     var qty=qtyRaw>0?qtyRaw:0;                      // 실제 대수: 빈 수량은 0(세지 않음, 재무 원본 기준) — 금액은 아래서 그대로 반영
     var mo=monthNum(r['월']); var prod=(r['구분#4']||'').trim();
-    // 저단가(부속·소액) 행은 제품 랭킹·대수만 어지럽힌다. 전에는 통째로 버려
-    // 금액까지 사라졌고 국내 합계가 회계보다 1.13억 비었다 → 금액은 살리고 품목·대수에서만 뺀다.
+    // 단가 100만원 미만 = 장비가 아니라 부속·소액 조정이다(실측 445건 1.13억: 의료기기 9,296만,
+    // Oligio 부속 1,935만, 1~2원짜리 잔액조정 등). 장비 랭킹·대수에는 넣으면 안 되지만
+    // 일보는 이 금액을 '국내영업-제품'에 넣으므로 금액까지 버리면 국내 합계가 1.13억 빈다.
+    // → 금액은 살리고 품목·대수에서만 뺀다. 월별 상세에는 '의료기기·부속(소액)' 으로 묶는다.
     var _low=false;
     if(/hair|헤어/i.test(prod)) prod='Hair Beam';
     else if(amt>0 && amt/qtyForExcl<1000000) _low=true;
@@ -142,7 +144,7 @@ function aggDevice2026(rows26){
     if(prod&&!_low){ products[prod]=(products[prod]||0)+amt; prodQty[prod]=(prodQty[prod]||0)+qty; }
     if(mo&&prod&&!_low){ prodMo[prod]=prodMo[prod]||{}; prodMo[prod][mo]=(prodMo[prod][mo]||0)+amt;
       prodMoQty[prod]=prodMoQty[prod]||{}; prodMoQty[prod][mo]=(prodMoQty[prod][mo]||0)+qty; }
-    if(mo&&_low){ prodMo['기타 소액']=prodMo['기타 소액']||{}; prodMo['기타 소액'][mo]=(prodMo['기타 소액'][mo]||0)+amt; }
+    if(mo&&_low){ var _LK='의료기기·부속(소액)'; prodMo[_LK]=prodMo[_LK]||{}; prodMo[_LK][mo]=(prodMo[_LK][mo]||0)+amt; }
     if(name){ var dh=devHosp[name]; if(!dh){ dh={y2026:0,orders26:0,prodsAll:{},prods2026:{},m2026:{},txns2026:[],lastDate:'',sales:''}; devHosp[name]=dh; }
       dh.y2026+=amt; dh.orders26++;
       if(prod&&!_low){ dh.prodsAll[prod]=(dh.prodsAll[prod]||0)+amt; dh.prods2026[prod]=(dh.prods2026[prod]||0)+amt; }
