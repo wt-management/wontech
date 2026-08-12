@@ -1559,7 +1559,7 @@ const SUPABASE_KEY='sb_publishable_aPMOOWAlyJlMcP1ZM_gpPA_jlrcvCRd';
 const _sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 let _canPortfolio=false;   // Sales Portfolio 메뉴 열람 권한(이관 전 기준 유지)
-let CONS={}, DEVICE={}, INTL={}, PENDING=[], TARGETS=[], ILBO_PEND=[], _user=null;
+let CONS={}, DEVICE={}, INTL={}, PENDING=[], TARGETS=[], ILBO_PEND=[], ILBO_CARRY=[], _user=null;
 let SALEST=[], REGMAP={pair:{},name:{},country:{}};   // 매출목표 + 거래처→지역 매핑
 let _ovChart=null;
 const DOM_BLUE='#2563eb', INTL_TEAL='#0d9488', DEV_PURPLE='#7c3aed', CONS_CYAN='#0891b2';
@@ -1777,7 +1777,7 @@ async function loadAll(){
     }catch(_ae){ console.warn('A/S 이동 실패',_ae); }
   }catch(e){ console.warn('cons_cache load', e); _loadErr=true; }
   try{ const {data:pd}=await _sb.from('pending_sales').select('*'); PENDING=pd||[]; }catch(e){ PENDING=[]; }
-  try{ const {data:ip}=await _sb.from('cons_cache').select('data').eq('key','ilbo_pending').maybeSingle(); ILBO_PEND=((ip&&ip.data&&ip.data.rows)||[]).filter(function(p){return p.status!=='반영됨'&&p.status!=='취소';}); }catch(e){ ILBO_PEND=[]; }
+  try{ const {data:ip}=await _sb.from('cons_cache').select('data').eq('key','ilbo_pending').maybeSingle(); ILBO_PEND=((ip&&ip.data&&ip.data.rows)||[]).filter(function(p){return p.status!=='반영됨'&&p.status!=='취소';}); ILBO_CARRY=(ip&&ip.data&&ip.data.carry)||[]; }catch(e){ ILBO_PEND=[]; ILBO_CARRY=[]; }
   try{ const {data:td}=await _sb.from('targets').select('id,data'); TARGETS=(td||[]).map(r=>r.data); }catch(e){ TARGETS=[]; }
   try{ const {data:stc}=await _sb.from('cons_cache').select('data').eq('key','sales_targets').maybeSingle(); if(stc&&stc.data&&Array.isArray(stc.data.rows)) SALEST=stc.data.rows; }catch(e){}
   if(!SALEST.length){ try{ const {data:st}=await _sb.from('sales_targets').select('year,month,dept,item,amount'); SALEST=st||[]; }catch(e){ SALEST=[]; } }
@@ -1856,6 +1856,18 @@ function _pendingAgg(yr){
     var mo=d.getMonth()+1, amt=Number(p.amount||0);
     if(p.region==='해외'){ agg.intlMonthly[mo]=(agg.intlMonthly[mo]||0)+amt; agg.intlTotal+=amt; agg.intlCount++; agg.intlCountMo[mo]=(agg.intlCountMo[mo]||0)+1; }
     else { var it=_pendKrItem(p.product); if(it==='소모품'){ agg.consMonthly[mo]=(agg.consMonthly[mo]||0)+amt; if(p.product) agg.consProducts[p.product]=(agg.consProducts[p.product]||0)+amt; } else { agg.devMonthly[mo]=(agg.devMonthly[mo]||0)+amt; if(p.product) agg.devProducts[p.product]=(agg.devProducts[p.product]||0)+amt; } agg.total+=amt; agg.count++; agg.countMo[mo]=(agg.countMo[mo]||0)+1; }
+  });
+  // 전월 이월 조정 — 마감된 달의 ④ 납품(선적) 잔액(회계가 납품보다 앞서 잡히면 음수).
+  // 일보는 이 값을 다음 달 '① 누적매출(누적회계+전월 납품)' 에 녹여 넘기므로,
+  // 여기서 더해야 전사 실적이 일보 ⑨ 연간 누적 예상과 같아진다. 건수(count)는 실제 미반영 건이 아니라 세지 않는다.
+  (ILBO_CARRY||[]).forEach(function(c){
+    var ym=String(c.ym||''); if(ym.slice(0,4)!==String(yr)) return;
+    var mo=parseInt(ym.slice(5,7),10), amt=Number(c.amount||0);
+    if(!(mo>=1&&mo<=12)||!amt) return;
+    if(c.region==='해외'){ agg.intlMonthly[mo]=(agg.intlMonthly[mo]||0)+amt; agg.intlTotal+=amt; return; }
+    if(c.item==='소모품') agg.consMonthly[mo]=(agg.consMonthly[mo]||0)+amt;
+    else agg.devMonthly[mo]=(agg.devMonthly[mo]||0)+amt;
+    agg.total+=amt;
   });
   return agg;
 }
