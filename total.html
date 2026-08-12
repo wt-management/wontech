@@ -411,6 +411,7 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .gx-head-r{display:flex;align-items:baseline;gap:14px}
 .gx-big{font-size:44px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .gx-head-s{font-size:16px;color:#37414f}
+.gx-rec{font-size:12.5px;color:#5b7591}
 .gx-head-s b{color:#141c28;font-weight:700}
 .gx-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:10px;margin-bottom:14px}
 .gx-fact{background:#f7f9fc;border:1px solid #dde5ef;border-radius:10px;padding:9px 14px;display:flex;flex-direction:column;gap:2px}
@@ -3528,7 +3529,11 @@ function renderGoals(){
   const items=[];
   items.push({label:'국내 제품',g:'국내',dk:'국내영업|제품',act:sumMo(DEVICE.monthly2026,f,t),pnd:sumMo(pend.devMonthly,f,t),tgt:_tgt('국내영업','제품',f,t),act25:sumMo(DEVICE.monthly2025,f,t)});
   items.push({label:'국내 소모품',g:'국내',dk:'국내영업|소모품',act:sumMo(CONS.monthly2026,f,t),pnd:sumMo(pend.consMonthly,f,t),tgt:_tgt('국내영업','소모품',f,t),act25:sumMo(CONS.monthly2025,f,t)});
-  EXEC_REGS.forEach(rg=>items.push({label:'해외 '+rg,g:'해외',dk:'해외영업|'+rg,act:sumMo(regMo[rg],f,t),pnd:sumMo(ipend[rg],f,t),tgt:_tgt('해외영업',rg,f,t),act25:sumMo(regMo25[rg],f,t)}));
+  // EXEC_REGS 에만 없는 지역이 생기면 실적이 통째로 사라져 합계가 회계와 어긋난다.
+  // (오세아니아 +5.8억 누락, 반품·충당이 모인 '기타' −8.6억 누락 → 해외 합계가 2.8억 부풀려졌음)
+  // → 목록에 없는 지역은 데이터에서 찾아 뒤에 붙인다.
+  const _regsAll=EXEC_REGS.concat(Object.keys(regMo).filter(rg=>EXEC_REGS.indexOf(rg)<0&&sumMo(regMo[rg],f,t)!==0));
+  _regsAll.forEach(rg=>items.push({label:'해외 '+rg,g:'해외',dk:'해외영업|'+rg,act:sumMo(regMo[rg],f,t),pnd:sumMo(ipend[rg],f,t),tgt:_tgt('해외영업',rg,f,t),act25:sumMo(regMo25[rg],f,t)}));
   const dom=items.filter(x=>x.g==='국내'), intl=items.filter(x=>x.g==='해외');
   const S=(arr,k)=>arr.reduce((s,x)=>s+x[k],0);
   const totAct=S(items,'act'), totPnd=S(items,'pnd'), totTgt=S(items,'tgt');
@@ -3547,7 +3552,12 @@ function renderGoals(){
   let h='<div class="gx-head">'+
     '<div class="gx-head-l">전사 목표 달성률 <span class="gx-per">1~'+t+'월 누적</span></div>'+
     '<div class="gx-head-r"><span class="gx-big" style="color:'+achCol+'">'+(achC==null?'-':achC.toFixed(0)+'%')+'</span>'+
-      '<span class="gx-head-s">실적 <b>'+_w(totAct)+'</b> &nbsp;/&nbsp; 목표 <b>'+_w(totTgt)+'</b></span></div></div>'+
+      '<span class="gx-head-s">실적 <b>'+_w(totAct)+'</b> &nbsp;/&nbsp; 목표 <b>'+_w(totTgt)+'</b>'+
+        // 이 표는 목표가 잡힌 부문만 다룬다. 기타 사업부(서지컬·B2C·고객만족·결산조정)는 목표가 없어
+        // 빠지므로, 말없이 두면 회계 총액과 달라 보인다 → 잔차를 옆에 밝힌다.
+        (function(){ try{ var etc=sumMo(CONS.etcMonthly2026,f,t); if(Math.abs(etc)<1e7) return '';
+          return '<span class="gx-rec"> · 회계 <b>'+_w(totAct+etc)+'</b> <span style="color:#94a3b8">(기타 사업부 '+_w(etc)+' 별도 · 목표 미설정)</span></span>'; }catch(e){ return ''; } })()+
+      '</span></div></div>'+
     '<div class="gx-facts">'+
       '<div class="gx-fact"><span class="l">100%까지 필요</span><span class="v" style="color:'+(need>0?'#c0392b':'#0f766e')+'">'+(need>0?_w(need):'달성')+'</span></div>'+
       '<div class="gx-fact"><span class="l">예정 포함 전망</span><span class="v">'+(achP==null?'-':achP.toFixed(0)+'%')+'</span></div>'+
