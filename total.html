@@ -3953,9 +3953,11 @@ function renderLeaderboard(){
     else { o.tot25+=r.total||0; o.cust25+=r.clients||0; }
   }); };
   iadd(INTL.reps,26); iadd((INTL.data2025||{}).reps,25);
+  // 해외 담당자 대수 — 전에는 null 이라 리더보드에만 대수가 비어 있었다
+  const _lbQ=_intlRepQty(INTL,f,t), _lbQ25=_intlRepQty(INTL.data2025||{},f,t);
   const rowsI=Object.values(im).map(o=>{ const v=Object.keys(o.m26).length?sumMo(o.m26,f,t):(o.tot26||0), pv=Object.keys(o.m25).length?sumMo(o.m25,f,t):(o.tot25||0);
     const tp=Object.entries(o.prods).sort((a,b)=>b[1]-a[1])[0];
-    return {n:o.n,team:'해외',v,pv,d:v-pv,yoy:pct(v,pv),cust:o.cust,cust25:o.cust25,qty:null,top:tp?tp[0]:'',ctry:o.ctry,m26:o.m26,m25:o.m25,prods:o.prods};
+    return {n:o.n,team:'해외',v,pv,d:v-pv,yoy:pct(v,pv),cust:o.cust,cust25:o.cust25,qty:(_lbQ[o.n]||0),qty25:(_lbQ25[o.n]||0),top:tp?tp[0]:'',ctry:o.ctry,m26:o.m26,m25:o.m25,prods:o.prods};
   });
   _lbRows=[];   // 담당자 드릴 캐시(인덱스 onclick — 이름 인젝션 방지)
   const mk=(rows,hasQty)=>{ rows=rows.filter(x=>x.v>0).sort((a,b)=>b.d-a.d); const maxAbs=Math.max(1,...rows.map(x=>Math.abs(x.d)));
@@ -3968,7 +3970,7 @@ function renderLeaderboard(){
       (hasQty?'<td class="r">'+_num(x.qty)+'대</td>':'<td class="r">'+(x.ctry||0)+'개국</td>')+'<td class="muted" style="font-size:11px">'+esc(x.top||'')+'</td></tr>'; }).join('');
     return '<div class="lb-wrap"><table class="lb-table">'+head+body+'</table></div>'; };
   document.getElementById('lb-dom').innerHTML=mk(rowsD,true);
-  document.getElementById('lb-intl').innerHTML=mk(rowsI,false);
+  document.getElementById('lb-intl').innerHTML=mk(rowsI,true);
 }
 
 // ── P5 거래처 신규·이탈·집중도 ──
