@@ -185,6 +185,12 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .qd-hd>span:nth-child(5){padding-left:12px}
 .qd-hd>span:last-child{padding-right:12px}
 .qd-hd span:nth-child(2),.qd-hd span:nth-child(3),.qd-hd span:nth-child(4),.qd-hd span:nth-child(6),.qd-hd span:nth-child(7),.qd-hd span:nth-child(8){text-align:right}
+/* 윈도우 기본 폰트엔 국기 글리프가 없어 🇰🇷 가 'KR' 글자로 나온다.
+   지역표시자(U+1F1E6~1F1FF)에만 적용되는 국기 전용 폰트를 얹는다(78KB, 다른 글자엔 영향 없음). */
+@font-face{font-family:'WT Flags';font-style:normal;font-weight:400;font-display:swap;
+  unicode-range:U+1F1E6-1F1FF;
+  src:url('https://cdn.jsdelivr.net/npm/country-flag-emoji-polyfill@0.1/dist/TwemojiCountryFlags.woff2') format('woff2')}
+.qf{font-family:'WT Flags','Apple Color Emoji','Segoe UI Emoji',sans-serif;font-size:13px;line-height:1;margin-right:6px;letter-spacing:0}
 .qd-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr) 96px 78px 74px);gap:0 26px}
 .qd-c{display:grid;grid-template-columns:subgrid;grid-column:span 4;align-items:center;padding:6px 12px;border-bottom:1px solid #f4f7fa;font-size:13px;cursor:pointer}
 .qd-c:hover{background:#f8fafc}
@@ -200,6 +206,12 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
    컨테이너에 좌우 padding을 주면 트랙이 안쪽으로 밀려 아래 항목과 12px 어긋나므로,
    부모 트랙을 그대로 물려받고(subgrid) 여백은 각 칸에 준다. */
 .qd-gh{grid-column:1/-1;display:grid;grid-template-columns:subgrid;align-items:center;background:#f8fafc;font-weight:800;padding:0;font-size:13px}
+/* 담당자별: 왼쪽=회사 직원 / 오른쪽=대리점 이라 그룹 머리도 반쪽만 차지한다 */
+.qd-gh.half{grid-column:span 4}
+/* 담당자별은 당기·전년에 대수를 같은 줄에 붙이고, 증감을 그 사이에 둔다 */
+.qd-grid.rep,.qd-hd.rep{grid-template-columns:repeat(2,minmax(0,1fr) 112px 62px 112px)}
+.qd-grid.rep .v b,.qd-grid.rep .p b{display:inline;font-size:10.5px;color:#8fa7bf;font-weight:600;margin-left:5px}
+.qd-grid.rep .p{color:#64748b}
 .qd-gh>*{padding-top:7px;padding-bottom:7px}
 .qd-gh>*:first-child{padding-left:12px}
 .qd-gh .y{padding-right:12px}
@@ -1428,7 +1440,7 @@ document.getElementById('wt-fb-send').onclick=function(){var t=document.getEleme
         <div class="qtab" id="qt-rep" onclick="qState.tab='rep';syncTab();renderQuery()">담당자별</div>
         <div class="qtab" id="qt-cust" onclick="qState.tab='cust';syncTab();renderQuery()">거래처별</div>
       </div>
-      <div class="qd-hd">
+      <div class="qd-hd" id="q-head-row">
         <span id="qh-name">제품</span><span>당기</span><span>전년</span><span>YoY</span>
         <span class="d2" id="qh-name2">제품</span><span class="d2">당기</span><span class="d2">전년</span><span class="d2">YoY</span>
       </div>
@@ -1564,6 +1576,12 @@ const _sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 let _canPortfolio=false;   // Sales Portfolio 메뉴 열람 권한(이관 전 기준 유지)
 let CONS={}, DEVICE={}, INTL={}, PENDING=[], TARGETS=[], ILBO_PEND=[], ILBO_CARRY=[], _user=null;
+const STAFF_SET={};   // 회사 직원 이름 집합(국내 인사명단 + 사번이 붙은 해외 담당자)
+// 해외 reps 키는 '244.김한결' 처럼 사번이 붙어 있다 → 사람이면 직원. 법인·수익인식 등은 제외.
+function _seedIntlStaff(){ try{ Object.keys((INTL&&INTL.reps)||{}).forEach(function(k){
+  if(!/^\s*\d+\./.test(k)) return; const n=_repBase(k);
+  if(!n||/원텍|수익인식|법인|welo|미분류|기타/i.test(n)) return; STAFF_SET[n]=1; }); }catch(e){} }
+function _isStaff(n){ return !!STAFF_SET[String(n||'').trim()]; }
 let SALEST=[], REGMAP={pair:{},name:{},country:{}};   // 매출목표 + 거래처→지역 매핑
 let _ovChart=null;
 const DOM_BLUE='#2563eb', INTL_TEAL='#0d9488', DEV_PURPLE='#7c3aed', CONS_CYAN='#0891b2';
@@ -1769,6 +1787,7 @@ async function loadAll(){
     DEVICE=(d.data&&d.data.data)||{};
     const ib=(i.data&&i.data.data)||{};
     INTL=Object.assign({}, ib.INTL2026||{}, {data2025:ib.INTL2025||{}, updatedAt:ib.updatedAt||''});
+    _seedIntlStaff();
     // 해외 A/S소모품 → 해외영업서 빼고 기타(고객만족)로 이동 (회계팀 사업부 정합 · 전사 총액 불변 · 재업로드 후엔 A/S 부재로 자동 무동작)
     try{
       var _asMo=(INTL.prodMo&&INTL.prodMo['A/S소모품'])?Object.assign({},INTL.prodMo['A/S소모품']):{};
@@ -1782,6 +1801,9 @@ async function loadAll(){
   }catch(e){ console.warn('cons_cache load', e); _loadErr=true; }
   try{ const {data:pd}=await _sb.from('pending_sales').select('*'); PENDING=pd||[]; }catch(e){ PENDING=[]; }
   try{ const {data:ip}=await _sb.from('cons_cache').select('data').eq('key','ilbo_pending').maybeSingle(); ILBO_PEND=((ip&&ip.data&&ip.data.rows)||[]).filter(function(p){return p.status!=='반영됨'&&p.status!=='취소';}); ILBO_CARRY=(ip&&ip.data&&ip.data.carry)||[]; }catch(e){ ILBO_PEND=[]; ILBO_CARRY=[]; }
+  // 담당자별 탭에서 회사 직원과 대리점을 가르는 기준 — 국내영업 인사명단
+  try{ const {data:kt}=await _sb.from('cons_cache').select('data').eq('key','kor_team').maybeSingle();
+    ((kt&&kt.data&&kt.data.members)||[]).forEach(function(m){ const n=String(m&&m.name||'').trim(); if(n) STAFF_SET[n]=1; }); }catch(e){}
   try{ const {data:td}=await _sb.from('targets').select('id,data'); TARGETS=(td||[]).map(r=>r.data); }catch(e){ TARGETS=[]; }
   try{ const {data:stc}=await _sb.from('cons_cache').select('data').eq('key','sales_targets').maybeSingle(); if(stc&&stc.data&&Array.isArray(stc.data.rows)) SALEST=stc.data.rows; }catch(e){}
   if(!SALEST.length){ try{ const {data:st}=await _sb.from('sales_targets').select('year,month,dept,item,amount'); SALEST=st||[]; }catch(e){ SALEST=[]; } }
@@ -2693,6 +2715,16 @@ function syncTab(){
   var _qhl={prod:'제품',geo:'국가·지역',rep:'담당자',cust:'거래처'}[qState.tab];
   document.getElementById('qh-name').textContent=_qhl;
   var _qh2=document.getElementById('qh-name2'); if(_qh2) _qh2.textContent=_qhl;   // 2열 배치의 오른쪽 헤더
+  // 담당자별만 '당기 · 증감 · 전년' 순서 — 열 폭과 머리글을 함께 바꾼다
+  var _rep=(qState.tab==='rep');
+  var _hd=document.getElementById('q-head-row'), _rw=document.getElementById('q-rows');
+  if(_hd){ _hd.classList.toggle('rep',_rep);
+    var s=_hd.children;
+    if(s.length>=8){ s[1].textContent=_rep?'당기':'당기'; s[2].textContent=_rep?'증감':'전년'; s[3].textContent=_rep?'전년':'YoY';
+                     s[5].textContent='당기'; s[6].textContent=_rep?'증감':'전년'; s[7].textContent=_rep?'전년':'YoY'; }
+    if(s.length>=8){ s[0].textContent=_rep?'회사 직원':_qhl; s[4].textContent=_rep?'대리점·기타':_qhl; }
+  }
+  if(_rw) _rw.classList.toggle('rep',_rep);
   qState.open={};
 }
 /* ===== Sales Portfolio (구 sales-portfolio 사이트 이관) — 전역 충돌 방지를 위해 모듈로 격리 ===== */
@@ -3069,7 +3101,7 @@ function renderQuery(){
   const _gvAll=G.reduce((s2,x)=>s2+Math.max(0,x.val),0);   // 구성비 분모(조회 항목 합계)
   const top=G.filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,5), bot=G.filter(x=>x.d<0).sort((a,b)=>a.d-b.d).slice(0,5);
   // 반쪽 카드를 둘로 나눈 칸이라 폭이 230px 남짓 — 발산막대까지 넣으면 이름이 설 자리가 없다
-  const drow=x=>'<div class="dl-row"><span class="dl-dot" style="background:'+_yoyCol(x.y)+'"></span><span class="dl-name">'+esc(x.name)+'</span><span class="dl-d" style="color:'+_yoyCol(x.y)+'">'+fmtD(x.d)+'</span><span class="dl-sub">'+(x.y===null?'신규':arrow(x.y))+'</span></div>';
+  const drow=x=>'<div class="dl-row">'+(_qFlag(x.name)||'<span class="dl-dot" style="background:'+_yoyCol(x.y)+'"></span>')+'<span class="dl-name">'+esc(x.name)+'</span><span class="dl-d" style="color:'+_yoyCol(x.y)+'">'+fmtD(x.d)+'</span><span class="dl-sub">'+(x.y===null?'신규':arrow(x.y))+'</span></div>';
   document.getElementById('q-dual').innerHTML=dualList(top,bot,drow);
   // 축마다 커버리지가 달라(기타 사업부·담당자 미지정 등) 탭을 옮기면 총액이 달라 보임
   // → 회계 총액과의 잔차를 '미분류' 한 줄로 명시해 모든 탭이 같은 합계로 떨어지게 함
@@ -3081,18 +3113,25 @@ function renderQuery(){
       d:rv-rp,y:pct(rv,rp),
       detail:'<div style="font-size:12.5px;color:#4a5666;line-height:1.9">이 축으로 분류되지 않은 잔여분입니다. 회계 총액 <b>'+fmtW(_accF)+'</b>에서 위 항목 합계 <b>'+fmtW(aSum)+'</b>을 뺀 값으로,<br>기타 사업부(의료기기·서지컬·B2C·고객만족)나 담당자·거래처가 지정되지 않은 거래가 여기에 들어갑니다.</div>'});
   })();
-  const _qrow=(x,idx)=>{
+  const _qrow=(x,idx,noDet)=>{
     const contrib=x.d>0?Math.round(x.d/totGrowth*100):0;
     // 한 줄에 2개씩 배치 · 막대 제거(구성비·성장기여는 숫자로) — 여백을 줄이고 한 화면에 더 담기 위함
     const share=_gvAll>0?(x.val/_gvAll*100):0;
     const row='<div class="qd-c" onclick="qToggle('+idx+')">'+
-      '<span class="n"><span class="dl-dot" style="display:inline-block;margin-right:6px;background:'+_yoyCol(x.y)+'"></span>'+esc(x.name)+
+      // 국가·지역 탭은 색 네모 대신 국기 (증감 색은 오른쪽 YoY 칸에서 이미 보인다)
+      '<span class="n">'+(_qFlag(x.name)||'<span class="dl-dot" style="display:inline-block;margin-right:6px;background:'+_yoyCol(x.y)+'"></span>')+esc(x.name)+
         ((x.tag&&qState.tab!=='prod')?' <span class="tg">'+esc(x.tag)+'</span>':'')+
         ' <span class="sh">'+share.toFixed(1)+'%'+(contrib>=5?' · 기여 '+contrib+'%':'')+'</span></span>'+
-      '<span class="v">'+fmtW(x.val)+(x.qty>0?'<b'+(x.qtyNote?' title="'+esc(x.qtyNote)+' 기준"':'')+'>'+x.qty.toLocaleString()+'대</b>':'')+'</span>'+
-      '<span class="p">'+fmtW(x.prev||0)+'</span>'+
-      '<span class="y" style="color:'+_yoyCol(x.y)+'">'+(x.y===null?'신규':arrow(x.y))+'</span>'+
+      // 담당자별은 '당기 · 증감 · 전년' 한 줄 (대수를 금액 옆에 붙임)
+      (qState.tab==='rep'
+        ? '<span class="v">'+fmtW(x.val)+(x.qty>0?'<b title="국내 장비 기준">'+x.qty.toLocaleString()+'대</b>':'')+'</span>'+
+          '<span class="y" style="color:'+_yoyCol(x.y)+'">'+(x.y===null?'신규':arrow(x.y))+'</span>'+
+          '<span class="p">'+fmtW(x.prev||0)+(x.qtyPrev>0?'<b>'+x.qtyPrev.toLocaleString()+'대</b>':'')+'</span>'
+        : '<span class="v">'+fmtW(x.val)+(x.qty>0?'<b'+(x.qtyNote?' title="'+esc(x.qtyNote)+' 기준"':'')+'>'+x.qty.toLocaleString()+'대</b>':'')+'</span>'+
+          '<span class="p">'+fmtW(x.prev||0)+'</span>'+
+          '<span class="y" style="color:'+_yoyCol(x.y)+'">'+(x.y===null?'신규':arrow(x.y))+'</span>')+
     '</div>';
+    if(noDet) return row;
     return row+(qState.open[idx]?'<div class="det">'+(x.detail||'상세 없음')+'</div>':'');
   };
   // 소액 항목 접기: 하위 항목 합이 전체의 3% 미만이면 한 줄로 묶음(최소 5개는 항상 표시)
@@ -3136,6 +3175,33 @@ function renderQuery(){
         '<span class="y" style="color:'+_yoyCol(gy)+'">'+(gy===null?'신규':arrow(gy))+'<b>'+fmtD(gd)+'</b></span></div>';
       _rowsHtml+=_qFold(list,idxOf,gname);
     });
+  } else if(qState.tab==='rep'){
+    // 왼쪽=회사 직원 / 오른쪽=대리점. 2열 그리드라 좌우를 번갈아 채워야 열이 갈린다.
+    // 김한결은 요청에 따라 목록에서 빼되(태국법인 물량이라 순위가 묻힘) 합계·비중 분모에는 남긴다.
+    const idxOf=new Map(G.map((x,i)=>[x,i]));
+    // 미분류·수익인식처럼 사람도 대리점도 아닌 항목은 오른쪽에 함께 둔다(빼면 두 소계 합이 전사와 안 맞음)
+    const vis=G.filter(x=>x.name!=='김한결');
+    const staff=vis.filter(x=>x.grp==='직원').sort((a,b)=>b.val-a.val);
+    const deal =vis.filter(x=>x.grp!=='직원').sort((a,b)=>b.val-a.val);
+    const excl=G.filter(x=>x.name==='김한결');
+    const gh=(title,list,col,note)=>{ const v=list.reduce((s,x)=>s+x.val,0), p=list.reduce((s,x)=>s+(x.prev||0),0),
+        q=list.reduce((s,x)=>s+(x.qty||0),0), qp=list.reduce((s,x)=>s+(x.qtyPrev||0),0), y=pct(v,p);
+      return '<div class="qd-gh half" style="border-top:2px solid '+col+'">'+
+        '<span style="color:'+col+';padding-left:12px"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+col+';margin-right:7px"></span>'+title+
+          ' <span style="font-size:10.5px;font-weight:500;color:#94a3b8">'+list.length+'명'+(note||'')+'</span></span>'+
+        '<span class="v">'+fmtW(v)+(q>0?'<b>'+q.toLocaleString()+'대</b>':'')+'</span>'+
+        '<span class="y" style="color:'+_yoyCol(y)+'">'+(y===null?'신규':arrow(y))+'</span>'+
+        '<span class="p">'+fmtW(p)+(qp>0?'<b>'+qp.toLocaleString()+'대</b>':'')+'</span></div>'; };
+    const blank='<div class="qd-c" style="visibility:hidden;pointer-events:none"><span class="n">·</span><span class="v"></span><span class="y"></span><span class="p"></span></div>';
+    _rowsHtml=gh('회사 직원',staff,'#2563eb',excl.length?' · 김한결 '+fmtW(excl[0].val)+' 별도':'')+gh('대리점·기타',deal,'#b45309','');
+    const n=Math.max(staff.length,deal.length);
+    for(let i=0;i<n;i++){
+      // 상세는 행 뒤에 전폭으로 들어가 좌우 짝이 어긋나므로, 한 쌍을 먼저 깔고 그 아래 붙인다
+      _rowsHtml += (staff[i]?_qrow(staff[i],idxOf.get(staff[i]),true):blank)
+                 + (deal[i] ?_qrow(deal[i], idxOf.get(deal[i]), true):blank);
+      [staff[i],deal[i]].forEach(function(x){ if(x&&qState.open[idxOf.get(x)])
+        _rowsHtml+='<div class="det"><b>'+esc(x.name)+'</b>'+(x.detail||'')+'</div>'; });
+    }
   } else {
     _rowsHtml=_qFold(G,new Map(G.map((x,i)=>[x,i])),qState.tab);
   }
@@ -3373,6 +3439,19 @@ function _qCustFlow(){
     '</div>';
   }catch(e){ return ''; }
 }
+// 국가명 → 국기. 지역표시자 2글자(U+1F1E6~1F1FF) 조합이라 위 'WT Flags' 폰트로 그려진다.
+const _FLAG={'한국':'KR','국내':'KR','대한민국':'KR','국내법인':'KR','일본':'JP','중국':'CN','대만':'TW','홍콩':'HK',
+ '태국':'TH','베트남':'VN','싱가폴':'SG','싱가포르':'SG','말레이시아':'MY','인도네시아':'ID','필리핀':'PH','미얀마':'MM','인도':'IN',
+ '네팔':'NP','스리랑카':'LK','파키스탄':'PK','호주':'AU','뉴질랜드':'NZ',
+ '미국':'US','캐나다':'CA','멕시코':'MX','브라질':'BR','칠레':'CL','콜롬비아':'CO','에콰도르':'EC','코스타리카':'CR','도미니카공화국':'DO',
+ '영국':'GB','독일':'DE','프랑스':'FR','스페인':'ES','네덜란드':'NL','벨기에':'BE','스위스':'CH','오스트리아':'AT','스웨덴':'SE',
+ '폴란드':'PL','체코':'CZ','헝가리':'HU','슬로베니아':'SI','에스토니아':'EE','사이프러스':'CY','러시아':'RU','튀르키예':'TR','터키':'TR',
+ 'UAE':'AE','아랍에미리트':'AE','사우디아라비아':'SA','사우디':'SA','카타르':'QA','쿠웨이트':'KW','바레인':'BH','오만':'OM',
+ '이스라엘':'IL','이란':'IR','아제르바이젠':'AZ','알제리':'DZ','모로코':'MA','남아공':'ZA'};
+function _qFlag(name){
+  const cc=_FLAG[String(name||'').trim()]; if(!cc) return '';
+  return '<span class="qf">'+String.fromCodePoint(0x1F1E6+cc.charCodeAt(0)-65, 0x1F1E6+cc.charCodeAt(1)-65)+'</span>';
+}
 function _qGeo(){
   const f=qState.f,t=qState.t;
   const out=[];
@@ -3386,7 +3465,7 @@ function _qGeo(){
         (incDev?miniBar('장비',devV,Math.max(consV,devV,1),DEV_PURPLE):'')+(incCons?miniBar('소모품',consV,Math.max(consV,devV,1),CONS_CYAN):'')+'</div>'+
         '<div class="col-md-6"><div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px">국내 제품 Top</div>'+_domTopProds(f,t,qState.cat)+'</div></div>';
       const _dq=incDev?Object.values(DEVICE.prodMoQty2026||{}).reduce((s,mo)=>s+sumMo(mo,f,t),0):0;
-      out.push({name:'🇰🇷 국내',tag:'전체',val:dom,prev:domPrev,qty:_dq,color:DOM_BLUE,detail});
+      out.push({name:'한국',tag:'전체',val:dom,prev:domPrev,qty:_dq,color:DOM_BLUE,detail});
     }
   }
   if(qState.ch!=='dom'){
@@ -3440,6 +3519,11 @@ function _qReps(){
       const yq=+((r&&r.qty2026)||0); if(!yq)return;
       const yv=sumMo((r&&r.m2026)||{},1,12), pv=sumMo((r&&r.m2026)||{},f,t);
       out[nm].qtyDev=(out[nm].qtyDev||0)+(yv>0?Math.round(yq*(pv/yv)):0); });
+    // 전년 대수도 같은 방식으로 안분 — 당기만 대수가 있으면 비교가 안 된다
+    if(incDev) Object.entries(DEVICE.reps||{}).forEach(([n,r])=>{ const nm=_repBase(n); if(!out[nm])return;
+      const yq=+((r&&r.qty2025)||0); if(!yq)return;
+      const yv=sumMo((r&&r.m2025)||{},1,12), pv=sumMo((r&&r.m2025)||{},f,t);
+      out[nm].qtyDevPrev=(out[nm].qtyDevPrev||0)+(yv>0?Math.round(yq*(pv/yv)):0); });
     if(incDev){ const p=Object.entries(DEVICE.reps||{}).map(([n,r])=>({n:_repBase(n),v:sumMo((r&&r.m2025)||{},f,t)})); p.forEach(r=>{ if(!(r.v>0)) return; if(!out[r.n]) add(r.n,'dom',0); out[r.n].domPrev+=r.v; }); }
   }
   if(qState.ch!=='dom'){
@@ -3455,7 +3539,11 @@ function _qReps(){
       miniBar('국내',r.dom,Math.max(r.dom,r.intl,1),DOM_BLUE)+miniBar('해외',r.intl,Math.max(r.dom,r.intl,1),INTL_TEAL)+'</div>'+
       '<div class="col-md-7"><div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px">제품별 (상위)</div>'+
       (prods.length?prods.slice(0,5).map(p=>miniBar(p[0],p[1],pmax,'#0f766e')).join(''):'<span style="font-size:12px;color:#94a3b8">데이터 없음</span>')+'</div></div>';
-    return {name:r.name,val,prev,qty:r.qtyDev||0,qtyNote:'국내 장비',color:'#7c3aed',detail};
+    // 회사 직원 / 대리점, 그리고 담당 채널(국내·해외)을 붙여 표에서 바로 구분되게 한다
+    const grp=_isStaff(r.name)?'직원':'대리점';
+    const ch=(r.dom>0&&r.intl>0)?'국내·해외':(r.intl>0?'해외':'국내');
+    return {name:r.name,val,prev,qty:r.qtyDev||0,qtyPrev:r.qtyDevPrev||0,qtyNote:'국내 장비',
+      grp,tag:ch,color:'#7c3aed',detail};
   });
   return _qNegFold(arr,'명');
 }
