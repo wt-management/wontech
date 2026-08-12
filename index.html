@@ -7847,6 +7847,22 @@ function saveCDUBulk(){
   try{ bootstrap.Modal.getInstance(document.getElementById('cduBulkModal')).hide(); }catch(e){}
   renderCDU(); DB.save('logs').then(function(){ showToast(n+'곳 방문 예정 일괄 등록 완료', true); });
 }
+// 자동 불릿: 빈 칸 포커스 시 '- ', 엔터 시 새 줄 '- ' 자동, 빈 불릿에서 백스페이스로 삭제
+function _cduBullet(el){
+  if(!el || el._bulletOn) return; el._bulletOn=1; var P='- ';
+  el.addEventListener('focus', function(){ if(el.value===''){ el.value=P; try{ el.setSelectionRange(P.length,P.length); }catch(_){} } });
+  el.addEventListener('keydown', function(e){
+    if(e.key==='Enter' && !e.shiftKey && !e.isComposing){
+      e.preventDefault();
+      var s=el.selectionStart, en=el.selectionEnd, v=el.value, ins='\n'+P;
+      el.value=v.slice(0,s)+ins+v.slice(en); var pos=s+ins.length; el.setSelectionRange(pos,pos);
+    } else if(e.key==='Backspace' && el.selectionStart===el.selectionEnd){
+      var s2=el.selectionStart, v2=el.value, ls=v2.lastIndexOf('\n', s2-1)+1;
+      if(v2.slice(ls,s2)===P){ e.preventDefault(); var from=ls>0?ls-1:0; el.value=v2.slice(0,from)+v2.slice(s2); el.setSelectionRange(from,from); }
+    }
+  });
+  el.addEventListener('blur', function(){ var lines=el.value.split('\n'); while(lines.length && /^-\s*$/.test(lines[lines.length-1])) lines.pop(); el.value=lines.join('\n'); });
+}
 function openCDUVisit(id, copy){
   var v=id?(_cduVisits().find(x=>x.id===id)):null;
   var isNew=(!v||copy);
@@ -7868,6 +7884,7 @@ function openCDUVisit(id, copy){
   var dl=document.getElementById('cdu-hosp-list'); if(dl&&!dl.innerHTML&&CONS.hospitals){ dl.innerHTML=Object.keys(CONS.hospitals).slice(0,800).map(n=>'<option value="'+_cduEsc(n)+'">').join(''); }
   try{ _cduHospAuto(false); }catch(e){}
   try{ _cduFillSalesList(); _cduChipEditMode={proc:false,comp:false,chan:false}; _cduRenderChips(); var _mgr=(typeof _isMgr!=='undefined'&&_isMgr); document.querySelectorAll('#cduVisitModal .cdu-chipedit').forEach(function(b){b.style.display=_mgr?'inline':'none';}); }catch(e){}
+  try{ _cduBullet(document.getElementById('cd-fb')); _cduBullet(document.getElementById('cd-contact-profile')); }catch(e){}
   new bootstrap.Modal(document.getElementById('cduVisitModal')).show();
 }
 function openCDUVisitFor(name){ openCDUQuick(); var e=document.getElementById('cq-hosp'); if(e){ e.value=name||''; } }
