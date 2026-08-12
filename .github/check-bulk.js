@@ -15,9 +15,13 @@ const RATIO = 0.35;           // 또는 파일의 35% 넘게 지워지면
 
 const sh = c => { try { return execSync(c, { encoding: 'utf8' }); } catch (e) { return ''; } };
 
-// 비교 기준: 원격 main (없으면 직전 커밋)
+// 비교 기준
+//  · 내 PC(push 직전): origin/main = 아직 안 올라간 원격 상태 → 이번에 올릴 변화량이 나온다
+//  · GitHub Actions : 이미 올라간 뒤라 origin/main 이 HEAD 와 같다 → 그대로 두면 변화량 0으로
+//    무조건 통과해 버린다. 이때는 직전 커밋과 비교한다.
+const head = sh('git rev-parse HEAD').trim();
 let base = sh('git rev-parse --verify --quiet origin/main').trim();
-if (!base) base = sh('git rev-parse --verify --quiet HEAD~1').trim();
+if (!base || base === head) base = sh('git rev-parse --verify --quiet HEAD~1').trim();
 if (!base) process.exit(0);   // 첫 커밋이면 검사할 게 없다
 
 const stat = sh(`git diff --numstat ${base} HEAD`).trim();
@@ -37,9 +41,9 @@ stat.split('\n').forEach(line => {
   if (!file || add === '-' ) return;                    // 바이너리는 제외
   const d = parseInt(del, 10) || 0;
   if (!d) return;
-  const total = (sh(`git show ${base}:${file} 2>/dev/null`).match(/\n/g) || []).length || 1;
-  const pct = d / total;
-  if (d > LIMIT || pct > RATIO) hits.push({ file, add: parseInt(add, 10) || 0, del: d, pct });
+  const total = (sh(`git show ${base}:${file}`).match(/\n/g) || []).length;
+  const pct = total ? d / total : 0;                      // 새 파일(원본 없음)은 비율 판정을 하지 않는다
+  if (d > LIMIT || pct > RATIO) hits.push({ file, add: parseInt(add, 10) || 0, del: d, total, pct });
 });
 
 if (!hits.length) { console.log('대량 삭제 검사 통과'); process.exit(0); }
@@ -47,7 +51,8 @@ if (!hits.length) { console.log('대량 삭제 검사 통과'); process.exit(0);
 console.error('\n대량 삭제가 감지됐습니다 — 옛 파일 위에 덮어쓴 것은 아닌지 확인하세요.\n');
 hits.forEach(h => {
   console.error(`  ${h.file}`);
-  console.error(`    +${h.add.toLocaleString()} / -${h.del.toLocaleString()} 줄 (원본의 ${(h.pct * 100).toFixed(0)}% 삭제)`);
+  console.error(`    +${h.add.toLocaleString()} / -${h.del.toLocaleString()} 줄` +
+    (h.total ? ` (원본 ${h.total.toLocaleString()}줄의 ${(h.pct * 100).toFixed(0)}% 삭제)` : ''));
 });
 console.error('\n  · 최신 상태에서 작업한 게 맞나요?  git pull --rebase 후 다시 확인');
 console.error('  · 지워진 줄에 남이 고쳐둔 로직이 섞이지 않았나요?  git diff ' + base + ' HEAD -- <파일> | grep "^-"');
