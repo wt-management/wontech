@@ -151,9 +151,12 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 /* 분해 타일 — 마지막 요소라 margin-top:auto 로 카드 바닥에 붙어 좌우 카드 높이가 맞는다 */
 .qh-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(91,117,145,.16);border:1px solid rgba(91,117,145,.16);border-radius:10px;overflow:hidden;margin-top:12px}
 @media(max-width:640px){.qh-grid{grid-template-columns:repeat(2,1fr)}}
+/* 좌우 카드 높이를 맞추면 왼쪽에 남는 높이가 생긴다 → 타일이 그 공간을 먹어 아래 여백을 없앤다 */
+.qd-top .exec-hero .qh-grid{flex:1 1 auto;align-content:stretch}
 .qh-t{background:#fff;padding:9px 12px;display:flex;flex-direction:column;justify-content:center;min-height:56px}
 .qh-t .l{font-size:11px;font-weight:700;letter-spacing:.01em}
 .qh-t b{font-size:16px;font-weight:800;color:#1c2534;font-variant-numeric:tabular-nums;letter-spacing:-.01em;line-height:1.25}
+.qh-t b .y{font-size:11px;font-weight:700;color:#5b7591;letter-spacing:0}
 .qh-t .s{font-size:10.5px;color:#8fa7bf;font-weight:600}
 .qh-break{display:flex;flex-wrap:wrap;align-items:baseline;gap:5px 16px;margin-top:10px;padding-top:9px;border-top:1px solid rgba(91,117,145,.18)}
 .qh-it{font-size:12.5px;color:#5b7591;display:inline-flex;align-items:baseline;gap:5px;white-space:nowrap}
@@ -2991,26 +2994,42 @@ function _qHeroBreak(f,t,G){
       Object.keys(pm).forEach(function(k){ const o=pm[k], v=(o.dom||0)+(o.intl||0);
         if(o.cat==='소모품') cons+=v; else dev+=v; });
     }catch(e){}
+    // 전년 동기 — 장비/소모품은 2026과 같은 분류맵(제품명 기준)을 그대로 써야 축이 어긋나지 않는다
+    const dom25=sumMo(CONS.monthly2025,f,t)+sumMo(DEVICE.monthly2025,f,t);
+    const intl25=sumMo((INTL.data2025||{}).monthly,f,t);
+    const etc25=sumMo(CONS.etcMonthly2025,f,t);
+    let dev25=sumMo(DEVICE.monthly2025,f,t), cons25=sumMo(CONS.monthly2025,f,t);
+    try{ const I25=INTL.data2025||{}, pm25=I25.prodMo||{}, sc25=_scale(I25.monthly,f,t);
+      new Set([].concat(Object.keys(pm25),Object.keys(I25.products||{}))).forEach(function(n){
+        const v=pm25[n]?sumMo(pm25[n],f,t):(((I25.products||{})[n]||0)*sc25);
+        const cat=(INTL.prodCat&&INTL.prodCat[n])||_domCat(n);
+        if(cat==='소모품') cons25+=v; else dev25+=v; });
+    }catch(e){}
     const tot=dom+intl+etc; if(!(tot>0)) return '';
     const p=v=>Math.round(v/tot*100)+'%';
     const dc=dev+cons||1;
-    const tile=(lb,val,sub,col)=>'<div class="qh-t"><span class="l" style="color:'+col+'">'+lb+'</span>'+
-      '<b>'+fmtW(val)+'</b><span class="s">'+sub+'</span></div>';
+    // 값 옆에 전년비, 아랫줄에 비중과 전년 실액 — 임원이 "작년보다 잘했나"를 타일에서 바로 본다
+    const tile=(lb,val,share,prev,col)=>{ const y=pct(val,prev);
+      return '<div class="qh-t"><span class="l" style="color:'+col+'">'+lb+'</span>'+
+        '<b>'+fmtW(val)+(y===null?'':' <span class="y">'+arrow(y)+'</span>')+'</b>'+
+        '<span class="s">'+share+(prev>0?' · 전년 '+fmtW(prev):'')+'</span></div>'; };
     let last='';
     try{
       const s5=(G||[]).slice().sort((a,b)=>b.val-a.val).slice(0,5);
       const s5v=s5.reduce((a,x)=>a+x.val,0), gv=(G||[]).reduce((a,x)=>a+Math.max(0,x.val),0)||1;
+      const s5p=(G||[]).slice().sort((a,b)=>(b.prev||0)-(a.prev||0)).slice(0,5).reduce((a,x)=>a+(x.prev||0),0);
+      const gp=(G||[]).reduce((a,x)=>a+Math.max(0,x.prev||0),0)||1;
       const grew=(G||[]).filter(x=>x.d>0).length;
       last='<div class="qh-t"><span class="l" style="color:#5b7591">상위 5개 집중</span>'+
         '<b>'+Math.round(s5v/gv*100)+'%</b>'+
-        '<span class="s">'+(G||[]).length+'개 · 성장 '+grew+' / 하락 '+((G||[]).length-grew)+'</span></div>';
+        '<span class="s">'+(gp>1?'전년 '+Math.round(s5p/gp*100)+'% · ':'')+'성장 '+grew+' / 하락 '+((G||[]).length-grew)+'</span></div>';
     }catch(e){}
     return '<div class="qh-grid">'+
-      tile('국내',dom,p(dom),'#2563eb')+
-      tile('해외',intl,p(intl),'#0f766e')+
-      tile('기타',etc,p(etc),'#94a3b8')+
-      tile('장비',dev,Math.round(dev/dc*100)+'%','#7c3aed')+
-      tile('소모품',cons,Math.round(cons/dc*100)+'%','#0891b2')+
+      tile('국내',dom,p(dom),dom25,'#2563eb')+
+      tile('해외',intl,p(intl),intl25,'#0f766e')+
+      tile('기타',etc,p(etc),etc25,'#94a3b8')+
+      tile('장비',dev,Math.round(dev/dc*100)+'%',dev25,'#7c3aed')+
+      tile('소모품',cons,Math.round(cons/dc*100)+'%',cons25,'#0891b2')+
       last+
     '</div>';
   }catch(e){ return ''; }
