@@ -8779,6 +8779,12 @@ function copyQuoteLink(id){
 function _promoTpls(){ return (DB.d.logs||[]).filter(function(l){return l.kind==='promo';}).sort(function(a,b){return String(b.updatedAt||'').localeCompare(String(a.updatedAt||''));}); }
 var _promoHosps=[];
 function _promoFillDL(){ var dl=document.getElementById('promo-hosp-list'); if(dl&&!dl.dataset.f){ var ns=[].concat(Object.keys((CONS&&CONS.hospitals)||{}),Object.keys((DEVICE&&DEVICE.hospitals)||{})); ns=[...new Set(ns)].sort(function(a,b){return a.localeCompare(b,'ko');}); dl.innerHTML=ns.slice(0,2500).map(function(n){return '<option value="'+n.replace(/"/g,'&quot;')+'">';}).join(''); dl.dataset.f='1'; } }
+function _promoFillSel(){ var sel=document.getElementById('promo-tpl'); if(!sel) return; var cur=sel.value; var tpls=_promoTpls();
+  sel.innerHTML='<option value="">— 새로 작성 —</option>'+tpls.map(function(t){ return '<option value="'+_escH(t.id)+'">'+_escH(t.name||'(이름없음)')+(t.by?(' · '+_escH(t.by)):'')+'</option>'; }).join('');
+  if(cur && tpls.some(function(t){return t.id===cur;})) sel.value=cur; }
+function _promoPick(){ var sel=document.getElementById('promo-tpl'); if(!sel) return; var id=sel.value; var nm=document.getElementById('promo-name'), bd=document.getElementById('promo-body');
+  if(!id){ if(nm) nm.value=''; if(bd) bd.value=''; _promoPreview(); return; }
+  var t=(DB.d.logs||[]).find(function(l){return l.id===id;}); if(t){ if(nm) nm.value=t.name||''; if(bd) bd.value=t.body||''; } _promoPreview(); }
 function openPromo(){ _promoFillDL(); _promoFillSel(); _promoPreview(); new bootstrap.Modal(document.getElementById('promoModal')).show(); }
 function openPromoFor(name){ _promoHosps=name?[name]:[]; _promoOpenWith(); }
 function openPromoBulk(names){ _promoHosps=(names||[]).filter(Boolean); _promoOpenWith(); }
