@@ -3226,7 +3226,7 @@ function renderQuery(){
         '<div class="rp-b">'+_sec('국내',sDom)+_sec('해외',sInt)+'</div></div>'+
       '<div class="rp-col">'+_hd('대리점·기타',deal,'#b45309','')+
         '<div class="rp-b">'+deal.map(_row).join('')+'</div></div>'+
-      '<div class="rp-note">대수는 <b>국내 장비</b> 기준입니다 — 해외 실적과 소모품은 회계 자료에 수량이 없어 <span class="q0">–</span> 로 둡니다.'+
+      '<div class="rp-note">대수 = <b>국내 장비 + 해외 전량</b>. 해외는 담당자별 수량이 따로 저장되지 않아 제품별 수량을 담당자 제품매출 비중으로 안분했습니다. 국내 소모품만 회계에 수량이 없어 빠집니다.'+
         (hid.length?(' · 제외: '+hid.map(x=>esc(x.name)).join('·')):'')+
         ' · <b>미분류</b>는 회계에는 잡혔으나 담당자가 지정되지 않은 거래입니다.</div>';
   } else {
@@ -3556,6 +3556,9 @@ function _qReps(){
   if(qState.ch!=='dom'){
     _repAcc(INTL.reps,INTL.monthly,f,t).forEach(r=>{ add(r.n,'intl',r.v); _mergeProds(out[r.n].prods,r.prods); });
     const i25=INTL.data2025||{}; _repAcc(i25.reps,i25.monthly,f,t).forEach(r=>{ if(!out[r.n]) add(r.n,'intl',0); out[r.n].intlPrev+=r.v; });
+    const _iq=_intlRepQty(INTL,f,t), _iq25=_intlRepQty(i25,f,t);
+    Object.keys(_iq).forEach(function(n){ if(out[n]) out[n].qtyIntl=(out[n].qtyIntl||0)+_iq[n]; });
+    Object.keys(_iq25).forEach(function(n){ if(out[n]) out[n].qtyIntlPrev=(out[n].qtyIntlPrev||0)+_iq25[n]; });
   }
   let arr=Object.values(out).map(r=>{
     const val=qState.ch==='dom'?r.dom:qState.ch==='intl'?r.intl:r.dom+r.intl;
@@ -3569,10 +3572,28 @@ function _qReps(){
     // 회사 직원 / 대리점, 그리고 담당 채널(국내·해외)을 붙여 표에서 바로 구분되게 한다
     const grp=_isStaff(r.name)?'직원':'대리점';
     const ch=(r.dom>0&&r.intl>0)?'국내·해외':(r.intl>0?'해외':'국내');
-    return {name:r.name,val,prev,qty:r.qtyDev||0,qtyPrev:r.qtyDevPrev||0,qtyNote:'국내 장비',
+    const qD=r.qtyDev||0, qI=r.qtyIntl||0, qDp=r.qtyDevPrev||0, qIp=r.qtyIntlPrev||0;
+    const qty=qState.ch==='dom'?qD:qState.ch==='intl'?qI:qD+qI;
+    const qtyPrev=qState.ch==='dom'?qDp:qState.ch==='intl'?qIp:qDp+qIp;
+    return {name:r.name,val,prev,qty,qtyPrev,qtyNote:'국내 장비+해외',
       grp,tag:ch,color:'#7c3aed',detail};
   });
   return _qNegFold(arr,'명');
+}
+// 해외 담당자 대수 — reps 에는 수량 필드가 없지만 제품별 수량(prodMoQty)은 있다.
+// 담당자의 제품별 매출 비중으로 그 제품의 기간 수량을 안분한다(국내 장비와 같은 방식).
+function _intlRepQty(src,f,t){
+  const out={}; if(!src||!src.reps) return out;
+  const pv={},pq={};
+  Object.keys(src.prodMo||{}).forEach(function(p){ pv[p]=sumMo(src.prodMo[p],f,t); });
+  Object.keys(src.prodMoQty||{}).forEach(function(p){ pq[p]=sumMo(src.prodMoQty[p],f,t); });
+  Object.entries(src.reps).forEach(function(e){ const n=e[0], r=e[1];
+    const yv=sumMo(r&&r.m,1,12), sv=sumMo(r&&r.m,f,t); if(!yv) return;
+    const sc=sv/yv; let q=0;
+    Object.keys((r&&r.prods)||{}).forEach(function(p){ if(!pv[p]||!pq[p]) return; q+=((r.prods[p]||0)*sc)/pv[p]*pq[p]; });
+    const nm=_repBase(n); out[nm]=(out[nm]||0)+Math.round(q);
+  });
+  return out;
 }
 // reps 누적: rep.m가 있으면 기간합, 없으면 total*기간비중
 function _repAcc(reps,moRef,f,t){
