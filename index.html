@@ -4329,7 +4329,7 @@ function renderRegion(){
   const un=sido['미분류']; const unCnt=un?Object.values(un.hosps).filter(o=>o.v26>0).length:0; const unAmt=un?un.v26:0;
   document.getElementById('reg-kpi').innerHTML=
     '<div class="wt-band">'
-    +'<div class="wt-hero"><span class="l">총 매출 · '+P.label+'</span><b>'+_ovFmt(grand)+'</b><span class="s">'+nHosp.toLocaleString()+'개 거래처 · '+named.length+'개 시도</span></div>'
+    +'<div class="wt-hero"><span class="l">총 매출 · '+P.label+'</span><b>'+_ovFmt(grand)+'</b><span class="s">'+nHosp.toLocaleString()+'개 거래처 · '+named.length+'개 시도 · <span title="거래처에 귀속된 매출만 집계합니다">내부거래·의료기기 제외</span></span></div>'
     +'<div class="wt-fact" style="cursor:default"><span class="l">거래처 수</span><b>'+nHosp.toLocaleString()+'곳</b><span class="s">매출 발생 병원</span></div>'
     +'<div class="wt-fact" style="cursor:default"><span class="l">지역(시도) 수</span><b>'+named.length+'개</b><span class="s">분류된 시도</span></div>'
     +'<div class="wt-fact"'+(unCnt?' onclick="openRegionDetail(\'미분류\')"':' style="cursor:default"')+'><span class="l">미분류'+(unCnt?' <i class="bi bi-chevron-right" style="font-size:9px;color:#cbd5e1"></i>':'')+'</span><b'+(unCnt?' class="rd"':'')+'>'+unCnt.toLocaleString()+'곳</b><span class="s">'+_ovFmt(unAmt)+' ('+(unAmt/grand*100).toFixed(0)+'%)</span></div>'
@@ -5033,7 +5033,9 @@ function consParseExcel(input) {
         if(EXCL_PROD_JS.includes(prod)) return;  // 의료기기 행 전체 제외
         const sales = r['담당자']||'';
         const rawDate = r['날짜'];
-        const mo = rawDate ? new Date(rawDate).getMonth()+1 : null;
+        // 월은 회계 귀속월('월' 컬럼)이 정본이다. 날짜(승인일자)로 잡으면 소급 조정건이 다른 달로 밀려
+        // 종합(월 기준)과 병원·지역별(날짜 기준)이 어긋난다 — 실제로 3월 2.04억이 6월로 밀려 있었다.
+        const mo = monthNum(r['월']) || (rawDate ? new Date(rawDate).getMonth()+1 : null);
         const ds = rawDate ? new Date(rawDate).toISOString().slice(0,10) : null;
         if(!hospMap[nm]) hospMap[nm]={total:0,y2025:0,y2026:0,orders:0,prods:{},prods2025:{},prods2026:{},m2025:{},m2026:{},txns2025:[],txns2026:[],lastDate:null,_salesCnt:{}};
         hospMap[nm].total += amt2;
