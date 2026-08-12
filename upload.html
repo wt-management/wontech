@@ -289,8 +289,10 @@ async function handleFile(file){
     const [main,device,intl,sp,ilboAcc,ilboPend,equipReb]=await Promise.all(['main','device','intl','sales_portfolio','ilbo_acc','ilbo_pending','equip_rebuilt'].map(async k=>{
       const {data}=await _sb.from('cons_cache').select('data').eq('key',k).maybeSingle(); return data?data.data:{};
     }));
+    const _prevCarry=(ilboPend&&ilboPend.carry)||[];   // 손으로 넣은 전월 이월 조정 — 덮어쓰기에서 지켜낸다
     log('변환·집계 중...');
     BUILT=WTU.build(sheets,{main,device,intl,equip_rebuilt:equipReb});   // equip_rebuilt: 2025 보존용
+    BUILT.__prevPendCarry=_prevCarry;   // 저장 단계에서 미반영치에 다시 실어 보낸다
     // Sales Portfolio 집계(회계분) — 2025는 기존 blob 유지, 미반영은 사이트에서 live 가산
     try{
       const rows26=WTU.transformRaw(sheets, WTU.buildCatMap(main,device,intl));
@@ -396,8 +398,11 @@ async function doWrite(){
     if(BUILT.equip_rebuilt&&BUILT.equip_rebuilt.rows&&BUILT.equip_rebuilt.rows.length) writes.push(['equip_rebuilt',BUILT.equip_rebuilt]);  // 장비현황 자동 재구축(대리점귀속·보상제외·시리얼전개)
     if(BUILT.sp) writes.push(['sales_portfolio',BUILT.sp]);
     if(BUILT.ilbo) writes.push(['ilbo_acc',BUILT.ilbo]);
-    if(_pendFromFile) writes.push(['ilbo_pending',_pendFromFile]);            // 미반영치 파일 올렸으면 전체 교체
-    else if(BUILT.ilboPending) writes.push(['ilbo_pending',BUILT.ilboPending]);  // 아니면 기존 미반영 자동대조분
+    // 미반영치를 새로 쓸 때 '전월 이월 조정(carry)'을 함께 넘긴다.
+    // carry 는 파일이 아니라 일보 화면에서 손으로 넣는 값이라, 그냥 덮어쓰면 조용히 사라진다.
+    const _keepCarry = o => { const c = BUILT.__prevPendCarry || []; return (c.length && o && !o.carry) ? Object.assign({}, o, {carry:c}) : o; };
+    if(_pendFromFile) writes.push(['ilbo_pending',_keepCarry(_pendFromFile)]);            // 미반영치 파일 올렸으면 전체 교체
+    else if(BUILT.ilboPending) writes.push(['ilbo_pending',_keepCarry(BUILT.ilboPending)]);  // 아니면 기존 미반영 자동대조분
     const skipped=[];
     if(!BUILT.sp) skipped.push('Sales Portfolio(sales_portfolio) — 포트폴리오 집계 실패로 미갱신 (이전 데이터 유지)');
     if(!BUILT.ilbo) skipped.push('일일보고(ilbo_acc) — 일보 집계 실패로 미갱신 (이전 데이터 유지)');
