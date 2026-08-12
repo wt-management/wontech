@@ -3213,13 +3213,13 @@ function renderQuery(){
         '<span class="y" style="color:'+_yoyCol(y)+'">'+(y===null?'신규':arrow(y))+'</span>'+
         '<span class="p">'+_q(p,_sum(list,'qtyPrev'))+'</span></div>'+
         '<div class="rp-lbl"><span>담당자</span><span class="v">당기</span><span class="y">증감</span><span class="p">전년</span></div>'; };
+    _qRepRows=G; _qGvAll=_gvAll;
     const _row=x=>{ const i=idxOf.get(x), sh=_gvAll>0?(x.val/_gvAll*100):0;
-      return '<div class="rp-r" onclick="qToggle('+i+')" title="클릭하면 상세">'+
+      return '<div class="rp-r" onclick="openQRepInfo('+i+')" title="클릭하면 상세 팝업">'+
         '<span class="n">'+esc(x.name)+' <span class="sh">'+sh.toFixed(1)+'%</span></span>'+
         '<span class="v">'+_q(x.val,x.qty)+'</span>'+
         '<span class="y" style="color:'+_yoyCol(x.y)+'">'+(x.y===null?'신규':arrow(x.y))+'</span>'+
-        '<span class="p">'+_q(x.prev||0,x.qtyPrev)+'</span></div>'+
-        (qState.open[i]?'<div class="det">'+(x.detail||'상세 없음')+'</div>':''); };
+        '<span class="p">'+_q(x.prev||0,x.qtyPrev)+'</span></div>'; };
     const _sec=(t,list)=>list.length?('<div class="rp-sub">'+t+' <span style="font-weight:600;color:#8fa7bf">'+list.length+'명 · '+fmtW(_sum(list,'val'))+'</span></div>'+list.map(_row).join('')):'';
     const hidNote=hid.length?(' · 제외 '+hid.length+'명 '+fmtW(_sum(hid,'val'))):'';
     _rowsHtml='<div class="rp-col">'+_hd('본사',staff,'#2563eb',hidNote)+
@@ -3535,7 +3535,7 @@ function _domTopProds(f,t,cat){
 function _qReps(){
   const f=qState.f,t=qState.t;
   const out={};
-  const add=(n,key,val,prev)=>{ if(!n) return; if(!out[n]) out[n]={name:n,dom:0,intl:0,domPrev:0,intlPrev:0,prods:{}}; out[n][key]+=val; };
+  const add=(n,key,val,prev)=>{ if(!n) return; if(!out[n]) out[n]={name:n,dom:0,intl:0,domPrev:0,intlPrev:0,prods:{},m26:{},m25:{},prods25:{},cust:0,cust25:0}; out[n][key]+=val; };
   const incCons=qState.cat==='all'||qState.cat==='소모품', incDev=qState.cat==='all'||qState.cat==='장비';
   if(qState.ch!=='intl'){
     if(incCons) _repAcc(CONS.reps,CONS.monthly2026,f,t).forEach(r=>{ add(r.n,'dom',r.v); out[r.n].dom2=(out[r.n].dom2||0); _mergeProds(out[r.n].prods,r.prods); });
@@ -3560,6 +3560,17 @@ function _qReps(){
     Object.keys(_iq).forEach(function(n){ if(out[n]) out[n].qtyIntl=(out[n].qtyIntl||0)+_iq[n]; });
     Object.keys(_iq25).forEach(function(n){ if(out[n]) out[n].qtyIntlPrev=(out[n].qtyIntlPrev||0)+_iq25[n]; });
   }
+  // 상세 팝업용 원본 — 월별 추이·전년 제품·거래처 수는 축 계산과 별개로 여기서 모은다
+  const _mrg=(d2,s2)=>{ if(!s2)return; for(const k in s2) d2[k]=(d2[k]||0)+(Number(s2[k])||0); };
+  if(qState.ch!=='intl') Object.entries(DEVICE.reps||{}).forEach(([k,r])=>{ const n=_repBase(k); if(!out[n])return;
+    _mrg(out[n].m26,r.m2026); _mrg(out[n].m25,r.m2025); _mrg(out[n].prods25,r.prods2025);
+    out[n].cust+=Number(r.cust2026)||0; out[n].cust25+=Number(r.cust2025)||0; });
+  if(qState.ch!=='dom'){
+    Object.entries(INTL.reps||{}).forEach(([k,r])=>{ const n=_repBase(k); if(!out[n])return;
+      _mrg(out[n].m26,r.m); out[n].cust+=Number(r.clients)||0; });
+    Object.entries(((INTL.data2025||{}).reps)||{}).forEach(([k,r])=>{ const n=_repBase(k); if(!out[n])return;
+      _mrg(out[n].m25,r.m); _mrg(out[n].prods25,r.prods); out[n].cust25+=Number(r.clients)||0; });
+  }
   let arr=Object.values(out).map(r=>{
     const val=qState.ch==='dom'?r.dom:qState.ch==='intl'?r.intl:r.dom+r.intl;
     const prev=qState.ch==='dom'?r.domPrev:qState.ch==='intl'?r.intlPrev:r.domPrev+r.intlPrev;
@@ -3576,6 +3587,8 @@ function _qReps(){
     const qty=qState.ch==='dom'?qD:qState.ch==='intl'?qI:qD+qI;
     const qtyPrev=qState.ch==='dom'?qDp:qState.ch==='intl'?qIp:qDp+qIp;
     return {name:r.name,val,prev,qty,qtyPrev,qtyNote:'국내 장비+해외',
+      dom:r.dom,intl:r.intl,domPrev:r.domPrev,intlPrev:r.intlPrev,qtyDom:qD,qtyIntl:qI,
+      m26:r.m26,m25:r.m25,prods:r.prods,prods25:r.prods25,cust:r.cust,cust25:r.cust25,
       grp,tag:ch,color:'#7c3aed',detail};
   });
   return _qNegFold(arr,'명');
@@ -4097,6 +4110,31 @@ function openProdInfo(p){
     ledger:pled, ledgerCol2:'거래처'});
 }
 // 담당자 드릴 (리더보드 캐시 인덱스)
+// 매출 상세 > 담당자별 : 이름 클릭 → 상세 팝업(월별 추이·제품 전년비교·채널·대수)
+var _qRepRows=[], _qGvAll=0;   // 팝업은 renderQuery 밖이라 비중 분모를 따로 들고 있어야 한다
+function openQRepInfo(i){
+  const x=_qRepRows[i]; if(!x) return;
+  const cd=(x.cust||0)-(x.cust25||0), mo=Math.max(1,qState.t-qState.f+1);
+  // 목록은 이름을 이스케이프하므로 태그를 넣으면 글자로 보인다 → 평문으로 붙인다
+  const _pr=Object.entries(x.prods||{}).sort((a,b)=>b[1]-a[1]).slice(0,10)
+    .map(e=>{ const p25=(x.prods25||{})[e[0]]||0, yy=pct(e[1],p25);
+      return [e[0]+' '+(p25>0?arrow(yy):'신규'), e[1]]; });
+  const ch=[]; if(x.dom) ch.push(['국내'+(x.qtyDom?' '+x.qtyDom.toLocaleString()+'대':''),x.dom]);
+  if(x.intl) ch.push(['해외'+(x.qtyIntl?' '+x.qtyIntl.toLocaleString()+'대':''),x.intl]);
+  const qTxt=x.qty?x.qty.toLocaleString()+'대'+(x.qtyPrev?' <span style="font-size:11px;color:#94a3b8">/ 전년 '+x.qtyPrev.toLocaleString()+'</span>':''):'–';
+  _infoShow({title:x.name, color:(x.grp==='직원'?'#2563eb':'#b45309'),
+    sub:(x.grp==='직원'?'본사':'대리점·기타')+' · '+(x.tag||'')+' · '+qState.f+'~'+qState.t+'월 누적',
+    kpi:[{l:'당기 매출',v:fmtW(x.val)},
+         {l:'전년 동기',v:fmtW(x.prev||0),c:'#64748b'},
+         {l:'증감',v:(x.y===null?'신규':arrow(x.y))+' '+fmtD(x.val-(x.prev||0)),c:_yoyCol(x.y)},
+         {l:'대수',v:qTxt},
+         {l:'전사 비중',v:(_qGvAll>0?(x.val/_qGvAll*100).toFixed(1):'0.0')+'%',c:'#0f172a'},
+         {l:'월평균',v:fmtW(x.val/mo),c:'#64748b'},
+         {l:'거래처',v:(x.cust||0)+'개'+(cd?' ('+(cd>0?'+':'')+cd+')':''),c:'#0f172a'}],
+    mo26:x.m26||{}, mo25:x.m25||{},
+    cols:[{t:'취급 제품 Top',rows:_pr,col:'#0891b2'},
+          {t:'채널',rows:ch,col:'#7c3aed'}]});
+}
 function openRepInfo(gi){
   const x=_lbRows[gi]; if(!x) return;
   const cd=(x.cust||0)-(x.cust25||0);
