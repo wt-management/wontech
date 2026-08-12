@@ -5026,7 +5026,9 @@ function consParseExcel(input) {
         const nm = r['거래처명']; if(!nm) return;
         if(INTERNAL_KW_JS.some(k=>nm.includes(k))) return;
         const amt2 = Number(r[' 금액 ']||r['금액']||0); if(!amt2) return;
-        let qty2 = parseInt(r['수량']||0); if(!(qty2>0)) qty2=null;
+        // 0/빈칸만 미기재로 본다. 음수(반품)를 버리면 원장 대수가 실제보다 많아진다
+        let qty2 = parseInt(r['수량']||0); if(!qty2) qty2=null;
+        if(qty2&&amt2<0&&qty2>0) qty2=-qty2;
         let prod  = r['구분#4']||'';
         if(EXCL_PROD_JS.includes(prod)) return;  // 의료기기 행 전체 제외
         const sales = r['담당자']||'';
@@ -5090,7 +5092,9 @@ function consParseExcel(input) {
           if (amt === 0) return;  // 음수(반품·[결산]충당) 유지 = 순매출 (정본 aggDevice2026과 동일)
           let qtyRaw = parseInt(r['수량']||0);
           let qtyForExcl = qtyRaw > 0 ? qtyRaw : 1;
-          let qty = qtyRaw > 0 ? qtyRaw : 0;  // 빈 수량은 0(세지 않음, 금액은 반영)
+          // 빈 수량만 0. 음수(반품)는 그대로 살려야 대수가 차감된다(예: Oligio Tip -100대)
+          let qty = qtyRaw ? qtyRaw : 0;
+          if(amt<0&&qty>0) qty=-qty;           // 금액만 음수인 행 부호 맞춤
           const mo   = monthNum(r['월']);
           let prod = (r['구분#4']||'').trim();
           if (/hair|헤어/i.test(prod)) {
@@ -5277,7 +5281,10 @@ function consParseExcel(input) {
         const proc=(r,yr)=>{
           const ak=_amK(r),amt=Number(r[ak]||0);if(amt===0)return;   // 음수(반품·충당) 유지 = 순매출 (정본 aggIntl2026과 동일)
           const usd=Number(r['USD']||0);
-          let qty=parseInt(r['수량']||0);if(qty<=0)qty=1;
+          // 반품·충당은 수량도 음수다. 예전엔 qty<=0 을 전부 1로 바꿔 반품이 대수를 '더하고' 있었다.
+          let qty=parseInt(r['수량']||0);
+          if(!qty) qty=(amt<0?-1:1);            // 수량 미기재는 1건으로 보되 반품이면 -1
+          else if(amt<0&&qty>0) qty=-qty;       // 금액만 음수이고 수량은 양수로 적힌 행 부호 맞춤
           const m=_moN(r['월']),p=(r['구분#4']||'').trim(),cat=(r['구분#2']||'').trim(),nm=(r['거래처명']||'').trim(),sl=(r['담당자']||'').trim(),co=_exCt(nm);
           const[mm,um,qm,pm2,pcm,pdm,pmm,pmqm,pqm,ctm,rpm]=yr===2026?[mo,mu,mq,pr,pc,pd,pm,pmq,pq,ct,rp]:[mo25,mu25,mq25,pr25,pc25,pd25,pm25,pmq25,pq25,ct25,rp25];
           if(m){mm[m]=(mm[m]||0)+amt;um[m]=(um[m]||0)+usd;qm[m]=(qm[m]||0)+qty;}

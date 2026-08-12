@@ -3587,11 +3587,13 @@ function _intlRepQty(src,f,t){
   const pv={},pq={};
   Object.keys(src.prodMo||{}).forEach(function(p){ pv[p]=sumMo(src.prodMo[p],f,t); });
   Object.keys(src.prodMoQty||{}).forEach(function(p){ pq[p]=sumMo(src.prodMoQty[p],f,t); });
-  Object.entries(src.reps).forEach(function(e){ const n=e[0], r=e[1];
+  Object.entries(src.reps).forEach(function(e){ const n=e[0], r=e[1], nm=_repBase(n);
+    // 파서가 담당자별 월 수량(mq)을 저장하기 시작했다 → 있으면 실측을 쓰고, 없을 때만 안분
+    if(r&&r.mq&&Object.keys(r.mq).length){ out[nm]=(out[nm]||0)+sumMo(r.mq,f,t); return; }
     const yv=sumMo(r&&r.m,1,12), sv=sumMo(r&&r.m,f,t); if(!yv) return;
     const sc=sv/yv; let q=0;
     Object.keys((r&&r.prods)||{}).forEach(function(p){ if(!pv[p]||!pq[p]) return; q+=((r.prods[p]||0)*sc)/pv[p]*pq[p]; });
-    const nm=_repBase(n); out[nm]=(out[nm]||0)+Math.round(q);
+    out[nm]=(out[nm]||0)+Math.round(q);
   });
   return out;
 }
