@@ -1911,9 +1911,10 @@ function _pendingAgg(yr){
     var ym=String(c.ym||''); if(ym.slice(0,4)!==String(yr)) return;
     var mo=parseInt(ym.slice(5,7),10), amt=Number(c.amount||0);
     if(!(mo>=1&&mo<=12)||!amt) return;
-    if(c.region==='해외'){ agg.intlMonthly[mo]=(agg.intlMonthly[mo]||0)+amt; agg.intlTotal+=amt; return; }
+    if(c.region==='해외'){ agg.intlMonthly[mo]=(agg.intlMonthly[mo]||0)+amt; agg.intlTotal+=amt; (agg.carryIntlMonthly=agg.carryIntlMonthly||{})[mo]=(agg.carryIntlMonthly[mo]||0)+amt; return; }
     if(c.item==='소모품') agg.consMonthly[mo]=(agg.consMonthly[mo]||0)+amt;
     else agg.devMonthly[mo]=(agg.devMonthly[mo]||0)+amt;
+    (agg.carryDomMonthly=agg.carryDomMonthly||{})[mo]=(agg.carryDomMonthly[mo]||0)+amt;   // 월별표·과거월 드릴에서 carry만 별도 참조용
     agg.total+=amt;
   });
   return agg;
@@ -2171,8 +2172,9 @@ function renderOvMonthly(){
     const domConf=(CONS.monthly2026&&CONS.monthly2026[m]||0)+(DEVICE.monthly2026&&DEVICE.monthly2026[m]||0);
     const intlConf=(INTL.monthly&&INTL.monthly[m]||0);
     const etc=(CONS.etcMonthly2026&&CONS.etcMonthly2026[m]||0);
-    const dom=domConf+(isCur?((pend.consMonthly[m]||0)+(pend.devMonthly[m]||0)):0);
-    const intl=intlConf+(isCur?(pend.intlMonthly[m]||0):0);
+    // 과거월도 전월 이월 조정(carry)은 반영 — 안 하면 월별표 합계가 스코어보드·일보 ⑨와 carry만큼 어긋남
+    const dom=domConf+(isCur?((pend.consMonthly[m]||0)+(pend.devMonthly[m]||0)):((pend.carryDomMonthly&&pend.carryDomMonthly[m])||0));
+    const intl=intlConf+(isCur?(pend.intlMonthly[m]||0):((pend.carryIntlMonthly&&pend.carryIntlMonthly[m])||0));
     const tot=dom+intl+etc;
     const prev=(CONS.monthly2025&&CONS.monthly2025[m]||0)+(DEVICE.monthly2025&&DEVICE.monthly2025[m]||0)+(CONS.etcMonthly2025&&CONS.etcMonthly2025[m]||0)+((INTL.data2025&&INTL.data2025.monthly&&INTL.data2025.monthly[m])||0);
     const y=pct(tot,prev); yd+=dom; yi+=intl; ye+=etc; yp+=prev;
@@ -2205,6 +2207,11 @@ function openOvDetail(m,type){
     const REGS=['동남아','중화','중동','유럽','미주','태국법인','미국법인','일본법인','기타'];
     REGS.forEach(r=>add('해외 '+r,(_ovRegMo[r]&&_ovRegMo[r][m])||0,INTL_TEAL,'해외영업|'+(r==='기타'?'기타·미분류':r)));
     if(isCur){ const ip=_pendForReport().intl; REGS.forEach(r=>add('해외 미반영·'+r,(ip[r]&&ip[r][m])||0,'#0d9488')); }
+  }
+  if(!isCur){ // 과거월 carry — 월별표와 모달 합계 정합
+    const cD=(pend.carryDomMonthly&&pend.carryDomMonthly[m])||0, cI=(pend.carryIntlMonthly&&pend.carryIntlMonthly[m])||0;
+    if((type==='dom'||type==='total')&&cD) add('전월 이월 조정(국내)',cD,'#b45309');
+    if((type==='intl'||type==='total')&&cI) add('전월 이월 조정(해외)',cI,'#b45309');
   }
   if(type==='total'){ add('기타(의료기기·서지컬·B2C·고객만족)',(CONS.etcMonthly2026&&CONS.etcMonthly2026[m]||0),'#94a3b8'); }
   const sum=rows.reduce((s,x)=>s+x.v,0), den=sum||1;
@@ -2359,6 +2366,14 @@ function _pendForReport(){   // 국내(제품/소모품) + 해외(지역별) 미
     var mo=d.getMonth()+1, amt=Number(p.amount||0);
     if(p.region==='해외'){ var r=_pendRegion(p.country); intl[r]=intl[r]||{}; intl[r][mo]=(intl[r][mo]||0)+amt; }
     else { var it=_pendKrItem(p.product); kr[it][mo]=(kr[it][mo]||0)+amt; }
+  });
+  // 전월 이월 조정(carry) — _pendingAgg와 동일 합산: 빠지면 report 탭만 타 메뉴·일보 ⑨와 어긋남
+  (ILBO_CARRY||[]).forEach(function(c){
+    var ym=String(c.ym||''); if(ym.slice(0,4)!=='2026') return;
+    var mo=parseInt(ym.slice(5,7),10), amt=Number(c.amount||0);
+    if(!(mo>=1&&mo<=12)||!amt) return;
+    if(c.region==='해외'){ intl['기타']=intl['기타']||{}; intl['기타'][mo]=(intl['기타'][mo]||0)+amt; }
+    else { var it2=(c.item==='소모품')?'소모품':'제품'; kr[it2][mo]=(kr[it2][mo]||0)+amt; }
   });
   return {kr,intl};
 }
@@ -3626,15 +3641,16 @@ function _qReps(){
 // 담당자의 제품별 매출 비중으로 그 제품의 기간 수량을 안분한다(국내 장비와 같은 방식).
 function _intlRepQty(src,f,t){
   const out={}; if(!src||!src.reps) return out;
+  // '대'는 장비만 — 팁·카트리지 등 소모품 수량이 섞이면 담당자 대수가 수만 단위로 부풀음(예: 팁 66,486개 혼입).
+  // 파서 실측(r.mq)도 소모품 수량이 포함돼 있어 '대' 용도로는 못 쓰고, 장비 제품만 안분한다.
+  const _consQ=/오일|의료기기|소모품|팁|tip|cartridge|카트리지|A\/S|spray|pad|needle|니들/i;
   const pv={},pq={};
-  Object.keys(src.prodMo||{}).forEach(function(p){ pv[p]=sumMo(src.prodMo[p],f,t); });
-  Object.keys(src.prodMoQty||{}).forEach(function(p){ pq[p]=sumMo(src.prodMoQty[p],f,t); });
+  Object.keys(src.prodMo||{}).forEach(function(p){ if(_consQ.test(p)) return; pv[p]=sumMo(src.prodMo[p],f,t); });
+  Object.keys(src.prodMoQty||{}).forEach(function(p){ if(_consQ.test(p)) return; pq[p]=sumMo(src.prodMoQty[p],f,t); });
   Object.entries(src.reps).forEach(function(e){ const n=e[0], r=e[1], nm=_repBase(n);
-    // 파서가 담당자별 월 수량(mq)을 저장하기 시작했다 → 있으면 실측을 쓰고, 없을 때만 안분
-    if(r&&r.mq&&Object.keys(r.mq).length){ out[nm]=(out[nm]||0)+sumMo(r.mq,f,t); return; }
     const yv=sumMo(r&&r.m,1,12), sv=sumMo(r&&r.m,f,t); if(!yv) return;
     const sc=sv/yv; let q=0;
-    Object.keys((r&&r.prods)||{}).forEach(function(p){ if(!pv[p]||!pq[p]) return; q+=((r.prods[p]||0)*sc)/pv[p]*pq[p]; });
+    Object.keys((r&&r.prods)||{}).forEach(function(p){ if(_consQ.test(p)) return; if(!pv[p]||!pq[p]) return; q+=((r.prods[p]||0)*sc)/pv[p]*pq[p]; });
     out[nm]=(out[nm]||0)+Math.round(q);
   });
   return out;
