@@ -2642,7 +2642,6 @@ let stageChart=null, salesChart=null, perfChart=null, custPerfChart=null;
 let qItemCount=0;
 let PENDING = [];   // 예정분(회계 미반영 매출)
 let ILBO_PEND = []; // 일매출일보 미반영분(국내) — 종합 KPI에 금액 합산
-let ILBO_CARRY = []; // 전월 이월 조정(일보 ④납품 잔액·마감 수기조정) — 미반영 월맵에 가산해야 일보 ①누적과 정합
 let ILBO_CARRY = []; // 전월 이월 조정(마감월의 납품(선적) 잔액) — 일보에서 입력, 해당 월 실적에 가산
 
 // 해외 병원명 접두사 목록
@@ -3152,7 +3151,6 @@ async function _loadIlboPending(){
     const {data}=await _sb.from('cons_cache').select('data').eq('key','ilbo_pending').maybeSingle();
     const rows=((data&&data.data&&data.data.rows)||[]).filter(function(p){return p.region==='국내'&&p.status!=='반영됨'&&p.status!=='취소';});
     ILBO_PEND = rows;
-    ILBO_CARRY = ((data&&data.data&&data.data.carry)||[]).filter(function(c){return c.region!=='해외';});
     ILBO_CARRY = ((data&&data.data&&data.data.carry)||[]).filter(function(c){ return c.region!=='해외' && Number(c.amount); });
     var tb=document.getElementById('ilbo-pend-tbody'),emp=document.getElementById('ilbo-pend-empty'),sum=document.getElementById('ilbo-pend-sum');
     if(!tb) return;
@@ -3194,13 +3192,6 @@ function _ilboMonthMaps(){
     var m=parseInt(ym.slice(5,7),10), amt=Number(c.amount)||0;
     if(!(m>=1&&m<=12)||!amt) return;
     if(c.item==='소모품') consMo[m]=(consMo[m]||0)+amt; else devMo[m]=(devMo[m]||0)+amt;
-  });
-  // 전월 이월 조정(carry) 가산 — 일보가 마감월 ④납품 잔액(수기조정 포함)을 다음달 ①누적에 녹이므로, 여기 더해야 일보 ①·⑨와 정합 (예: 7월 기타 -43,775,079)
-  (ILBO_CARRY||[]).forEach(function(c){
-    var ym=String(c.ym||''); if(ym.slice(0,4)!=='2026') return;
-    var m=parseInt(ym.slice(5,7),10); var amt=Number(c.amount)||0;
-    if(!(m>=1&&m<=12)||!amt) return;
-    if(String(c.item)==='소모품') consMo[m]=(consMo[m]||0)+amt; else devMo[m]=(devMo[m]||0)+amt;
   });
   return {consMo:consMo, devMo:devMo};
 }
