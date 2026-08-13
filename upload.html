@@ -407,6 +407,19 @@ async function doWrite(){
   const btn=document.getElementById('confirmBtn'); btn.disabled=true; btn.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span>적재 중...';
   try{
     const writes=[['main',BUILT.main],['device',BUILT.device],['intl',BUILT.intl]];
+    // 해외 단가현황(intl_unitprice) 자동 재생성 — 국가×제품 {amt,qty}는 회계 txns의 단순 집계라 업로드마다 갱신(과거엔 별도 수동도구라 stale했음). y2025·기존 cat 보존.
+    try{
+      const {data:_upRow}=await _sb.from('cons_cache').select('data').eq('key','intl_unitprice').maybeSingle();
+      const _upOld=(_upRow&&_upRow.data)||{}; const _oldProd=((_upOld.y2026||{}).prod)||{};
+      const _upConsRe=/tip|cartridge|카트리지|팁|소모품|a\s*\/\s*s|spray|pad|needle|니들|gel|젤/i;
+      const _ctry={}, _prod={}; const _C=((BUILT.intl||{}).INTL2026||{}).countries||{};
+      Object.keys(_C).forEach(cc=>{ const cd=_C[cc].clientData||{}; Object.keys(cd).forEach(cn=>{ (cd[cn].txns||[]).forEach(t=>{
+        const p=String(t[1]||'').trim()||'(미상)', q=Number(t[2])||0, a=Number(t[3])||0;
+        (_ctry[cc]=_ctry[cc]||{})[p]=_ctry[cc][p]||{amt:0,qty:0}; _ctry[cc][p].amt+=a; _ctry[cc][p].qty+=q;
+        _prod[p]=_prod[p]||{amt:0,qty:0,cat:(_oldProd[p]&&_oldProd[p].cat)||(_upConsRe.test(p)?'소모품':'장비')}; _prod[p].amt+=a; _prod[p].qty+=q;
+      });});});
+      if(Object.keys(_prod).length) writes.push(['intl_unitprice',{rev:BUILT.summary.updatedAt+'#auto',y2025:_upOld.y2025||{},y2026:{ctry:_ctry,prod:_prod},updatedAt:BUILT.summary.updatedAt}]);
+    }catch(e){ log('단가현황 갱신 경고(이전값 유지): '+e.message); }
     if(BUILT.equip_rebuilt&&BUILT.equip_rebuilt.rows&&BUILT.equip_rebuilt.rows.length) writes.push(['equip_rebuilt',BUILT.equip_rebuilt]);  // 장비현황 자동 재구축(대리점귀속·보상제외·시리얼전개)
     if(BUILT.sp) writes.push(['sales_portfolio',BUILT.sp]);
     if(BUILT.ilbo) writes.push(['ilbo_acc',BUILT.ilbo]);
