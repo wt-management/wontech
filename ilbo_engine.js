@@ -6,7 +6,7 @@
 (function(root){
 'use strict';
 var DEPT_MAP={'A0402040':'국내영업','A0402020':'국내영업','A0402030':'국내영업','A0402010':'국내영업','A0402050':'국내영업','A0401020':'국내영업','A0401040':'국내영업','A0401070':'국내영업','A0401030':'해외영업','A0401050':'Surgical','B0901030':'Surgical','A0501020':'고객만족','A0501030':'고객만족','A0501010':'고객만족','A0401060':'B2C','A0701020':'기타'};
-var CONS_RE=/tip|cartridge|cathet|카트리지|팁|니들|needle|소모|consum|spray|쿨링/i;
+var CONS_RE=/tip|cartridge|cathet|카트리지|팁|니들|needle|소모|consum|spray|쿨링|멸균|fiber|pad|패드/i;   // ilbo.html CONS_RE와 동일하게 유지(2026-07 멸균|fiber|pad 추가분 동기화)
 var DIVS=['국내제품','국내소모품','해외영업','Surgical','B2C','고객만족','기타'];
 function divRegion(div){ return div==='해외영업'?'해외':'국내'; }
 function prodName(pn){ pn=String(pn||''); var i=pn.indexOf('.'); return (i>=0?pn.slice(i+1):pn).trim(); }
