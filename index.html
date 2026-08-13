@@ -11625,9 +11625,17 @@ function renderDeviceSales() {
     for(const k in qm){ if(qm[k][x.m]){ const ck=_cpn(k); _pQty[ck]=(_pQty[ck]||0)+qm[k][x.m]; } } });
   prevMs.forEach(x=>{ const qm=prodMoQtyY(x.y); for(const k in qm){ if(qm[k][x.m]){ const ck=_cpn(k); _pQtyPrev[ck]=(_pQtyPrev[ck]||0)+qm[k][x.m]; } } });
   // 미반영(pending) per-product 가산 → 보고기준(매출·대수)로 통일: 증감분해와 동일 기준
-  try{ var _pnd=(typeof ILBO_PEND!=='undefined'&&ILBO_PEND)||[]; var _dset={}; ['products2026','products2025','prods_dev'].forEach(k=>Object.keys((DEVICE&&DEVICE[k])||{}).forEach(n=>{_dset[_cpn(n)]=1;}));
+  try{ var _pnd=(typeof ILBO_PEND!=='undefined'&&ILBO_PEND)||[];
+    // 미반영 제품명은 표기가 흔들림(V Laser↔V-Laser, AVVIO↔Avvio, Majesty↔Picocare Majesty) → 정규화+부분일치로 회계 제품명에 귀속, 못 찾으면 조정 버킷(탈락 금지: 표합=hero 보고기준 정합)
+    var _dmap={}; ['products2026','products2025','prods_dev'].forEach(k=>Object.keys((DEVICE&&DEVICE[k])||{}).forEach(n=>{var c=_cpn(n); _dmap[String(c).replace(/[\s\[\]()\/\-\.]/g,'').toLowerCase()]=c;}));
+    var _pnorm=s=>String(s||'').replace(/[\s\[\]()\/\-\.]/g,'').toLowerCase();
+    var _pfind=np=>{ if(_dmap[np])return _dmap[np]; if(np.length>=4){ for(var k in _dmap){ if(k.length>=4&&(k.indexOf(np)>=0||np.indexOf(k)>=0)) return _dmap[k]; } } return null; };
     var _smo={}; spanMs.forEach(x=>{ if(x.y===_curYear()) _smo[x.m]=1; });
-    _pnd.forEach(r=>{ if(!r||(r.region&&r.region!=='국내')||r.status==='반영됨'||r.status==='취소')return; var p=_cpn(r.product||''); if(!p||/tip|팁|cartridge|카트리지|소모|a\/s/i.test(p)||!_dset[p])return; var mo=parseInt(String(r.expectedDate||r.date||'').slice(5,7),10); if(!_smo[mo])return; _pRev[p]=(_pRev[p]||0)+(Number(r.amount)||0); _pQty[p]=(_pQty[p]||0)+(Number(r.qty)||0); }); }catch(e){}
+    var ETCK='기타·조정(미반영)';
+    _pnd.forEach(r=>{ if(!r||(r.region&&r.region!=='국내')||r.status==='반영됨'||r.status==='취소')return; var raw=_cpn(r.product||''); if(!raw||/tip|팁|cartridge|카트리지|소모|a\/s/i.test(raw))return; var mo=parseInt(String(r.expectedDate||r.date||'').slice(5,7),10); if(!_smo[mo])return; var key=_pfind(_pnorm(raw))||ETCK; _pRev[key]=(_pRev[key]||0)+(Number(r.amount)||0); if(key!==ETCK)_pQty[key]=(_pQty[key]||0)+(Number(r.qty)||0); });
+    // 전월 이월 조정(제품)도 조정 버킷에 — 표합이 hero(회계+미반영+carry)와 일치
+    (typeof ILBO_CARRY!=='undefined'?(ILBO_CARRY||[]):[]).forEach(c=>{ var ym=String(c.ym||''); if(ym.slice(0,4)!==String(_curYear()))return; var mo=parseInt(ym.slice(5,7),10); if(!_smo[mo])return; if(String(c.item)==='소모품')return; _pRev[ETCK]=(_pRev[ETCK]||0)+(Number(c.amount)||0); });
+  }catch(e){}
   const _pRank=Object.entries(_pRev).sort((a,b)=>b[1]-a[1]);
   const topP=_pRank[0]||['-',0];
   const topShare=ytdCur>0?(topP[1]/ytdCur*100):0;
