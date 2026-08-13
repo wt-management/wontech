@@ -57,10 +57,16 @@ function transformRaw(sheets, CM){
       var net=num(row['대변'])-num(row['차변']);
       if(net===0) return;
       var prod=prodName(row['프로젝트']); var cat=catOf(prod,CM);
-      // 안전장치: 프로젝트가 장비명("Oligio" 등)이라 제품으로 잡혀도, 품번(SKU)이 명백한 소모품/부속(팁·카트리지·리턴패드·커플링플루이드·쿨링스프레이 등)이면 소모품으로 교정.
-      // (회계 구분#2/프로젝트 오입력 방지 — 실장비 SKU "ULTRASKIN TIGHTAN" 등엔 키워드 없어 그대로 장비 유지)
-      if(cat!=='소모품'){ var _sku=String(row['품번']==null?'':row['품번']);
-        if(/\bTIP\b|팁|CARTRIDGE|카트리지|Return\s*Pad|Coupling|Cooling\s*Spray|GOGGLE|고글|Bare\s*Fiber|Side\s*Fiber/i.test(_sku)){ cat='소모품'; var _pn=prodName(row['품번']); if(_pn) prod=_pn; } }
+      // 안전장치: 프로젝트가 장비명("Oligio" 등)이라 제품으로 잡혀도, 품번(SKU)·적요·품목군이 명백한 소모품/부속(팁·카트리지·리턴패드·오일·커플링플루이드·쿨링스프레이 등)이면 소모품으로 교정.
+      // (회계 프로젝트 오입력 방지 — 실장비 SKU "ULTRASKIN TIGHTAN"·보상판매("Oligio #1944 ^1대 보상판매") 등엔 키워드 없어 그대로 장비 유지)
+      if(cat!=='소모품'){
+        var _hay=[row['품번'],row['적요란'],row['적요'],row['품목군']].map(function(x){return x==null?'':String(x);}).join(' ');
+        if(/\bTIP\b|팁|CARTRIDGE|카트리지|Return\s*Pad|리턴패드|리펀패드|Coupling|Cooling\s*Spray|쿨링|GOGGLE|고글|Bare\s*Fiber|Side\s*Fiber|오일|\bOIL\b/i.test(_hay)){
+          cat='소모품';
+          var _pn=prodName(String(row['품번']==null?'':row['품번']));
+          if(_pn) prod=_pn; else { var _jk=String(row['적요란']!=null?row['적요란']:(row['적요']!=null?row['적요']:'')); var _pj=_jk.split(/[#^]/)[0].trim(); if(_pj) prod=normProd(_pj); }
+        }
+      }
       var dept=String(row['사용부서']==null?'':row['사용부서']);
       // 국내/해외: 거래처명 "국가/" 접두사 OR 사용부서(해외법인영업·해외CS·수출·구매확인서) — 더마케이 등 간접수출 포착
       var region=(FOR.test(cust)||dept.indexOf('해외')>=0||dept.indexOf('수출')>=0||dept.indexOf('구매확인서')>=0)?'해외':'국내';
