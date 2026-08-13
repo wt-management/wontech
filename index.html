@@ -12180,6 +12180,7 @@ function renderDevVariance(){
 }
 // ── Capa 달성 분석 ── 월 40억(장비30=대리점21+직판9, 소모품10). 대리점=6곳 담당(_repOf), 나머지 직판
 var _CAPA_DEALER_RE=/유니메디|드림메드|이지온|에스비메디|씽씽|라이트스톤|리이트스톤/;
+var _CAPA_EXCL_RE=/원텍몰/i;   // 자사몰 등 직판 담당자 랭킹에서 제외(금액은 채널 합계·회계 총액엔 유지)
 function renderCapa(){
   var host=document.getElementById('capa-view'); if(!host) return;
   try{
@@ -12284,7 +12285,7 @@ function renderCapa(){
     bl.push('전체 달성률 <b style="color:'+col(pc(totA,CAPA_TOT*lm))+'">'+pc(totA,CAPA_TOT*lm)+'%</b> · 누계 '+W(totA)+'억 / Capa '+W(CAPA_TOT*lm)+'억. 가장 부족한 채널 <b style="color:'+col(pc(worst[1],worst[2]*lm))+'">'+worst[0]+' '+pc(worst[1],worst[2]*lm)+'%</b> (누계 '+W(worst[1]-worst[2]*lm)+'억).');
     if(dealers.length){ var dTop=dealers[0]; var dY=dealers.filter(function(e){return e.yoy!=null;}); var dGrow=dY.slice().sort(function(a,b){return b.yoy-a.yoy;})[0]; var dDrop=dY.slice().sort(function(a,b){return a.yoy-b.yoy;})[0];
       bl.push('대리점 최대 기여 <b>'+esc(dTop.name)+'</b> '+W(dTop.y26)+'억'+(dGrow&&dGrow.yoy>0?' · 최고 성장 <b style="color:#16a34a">'+esc(dGrow.name)+' +'+dGrow.yoy.toFixed(0)+'%</b>':'')+(dDrop&&dDrop.yoy<0?' · 최대 부진 <b style="color:#dc2626">'+esc(dDrop.name)+' '+dDrop.yoy.toFixed(0)+'%</b>':'')+'.'); }
-    if(directs.length){ var xTeam=directs.filter(function(e){return !NOISE.test(e.name);}); var xTop=xTeam[0]||directs[0];
+    if(directs.length){ var xTeam=directs.filter(function(e){return !NOISE.test(e.name)&&!_CAPA_EXCL_RE.test(e.name);}); var xTop=xTeam[0]||directs[0];
       bl.push('직판 최대 기여 <b>'+esc(xTop.name)+'</b> '+W(xTop.y26)+'억 · 직판 담당 '+xTeam.length+'명.'); }
     var insMo=[['대리점',last.dealer,CAPA.dealer],['직판',last.direct,CAPA.direct],['소모품',last.cons,CAPA.cons]].map(function(x){ var d=x[1]-x[2]; return '<b style="color:'+(d>=0?'#16a34a':'#dc2626')+'">'+x[0]+' '+(d>=0?'+':'')+W(d)+'억</b>'; }).join(' · ');
     bl.push(lm+'월 단월 Capa 대비: '+insMo+'.');
@@ -12296,7 +12297,7 @@ function renderCapa(){
 
     host.innerHTML=overview+diag
       +chCard('bi-shop','#7c3aed','장비 대리점 채널 · 대리점 6곳',sum.dealer,CAPA.dealer,ctbl(dealers,CAPA.dealer,'대리점'))
-      +chCard('bi-person-badge','#2563eb','장비 직판 채널 · 영업 담당',sum.direct,CAPA.direct,ctbl(directs.filter(function(e){return !NOISE.test(e.name);}),CAPA.direct,'담당자'))
+      +chCard('bi-person-badge','#2563eb','장비 직판 채널 · 영업 담당',sum.direct,CAPA.direct,ctbl(directs.filter(function(e){return !NOISE.test(e.name)&&!_CAPA_EXCL_RE.test(e.name);}),CAPA.direct,'담당자'))
       +chCard('bi-capsule','#0d9488','소모품 채널',sum.cons,CAPA.cons,consBody);
   }catch(e){ host.innerHTML='<div class="card p-3" style="color:#dc2626">Capa 분석 로드 오류</div>'; console.warn('capa',e); }
 }
