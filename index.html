@@ -3158,12 +3158,12 @@ async function _loadIlboPending(){
     if(emp) emp.style.display='none';
     var total=0;
     var e=function(x){return String(x==null?'':x).replace(/</g,'&lt;');};
-    var html=rows.map(function(p){ total+=Number(p.amount)||0; return '<tr><td style="padding:8px 12px">'+e(p.customer)+'</td><td>'+e(p.product)+'</td><td style="text-align:center">'+(p.qty||'')+'</td><td style="text-align:right">'+(Number(p.amount)||0).toLocaleString()+'</td><td style="text-align:center">'+(p.expectedDate||'')+'</td></tr>'; }).join('');
+    var html=rows.map(function(p){ total+=Number(p.amount)||0; return '<tr><td style="padding:8px 12px">'+e(p.customer)+'</td><td>'+e(p.product)+'</td><td style="text-align:center">'+(p.qty||'')+'</td><td style="text-align:right">'+Math.round(Number(p.amount)||0).toLocaleString()+'</td><td style="text-align:center">'+(p.expectedDate||'')+'</td></tr>'; }).join('');
     // 전월 이월 조정 — KPI에는 들어가는데 목록에 없으면 합계가 안 맞아 보인다
     html+=ILBO_CARRY.map(function(c){ var a=Number(c.amount)||0; total+=a;
       return '<tr style="background:#fff7ed"><td style="padding:8px 12px;font-weight:700">전월 이월 조정</td><td>'+e(c.memo||(c.item||''))+'</td><td style="text-align:center">'+e(c.item||'')+'</td><td style="text-align:right;color:'+(a<0?'#b91c1c':'#166534')+';font-weight:700">'+a.toLocaleString()+'</td><td style="text-align:center">'+e(c.ym||'')+'</td></tr>'; }).join('');
     tb.innerHTML=html;
-    if(sum) sum.textContent='· '+rows.length+'건'+(ILBO_CARRY.length?(' + 이월조정 '+ILBO_CARRY.length+'건'):'')+' · '+total.toLocaleString()+'원';
+    if(sum) sum.textContent='· '+rows.length+'건'+(ILBO_CARRY.length?(' + 이월조정 '+ILBO_CARRY.length+'건'):'')+' · '+Math.round(total).toLocaleString()+'원';
   }catch(e){ console.warn('ilbo pending load',e); }
 }
 function _normPname(s){ return String(s||'').replace(/[\s\[\]()\/]/g,'').toLowerCase(); }
@@ -3858,7 +3858,7 @@ function openOvDetail(cat, name){
 function openOvMonth(month, year){
   year=(year===2025||year===2026)?year:2026;
   let consMo=(CONS['monthly'+year]||{})[month]||0, devMo=(DEVICE['monthly'+year]||{})[month]||0, _pendNote='';
-  if(year===2026){ try{ var _pvM=(typeof _pendingView==='function')?(_pendingView(2026).agg||{}):{}, _imM=(typeof _ilboMonthMaps==='function')?(_ilboMonthMaps()||{}):{}; var _cP=((_pvM.consMonthly||{})[month]||0)+((_imM.consMo||{})[month]||0), _dP=((_pvM.devMonthly||{})[month]||0)+((_imM.devMo||{})[month]||0); if(_cP+_dP>0){ _pendNote='<div style="font-size:11px;color:#7c3aed;margin-bottom:8px"><i class="bi bi-hourglass-split me-1"></i>미반영(예정) 포함 · 회계반영 소모품 '+_ovFmt(consMo)+' · 제품 '+_ovFmt(devMo)+'</div>'; consMo+=_cP; devMo+=_dP; } }catch(e){} }
+  if(year===2026){ try{ var _pvM=(typeof _pendingView==='function')?(_pendingView(2026).agg||{}):{}, _imM=(typeof _ilboMonthMaps==='function')?(_ilboMonthMaps()||{}):{}; var _cP=((_pvM.consMonthly||{})[month]||0)+((_imM.consMo||{})[month]||0), _dP=((_pvM.devMonthly||{})[month]||0)+((_imM.devMo||{})[month]||0); if(_cP+_dP!==0){ _pendNote='<div style="font-size:11px;color:#7c3aed;margin-bottom:8px"><i class="bi bi-hourglass-split me-1"></i>미반영(예정) 포함 · 회계반영 소모품 '+_ovFmt(consMo)+' · 제품 '+_ovFmt(devMo)+'</div>'; consMo+=_cP; devMo+=_dP; } }catch(e){} }
   const cp={}, dp={};
   Object.values(CONS.hospitals||{}).forEach(o=>(o['txns'+year]||[]).forEach(t=>{ if(+t[0]===month && t[2]) cp[t[2]]=(cp[t[2]]||0)+Number(t[3]||0); }));
   Object.values(DEVICE.hospitals||{}).forEach(o=>(o['txns'+year]||[]).forEach(t=>{ if(+t[0]===month && t[3]) dp[t[3]]=(dp[t[3]]||0)+Number(t[4]||0); }));
