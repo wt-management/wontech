@@ -185,7 +185,7 @@ function aggIntl2026(rows26){
   var _muK={},_muU={},_muMiss={};   // USD 미기재 거래 보정용(월별 내재환율)
   rows26.forEach(function(r){
     var amt=num(r['금액']); if(amt===0) return;
-    var usd=num(r['USD']); var qty=pint(r['수량']); qty=qty>0?qty:1;
+    var usd=num(r['USD']); var qty=pint(r['수량']);   // 원장 그대로(net): 음수=반품 차감, 공란=0 — 과거 '음수·공란→1' 보정이 수량 과대(예: Pastelle 78 vs 실제 37)를 만들었음. txns·단가현황과 동일 기준.
     var m=moN(r['월']); var p=(r['구분#4']||'').trim(); var cat=(r['구분#2']||'').trim();
     var nm=(r['거래처명']||'').trim(); var sl=(r['담당자']||'').trim();
     var co=(!nm)?'기타':(_intlCtryFix(nm)||(FOR.test(nm)?(nm.match(/^([가-힣a-zA-Z]+)\s*\//)[1]):'국내법인'));
