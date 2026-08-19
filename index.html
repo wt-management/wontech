@@ -7182,7 +7182,7 @@ function _cduDrillWeek(w){ var _t=_cduTodayStr(); _cduDrill(w+' 방문 상세', 
 function _cduDrillChurn(){ _cduDrill('선제 감지 · 집중 대응 병원', _cduRepVs.filter(v=>(v.churnRisk||'').trim()), 'churn'); }
 var _cduNewSet={};
 function _cduDrillNew(){ _cduDrill('신규 개척 방문 (기간 내 첫 방문)', _cduRepVs.filter(v=>_cduNewSet[(v.custName||'').trim()])); }
-function _cduDrillPrice(){ _cduDrill('시술 수가 파악 병원', _cduRepVs.filter(v=>(Number(v.price)||0)>0), 'price'); }
+function _cduDrillPrice(){ _cduDrill('시술 수가 파악 병원', _cduRepVs.filter(v=>((Number(v.price)||0)>0||(Number(v.priceX)||0)>0||(Number(v.priceKiss)||0)>0)), 'price'); }
 function _cduDrillVip(){ var m={}; _cduRepVs.forEach(v=>{var n=(v.custName||'').trim(); if(n)m[n]=1;}); var arr=Object.keys(m).map(n=>({n:n,r:_cduRev(n).y2026||0})).sort((a,b)=>b.r-a.r); _cduDrill('매출 상위 방문 병원', _cduRepVs.filter(v=>{ var top=arr.slice(0,15).map(x=>x.n); return top.indexOf((v.custName||'').trim())>=0; }), 'rev'); }
 function _cduDrill(title, arr, kind){
   var _uh={}; (arr||[]).forEach(function(v){var n=(v.custName||'').trim(); if(n)_uh[n]=1;}); var _uhN=Object.keys(_uh).length; var t=document.getElementById('cduDrillTitle'); if(t) t.innerHTML=_cduEsc(title)+' <span style="font-size:13px;font-weight:400;color:#94a3b8">· '+_uhN+'개처'+(arr.length!==_uhN?' · '+arr.length+'회':'')+'</span>';
@@ -7223,11 +7223,12 @@ function _cduDrill(title, arr, kind){
   var gl=function(txt,bg,fg,bd){return '<div style="background:'+(bg||'#eff6ff')+';border:1px solid '+(bd||'#dbeafe')+';border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:'+(fg||'#1e40af')+';line-height:1.6">'+txt+'</div>';};
   var col=function(inner,w){return '<div class="col-md-'+(w||6)+'">'+inner+'</div>';};
   var _glance='', mini='', cells=[];
-  if(kind==='price'&&prices.length){
-    var bands=_CDU_BANDS.map(b=>[b[0],prices.filter(b[1]).length]);
-    var mxB=_mx(bands.map(b=>b[1]));
-    _glance=gl('<b>수가 포지션</b> · '+nH+'개처 · 평균 <b>'+avg+'천</b> (최저 '+Math.min.apply(null,prices)+' ~ 최고 '+Math.max.apply(null,prices)+'천)', '#faf5ff', '#6d28d9', '#e9d5ff');
-    cells.push(col(box('수가 분포',bands.map(b=>barLine(b[0],b[1],mxB,'#7c3aed')).join('')+note('평균('+avg+'천)보다 <b style="color:#dc2626">낮은 곳</b>=저가 압박·인상 여지, <b style="color:#16a34a">높은 곳</b>=프리미엄·시술량 확대. 목록은 수가 높은 순, 평균 대비 편차 표기.'))));
+  var _pOli=[],_pX=[],_pKiss=[]; if(kind==='price'){ arr.forEach(function(v){var a=Number(v.price)||0,b=Number(v.priceX)||0,c=Number(v.priceKiss)||0;if(a>0)_pOli.push(a);if(b>0)_pX.push(b);if(c>0)_pKiss.push(c);}); }
+  if(kind==='price'&&(_pOli.length||_pX.length||_pKiss.length)){
+    var _avgA=function(a){return a.length?Math.round(a.reduce(function(s,p){return s+p;},0)/a.length):0;};
+    var _distBlk=function(lbl,a,c){ if(!a.length) return '<div style="margin-bottom:9px"><div style="font-size:12.5px;font-weight:700;color:'+c+'">'+lbl+' <span style="font-weight:400;color:#94a3b8">· 기재 없음</span></div></div>'; var bd=_CDU_BANDS.map(function(b){return [b[0],a.filter(b[1]).length];}); var mx=_mx(bd.map(function(x){return x[1];})); return '<div style="margin-bottom:11px"><div style="font-size:12.5px;font-weight:800;color:'+c+';margin-bottom:3px">'+lbl+' <span style="font-weight:400;color:#94a3b8">· '+a.length+'건 · 평균 '+_avgA(a)+'천 (최저 '+Math.min.apply(null,a)+'~최고 '+Math.max.apply(null,a)+')</span></div>'+bd.map(function(b){return barLine(b[0],b[1],mx,c);}).join('')+'</div>'; };
+    _glance=gl('<b>장비별 수가 포지션</b> · '+nH+'개처'+(_pOli.length?' · 올리지오 평균 <b>'+_avgA(_pOli)+'천</b>':'')+(_pX.length?' · X 평균 <b>'+_avgA(_pX)+'천</b>':'')+(_pKiss.length?' · 키스 평균 <b>'+_avgA(_pKiss)+'천</b>':''), '#faf5ff', '#6d28d9', '#e9d5ff');
+    cells.push(col(box('장비별 수가 분포 <span style="font-weight:400;color:#94a3b8">올리지오 · X · 키스</span>',_distBlk('올리지오',_pOli,'#7c3aed')+_distBlk('올리지오 X',_pX,'#2563eb')+_distBlk('올리지오 키스',_pKiss,'#db2777')+note('장비별로 수가대 분포를 봅니다. 평균보다 <b style="color:#dc2626">낮은 곳</b>=인상 여지, <b style="color:#16a34a">높은 곳</b>=프리미엄. 목록은 수가 높은 순.')),12));
   } else if(kind==='comp'){
     var mxC=_mx(_cDist.map(x=>x[1]));
     _glance=gl('<b>경쟁 인텔리전스</b> · 경쟁 노출 <b>'+nH+'개처</b>'+(_cDist.length?' · 최다 <b>'+_cduEsc(_cDist[0][0])+'</b> '+_cDist[0][1]+'개처':''), '#fef2f2', '#b91c1c', '#fecaca');
@@ -7276,7 +7277,7 @@ function _cduDrill(title, arr, kind){
     if(_sArr.length>1) cells.push(col(box('담당자별 방문',_sArr.slice(0,6).map(x=>barLine(x[0],x[1],mxSd,'#2563eb')).join(''))));
     if(_pArr.length) cells.push(col(box('주력 시술 TOP',_pArr.slice(0,6).map(x=>barLine(x[0],x[1],mxPd,'#0d9488')).join(''))));
   }
-  if(cells.length===1){
+  if(cells.length===1 && kind!=='price'){   // 수가 파악은 장비별 분포를 전체폭으로 — 담당자별 방문 칸 제거
     if(_sArr.length>1){ var mxS3=_mx(_sArr.map(x=>x[1])); cells.push(col(box('담당자별 방문 <span style="font-weight:400;color:#94a3b8">건</span>',_sArr.slice(0,6).map(x=>barLine(x[0],x[1],mxS3,'#64748b')).join('')))); }
     else if(_pArr.length){ var mxP3=_mx(_pArr.map(x=>x[1])); cells.push(col(box('주력 시술',_pArr.slice(0,6).map(x=>barLine(x[0],x[1],mxP3,'#0d9488')).join('')))); }
   }
