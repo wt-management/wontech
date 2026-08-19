@@ -1192,7 +1192,12 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <div class="col-md-3 col-6"><label class="form-label" style="font-size:12px">대표원장</label><input id="cdv-doctor" class="form-control form-control-sm"></div>
         <div class="col-md-2 col-6"><label class="form-label" style="font-size:12px">원장수</label><input type="number" id="cd-dcount" class="form-control form-control-sm" min="0"></div>
         <div class="col-md-2 col-4"><label class="form-label" style="font-size:12px">샷 기준</label><input type="number" id="cd-shots" class="form-control form-control-sm" min="0" value="300"></div>
-        <div class="col-md-3 col-4"><label class="form-label" style="font-size:12px">시술 수가<span class="text-muted">(천원)</span></label><input type="number" id="cd-price" class="form-control form-control-sm" min="0"></div>
+        <div class="col-md-6"><label class="form-label" style="font-size:12px">시술 수가 <span class="text-muted">(천원 · 장비별)</span></label>
+          <div class="d-flex gap-2">
+            <div style="flex:1"><input type="number" id="cd-price" class="form-control form-control-sm" min="0" placeholder="0"><div style="font-size:10px;color:#94a3b8;text-align:center;margin-top:2px">올리지오</div></div>
+            <div style="flex:1"><input type="number" id="cd-price-x" class="form-control form-control-sm" min="0" placeholder="0"><div style="font-size:10px;color:#94a3b8;text-align:center;margin-top:2px">올리지오 X</div></div>
+            <div style="flex:1"><input type="number" id="cd-price-kiss" class="form-control form-control-sm" min="0" placeholder="0"><div style="font-size:10px;color:#94a3b8;text-align:center;margin-top:2px">올리지오 Kiss</div></div>
+          </div></div>
         <div class="col-md-2 col-4"><label class="form-label" style="font-size:12px">시술 건수<span class="text-muted">(1일)</span></label><input type="number" id="cd-pcount" class="form-control form-control-sm" min="0"></div>
         <div class="col-12"><label class="form-label" style="font-size:12px">주력 시술 <span class="text-muted">(칩 터치·직접 입력, 복수 /)</span> <button type="button" class="cdu-chipedit" onclick="_cduChipEditToggle('proc')" style="display:none;font-size:10.5px;color:#2563eb;background:none;border:0;padding:0 3px;cursor:pointer">✎ 칩 편집</button></label><input id="cd-proc" class="form-control form-control-sm" oninput="_cduChipSync()">
           <div id="cd-proc-chips"><span class="cdu-chip" data-for="cd-proc" data-v="레이저" onclick="_cduChip(this)">레이저</span><span class="cdu-chip" data-for="cd-proc" data-v="리프팅" onclick="_cduChip(this)">리프팅</span><span class="cdu-chip" data-for="cd-proc" data-v="모공·흉터" onclick="_cduChip(this)">모공·흉터</span><span class="cdu-chip" data-for="cd-proc" data-v="보톡스·필러" onclick="_cduChip(this)">보톡스·필러</span><span class="cdu-chip" data-for="cd-proc" data-v="비만" onclick="_cduChip(this)">비만</span><span class="cdu-chip" data-for="cd-proc" data-v="색소·미백" onclick="_cduChip(this)">색소·미백</span><span class="cdu-chip" data-for="cd-proc" data-v="수술" onclick="_cduChip(this)">수술</span><span class="cdu-chip" data-for="cd-proc" data-v="스킨부스터" onclick="_cduChip(this)">스킨부스터</span><span class="cdu-chip" data-for="cd-proc" data-v="여드름" onclick="_cduChip(this)">여드름</span><span class="cdu-chip" data-for="cd-proc" data-v="질환치료" onclick="_cduChip(this)">질환치료</span><span class="cdu-chip" data-for="cd-proc" data-v="탈모" onclick="_cduChip(this)">탈모</span></div></div>
@@ -2625,7 +2630,8 @@ const DB = {
         rows.forEach(r=>{ snap[r.id]=r._j; });
       }
       showToast('저장 완료!', true);
-    } catch(e) { showToast('저장 실패: '+e.message, true, true); }
+      return true;
+    } catch(e) { showToast('저장 실패: '+e.message, true, true); return false; }
   },
   // 다음 save 때 이 행을 강제로 업로드하게 표시(스냅샷 무효화). 내용이 같아도 다시 밀어올려야 할 때 사용.
   touch(name, id) { if(this._orig[name] && id!=null) delete this._orig[name][id]; },
@@ -4793,6 +4799,8 @@ async function goUpload(){
   }
   function _fire(){
     try{
+      // 작성 중(모달 열림)이면 자동 로그아웃 보류 — 상세 폼 작성 중 튕겨 입력 소실되는 것 방지
+      if(document.querySelector('.modal.show')){ _arm(); return; }
       if(typeof _sb!=='undefined' && _sb && _sb.auth && _sb.auth.getSession){
         _sb.auth.getSession().then(function(r){
           var s=r&&r.data&&r.data.session; var _noAutoLogout=['pmw0406@gmail.com','son8704@wontech.com','megan@wontech.com','hyerin0519@wontech.com','tndnjs890@wontech.com']; if(s&&s.user&&_noAutoLogout.indexOf(s.user.email)>=0){ _arm(); return; } /* 마스터·megan은 자동로그아웃 제외 */ if(s){ _logout(); } else { _arm(); }
@@ -6720,6 +6728,10 @@ function _cduToggleDetail(){ _cduDetailOpen=!_cduDetailOpen; renderCDU(); }
 function _cduEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function _cduWeekLabel(ds){ if(!ds) return ''; var d=new Date(String(ds).slice(0,10)+'T00:00:00'); if(isNaN(d)) return ''; var dow=(d.getDay()+6)%7; var mon=new Date(d); mon.setDate(d.getDate()-dow); var sun=new Date(mon); sun.setDate(mon.getDate()+6); var f=function(x){ return ('0'+(x.getMonth()+1)).slice(-2)+'.'+('0'+x.getDate()).slice(-2); }; return f(mon)+'~'+f(sun); }   // 월~일 주(상단 '이번 주' 기준과 일치)
 function _cduVisits(){ return (DB.d.logs||[]).filter(l=>l.kind==='cdu'); }
+// 장비별 시술 수가 표기(올리지오/X/키스). 하나만 있으면 그것만, 여러개면 라벨 붙여 표시.
+function _cduPriceDisp(v){ if(!v) return ''; var a=[]; if(v.price) a.push(['올',v.price]); if(v.priceX) a.push(['X',v.priceX]); if(v.priceKiss) a.push(['키스',v.priceKiss]);
+  if(!a.length) return ''; if(a.length===1) return _cduEsc(a[0][1])+'천';
+  return a.map(function(x){return '<span style="white-space:nowrap">'+x[0]+' '+_cduEsc(x[1])+'</span>';}).join(' / ')+'천'; }
 function _cduMeta(){ return (DB.d.logs||[]).find(l=>l.kind==='cdu_meta')||null; }
 function _cduFillSales(){ var sel=document.getElementById('cdu-sales'); if(!sel)return; var names=[...new Set(_cduVisits().map(v=>(v.sales||'').trim()).filter(Boolean))].sort(); var cur=sel.value; sel.innerHTML='<option value="">담당 전체</option>'+names.map(n=>'<option>'+_cduEsc(n)+'</option>').join(''); if([...sel.options].some(o=>o.value===cur))sel.value=cur; }
 // ── 기간 조회 엔진(일정 메뉴 방식: 프리셋 + 직접범위) ──
@@ -7278,7 +7290,8 @@ function _cduDrill(title, arr, kind){
   var rows=arr.slice().sort(_cmp);
   var list='<div style="column-count:2;column-gap:26px">'+rows.map(function(v){ var rev=_cduRev(v.custName); var p=Number(v.price)||0;
     var dv=(kind==='price'&&avg&&p>0)?(p-avg):null;
-    var priceTag=p>0?('수가 <b style="color:#7c3aed">'+p+'천</b>'+(dv!==null&&dv!==0?' <span style="color:'+(dv>0?'#16a34a':'#dc2626')+';font-weight:700">'+(dv>0?'+':'')+dv+'</span>':'')):'';
+    var _pex=[]; if(v.priceX)_pex.push('X '+_cduEsc(v.priceX)); if(v.priceKiss)_pex.push('키스 '+_cduEsc(v.priceKiss));
+    var priceTag=p>0?('수가 <b style="color:#7c3aed">'+p+'천</b>'+(dv!==null&&dv!==0?' <span style="color:'+(dv>0?'#16a34a':'#dc2626')+';font-weight:700">'+(dv>0?'+':'')+dv+'</span>':'')+(_pex.length?' <span style="color:#94a3b8;font-size:11px">('+_pex.join(' / ')+'천)</span>':'')):((v.priceX||v.priceKiss)?'수가 '+_cduPriceDisp(v):'');
     var _rsn=_cduReasonDisp((v.noBuyReason||'').trim()), _act=(v.action||'').trim(), _fb=(v.feedback||'').trim();
     var _person=''; if(_fb){ var _fl=_fb.split(/\r?\n/); var _f0=_fl[0].trim(); if(_fl.length>1&&_f0.length<=22&&!/^[-·•*]/.test(_f0)){ _person=_f0; _fb=_fl.slice(1).join('\n').trim(); } }
     var meta=[]; if(v.competitor) meta.push('<span style="color:#dc2626;font-weight:700">'+_cduEsc(v.competitor)+'</span>'); if(priceTag) meta.push('<span style="color:#64748b">'+priceTag+'</span>'); if(v.sales) meta.push('<span style="color:#94a3b8">'+_cduEsc(v.sales)+'</span>');
@@ -7309,7 +7322,7 @@ function _cduHospAuto(force){
   var setP=(id,val,def)=>{ var e=document.getElementById(id); if(e&&val!=null&&val!==''&&(force||!e.value||e.value===def)) e.value=val; };
   if(rep) setIf('cd-sales',rep);
   setIf('cdv-doctor', hi.doctor||pv('doctor'));
-  if(_hist.length){ setIf('cd-dealer',pv('dealer')); setIf('cd-dcount',pv('doctorCount')); setIf('cd-proc',pv('mainProc')); setIf('cd-comp',pv('competitor')); setIf('cd-chan',pv('channels')); setIf('cd-price',pv('price')); setIf('cd-contact-profile',pv('contactProfile'));
+  if(_hist.length){ setIf('cd-dealer',pv('dealer')); setIf('cd-dcount',pv('doctorCount')); setIf('cd-proc',pv('mainProc')); setIf('cd-comp',pv('competitor')); setIf('cd-chan',pv('channels')); setIf('cd-price',pv('price')); setIf('cd-price-x',pv('priceX')); setIf('cd-price-kiss',pv('priceKiss')); setIf('cd-contact-profile',pv('contactProfile'));
     setP('cd-shots',pv('shots'),'300'); setIf('cd-oli-x',pv('oliX')); setIf('cd-oli-kiss',pv('oliKiss')); setP('cdv-region',pv('region'),'국내'); }
   if(info){ var b=[];
     if(rep) b.push('담당 <b>'+_cduEsc(rep)+'</b>');
@@ -7321,7 +7334,7 @@ function _cduHospAuto(force){
     info.style.display=''; info.innerHTML = b.length? '<i class="bi bi-magic me-1"></i>'+b.join(' · ') : '<span style="color:#94a3b8">한국영업 DB에 매출 이력이 없는 신규/미등록 병원입니다.</span>';
     var hist=_hist;
     if(hist.length){ info.innerHTML+='<details style="margin-top:7px"><summary style="cursor:pointer;font-size:11.5px;color:#0891b2;font-weight:700"><i class="bi bi-clock-history me-1"></i>지난 방문 '+hist.length+'회 보기</summary><div style="margin-top:4px">'
-      +hist.slice(0,8).map(function(v){ return '<div style="font-size:11.5px;color:#475569;padding:3px 0;border-top:1px dashed #cbe8ed"><b style="color:#0f766e">'+_cduEsc(String(v.date||'').slice(0,10))+'</b>'+(v.sales?' · '+_cduEsc(v.sales):'')+(v.price?' · 수가 '+_cduEsc(v.price)+'천':'')+(v.competitor?' · <span style="color:#dc2626">'+_cduEsc(v.competitor)+'</span>':'')+((v.reels&&/^(촬영완료|O)$/i.test(v.reels))?' · <span style="color:#db2777">릴스</span>':'')+((v.feedback||'').trim()?'<div style="color:#64748b;margin-top:1px">'+_cduEsc(v.feedback.slice(0,55))+'</div>':'')+'</div>'; }).join('')
+      +hist.slice(0,8).map(function(v){ return '<div style="font-size:11.5px;color:#475569;padding:3px 0;border-top:1px dashed #cbe8ed"><b style="color:#0f766e">'+_cduEsc(String(v.date||'').slice(0,10))+'</b>'+(v.sales?' · '+_cduEsc(v.sales):'')+((v.price||v.priceX||v.priceKiss)?' · 수가 '+_cduPriceDisp(v):'')+(v.competitor?' · <span style="color:#dc2626">'+_cduEsc(v.competitor)+'</span>':'')+((v.reels&&/^(촬영완료|O)$/i.test(v.reels))?' · <span style="color:#db2777">릴스</span>':'')+((v.feedback||'').trim()?'<div style="color:#64748b;margin-top:1px">'+_cduEsc(v.feedback.slice(0,55))+'</div>':'')+'</div>'; }).join('')
       +'</div></details>'; }
   }
   try{ _cduChipSync(); }catch(e){}
@@ -7737,7 +7750,7 @@ function _cduMiniCard(v){
     +'</div>'
     +'<div style="font-size:13px;font-weight:700;color:#1f2937;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.35">'+_cduEsc(v.custName||'')+'</div>'
     +(planned?'<div style="font-size:12.5px;color:#2563eb;font-weight:700;margin-top:1px"><i class="bi bi-pencil-square"></i> 결과 입력</div>'
-      :((v.price||v.competitor)?'<div style="font-size:12.5px;line-height:1.4;margin-top:1px">'+(v.price?'<span style="color:#475569">수가 '+_cduEsc(v.price)+'천</span>'+(v.competitor?' · ':''):'')+(v.competitor?'<span style="color:#dc2626">'+_cduEsc(v.competitor)+'</span>':'')+'</div>':''))
+      :((v.price||v.priceX||v.priceKiss||v.competitor)?'<div style="font-size:12.5px;line-height:1.4;margin-top:1px">'+((v.price||v.priceX||v.priceKiss)?'<span style="color:#475569">수가 '+_cduPriceDisp(v)+'</span>'+(v.competitor?' · ':''):'')+(v.competitor?'<span style="color:#dc2626">'+_cduEsc(v.competitor)+'</span>':'')+'</div>':''))
   +'</div>';
 }
 function _cduInputCal(){
@@ -7774,7 +7787,7 @@ function _cduInputList(vs){
       +'<td style="font-size:12.5px" '+oc(v.id)+'>'+_cduEsc(v.doctor||'')+(v.doctorCount?' <span style="color:#64748b">('+_cduEsc(v.doctorCount)+')</span>':'')+'</td>'
       +'<td style="font-size:12.5px;color:#dc2626" '+oc(v.id)+'>'+_cduEsc(v.competitor||'')+'</td>'
       +'<td style="font-size:12px;color:#2563eb;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" '+oc(v.id)+'>'+_cduEsc(v.channels||'')+'</td>'
-      +'<td class="text-end" style="font-size:12.5px" '+oc(v.id)+'>'+(v.price?_cduEsc(v.price)+'천':'-')+'</td>'
+      +'<td class="text-end" style="font-size:12.5px" '+oc(v.id)+'>'+((v.price||v.priceX||v.priceKiss)?_cduPriceDisp(v):'-')+'</td>'
       +'<td class="text-center" style="font-size:12.5px" '+oc(v.id)+'>'+(/^(원내|외부|O)$/i.test((v.event||'').trim())?'<span style="color:#7c3aed;font-weight:700">이벤트</span> ':'')+(/^(촬영완료|O)$/i.test((v.reels||'').trim())?'<span style="color:#db2777;font-weight:700">릴스</span>':(/^제안$/.test((v.reels||'').trim())?'<span style="color:#f472b6;font-weight:700">릴스제안</span>':''))+'</td>'
       +'<td style="font-size:12px;color:#64748b" '+oc(v.id)+'>'+_cduEsc(v.sales||'')+'</td>'
       +'<td class="text-end" style="white-space:nowrap"><button class="btn btn-link btn-sm p-0 me-2" title="병원 이력" onclick="openCDUHosp(\''+_cduEsc(v.custName||'').replace(/\x27/g,"\\x27")+'\')"><i class="bi bi-clock-history" style="font-size:12.5px;color:#94a3b8"></i></button><button class="btn btn-link btn-sm p-0 me-2" title="복사(재방문)" onclick="openCDUVisit(\''+v.id+'\',true)"><i class="bi bi-files" style="font-size:12.5px;color:#94a3b8"></i></button><i class="bi bi-pencil" '+oc(v.id)+' style="color:#94a3b8;font-size:13px;cursor:pointer"></i></td></tr>';
@@ -7924,7 +7937,7 @@ function openCDUVisit(id, copy){
   document.getElementById('cdv-region').value = v&&v.region?v.region:'국내';
   sv('cd-sales', v?v.sales:(typeof currentUserName==='function'?currentUserName():''));
   document.getElementById('cd-event').value=(v&&!copy)?(v.event||''):'';
-  sv('cd-shots', v?(v.shots||'300'):'300'); sv('cd-price', v?v.price:''); sv('cd-pcount', copy?'':(v?v.procCount:'')); sv('cd-stock', v?v.stock:''); sv('cd-churn', copy?'':(v?v.churnRisk:''));
+  sv('cd-shots', v?(v.shots||'300'):'300'); sv('cd-price', v?v.price:''); sv('cd-price-x', v?(v.priceX||''):''); sv('cd-price-kiss', v?(v.priceKiss||''):''); sv('cd-pcount', copy?'':(v?v.procCount:'')); sv('cd-stock', v?v.stock:''); sv('cd-churn', copy?'':(v?v.churnRisk:''));
   sv('cd-reason', copy?'':(v?(v.noBuyReason||''):''));
   sv('cd-contact-profile', copy?'':(v?(v.contactProfile||''):'')); sv('cd-oli-basic', v?(v.oliBasic||''):'1'); sv('cd-oli-x', v?(v.oliX||''):''); sv('cd-oli-kiss', v?(v.oliKiss||''):'');
   (function(){ var e=document.getElementById('cd-action'); if(!e) return; var val=copy?'':(v?(v.action||''):'');
@@ -7949,17 +7962,27 @@ async function saveCDUVisit(){
   // 릴스는 별도 cdu_reel 레코드로 관리 — 방문 저장 시 기존 방문내 릴스필드는 보존(덮어쓰지 않음)
   var rec={id:id, kind:'cdu', status:'done', date:date, custName:hosp, dealer:g('cd-dealer').trim(), doctor:g('cdv-doctor').trim(), doctorCount:g('cd-dcount'),
     mainProc:g('cd-proc').trim(), competitor:g('cd-comp').trim(), feedback:g('cd-fb').trim(), channels:g('cd-chan').trim(), region:g('cdv-region'),
-    sales:g('cd-sales').trim(), time:(_pv&&_pv.time)||'', event:g('cd-event'), reels:(_pv&&_pv.reels)||'', reelsUrl:(_pv&&_pv.reelsUrl)||'', reelsStage:(_pv&&_pv.reelsStage)||'', reelsViews:(_pv&&_pv.reelsViews)||'', shots:g('cd-shots'), price:g('cd-price'), procCount:g('cd-pcount'), stock:g('cd-stock').trim(), churnRisk:g('cd-churn').trim(),
+    sales:g('cd-sales').trim(), time:(_pv&&_pv.time)||'', event:g('cd-event'), reels:(_pv&&_pv.reels)||'', reelsUrl:(_pv&&_pv.reelsUrl)||'', reelsStage:(_pv&&_pv.reelsStage)||'', reelsViews:(_pv&&_pv.reelsViews)||'', shots:g('cd-shots'), price:g('cd-price'), priceX:g('cd-price-x'), priceKiss:g('cd-price-kiss'), procCount:g('cd-pcount'), stock:g('cd-stock').trim(), churnRisk:g('cd-churn').trim(),
     noBuyReason:g('cd-reason'), action:g('cd-action').trim(),
     contactProfile:g('cd-contact-profile').trim(), oliBasic:g('cd-oli-basic'), oliX:g('cd-oli-x'), oliKiss:g('cd-oli-kiss'),
     by:(typeof currentUserName==='function'?currentUserName():'')};
   var idx=(DB.d.logs||[]).findIndex(l=>l.id===id);
+  var _prev=idx>=0?DB.d.logs[idx]:null;
   if(idx>=0) DB.d.logs[idx]=rec; else DB.d.logs.push(rec);
+  // ★유실 방지: 저장을 확실히 마친 뒤에만 모달 닫기. 실패하면 모달 유지 + 재시도 안내(입력 소실 방지)
+  var _btn=document.querySelector('#cduVisitModal .btn-primary'); var _bt=_btn?_btn.textContent:''; if(_btn){_btn.disabled=true;_btn.textContent='저장 중...';}
+  var ok=await DB.save('logs');
+  if(_btn){_btn.disabled=false;_btn.textContent=_bt;}
+  if(ok===false){   // 저장 실패 → 메모리 롤백, 모달 유지
+    if(_prev){ DB.d.logs[idx]=_prev; } else { var _ri=DB.d.logs.findIndex(l=>l.id===id); if(_ri>=0) DB.d.logs.splice(_ri,1); }
+    alert('저장에 실패했습니다.\n인터넷/로그인 상태를 확인하고 [저장]을 다시 눌러주세요.\n(입력하신 내용은 그대로 남아 있습니다.)');
+    return;
+  }
   try{ bootstrap.Modal.getInstance(document.getElementById('cduVisitModal')).hide(); }catch(e){}
   renderCDU(); try{ renderCDUWeekly(); }catch(e){}
-  DB.save('logs').then(function(){ showToast('방문 기록 저장 완료', true);
-    var t=_cduTodayStr(); var pend=(DB.d.logs||[]).filter(function(l){return l.kind==='cdu'&&l.status==='planned'&&String(l.date||'').slice(0,10)<t;}).sort(function(a,b){return String(a.date||'').localeCompare(String(b.date||''));});
-    if(pend.length){ setTimeout(function(){ if(confirm('결과 미입력 방문 '+pend.length+'건이 남았습니다. 다음 건을 이어서 입력할까요?\n('+_cduEsc(pend[0].custName||'')+' · '+String(pend[0].date||'').slice(5)+')')) openCDUVisit(pend[0].id); },350); } });
+  showToast('방문 기록 저장 완료', true);
+  var t=_cduTodayStr(); var pend=(DB.d.logs||[]).filter(function(l){return l.kind==='cdu'&&l.status==='planned'&&String(l.date||'').slice(0,10)<t;}).sort(function(a,b){return String(a.date||'').localeCompare(String(b.date||''));});
+  if(pend.length){ setTimeout(function(){ if(confirm('결과 미입력 방문 '+pend.length+'건이 남았습니다. 다음 건을 이어서 입력할까요?\n('+_cduEsc(pend[0].custName||'')+' · '+String(pend[0].date||'').slice(5)+')')) openCDUVisit(pend[0].id); },350); }
 }
 function delCDUVisit(){
   var id=(document.getElementById('cd-id')||{}).value; if(!id) return;
@@ -8096,7 +8119,7 @@ function openCDUHosp(name){
       +'<span style="position:absolute;left:-5px;top:2px;width:8px;height:8px;border-radius:50%;background:#2563eb"></span>'
       +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:13.5px;color:#0f172a">'+_cduEsc(String(v.date||'').slice(0,10))+'</b>'
         +(v.doctor?'<span style="font-size:12.5px;color:#64748b">'+_cduEsc(v.doctor)+(v.doctorCount?' (원장 '+_cduEsc(v.doctorCount)+')':'')+'</span>':'')
-        +(v.price?'<span style="font-size:12.5px;color:#0891b2;font-weight:700">수가 '+_cduEsc(v.price)+'천</span>':'')
+        +((v.price||v.priceX||v.priceKiss)?'<span style="font-size:12.5px;color:#0891b2;font-weight:700">수가 '+_cduPriceDisp(v)+'</span>':'')
         +(v.sales?'<span style="font-size:12px;color:#94a3b8;margin-left:auto">'+_cduEsc(v.sales)+'</span>':'')+'</div>'
       +(badges.length?'<div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap">'+badges.join('')+'</div>':'')
       +(v.channels?'<div style="font-size:12.5px;color:#2563eb;margin-top:3px"><i class="bi bi-megaphone me-1"></i>'+_cduEsc(v.channels)+'</div>':'')
