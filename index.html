@@ -3063,6 +3063,7 @@ async function _showLauncherOrApp(user) {
   _isAdmin = profile?.role === 'admin';
   _isMgr   = _isAdmin || profile?.role === 'manager';
   _isStrat = String(profile?.dept||'').replace(/\s/g,'').includes('영업전략');   // 영업전략파트 → 현황판 열람 허용
+  if(_isAdmin) { try{ _inboxBadge(); }catch(e){} }   // 최근 7일 오류·요청 건수를 관리자 눈에 띄게
   // 임시비밀번호를 아직 안 바꾼 사용자 → 강제 변경(마스터 제외)
   if(profile.temp_pw && String(profile.temp_pw).trim() && user.email !== 'pmw0406@gmail.com'){ _hideLoading(); _showForcePw(); return; }
   // 새로고침 시 이전 상태 복원
@@ -11156,6 +11157,23 @@ async function setUserPassword(id, email){
 
 async function renderUsers() { renderAdminUsers(); }
 
+// ── 최근 7일 오류·요청 알림 ──────────────────────────────────────────────
+// 오류는 예전부터 쌓이고 있었지만 조회함을 일부러 열어봐야만 보였다. 담당자가 바뀌면
+// 아무도 안 열어본다. 그래서 관리자로 로그인하면 화면 우하단에 건수를 먼저 띄운다.
+async function _inboxBadge(){
+  var since=new Date(Date.now()-7*864e5).toISOString();
+  var er=0, fb=0;
+  try{ var a=await _sb.from('site_errors').select('id',{count:'exact',head:true}).gte('created_at',since); if(!a.error) er=a.count||0; }catch(e){}
+  try{ var b=await _sb.from('site_feedback').select('id',{count:'exact',head:true}).gte('created_at',since); if(!b.error) fb=b.count||0; }catch(e){}
+  if(!er && !fb) return;
+  if(document.getElementById('wt-inbox-badge')) return;
+  var d=document.createElement('div'); d.id='wt-inbox-badge';
+  d.style.cssText='position:fixed;right:18px;bottom:106px;z-index:99989;background:#7f1d1d;color:#fff;padding:8px 13px;border-radius:10px;font-size:12px;line-height:1.5;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.4);font-family:inherit;max-width:240px';
+  d.innerHTML='<b>최근 7일</b><br>'+(er?('오류 <b>'+er+'</b>건'):'')+(er&&fb?' · ':'')+(fb?('요청 <b>'+fb+'</b>건'):'')+
+    '<div style="font-size:11px;color:#fecaca;margin-top:3px">눌러서 조회함 열기</div>';
+  d.onclick=function(){ try{ showPage('feedback'); }catch(e){} d.remove(); };
+  document.body.appendChild(d);
+}
 // ── 요청·신고함 (site_feedback / site_errors 조회, 관리자 전용) ──
 let _fbSub='feedback';
 function adminTab(t){
