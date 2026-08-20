@@ -2167,7 +2167,13 @@ function _curMonth(){ const n=new Date(); const cal=n.getFullYear()===_dataYear(
 function _matureMonth(){
   const t=_curMonth(); if(t<=1) return t;
   const v=m=>(Number(CONS.monthly2026&&CONS.monthly2026[m])||0)+(Number(DEVICE.monthly2026&&DEVICE.monthly2026[m])||0)+(Number(INTL.monthly&&INTL.monthly[m])||0)+(Number(CONS.etcMonthly2026&&CONS.etcMonthly2026[m])||0);
-  return (v(t) >= v(t-1)*0.2) ? t : t-1;
+  // 한 달 전과 견줘 20% 미만이면 아직 '월초 소량'으로 보고 전월을 기준월로 삼는다.
+  // 다만 전월도 비어 있으면(업로드가 두 달 이상 밀린 경우) 0 >= 0*0.2 이 참이 돼 텅 빈 달이 기준월이 됐다.
+  // → 실적이 있는 마지막 달까지 거슬러 올라간다. 업로드가 끊겨도 분기·반기가 빈 칸으로 넘어가지 않는다.
+  let m=t;
+  if(v(m) < v(m-1)*0.2) m--;          // 월초 소량 → 전월 (원래 규칙 그대로, 한 칸만)
+  while(m>1 && v(m)<=0) m--;          // 그래도 비어 있으면(업로드가 두 달 이상 밀림) 실적 있는 달까지
+  return m;
 }
 let _ovRegMo={};
 // 국내·해외 월별 표 — 지난달=회계반영, 당월=미반영 포함. 숫자 클릭 시 내역.
