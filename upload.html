@@ -12,7 +12,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="wtu_engine.js?v=20260818"></script>
-<script src="portfolio_engine.js?v=20260727"></script>
+<script src="portfolio_engine.js?v=20260820"></script>
 <script src="ilbo_engine.js?v=20260813"></script>
 <style>
   html{color-scheme:light}
@@ -296,7 +296,7 @@ async function handleFile(file){
     // Sales Portfolio 집계(회계분) — 2025는 기존 blob 유지, 미반영은 사이트에서 live 가산
     try{
       const rows26=WTU.transformRaw(sheets, WTU.buildCatMap(main,device,intl));
-      BUILT.sp=WTPF.buildPortfolio(rows26, sp, BUILT.summary.updatedAt);
+      BUILT.sp=WTPF.buildPortfolio(rows26, sp, BUILT.summary.updatedAt, (BUILT.main&&BUILT.main.dataYear)||null);   // dataYear 를 넘겨 연도 승계 판단
       const g=(BUILT.sp.amount['전체']||[]).find(r=>r.item==='총합계');
       BUILT.summary.portfolio26 = g?Math.round(g.t26/100*10)/10:0;   // 억
       log('포트폴리오 집계 OK (회계 2026 '+BUILT.summary.portfolio26+'억)');

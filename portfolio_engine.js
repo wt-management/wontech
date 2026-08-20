@@ -67,17 +67,21 @@ function aggregate(rows26){
   return {amount:A, qty:Q};
 }
 
-// 기존 SP에서 2025(q25,t25) 가져오기 (cat,item 매칭)
-function prev25(existingSP, unit, scope, cat, item){
+// 기존 SP에서 전년(q25,t25) 가져오기 (cat,item 매칭)
+// q26/q25 는 '올해/전년' 칸 이름이다(연도가 이름에 굳어 있을 뿐 내용은 해마다 바뀐다).
+// 연도가 넘어간 업로드(rolled)면 기존 '올해' 값이 곧 새 '전년' 값이다.
+function prev25(existingSP, unit, scope, cat, item, rolled){
   try{
     var arr=existingSP[unit][scope];
-    for(var i=0;i<arr.length;i++){ if(arr[i].cat===cat&&arr[i].item===item) return {q25:arr[i].q25||[0,0,0,0], t25:arr[i].t25||0}; }
+    for(var i=0;i<arr.length;i++){ if(arr[i].cat===cat&&arr[i].item===item){
+      return rolled ? {q25:arr[i].q26||[0,0,0,0], t25:arr[i].t26||0}
+                    : {q25:arr[i].q25||[0,0,0,0], t25:arr[i].t25||0}; } }
   }catch(e){}
   return {q25:[0,0,0,0], t25:0};
 }
 
 // 한 (unit,scope)의 보고 행배열 생성 (총합계/소계/RF소계/HIFU소계/품목)
-function buildRows(agg26, existingSP, unit, scope){
+function buildRows(agg26, existingSP, unit, scope, rolled){
   var data26=(unit==='amount'?agg26.amount:agg26.qty)[scope]||{};
   var rows=[]; var sum4=function(a,b){ return [a[0]+b[0],a[1]+b[1],a[2]+b[2],a[3]+b[3]]; };
   var sumArr=function(a){ return a[0]+a[1]+a[2]+a[3]; };
@@ -88,7 +92,7 @@ function buildRows(agg26, existingSP, unit, scope){
     var catRows=[], cat26=[0,0,0,0], cat25=[0,0,0,0];
     var pushItem=function(it){
       var q26=data26[it]||[0,0,0,0];
-      var pv=prev25(existingSP,unit,scope,g.cat,it);
+      var pv=prev25(existingSP,unit,scope,g.cat,it,rolled);
       cat26=sum4(cat26,q26); cat25=sum4(cat25,pv.q25);
       catRows.push({cat:g.cat,item:it,q25:pv.q25,t25:pv.t25,q26:q26,t26:sumArr(q26)});
     };
@@ -97,7 +101,7 @@ function buildRows(agg26, existingSP, unit, scope){
       g.subs.forEach(function(s){
         var sub26=[0,0,0,0], sub25=[0,0,0,0], items=[];
         s.items.forEach(function(it){
-          var q26=data26[it]||[0,0,0,0]; var pv=prev25(existingSP,unit,scope,g.cat,it);
+          var q26=data26[it]||[0,0,0,0]; var pv=prev25(existingSP,unit,scope,g.cat,it,rolled);
           sub26=sum4(sub26,q26); sub25=sum4(sub25,pv.q25);
           items.push({cat:g.cat,item:it,q25:pv.q25,t25:pv.t25,q26:q26,t26:sumArr(q26)});
         });
@@ -120,14 +124,18 @@ function buildRows(agg26, existingSP, unit, scope){
   return rows;
 }
 
-function buildPortfolio(rows26, existingSP, updatedAt){
+function buildPortfolio(rows26, existingSP, updatedAt, dataYear){
   existingSP=existingSP||{amount:{},qty:{}};
+  // 연도가 넘어갔나 — 넘어갔으면 기존 '올해' 열을 '전년' 열로 승계한다.
+  // 이게 없으면 2027년 표의 전년 열에 2025년 값이 그대로 남아 비교가 두 해 어긋난다.
+  var _sy=Number(existingSP.dataYear)||0;
+  var rolled = !!(dataYear && _sy && dataYear>_sy);
   var agg26=aggregate(rows26);
   var out={ unit:'백만원', asOf:(updatedAt||(existingSP.asOf)||''), updatedAt:(updatedAt||''),
-    amount:{}, qty:{}, notes:(existingSP.notes||[]) };
+    dataYear:(dataYear||_sy||null), amount:{}, qty:{}, notes:(existingSP.notes||[]) };
   ['전체','국내','해외'].forEach(function(s){
-    out.amount[s]=buildRows(agg26,existingSP,'amount',s);
-    out.qty[s]=buildRows(agg26,existingSP,'qty',s);
+    out.amount[s]=buildRows(agg26,existingSP,'amount',s,rolled);
+    out.qty[s]=buildRows(agg26,existingSP,'qty',s,rolled);
   });
   return out;
 }
