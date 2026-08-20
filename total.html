@@ -1472,7 +1472,7 @@ document.getElementById('wt-fb-send').onclick=function(){var t=document.getEleme
     <div class="rpt-hero" id="rpt-hero"></div>
     <div class="card p-3 mb-2">
       <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px;margin-bottom:8px">
-        <div class="fw-bold" style="font-size:14px"><i class="bi bi-table me-1" style="color:#4f46e5"></i>2026년 글로벌영업 매출현황 <span style="font-size:11px;font-weight:500;color:#94a3b8">· 행을 클릭하면 상세 분석</span></div>
+        <div class="fw-bold" style="font-size:14px"><i class="bi bi-table me-1" style="color:#4f46e5"></i><span id="rpt-yr">2026</span>년 글로벌영업 매출현황 <span style="font-size:11px;font-weight:500;color:#94a3b8">· 행을 클릭하면 상세 분석</span></div>
         <div style="font-size:11px;color:#94a3b8">단위: 백만원 · VAT 별도 · <b>실적 = 회계 + 미반영</b></div>
       </div>
       <div style="overflow-x:auto"><table class="rpt-table" id="report-table"></table></div>
@@ -1925,6 +1925,7 @@ function buildSelectors(){
   const mOpts=Array.from({length:12},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+'월</option>').join('');
   ['ov-from','ov-to','q-from','q-to'].forEach(id=>{document.getElementById(id).innerHTML=mOpts;});
   const lastMo=(typeof _curMonth==='function'?_curMonth():_lastDataMonth());   // 달력 현재월 자동 반영(월 바뀌면 즉시 전환) — 월초 빈달은 '월별 추이'·'당월 매출 관리'로 보완
+  var _ry=document.getElementById('rpt-yr'); if(_ry) _ry.textContent=String(_dataYear());   // 정적 제목의 연도도 데이터에 맞춘다
   document.getElementById('ov-from').value=1; document.getElementById('ov-to').value=lastMo;
   document.getElementById('q-from').value=1; document.getElementById('q-to').value=lastMo;
   qState.f=1; qState.t=lastMo;
@@ -2044,9 +2045,9 @@ function opsKpi(){
     o.demoAll=OPS.demo.length;
     o.demoUp=OPS.demo.filter(d=>{ const x=new Date(String(d.date||'').slice(0,10)); return !isNaN(x)&&x>=t; }).length; }
   const yr=v=>String(v||'').slice(0,4);
-  if(OPS.us){ const S=(OPS.us.sales||[]).filter(x=>yr(x.date)==='2026');
+  if(OPS.us){ const S=(OPS.us.sales||[]).filter(x=>yr(x.date)===String(_dataYear()));
     o.usAmt=S.reduce((s,x)=>s+(+x.amt||0),0)*(+OPS.us.rate||1450); o.usCnt=S.length; }
-  if(OPS.th){ const S=(OPS.th.sales||[]).filter(x=>yr(x.date)==='2026');
+  if(OPS.th){ const S=(OPS.th.sales||[]).filter(x=>yr(x.date)===String(_dataYear()));
     o.thAmt=S.reduce((s,x)=>s+(+x.amt||0),0)*(+OPS.th.rate||38); o.thCnt=S.length; }
   return o;
 }
@@ -2150,8 +2151,15 @@ function renderChannelMix(f,t){
   const ch=document.getElementById('ov-mix-ch'); if(ch) ch.innerHTML=bar('국내',dom,tot,'#2563eb')+bar('해외',intl,tot,'#0d9488');
   const ct=document.getElementById('ov-mix-cat'); if(ct) ct.innerHTML=bar('장비',dev,cd,'#7c3aed')+bar('소모품',cons,cd,'#0891b2')+'<div style="font-size:11px;color:#9ca3af;margin-top:2px">국내 실데이터 \u00b7 해외 제품군 비율 환산</div>';
 }
+// ── 연도 표기 ───────────────────────────────────────────────────────────────
+// 여기(전사 종합)는 목표(sales_targets.year)·미반영 예정일·회계 날짜가 전부 '진짜 연도'다.
+// 그래서 2026 이라고 박아둔 자리는 전부 '지금 데이터의 연도'라는 뜻이며, 파서가 적어준
+// dataYear 로 갈아 끼운다. 2027년 파일을 올리면 목표·미반영이 그대로 따라온다.
+// (제품 포트폴리오의 q26/t26 같은 칸 이름만 옛 연도 그대로 — 내용은 해마다 새로 채워진다)
+function _dataYear(){ var y=Number((typeof CONS!=='undefined'&&CONS&&CONS.dataYear)||(typeof DEVICE!=='undefined'&&DEVICE&&DEVICE.dataYear)||0); return y||2026; }
+function _YR(y){ y=Number(y); var C=_dataYear(); return y===2026?C:(y===2025?C-1:y); }   // 칸 연도 → 보여줄 연도
 // 보고 기준월 = 달력상 현재월과 실제 데이터 마지막월 중 작은 값. 월초(데이터 없는 새 달)에 빈 현재월/분기/반기로 롤오버되는 것 방지.
-function _curMonth(){ const n=new Date(); const cal=n.getFullYear()===2026?(n.getMonth()+1):12; return Math.max(1,cal); }   // 달력 현재월 자동 반영(데이터월 캡 제거 — 월 바뀌면 즉시 전환, 전월 병기로 공백 보완)
+function _curMonth(){ const n=new Date(); const cal=n.getFullYear()===_dataYear()?(n.getMonth()+1):12; return Math.max(1,cal); }   // 달력 현재월 자동 반영(데이터월 캡 제거 — 월 바뀌면 즉시 전환, 전월 병기로 공백 보완)
 // 보고 기준월(성숙월): 새 달 실적이 전월의 20% 미만이면 아직 '월초 소량'으로 보고 전월을 기준월로.
 // 매출현황 분기/반기 자동전환·목표달성률 분모·임원리포트가 월초에 텅 빈 새 분기/반기로 넘어가는 것 방지.
 // (누계 기간·이번달 관리 카드는 _curMonth 그대로 — 당월 진행분은 계속 보임)
@@ -2336,7 +2344,7 @@ function _intlRegionMonthly(o){   // {지역:{월:금액}} — 거래처별 월�
   }
   return out;
 }
-function _tgt(dept,item,f,t){ let s=0; (SALEST||[]).forEach(r=>{ if(r.dept===dept&&r.item===item&&+r.year===2026&&+r.month>=f&&+r.month<=t) s+=Number(r.amount||0); }); return s; }
+function _tgt(dept,item,f,t){ let s=0; (SALEST||[]).forEach(r=>{ if(r.dept===dept&&r.item===item&&+r.year===_dataYear()&&+r.month>=f&&+r.month<=t) s+=Number(r.amount||0); }); return s; }
 // 미반영(ilbo_pending) country 라벨 → 보고 지역. 법인(태국/미국/일본법인)은 그대로, 직수출 국가는 권역으로.
 const _PEND_REG={'미국':'미주','캐나다':'미주','멕시코':'미주','브라질':'미주','칠레':'미주','페루':'미주','콜롬비아':'미주','아르헨티나':'미주','파나마':'미주',
   '중국':'중화','대만':'중화','홍콩':'중화','마카오':'중화',
@@ -2350,7 +2358,7 @@ function _pendForReport(){   // 국내(제품/소모품) + 해외(지역별) 미
   const kr={'제품':{},'소모품':{}}, intl={};
   (PENDING||[]).forEach(p=>{
     const d=p.expected_date?new Date(p.expected_date+'T00:00:00'):null;
-    if(!(d&&!isNaN(d)&&d.getFullYear()===2026)) return;
+    if(!(d&&!isNaN(d)&&d.getFullYear()===_dataYear())) return;
     const mo=d.getMonth()+1, amt=Number(p.amount||0);
     if((p.channel||'korea')==='intl'){
       if(p.status==='취소'||p.status==='반영됨') return;
@@ -2362,14 +2370,14 @@ function _pendForReport(){   // 국내(제품/소모품) + 해외(지역별) 미
   });
   (ILBO_PEND||[]).forEach(function(p){
     var ds=p.expectedDate||p.expected_date||''; var d=ds?new Date(ds+'T00:00:00'):null;
-    if(!(d&&!isNaN(d)&&d.getFullYear()===2026)) return;
+    if(!(d&&!isNaN(d)&&d.getFullYear()===_dataYear())) return;
     var mo=d.getMonth()+1, amt=Number(p.amount||0);
     if(p.region==='해외'){ var r=_pendRegion(p.country); intl[r]=intl[r]||{}; intl[r][mo]=(intl[r][mo]||0)+amt; }
     else { var it=_pendKrItem(p.product); kr[it][mo]=(kr[it][mo]||0)+amt; }
   });
   // 전월 이월 조정(carry) — _pendingAgg와 동일 합산: 빠지면 report 탭만 타 메뉴·일보 ⑨와 어긋남
   (ILBO_CARRY||[]).forEach(function(c){
-    var ym=String(c.ym||''); if(ym.slice(0,4)!=='2026') return;
+    var ym=String(c.ym||''); if(ym.slice(0,4)!==String(_dataYear())) return;
     var mo=parseInt(ym.slice(5,7),10), amt=Number(c.amount||0);
     if(!(mo>=1&&mo<=12)||!amt) return;
     if(c.region==='해외'){ intl['기타']=intl['기타']||{}; intl['기타'][mo]=(intl['기타'][mo]||0)+amt; }
@@ -2381,7 +2389,7 @@ function _rptPeriods(){
   // 분기·반기는 성숙월(_matureMonth) 기준(월초 소량데이터로 상반기/분기가 사라지는 것 방지).
   // 단, 맨 오른쪽 '월' 컬럼은 실제 현재월(_curMonth)로 → 전사 종합과 동일하게 당월(7월) 진행상황 반영.
   const mo=_matureMonth(), Q=Math.ceil(mo/3), fh=mo<=6, cm=_curMonth();
-  return {mo,cm,Q,qf:(Q-1)*3+1,qt:Q*3,hf:fh?1:7,ht:fh?6:12,qLbl:Q+'분기',hLbl:fh?'상반기':'하반기',mLbl:'2026년 '+cm+'월'};
+  return {mo,cm,Q,qf:(Q-1)*3+1,qt:Q*3,hf:fh?1:7,ht:fh?6:12,qLbl:Q+'분기',hLbl:fh?'상반기':'하반기',mLbl:_dataYear()+'년 '+cm+'월'};
 }
 function _rowVals(act,pend,prev,dept,item){
   const sm=(o,f,t)=>{let s=0;for(let m=f;m<=t;m++)s+=Number((o&&o[m])||0);return s;};
@@ -2447,7 +2455,7 @@ function renderReport(){
   const P=_rptPeriods();
   // Wontech Total = 글로벌영업실 + 서지컬(국내) + 기타(의료기기·B2C·고객만족) → 회계 전체 정합. 목표=전체 sales_targets.
   const _smE=(o,ff,tt)=>{let s=0;for(let m=ff;m<=tt;m++)s+=Number((o||{})[m]||0);return s;};
-  const _allT=(ff,tt)=>{let s=0;(SALEST||[]).forEach(r=>{if(+r.year===2026&&+r.month>=ff&&+r.month<=tt)s+=Number(r.amount||0);});return s;};
+  const _allT=(ff,tt)=>{let s=0;(SALEST||[]).forEach(r=>{if(+r.year===_dataYear()&&+r.month>=ff&&+r.month<=tt)s+=Number(r.amount||0);});return s;};
   const _perOf={q2:[P.qf,P.qt],h1:[P.hf,P.ht],m6:[P.cm,P.cm]};
   const etcRow={}, sgRow={}, totalSum={};
   // 서지컬(국내)은 etcDept에서 분리 표시, 기타 행 = etc 전체 − 서지컬. 총합엔 etc 전체가 그대로 들어가 정합 유지.
@@ -2496,7 +2504,7 @@ function _rptHero(g,rows,pend){
     hk('미반영 포함분','+'+_fM(pendTot)+'<span style="font-size:13px;font-weight:600"> 백만</span>','회계 미마감·예정분','#0d9488');
 }
 // ── 드릴다운 ──
-function _tgtMo(dept,item){ const o={}; (SALEST||[]).forEach(r=>{ if(r.dept===dept&&r.item===item&&+r.year===2026) o[+r.month]=(o[+r.month]||0)+Number(r.amount||0); }); return o; }
+function _tgtMo(dept,item){ const o={}; (SALEST||[]).forEach(r=>{ if(r.dept===dept&&r.item===item&&+r.year===_dataYear()) o[+r.month]=(o[+r.month]||0)+Number(r.amount||0); }); return o; }
 function _drillSeg(dept,item,F,T){ F=F||1; T=T||12; const _smE=o=>{let s=0;for(let m=F;m<=T;m++)s+=Number((o&&o[m])||0);return s;};
   const C=_rptCache, custs={},prods={},pendRows=[]; let mo26={},mo25={},pend={},tgt={};
   if(dept==='서지컬'){
@@ -2619,7 +2627,7 @@ function _periodDrill(f,t,lbl){
 
 // ── 전사 스코어보드(히어로) + 자동 인사이트 칩 ─────────────────
 // renderOverview가 이미 계산한 로컬만 받아 표시(데이터 로직 무변경). SALEST 0건·전년 0 가드.
-const _ovTgt=(f,t)=>{let s=0;(SALEST||[]).forEach(r=>{if(+r.year===2026&&+r.month>=f&&+r.month<=t)s+=Number(r.amount||0);});return s;};
+const _ovTgt=(f,t)=>{let s=0;(SALEST||[]).forEach(r=>{if(+r.year===_dataYear()&&+r.month>=f&&+r.month<=t)s+=Number(r.amount||0);});return s;};
 // 장비 vs 소모품 셀 (스코어보드용 — 다크 배경 미니바, 클릭=카테고리 조회)
 function _sbCat(d){
   const dev=Number(d.devTot)||0, cons=Number(d.consTot)||0, cd=dev+cons||1;
@@ -2708,7 +2716,7 @@ function renderThisMonth(){
   const _tmYoY=_tmPrev>0?((manage/_tmPrev-1)*100):null;
   // 당월 진척률: 오늘이 이번 달의 몇 %를 지났는지(목표 대비 페이스 판단용)
   const _tmNow=new Date(), _tmDays=new Date(2026,tmo,0).getDate();
-  const _tmElapsed=(_tmNow.getFullYear()===2026&&(_tmNow.getMonth()+1)===tmo)?_tmNow.getDate():_tmDays;
+  const _tmElapsed=(_tmNow.getFullYear()===_dataYear()&&(_tmNow.getMonth()+1)===tmo)?_tmNow.getDate():_tmDays;
   const _tmPace=Math.round(_tmElapsed/_tmDays*100);
   const _tmNeed=tgt>manage?(tgt-manage):0;
   const _tmLeft=Math.max(0,_tmDays-_tmElapsed);
@@ -2742,7 +2750,7 @@ function _monthTarget(mo){
   const t=(TARGETS||[]).filter(x=>String(x.ym||'')===ymKey).reduce((s,x)=>s+(Number(x.target)||0),0);
   if(t>0) return t;
   // targets 테이블은 현재 비어 있음 → 목표·분기 실적과 같은 소스(sales_targets)의 해당 월 전사 합계로 대체
-  return (SALEST||[]).filter(x=>+x.year===2026&&+x.month===mo).reduce((s,x)=>s+(Number(x.amount)||0),0);
+  return (SALEST||[]).filter(x=>+x.year===_dataYear()&&+x.month===mo).reduce((s,x)=>s+(Number(x.amount)||0),0);
 }
 
 // ── 상세 조회 ────────────────────────────────────────────
@@ -2781,8 +2789,8 @@ function _rebuildCols(){
   COLS=[
     {grp:'2025년',lab:'1Q',k:'q25',i:0},{grp:'2025년',lab:'2Q',k:'q25',i:1},{grp:'2025년',lab:'3Q',k:'q25',i:2},{grp:'2025년',lab:'4Q',k:'q25',i:3},{grp:'2025년',lab:'합계',k:'t25'},
   ];
-  for(let i=0;i<NQ;i++) COLS.push({grp:'2026년',lab:(i+1)+'Q',k:'q26',i:i});
-  COLS.push({grp:'2026년',lab:'합계',k:'t26'});
+  for(let i=0;i<NQ;i++) COLS.push({grp:_dataYear()+'년',lab:(i+1)+'Q',k:'q26',i:i});
+  COLS.push({grp:_dataYear()+'년',lab:'합계',k:'t26'});
 }
 _rebuildCols();
 function _perLab(y){ return NQ<=2?('1H'+y):(NQ>=4?('20'+y+' 연간'):('1~'+NQ+'Q'+y)); }   // '26'|'25' → 기간 라벨
@@ -2915,7 +2923,7 @@ function secTable(){
   return '<div id="sp-s-table"></div><div class="card" style="padding:16px 16px 8px">'+
     '<div class="sec" style="margin:2px 4px 12px">📋 분기별 Portfolio ('+(unit==='amount'?'금액':'수량')+') <span class="hint">단위 '+unitLab+' · 숫자/행 클릭 → 상세현황 · %는 분기 총합계 대비</span></div>'+
     '<div class="tbl-scroll"><table class="rt"><thead>'+
-      '<tr><th class="lbl" rowspan="2">상세품목</th><th class="grp" colspan="5">2025년</th><th class="grp" colspan="'+(NQ+1)+'">2026년</th></tr>'+
+      '<tr><th class="lbl" rowspan="2">상세품목</th><th class="grp" colspan="5">'+(_dataYear()-1)+'년</th><th class="grp" colspan="'+(NQ+1)+'">'+_dataYear()+'년</th></tr>'+
       '<tr>'+COLS.map(c=>'<th>'+c.lab+'</th>').join('')+'</tr>'+
     '</thead><tbody>'+body+'</tbody></table></div></div>';
 }
@@ -3041,7 +3049,7 @@ function _spMakePendNote(rows){
       if(m>=1&&m<=lastMo) inQ++; else { out++; outAmt+=(+r.amount||0); }
     });
     // 전월 이월 조정도 표시 범위 밖 건이면 함께 빼야 다른 메뉴의 '미반영'과 금액이 갈리지 않는다
-    (ILBO_CARRY||[]).forEach(function(c){ var ym=String(c.ym||''); if(ym.slice(0,4)!=='2026') return;
+    (ILBO_CARRY||[]).forEach(function(c){ var ym=String(c.ym||''); if(ym.slice(0,4)!==String(_dataYear())) return;
       var m=parseInt(ym.slice(5,7),10); if(m>lastMo&&m<=12) outAmt+=(+c.amount||0); });
     if(!inQ&&out) return '미반영 '+out+'건('+_ok1(outAmt)+'억)은 '+(SPF.nq?SPF.nq():2)+'분기 이후 예정분이라 '+(SPF.perLab?SPF.perLab('26'):'현재')+' 표에는 반영되지 않습니다.';
     return '';
@@ -3676,7 +3684,7 @@ function miniBar(label,v,max,col){
 const EXEC_REGS=['동남아','중화','중동','유럽','미주','태국법인','미국법인','일본법인'];
 // 보고 기준월(누적 상한): 기본=자동(현재 달력월 — 월 바뀌면 자동 반영), 셀렉터로 변경 가능
 window._execTsel = (typeof window._execTsel!=='undefined')?window._execTsel:null;
-function _execCalMonth(){ var n=new Date(); return n.getFullYear()<2026?1:(n.getFullYear()>2026?12:Math.min(12,n.getMonth()+1)); }
+function _execCalMonth(){ var n=new Date(); var D=_dataYear(); return n.getFullYear()<D?1:(n.getFullYear()>D?12:Math.min(12,n.getMonth()+1)); }
 function _execT(){ return (window._execTsel!=null)?Math.max(1,Math.min(12,window._execTsel)):_execCalMonth(); }
 var _EXEC_SEL_PAGES=['goals','units','quarters','corps'];
 function _setExecT(v){ window._execTsel=(v==='auto'||v==='')?null:parseInt(v,10); var ap=document.querySelector('.page.on'); if(!ap)return; var id=ap.id.replace('page-',''); var nav=Array.prototype.slice.call(document.querySelectorAll('.nav-link')).filter(function(a){return (a.getAttribute('onclick')||'').indexOf("'"+id+"'")>=0;})[0]; showPage(id, nav||null); }
@@ -3725,7 +3733,7 @@ function _gxLanding(M){
     for(var m=1;m<=12;m++){ if(m<=M){ ytd+=cur(m); pYtd+=pre(m); } else pRest+=pre(m); pAll+=pre(m); }
     if(!(pYtd>0)) return "";
     var land=ytd*(1+pRest/pYtd);
-    var tgtY=0; (SALEST||[]).forEach(function(r){ if(+r.year===2026) tgtY+=(+r.amount||0); });
+    var tgtY=0; (SALEST||[]).forEach(function(r){ if(+r.year===_dataYear()) tgtY+=(+r.amount||0); });
     if(!(tgtY>0)) return "";
     var gap=land-tgtY, achL=land/tgtY*100, grow=land-pAll;
     var col=achL>=100?"#0f766e":(achL>=90?"#b45309":"#c0392b");
@@ -3923,7 +3931,7 @@ function renderQuarters(){
   const totMo=m=>({a:(Number((CONS.monthly2026||{})[m]||0)+Number((DEVICE.monthly2026||{})[m]||0)+Number((INTL.monthly||{})[m]||0)),
                    p:(Number((CONS.monthly2025||{})[m]||0)+Number((DEVICE.monthly2025||{})[m]||0)+Number(((INTL.data2025||{}).monthly||{})[m]||0))});
   const sumP=(f,t)=>{let a=0,p=0;for(let m=f;m<=t;m++){const x=totMo(m);a+=x.a;p+=x.p;}return {a,p};};
-  const allTgt=(f,t)=>{ let s=0; (SALEST||[]).forEach(r=>{ if(+r.year===2026&&+r.month>=f&&+r.month<=t) s+=Number(r.amount||0); }); return s; };
+  const allTgt=(f,t)=>{ let s=0; (SALEST||[]).forEach(r=>{ if(+r.year===_dataYear()&&+r.month>=f&&+r.month<=t) s+=Number(r.amount||0); }); return s; };
   const pend=_pendingAgg(2026); const pendP=(f,t)=>sumMo(pend.consMonthly,f,t)+sumMo(pend.devMonthly,f,t)+sumMo(pend.intlMonthly,f,t);
   const cur=_execT(), T=cur, curQ=Math.ceil(cur/3);
   const ytd=sumP(1,T), ytdPnd=pendP(1,T), ytdF=ytd.a+ytdPnd, ytdYoY=pct(ytdF,ytd.p);
@@ -4116,7 +4124,7 @@ function _infoShow(d){
   if(_infoChart){_infoChart.destroy();_infoChart=null;}
   if(hasMo){ const lb=[],a=[],p=[]; for(let m=1;m<=12;m++){ lb.push(m+'월'); a.push(Math.round((Number(d.mo26[m])||0)/1e6)); p.push(Math.round((Number((d.mo25||{})[m])||0)/1e6)); }
     _infoChart=new Chart(document.getElementById('info-chart'),{data:{labels:lb,datasets:[
-      {type:'bar',label:'2026',data:a,backgroundColor:d.color||'#0d9488',borderRadius:3,maxBarThickness:22},
+      {type:'bar',label:String(_dataYear()),data:a,backgroundColor:d.color||'#0d9488',borderRadius:3,maxBarThickness:22},
       {type:'line',label:'전년',data:p,borderColor:'#94a3b8',borderWidth:2,borderDash:[5,4],pointRadius:0,tension:.3}
     ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
       plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y+'백만'}}},
@@ -4284,7 +4292,7 @@ function corpMonthDetail(m){
     if(_regionOf(cc,nm)!==cp.n) return; const v=Number((cd.m||{})[m])||0; if(v>0) rows.push({nm,v});
   }));
   const pend=(ILBO_PEND||[]).filter(p=>{ if(p.region!=='해외') return false;
-    const ds=String(p.expectedDate||p.expected_date||''); if(ds.slice(0,4)!=='2026') return false;
+    const ds=String(p.expectedDate||p.expected_date||''); if(ds.slice(0,4)!==String(_dataYear())) return false;
     return parseInt(ds.slice(5,7),10)===m && _pendRegion(p.country)===cp.n; });
   rows.sort((a,b)=>b.v-a.v);
   const sum=rows.reduce((s,x)=>s+x.v,0)+pend.reduce((s,p)=>s+Number(p.amount||0),0), den=sum||1;

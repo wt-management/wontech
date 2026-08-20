@@ -36,7 +36,7 @@
       },
       {
         "id": "month-target-fallback",
-        "must": "return (SALEST||[]).filter(x=>+x.year===2026&&+x.month===mo)",
+        "must": "return (SALEST||[]).filter(x=>+x.year===_dataYear()&&+x.month===mo)",
         "why": "targets 테이블이 비어 있어 당월 목표가 0으로 나오던 문제의 대체 경로"
       }
     ]
