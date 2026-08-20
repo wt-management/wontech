@@ -359,7 +359,7 @@ async function showRestore(){
   if(!rows.length){ box.innerHTML='<div style="font-size:12.5px;color:#6b7280">보관된 직전 값이 없습니다(다음 업로드부터 생깁니다).</div>'; return; }
   box.innerHTML='<table class="table table-sm" style="font-size:12.5px"><thead><tr><th>대상</th><th>지금</th><th>직전 보관본</th><th></th></tr></thead><tbody>'+
     rows.map(r=>'<tr><td>'+r[0]+'</td><td class="mono">'+r[2]+'</td><td class="mono">'+r[1]+'</td>'+
-      '<td style="text-align:right"><button class="btn btn-sm btn-outline-danger" onclick="doRestore(''+r[0]+'')">되돌리기</button></td></tr>').join('')+
+      '<td style="text-align:right"><button class="btn btn-sm btn-outline-danger" onclick="doRestore(\''+r[0]+'\')">되돌리기</button></td></tr>').join('')+
     '</tbody></table><div style="font-size:11.5px;color:#94a3b8">되돌리면 지금 값이 다시 직전 보관본이 됩니다(한 번 더 누르면 원위치).</div>';
 }
 async function doRestore(k){
@@ -417,7 +417,7 @@ function _renderCross(){
   box.innerHTML='<div style="font-weight:700;font-size:13px;margin-bottom:6px">확정 전 자동 대조</div>'+
     R.lines.map(l=>'<div style="font-size:12.5px;line-height:1.7;color:'+col(l[2])+'"><b>'+ico(l[2])+'</b> '+l[0]+' — '+l[1]+'</div>').join('')+
     (R.ok?'':'<div style="margin-top:8px;font-size:12.5px;color:#b91c1c"><b>확정이 잠겼습니다.</b> 회계 파일이 평소와 다르거나 파서가 파일을 잘못 읽고 있습니다. 그대로 올리면 임원 보고 숫자가 틀립니다.'+
-      '<label style="display:block;margin-top:6px;color:#475569;font-weight:600"><input type="checkbox" id="crossOverride" onchange="document.getElementById('confirmBtn').disabled=!this.checked"> 확인했고 그래도 올리겠습니다</label></div>');
+      '<label style="display:block;margin-top:6px;color:#475569;font-weight:600"><input type="checkbox" id="crossOverride" onchange="document.getElementById(\'confirmBtn\').disabled=!this.checked"> 확인했고 그래도 올리겠습니다</label></div>');
   box.style.cssText='border:1px solid '+(R.ok?(R.warn?'#fde68a':'#bbf7d0'):'#fecaca')+';background:'+(R.ok?(R.warn?'#fffbeb':'#f0fdf4'):'#fef2f2')+';border-radius:10px;padding:12px 14px;margin-top:12px';
   const b=document.getElementById('confirmBtn'); if(b) b.disabled=!R.ok;
 }
