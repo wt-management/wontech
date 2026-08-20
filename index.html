@@ -2960,7 +2960,7 @@ async function init() {
   ]);
   try{ _normProds(CONS,true); _normProds(DEVICE,false); }catch(e){ console.warn('제품명 정규화 실패', e); }
   purgeForeignHospitals();
-  try{ if(window.WT_STALE) WT_STALE(CONS.updatedAt||DEVICE.updatedAt, '회계 매출자료'); }catch(e){}   // 업로드가 끊기면 화면 맨 위로 알린다
+  try{ const {data:{session:_stSs}}=await _sb.auth.getSession(); if(_stSs&&window.WT_STALE) WT_STALE(CONS.updatedAt||DEVICE.updatedAt, '회계 매출자료'); }catch(e){}   // 업로드가 끊기면 화면 맨 위로 알린다 — 단 미로그인 시엔 RLS로 라이브를 못 읽어 내장본(구버전) 날짜로 오경보가 나므로 세션 있을 때만
   _stripSalesPrefixes();
   // 견적서 공개 링크 처리 (?q=견적번호)
   const qParam = new URLSearchParams(location.search).get('q');
