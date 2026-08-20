@@ -126,6 +126,12 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <div class="alert alert-warning" style="margin:16px 0 0;font-size:13px;padding:10px 12px">
         <i class="bi bi-exclamation-triangle me-1"></i> 확정하면 <b>라이브 cons_cache(main·device·intl·sales_portfolio·ilbo_acc<span id="pendNote"></span>)</b>가 즉시 교체됩니다. 모든 사이트(한국·해외·종합·Sales Portfolio·일일매출일보)에 반영됩니다. 2025(전년)는 보존됩니다.
       </div>
+      <div id="crossBox"></div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px dashed #e5e7eb">
+        <div style="font-size:12.5px;color:#6b7280">잘못 올렸을 때는 <b>직전 값으로 되돌릴 수 있습니다</b>(업로드 때마다 1개 보관).</div>
+        <button class="btn btn-outline-secondary btn-sm mt-2" onclick="showRestore()"><i class="bi bi-arrow-counterclockwise me-1"></i>직전 값으로 되돌리기</button>
+        <div id="restoreBox" style="margin-top:10px"></div>
+      </div>
       <button id="confirmBtn" class="btn btn-success w-100 btn-confirm mt-3" onclick="doWrite()"><i class="bi bi-database-check me-1"></i> cons_cache에 적재 (확정)</button>
     </div>
 
@@ -291,7 +297,12 @@ async function handleFile(file){
     }));
     const _prevCarry=(ilboPend&&ilboPend.carry)||[];   // 손으로 넣은 전월 이월 조정 — 덮어쓰기에서 지켜낸다
     log('변환·집계 중...');
-    BUILT=WTU.build(sheets,{main,device,intl,equip_rebuilt:equipReb});   // equip_rebuilt: 2025 보존용
+    // 직전 총액 스냅샷 — build 가 기존 payload 를 건드리기 전에 떠 둔다(급감 감지용)
+    const _sumMo=o=>{let t=0;for(const k in (o||{}))t+=Number(o[k])||0;return t;};
+    const _prevTotal=_sumMo((main||{}).monthly2026)+_sumMo((device||{}).monthly2026)
+                    +_sumMo((((intl||{}).INTL2026)||{}).monthly)+_sumMo((main||{}).etcMonthly2026);
+    BUILT=WTU.build(sheets,{main,device,intl,equip_rebuilt:equipReb});
+    BUILT.__prevTotal=_prevTotal;   // equip_rebuilt: 2025 보존용
     BUILT.__prevPendCarry=_prevCarry;   // 저장 단계에서 미반영치에 다시 실어 보낸다
     // Sales Portfolio 집계(회계분) — 2025는 기존 blob 유지, 미반영은 사이트에서 live 가산
     try{
@@ -326,6 +337,90 @@ async function handleFile(file){
   }catch(err){ fi.textContent='❌ 오류: '+err.message; log('오류: '+err.message+'\n'+(err.stack||'')); }
 }
 
+// ── 확정 전 자동 대조 ────────────────────────────────────────────────────
+// 재무팀이 회계파일 서식을 바꾸면 업로드는 성공하는데 금액만 조용히 어긋난다.
+// 같은 파일을 성격이 다른 두 파서(wtu=사용부서 축 / ilbo=부서코드 축)가 각각 집계하므로,
+// 둘이 어긋나면 어느 한쪽이 파일을 잘못 읽은 것이다. 어긋나면 확정 버튼을 잠근다.
+// (오늘 손으로 하던 대조를 기계가 하는 것 — 사람이 잊어도 걸린다)
+// ── 되돌리기 ──────────────────────────────────────────────────────────────
+// 업로드는 기존 값을 덮어쓴다. 잘못된 파일을 올리면 예전 숫자를 되찾을 방법이 없었다.
+// 그래서 덮어쓰기 직전 값을 <key>__prev 에 1개 보관하고, 여기서 되돌린다.
+const _RKEYS=['main','device','intl','sales_portfolio','ilbo_acc','ilbo_pending','equip_rebuilt','intl_unitprice'];
+async function showRestore(){
+  const box=document.getElementById('restoreBox'); box.innerHTML='조회 중...';
+  const rows=[];
+  for(const k of _RKEYS){
+    try{
+      const {data:b}=await _sb.from('cons_cache').select('data').eq('key',k+'__prev').maybeSingle();
+      const {data:c}=await _sb.from('cons_cache').select('data').eq('key',k).maybeSingle();
+      if(b&&b.data) rows.push([k,(b.data.updatedAt||b.data.asOf||b.data.reportDate||'(기준일 없음)'),((c&&c.data&&(c.data.updatedAt||c.data.asOf||c.data.reportDate))||'-')]);
+    }catch(e){}
+  }
+  if(!rows.length){ box.innerHTML='<div style="font-size:12.5px;color:#6b7280">보관된 직전 값이 없습니다(다음 업로드부터 생깁니다).</div>'; return; }
+  box.innerHTML='<table class="table table-sm" style="font-size:12.5px"><thead><tr><th>대상</th><th>지금</th><th>직전 보관본</th><th></th></tr></thead><tbody>'+
+    rows.map(r=>'<tr><td>'+r[0]+'</td><td class="mono">'+r[2]+'</td><td class="mono">'+r[1]+'</td>'+
+      '<td style="text-align:right"><button class="btn btn-sm btn-outline-danger" onclick="doRestore(''+r[0]+'')">되돌리기</button></td></tr>').join('')+
+    '</tbody></table><div style="font-size:11.5px;color:#94a3b8">되돌리면 지금 값이 다시 직전 보관본이 됩니다(한 번 더 누르면 원위치).</div>';
+}
+async function doRestore(k){
+  if(!confirm(k+' 를 직전 값으로 되돌립니다. 계속할까요?')) return;
+  try{
+    const {data:b}=await _sb.from('cons_cache').select('data').eq('key',k+'__prev').maybeSingle();
+    if(!b||!b.data) throw new Error('보관본이 없습니다');
+    const {data:c}=await _sb.from('cons_cache').select('data').eq('key',k).maybeSingle();
+    if(c&&c.data){ const sw=await _sb.from('cons_cache').upsert({key:k+'__prev',data:c.data},{onConflict:'key'}); if(sw.error) throw sw.error; }
+    const {error}=await _sb.from('cons_cache').upsert({key:k,data:b.data},{onConflict:'key'});
+    if(error) throw error;
+    log(k+' 되돌림 완료');
+    alert(k+' 를 직전 값으로 되돌렸습니다. 사이트에서 새로고침하세요.');
+    showRestore();
+  }catch(e){ alert('되돌리기 실패: '+(e.message||e)); }
+}
+function _crossCheck(){
+  const R={ok:true, warn:false, lines:[]};
+  const I=BUILT.ilbo;
+  const sumTo=(o,cm)=>{let t=0;for(let m=1;m<=cm;m++)t+=Number((o||{})[m]||0);return t;};
+  const won=v=>Math.round(v).toLocaleString()+'원';
+  if(!I||!I.monthly){ R.warn=true; R.lines.push(['일보 대조','건너뜀 — 일보 집계에 실패해 맞대볼 상대가 없습니다','warn']); }
+  else{
+    const cm=Number(I.curMonth)||12;
+    const iv=d=>sumTo((I.monthly||{})[d],cm);
+    const pair=[
+      ['국내영업', sumTo((BUILT.main||{}).monthly2026,cm)+sumTo((BUILT.device||{}).monthly2026,cm), iv('국내제품')+iv('국내소모품')],
+      ['해외영업', sumTo((((BUILT.intl||{}).INTL2026)||{}).monthly,cm), iv('해외영업')],
+      ['기타(서지컬·B2C·고객만족)', sumTo((BUILT.main||{}).etcMonthly2026,cm), iv('Surgical')+iv('B2C')+iv('고객만족')+iv('기타')]
+    ];
+    let gap=0;
+    pair.forEach(([n,a,b])=>{ const d=Math.round(a-b); gap+=Math.abs(d);
+      R.lines.push([n+' 대조', d===0?('일치 · '+won(a)):('어긋남 '+won(d)+' (업로드 '+won(a)+' / 일보 '+won(b)+')'), d===0?'ok':'bad']);
+      if(d!==0) R.ok=false; });
+    if(gap===0) R.lines.push(['합계','두 집계가 원 단위까지 같습니다','ok']);
+  }
+  // 총액 급감 — 파일을 잘못 골랐거나 일부만 담긴 파일
+  const nowTot=(function(){ const cm=12, f=o=>sumTo(o,cm);
+    return f((BUILT.main||{}).monthly2026)+f((BUILT.device||{}).monthly2026)
+          +f((((BUILT.intl||{}).INTL2026)||{}).monthly)+f((BUILT.main||{}).etcMonthly2026); })();
+  const pv=Number(BUILT.__prevTotal)||0;
+  if(pv>0){
+    const r=nowTot/pv;
+    if(r<0.7){ R.ok=false; R.lines.push(['직전 대비','전사 합계가 '+Math.round((1-r)*100)+'% 줄었습니다 ('+won(pv)+' → '+won(nowTot)+'). 파일을 잘못 고르지 않았는지 확인하세요','bad']); }
+    else if(r<0.95){ R.warn=true; R.lines.push(['직전 대비','전사 합계가 '+Math.round((1-r)*100)+'% 줄었습니다 — 반품·조정 때문인지 확인하세요','warn']); }
+    else R.lines.push(['직전 대비', '정상 ('+won(pv)+' → '+won(nowTot)+')','ok']);
+  }
+  return R;
+}
+function _renderCross(){
+  const R=_crossCheck();
+  const box=document.getElementById('crossBox'); if(!box) return;
+  const col=t=>t==='bad'?'#b91c1c':(t==='warn'?'#a16207':'#15803d');
+  const ico=t=>t==='bad'?'✕':(t==='warn'?'!':'✓');
+  box.innerHTML='<div style="font-weight:700;font-size:13px;margin-bottom:6px">확정 전 자동 대조</div>'+
+    R.lines.map(l=>'<div style="font-size:12.5px;line-height:1.7;color:'+col(l[2])+'"><b>'+ico(l[2])+'</b> '+l[0]+' — '+l[1]+'</div>').join('')+
+    (R.ok?'':'<div style="margin-top:8px;font-size:12.5px;color:#b91c1c"><b>확정이 잠겼습니다.</b> 회계 파일이 평소와 다르거나 파서가 파일을 잘못 읽고 있습니다. 그대로 올리면 임원 보고 숫자가 틀립니다.'+
+      '<label style="display:block;margin-top:6px;color:#475569;font-weight:600"><input type="checkbox" id="crossOverride" onchange="document.getElementById('confirmBtn').disabled=!this.checked"> 확인했고 그래도 올리겠습니다</label></div>');
+  box.style.cssText='border:1px solid '+(R.ok?(R.warn?'#fde68a':'#bbf7d0'):'#fecaca')+';background:'+(R.ok?(R.warn?'#fffbeb':'#f0fdf4'):'#fef2f2')+';border-radius:10px;padding:12px 14px;margin-top:12px';
+  const b=document.getElementById('confirmBtn'); if(b) b.disabled=!R.ok;
+}
 function renderPreview(s){
   document.getElementById('updLine').textContent='기준일 '+s.updatedAt+' · 처리행 '+s.rows26.toLocaleString()+'건';
   const rows=[
@@ -339,7 +434,8 @@ function renderPreview(s){
   ];
   if(_pendFromFile){ const _pt=_pendFromFile.rows.reduce((a,p)=>a+p.amount,0), _pd=_pendFromFile.rows.filter(p=>p.region==='국내'), _pi=_pendFromFile.rows.filter(p=>p.region==='해외'); rows.push(['미반영치 (교체)', _pendFromFile.rows.length+'건 '+e8(_pt)+'억', '국내 '+_pd.length+'건 · 해외 '+_pi.length+'건 → ilbo_pending 전체 교체']); }
   if(s.pendAuto!=null) rows.push(['미반영 자동대조', s.pendAuto+'건 자동 반영처리', '확인필요 '+s.pendNear+'건 · 미반영 관리에서 검토 (전체 '+s.pendTotal+'건)']);
-  document.getElementById('sumBody').innerHTML=rows.map(r=>'<tr><td>'+r[0]+'</td><td class="mono">'+r[1]+(r[2]?' <span style="color:#94a3b8;font-weight:400">'+r[2]+'</span>':'')+'</td></tr>').join('');
+  document.getElementById('sumBody').innerHTML=rows.map(r=>'<tr><td>'+r[0]+'</td><td class="mono">'+r[1]+(r[2]?' <span style="color:#94a3b8;font-weight:400">'+r[2]+'</span>':'')+'</td></tr>').join('')
+  try{ _renderCross(); }catch(e){ log('대조 경고: '+e.message); };
   const dp=document.getElementById('dermakPill');
   dp.innerHTML = s.dermakInDomestic
     ? '<span class="pill warn">⚠ 더마케이가 국내에 있음</span>'
@@ -432,6 +528,15 @@ async function doWrite(){
     if(!BUILT.sp) skipped.push('Sales Portfolio(sales_portfolio) — 포트폴리오 집계 실패로 미갱신 (이전 데이터 유지)');
     if(!BUILT.ilbo) skipped.push('일일보고(ilbo_acc) — 일보 집계 실패로 미갱신 (이전 데이터 유지)');
     for(const [k,data] of writes){
+      // 덮어쓰기 전에 직전 값을 <key>__prev 로 떠 둔다. 업로드는 되돌릴 수 없는 작업이라
+      // 잘못된 파일을 올리면 예전 숫자를 되찾을 방법이 없었다. 최근 1개만 보관한다.
+      try{
+        const {data:_cur}=await _sb.from('cons_cache').select('data').eq('key',k).maybeSingle();
+        if(_cur&&_cur.data){
+          const _bk=await _sb.from('cons_cache').upsert({key:k+'__prev',data:_cur.data},{onConflict:'key'});
+          if(_bk.error) log('백업 경고('+k+'): '+_bk.error.message); else log(k+' 직전값 백업 OK');
+        }
+      }catch(e){ log('백업 경고('+k+'): '+e.message); }
       // upsert(원자적) — delete+insert는 insert 실패 시 해당 키가 빈 채로 남아 전 사이트 데이터 유실 위험
       const {error}=await _sb.from('cons_cache').upsert({key:k,data},{onConflict:'key'});
       if(error) throw new Error(k+' 기록 실패: '+error.message);
