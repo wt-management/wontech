@@ -1634,7 +1634,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <span id="dev-simple" style="display:none">
       <select id="dev-year-sel" class="form-select form-select-sm" style="width:84px" onchange="renderDeviceSales()">
         <option value="2026" selected>2026년</option>
-        <option value="2025">2025년</option>
+        <option value="2025">2025년</option><!-- 숨은 레거시 셀렉터(dev-simple). 실제 조회는 dev-period-host 가 담당 -->
       </select>
       <select id="dev-from-sel" class="form-select form-select-sm" style="width:70px" onchange="_devPeriodChange()">
         <option value="1" selected>1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
@@ -3310,7 +3310,7 @@ function showToast(msg, hide=false, err=false) {
 
 // ── 대시보드 ──────────────────────────────────────────────────────
 let monthlyChart = null;
-let _dashYear = new Date().getFullYear();
+let _dashYear = 2026;   // 칸 연도(2026=올해 칸). 화면 글자는 _YR 로 옮겨 찍는다
 let _dashPeriodType = String(new Date().getMonth()+1); // 'year','Q1'-'Q4','1'-'12'
 
 let _dashUIInited = false;
@@ -3319,10 +3319,9 @@ function _initDashPeriodUI() {
   _dashUIInited = true;
   const ySel = document.getElementById('dash-year-select');
   if(ySel) {
-    const curY = new Date().getFullYear();
-    for(let y=curY; y>=2024; y--) {
+    for(let y=2026; y>=2025; y--) {
       const o=document.createElement('option');
-      o.value=String(y); o.textContent=String(y);
+      o.value=String(y); o.textContent=String(_YR(y));
       if(y===_dashYear) o.selected=true;
       ySel.appendChild(o);
     }
@@ -3338,14 +3337,14 @@ function _dashPeriodYMs() {
   const y = _dashYear;
   const p = _dashPeriodType;
   const ym = (yr,mo) => `${yr}-${String(mo).padStart(2,'0')}`;
-  const curY=new Date().getFullYear(), curM=new Date().getMonth()+1;
+  const curY=2026, curM=new Date().getMonth()+1;   // curY=올해 칸(달력 비교는 _YR 로)
   if(p === 'year') {
     const maxM = (y===curY) ? curM : 12;
-    return { yms:Array.from({length:maxM},(_,i)=>ym(y,i+1)), ymsFull:Array.from({length:12},(_,i)=>ym(y,i+1)), label:`${y}년` };
+    return { yms:Array.from({length:maxM},(_,i)=>ym(y,i+1)), ymsFull:Array.from({length:12},(_,i)=>ym(y,i+1)), label:`${_YR(y)}년` };
   }
   if(p.startsWith('Q')) {
     const q=Number(p[1]), start=(q-1)*3+1;
-    return { yms:[0,1,2].map(i=>ym(y,start+i)), ymsFull:[0,1,2].map(i=>ym(y,start+i)), label:`${y}년 ${q}분기` };
+    return { yms:[0,1,2].map(i=>ym(y,start+i)), ymsFull:[0,1,2].map(i=>ym(y,start+i)), label:`${_YR(y)}년 ${q}분기` };
   }
   let mo=Number(p);
   // 당월(달력월) 선택인데 회계 미도래(데이터 0)면 최신 데이터월로 폴백 → 월초 대시보드 ▼100%·0원 방지
@@ -3353,7 +3352,7 @@ function _dashPeriodYMs() {
     const _lm=_lastAcctMonth();
     if(_lm>=1 && _lm<mo && ((CONS['monthly'+y]||{})[mo]||0)===0 && ((DEVICE['monthly'+y]||{})[mo]||0)===0) mo=_lm;
   }
-  return { yms:[ym(y,mo)], ymsFull:[ym(y,mo)], label:`${y}년 ${mo}월` };
+  return { yms:[ym(y,mo)], ymsFull:[ym(y,mo)], label:`${_YR(y)}년 ${mo}월` };
 }
 
 
@@ -3362,6 +3361,13 @@ const _PDST = {};  // prefix -> {mode:'simple'|'custom'}
 const _RENDERFN = {ov:'renderSalesOverview', cons:'renderConsumables', dev:'renderDeviceSales', hosp:'renderConsHospitals', devrep:'renderDevReps', reg:'renderRegion'};
 function _todayLocal(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }  // 로컬(KST) 오늘 — toISOString(UTC)는 새벽 00~09시 -1일 오류
 function _ymLocal(){ return _todayLocal().slice(0,7); }
+// ── 연도 표기 ─────────────────────────────────────────────────────────────
+// 데이터는 '올해'를 monthly2026·y2026·txns2026 …, '전년'을 *2025 라는 칸에 담는다.
+// 칸 이름은 옛 연도로 굳어 있지만 내용은 해마다 새로 채워진다(파서가 연말에 옮겨 담는다).
+// 그래서 계산은 칸 이름 그대로 두고, 사람에게 보여줄 때만 실제 연도로 옮긴다.
+// 실제 연도는 파서가 payload 에 적어준 dataYear 가 알려준다 — 2027이 와도 코드를 고칠 일이 없다.
+function _dataYear(){ var y=Number((typeof CONS!=='undefined'&&CONS&&CONS.dataYear)||(typeof DEVICE!=='undefined'&&DEVICE&&DEVICE.dataYear)||0); return y||2026; }
+function _YR(y){ y=Number(y); var C=_dataYear(); return y===2026?C:(y===2025?C-1:y); }   // 칸 연도 → 보여줄 연도
 // ── 연도 롤오버 대비: 데이터에 존재하는 연도로 '올해(CY)'를 구동(2027이 되면 자동 승격) ──
 function _dataYears(){ var s=new Set(); [ (typeof DEVICE!=='undefined'?DEVICE:null),(typeof CONS!=='undefined'?CONS:null) ].forEach(function(D){ if(!D)return; try{ Object.keys(D).forEach(function(k){ var m=k.match(/^monthly(\d{4})$/); if(m) s.add(parseInt(m[1],10)); }); }catch(e){} }); return Array.from(s).sort(function(a,b){return a-b;}); }
 function _curYear(){ var ys=_dataYears(); return ys.length? ys[ys.length-1] : new Date().getFullYear(); }
@@ -3371,7 +3377,7 @@ function _dataMaxMonth(){
   const CY=_curYear();
   const now=new Date();
   // 현재 연도 조회 = 달력 현재월 자동 반영(월 바뀌면 즉시 당월 전환). 월초 매출공백은 KPI '전월까지' 병기로 보완.
-  if(CY===now.getFullYear()) return now.getMonth()+1;
+  if(_YR(CY)===now.getFullYear()) return now.getMonth()+1;
   // 과거 연도 조회 = 그 해 데이터 최신월(없으면 12월)
   const ms=[].concat(Object.keys(CONS['monthly'+CY]||{}),Object.keys(DEVICE['monthly'+CY]||{})).map(Number).filter(m=>m>=1&&m<=12);
   return ms.length?Math.max.apply(null,ms):12;
@@ -3387,7 +3393,7 @@ function _lastAcctMonth(){
 function _yoyCapMonth(t){ try{ return Math.min(Number(t)||12, _lastAcctMonth()); }catch(e){ return t; } }
 function _renderPrefix(p){ const fn=window[_RENDERFN[p]]; if(fn) fn(); }
 function _gvN(id,d){ const e=document.getElementById(id); return e?(parseInt(e.value)||d):d; }
-function _normPeriod(sy,sm,ey,em){ if(ey<sy||(ey===sy&&em<sm)){ let t; t=sy;sy=ey;ey=t; t=sm;sm=em;em=t; } const cross=(sy!==ey); const lab=cross?(String(sy).slice(2)+'.'+sm+'~'+String(ey).slice(2)+'.'+em):(sm===em?sm+'월':sm+'-'+em+'월'); return {sy:sy,sm:sm,ey:ey,em:em,cross:cross,label:lab}; }
+function _normPeriod(sy,sm,ey,em){ if(ey<sy||(ey===sy&&em<sm)){ let t; t=sy;sy=ey;ey=t; t=sm;sm=em;em=t; } const cross=(sy!==ey); const lab=cross?(String(_YR(sy)).slice(2)+'.'+sm+'~'+String(_YR(ey)).slice(2)+'.'+em):(sm===em?sm+'월':sm+'-'+em+'월'); return {sy:sy,sm:sm,ey:ey,em:em,cross:cross,label:lab}; }
 function _getPeriod(prefix){  // 단일 출처: 4개 커스텀 셀렉터(프리셋이 값을 채움). 기본연도=데이터 최신연도(CY)
   var CY=_curYear();
   return _normPeriod(_gvN(prefix+'-csy',CY),_gvN(prefix+'-csm',1),_gvN(prefix+'-cey',CY),_gvN(prefix+'-cem',_dataMaxMonth()));
@@ -3395,7 +3401,7 @@ function _getPeriod(prefix){  // 단일 출처: 4개 커스텀 셀렉터(프리�
 function _spanMonths(p){ const o=[]; for(let y=p.sy;y<=p.ey;y++){ const lo=(y===p.sy?p.sm:1), hi=(y===p.ey?p.em:12); for(let m=lo;m<=hi;m++) o.push({y:y,m:m}); } return o; }
 function _prevSpan(p){ const len=_spanMonths(p).length; let ey=p.sy, em=p.sm-1; if(em<1){em=12;ey--;} let sy=ey, sm=em-len+1; while(sm<1){sm+=12;sy--;} return _normPeriod(sy,sm,ey,em); }
 function _yoyShift(p){ return _normPeriod(p.sy-1,p.sm,p.ey-1,p.em); }  // 동일 월·전년(YoY 비교용)
-function _ongoingEnd(p){ const n=new Date(); return p.ey===n.getFullYear() && p.em===(n.getMonth()+1); }  // 기간 끝 = 진행 중인 달
+function _ongoingEnd(p){ const n=new Date(); return _YR(p.ey)===n.getFullYear() && p.em===(n.getMonth()+1); }  // 기간 끝 = 진행 중인 달
 function _prevEndP(p){ let ey=p.ey, em=p.em-1; if(em<1){em=12;ey--;} let sy=p.sy, sm=p.sm; if(ey<sy||(ey===sy&&em<sm)){ sy=ey; sm=em; } return _normPeriod(sy,sm,ey,em); }  // 끝월 하나 앞으로(전월까지 기준)
 // 연도별 월데이터 접근자 후 span 합. acc(y) → {m:value}
 function _spanSumF(acc,p){ let s=0; _spanMonths(p).forEach(function(x){ s+=Number((acc(x.y)||{})[x.m]||0); }); return s; }
@@ -3419,9 +3425,9 @@ function _periodCustomChange(prefix){  // 셀렉터 직접 변경 → 프리셋 
 function _periodCtrl(prefix){
   const _CY=_curYear(), _PY=_prevYear(), _MN=_minDataYear();
   const _yrs=[]; for(let _y=Math.min(_MN,_PY); _y<=_CY; _y++) _yrs.push(_y);
-  const yrOpt=_yrs.map(y=>'<option value="'+y+'">'+y+'년</option>').join('');
+  const yrOpt=_yrs.map(y=>'<option value="'+y+'">'+_YR(y)+'년</option>').join('');   // 값=데이터 칸 연도, 글자=실제 연도
   const moOpt=Array.from({length:12},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+'월</option>').join('');
-  const presets=[['olhae','올해'],['py',_PY+'년'],['last12','최근 12개월'],['all',_MN+'~현재']];
+  const presets=[['olhae','올해'],['py',_YR(_PY)+'년'],['last12','최근 12개월'],['all',_MN+'~현재']];
   const chips=presets.map(o=>'<button type="button" class="pp-chip pp-'+prefix+'" data-t="'+o[0]+'" onclick="_periodPreset(\''+prefix+'\',\''+o[0]+'\',this)">'+o[1]+'</button>').join('');
   return '<span id="'+prefix+'-custom" style="display:inline-flex;align-items:center;gap:4px;margin-right:8px;padding-right:8px;border-right:1px solid #e5e7eb">'
     +'<select id="'+prefix+'-csy" class="form-select form-select-sm" style="width:94px" onchange="_periodCustomChange(\''+prefix+'\')">'+yrOpt+'</select>'
@@ -3717,8 +3723,8 @@ function renderSalesOverview() {
       const grp=qmap[key], open=window._ovQtrOpen.has(key), Q={c:0,dv:0,pe:0,c25:0,dv25:0};
       grp.ms.forEach(x=>{ const s=_cell(Q,x.m,x.y); s._m=x.m; s._y=x.y; });
       G.c+=Q.c;G.dv+=Q.dv;G.pe+=Q.pe;G.c25+=Q.c25;G.dv25+=Q.dv25;G.dq=(G.dq||0)+(Q.dq||0);G.dq25=(G.dq25||0)+(Q.dq25||0);
-      rows+=_rowHTML((P.cross?String(grp.y).slice(2)+'. ':'')+grp.q+'분기', Q, {qtr:true,key,open});
-      grp.ms.forEach(x=>{ const S={c:0,dv:0,pe:0,c25:0,dv25:0}; _cell(S,x.m,x.y); rows+=_rowHTML('&nbsp;&nbsp;'+(P.cross?String(x.y).slice(2)+'.':'')+x.m+'월', S, {qm:key,hidden:!open}); });
+      rows+=_rowHTML((P.cross?String(_YR(grp.y)).slice(2)+'. ':'')+grp.q+'분기', Q, {qtr:true,key,open});
+      grp.ms.forEach(x=>{ const S={c:0,dv:0,pe:0,c25:0,dv25:0}; _cell(S,x.m,x.y); rows+=_rowHTML('&nbsp;&nbsp;'+(P.cross?String(_YR(x.y)).slice(2)+'.':'')+x.m+'월', S, {qm:key,hidden:!open}); });
     });
     const halfLbl = qorder.length>1 ? (spanMs.every(x=>x.m<=6)?'상반기':spanMs.every(x=>x.m>=7)?'하반기':'합계') : '합계';
     rows+='<tr style="border-top:2px solid #dbe2ea;background:#f1f5f9">'
@@ -4010,7 +4016,7 @@ function _pendingView(yr) {
   const items=[]; const agg={consMonthly:{}, devMonthly:{}, consProducts:{}, devProducts:{}, consTotal:0, devTotal:0, count:0, candidateCnt:0, reflectedCnt:0};
   (PENDING||[]).forEach(p=>{
     const d = p.expected_date ? new Date(p.expected_date+'T00:00:00') : null;
-    const inYr = !!(d && !isNaN(d) && d.getFullYear()===yr);
+    const inYr = !!(d && !isNaN(d) && d.getFullYear()===_YR(yr));
     const e = _pendEff(p);
     items.push({p, ...e, inYr});
     if(!inYr) return;
@@ -9702,7 +9708,7 @@ function showHospitalDetail(name){
       <div class="mt-3" style="border-top:1px solid #e5e7eb;padding-top:10px">
         <div class="fw-bold mb-2" style="font-size:12px;color:#374151"><i class="bi bi-graph-up-arrow me-1 text-success"></i>발주 패턴 비교</div>
         <table class="table table-sm mb-0" style="font-size:11px">
-          <thead class="table-light"><tr><th>항목</th><th class="text-end">2025년</th><th class="text-end" style="color:#1d4ed8">2026년</th></tr></thead>
+          <thead class="table-light"><tr><th>항목</th><th class="text-end">${_YR(2025)}년</th><th class="text-end" style="color:#1d4ed8">${_YR(2026)}년</th></tr></thead>
           <tbody>
             <tr><td>구매 건수</td><td class="text-end">${pat25?pat25.cnt+'건':'-'}</td><td class="text-end fw-bold" style="color:#1d4ed8">${pat26?pat26.cnt+'건':'-'}</td></tr>
             <tr><td>평균 발주 간격</td><td class="text-end">${pat25?.avgGap!=null?pat25.avgGap+'일':'-'}</td><td class="text-end fw-bold" style="color:#1d4ed8">${pat26?.avgGap!=null?pat26.avgGap+'일':'-'}</td></tr>
@@ -11693,7 +11699,7 @@ function renderDeviceSales() {
   // 월별 트렌드 차트
   let _labels, _ds;
   if (P.cross) {
-    _labels = spanMs.map(x=>String(x.y).slice(2)+'.'+x.m);
+    _labels = spanMs.map(x=>String(_YR(x.y)).slice(2)+'.'+x.m);
     _ds = [
       {label:'기간(만원)', data:spanMs.map(x=>Math.round((moY(x.y)[x.m]||0)/1e4)), backgroundColor:'rgba(37,99,235,0.7)', borderRadius:4, yAxisID:'y'},
       {label:'전년 동기(만원)', data:prevMs.map(x=>Math.round((moY(x.y)[x.m]||0)/1e4)), type:'line', borderColor:'#94a3b8', backgroundColor:'transparent', borderWidth:2, borderDash:[5,3], pointRadius:2, yAxisID:'y'},
@@ -11703,8 +11709,8 @@ function renderDeviceSales() {
     const prevYrMo = P.sy===2026 ? (DEVICE.monthly2025||{}) : {};
     _labels = months12.map(m=>m+'월');
     _ds = [
-      {label:`${P.sy}년(만원)`, data:months12.map(m=>Math.round((moY(P.sy)[m]||0)/1e4)), backgroundColor:'rgba(37,99,235,0.7)', borderRadius:4, yAxisID:'y'},
-      {label:`${P.sy-1}년(만원)`, data:months12.map(m=>Math.round((prevYrMo[m]||0)/1e4)), type:'line', borderColor:'#94a3b8', backgroundColor:'transparent', borderWidth:2, borderDash:[5,3], pointRadius:2, yAxisID:'y'},
+      {label:`${_YR(P.sy)}년(만원)`, data:months12.map(m=>Math.round((moY(P.sy)[m]||0)/1e4)), backgroundColor:'rgba(37,99,235,0.7)', borderRadius:4, yAxisID:'y'},
+      {label:`${_YR(P.sy)-1}년(만원)`, data:months12.map(m=>Math.round((prevYrMo[m]||0)/1e4)), type:'line', borderColor:'#94a3b8', backgroundColor:'transparent', borderWidth:2, borderDash:[5,3], pointRadius:2, yAxisID:'y'},
     ];
   }
   if (deviceMonthlyChart) { deviceMonthlyChart.destroy(); deviceMonthlyChart=null; }
@@ -12498,8 +12504,8 @@ function showDevRepDetail(repName) {
     _devRepChart = new Chart(ctx2, {
       type:'bar',
       data:{labels:months12.map(m=>m+'월'), datasets:[
-        {label:`${yr}년`,   data:months12.map(m=>Math.round((curM[m]||0)/1e4)), backgroundColor:'rgba(37,99,235,0.7)', borderRadius:3, yAxisID:'y'},
-        {label:`${yr-1}년`, data:months12.map(m=>Math.round((preM[m]||0)/1e4)), type:'line', borderColor:'#94a3b8', backgroundColor:'transparent', borderWidth:2, borderDash:[5,3], pointRadius:2, yAxisID:'y'},
+        {label:`${_YR(yr)}년`,   data:months12.map(m=>Math.round((curM[m]||0)/1e4)), backgroundColor:'rgba(37,99,235,0.7)', borderRadius:3, yAxisID:'y'},
+        {label:`${_YR(yr)-1}년`, data:months12.map(m=>Math.round((preM[m]||0)/1e4)), type:'line', borderColor:'#94a3b8', backgroundColor:'transparent', borderWidth:2, borderDash:[5,3], pointRadius:2, yAxisID:'y'},
       ]},
       options:{responsive:true,maintainAspectRatio:false,
         plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},
