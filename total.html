@@ -1809,6 +1809,7 @@ async function loadAll(){
     const ib=(i.data&&i.data.data)||{};
     INTL=Object.assign({}, ib.INTL2026||{}, {data2025:ib.INTL2025||{}, updatedAt:ib.updatedAt||''});
     _seedIntlStaff();
+    try{ if(window.WT_STALE) WT_STALE(CONS.updatedAt||DEVICE.updatedAt, '회계 매출자료'); }catch(e){}   // 업로드가 끊기면 화면 맨 위로 알린다
     // 해외 A/S소모품 → 해외영업서 빼고 기타(고객만족)로 이동 (회계팀 사업부 정합 · 전사 총액 불변 · 재업로드 후엔 A/S 부재로 자동 무동작)
     try{
       var _asMo=(INTL.prodMo&&INTL.prodMo['A/S소모품'])?Object.assign({},INTL.prodMo['A/S소모품']):{};
@@ -5239,6 +5240,33 @@ window.addEventListener('popstate', function(e){
 <script>
 /* 서비스워커 등록: 일반 새로고침(F5)에도 항상 최신 HTML(network-first) — 하드리프레시 불필요 */
 if('serviceWorker' in navigator){ window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
+</script>
+<script>
+/* WT_STALE_V1 — 데이터가 오래되면 상단 경고 바 (전 사이트 공통 스니펫, 개별 수정 금지)
+ * 담당자가 바뀌면 업로드가 조용히 끊기고, 화면은 지난달 숫자를 아무 일 없다는 듯 계속 보여준다.
+ * 그래서 '기준일'을 본 사람이 바로 알아채도록 화면 맨 위에 띄운다.
+ * 쓰는 법: 데이터를 불러온 뒤 WT_STALE('2026-08-11', '회계 매출자료') 한 번 호출.
+ *          날짜는 'YYYY-MM-DD' 또는 'YYYY.MM.DD' 무엇이든 된다. */
+(function(){
+var WARN=9, ALERT=16;   // 9일=주간 업로드 한 번 걸렀다 / 16일=두 번 걸렀다
+function days(ds){ var m=String(ds||'').match(/(\d{4})\D(\d{1,2})\D(\d{1,2})/); if(!m) return null;
+  var d=new Date(+m[1],+m[2]-1,+m[3]); if(isNaN(d)) return null;
+  var n=new Date(); n.setHours(0,0,0,0); d.setHours(0,0,0,0);
+  return Math.round((n-d)/864e5); }
+window.WT_STALE=function(ds,label){
+  var n=days(ds); if(n===null||n<WARN) { var ex=document.getElementById('wt-stale'); if(ex) ex.remove(); return; }
+  var hard=n>=ALERT;
+  var d=document.getElementById('wt-stale')||document.createElement('div');
+  d.id='wt-stale';
+  d.style.cssText='position:fixed;top:0;left:0;right:0;z-index:2147482000;background:'+(hard?'#7f1d1d':'#92400e')+
+    ';color:#fff;font-family:inherit;font-size:13px;line-height:1.5;display:flex;gap:10px;align-items:center;justify-content:center;padding:9px 14px;box-shadow:0 2px 10px rgba(0,0,0,.25)';
+  d.innerHTML='<span style="font-size:15px">'+(hard?'\u26D4':'\u26A0\uFE0F')+'</span>'+
+    '<span><b>'+(label||'데이터')+'</b>가 <b>'+n+'일째</b> 갱신되지 않았습니다 (기준일 '+ds+'). '+
+    (hard?'지금 보시는 숫자는 최신이 아닙니다.':'업로드가 밀리고 있는지 확인해 주세요.')+'</span>'+
+    '<button onclick="this.parentNode.remove()" style="background:rgba(255,255,255,.18);color:#fff;border:none;border-radius:7px;padding:3px 10px;font-size:12px;cursor:pointer">닫기</button>';
+  if(!d.parentNode) document.body.appendChild(d);
+};
+})();
 </script>
 <script>/* WT_UPDATE_V1 — 새 버전 감지 시 상단 새로고침 바 (전 사이트 공통 스니펫, 개별 수정 금지) */
 (function(){var base=null;
