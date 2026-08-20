@@ -310,10 +310,52 @@ function buildEquip(rows, hospNames, exEquip, devModels){
 
 // ───────── 메인 빌드 ─────────
 // existing = {main, device, intl} (기존 cons_cache data). 반환 {main, device, intl, summary}
+// ── 연도 승계(roll) ───────────────────────────────────────────────────────────
+// 이 엔진은 '올해'를 *2026, '전년'을 *2025 라는 이름의 칸에 담는다(과거 하드코딩의 잔재).
+// 새해 첫 업로드에서 파일 연도가 저장된 연도보다 앞서면, 지금 올해 칸에 있는 값이 전년 칸으로
+// 내려가야 한다. 이 단계가 없으면 2027년 매출이 2026 칸에 덮여 쌓이고 전년비는 2025와 비교하게 된다.
+// (칸 이름은 그대로 두고 내용만 옮긴다 — 화면 코드를 건드리지 않고 연말을 넘기기 위해서다)
+function _rollPair(o, base){ if(!o) return; o[base+'2025']=o[base+'2026']||{}; delete o[base+'2026']; }
+function _rollHospRec(h){
+  if(!h) return h;
+  h.y2025=h.y2026||0;           h.y2026=0;
+  h.m2025=h.m2026||{};          h.m2026={};
+  h.prods2025=h.prods2026||{};  h.prods2026={};
+  h.txns2025=h.txns2026||[];    h.txns2026=[];
+  return h;
+}
+function _rollRepRec(r){
+  if(!r) return r;
+  r.y2025=r.y2026||0;           r.y2026=0;
+  r.m2025=r.m2026||{};          r.m2026={};
+  r.prods2025=r.prods2026||{};  r.prods2026={};
+  r.cust2025=r.cust2026||0;     r.cust2026=0;
+  r.qty2025=r.qty2026||0;       r.qty2026=0;
+  return r;
+}
+// 저장된 연도. 없으면(승계 기능 도입 전 데이터) 2026 으로 본다.
+function storedYear(existing){
+  existing=existing||{};
+  var y=(existing.main&&existing.main.dataYear)||(existing.device&&existing.device.dataYear)||(existing.intl&&existing.intl.dataYear);
+  return Number(y)||2026;
+}
+function rollYear(exMain, exDev, exIntl){
+  ['monthly','products','qtr','oligioMo','etcMonthly','etcDept'].forEach(function(b){ _rollPair(exMain,b); });
+  Object.keys(exMain.hospitals||{}).forEach(function(n){ _rollHospRec(exMain.hospitals[n]); });
+  ['monthly','monthlyQty','products','prodQty','prodMo','prodMoQty'].forEach(function(b){ _rollPair(exDev,b); });
+  Object.keys(exDev.hospitals||{}).forEach(function(n){ _rollHospRec(exDev.hospitals[n]); });
+  Object.keys(exDev.reps||{}).forEach(function(n){ _rollRepRec(exDev.reps[n]); });
+  exIntl.INTL2025 = exIntl.INTL2026 || {}; delete exIntl.INTL2026;
+}
 function build(sheets, existing){
   existing=existing||{}; var exMain=existing.main||{}, exDev=existing.device||{}, exIntl=existing.intl||{};
   var CM=buildCatMap(exMain,exDev,exIntl);
   var rows26=transformRaw(sheets,CM);
+  // 파일이 몇 년치인지는 승인일자가 말해준다. 연도가 넘어갔으면 기존 '올해'를 '전년'으로 내린다.
+  var _fy=0; rows26.forEach(function(r){ var d=r['날짜']; if(d&&d.getFullYear&&d.getFullYear()>_fy) _fy=d.getFullYear(); });
+  var _sy=storedYear(existing);
+  var DATA_YEAR=_fy||_sy;
+  if(_fy && _fy>_sy) rollYear(exMain, exDev, exIntl);
   // 사업부 = 회계 '사용부서'. 일보(회계)와 같은 축이라야 사업부별 금액이 맞는다.
   // 예전엔 거래처명·부서로 만든 '국내외'로 갈라 welo(B2C사업팀·중국수출) 같은 건이
   // 해외로 잡혀 일보와 어긋났다. 검증: 원장 부서별 1~8월 = 일보 6개 사업부 전부 0원 차이.
@@ -348,7 +390,7 @@ function build(sheets, existing){
     products2025:exMain.products2025||{}, products2026:topN(a26.products,10),
     groups2026:groups26final(a26.groups), qtr2025:exMain.qtr2025||{}, qtr2026:a26.qtr,
     oligioMo2025:exMain.oligioMo2025||{}, oligioMo2026:a26.oligioMo,
-    hospitals:mergeConsHospitals(exMain.hospitals,consH26), updatedAt:updatedAt };
+    hospitals:mergeConsHospitals(exMain.hospitals,consH26), dataYear:DATA_YEAR, updatedAt:updatedAt };
   // DEVICE
   var d26=aggDevice2026(devR);
   var DEVICE={ monthly2025:exDev.monthly2025||{}, monthly2026:d26.monthly2026,
@@ -358,10 +400,10 @@ function build(sheets, existing){
     prodMo2025:exDev.prodMo2025||{}, prodMo2026:d26.prodMo2026,
     prodMoQty2025:exDev.prodMoQty2025||{}, prodMoQty2026:d26.prodMoQty2026,
     hospitals:mergeDevHospitals(exDev.hospitals,d26.hospitals2026),
-    reps:mergeDevReps(exDev.reps,d26.reps2026), updatedAt:updatedAt };
+    reps:mergeDevReps(exDev.reps,d26.reps2026), dataYear:DATA_YEAR, updatedAt:updatedAt };
   // INTL
   var i26=aggIntl2026(intlR);
-  var INTL={ INTL2026:i26, INTL2025:(exIntl.INTL2025||{}), updatedAt:updatedAt };
+  var INTL={ INTL2026:i26, INTL2025:(exIntl.INTL2025||{}), dataYear:DATA_YEAR, updatedAt:updatedAt };
 
   // 기타(종합 전용): 국내 전체 net − 국내소모품 − 국내제품 = 서지컬·B2C·고객만족·의료기기·지원부서.
   // 한국영업 분석(소모품/제품)엔 미포함, 종합사이트 전사 합계에만 얹음 → 회계 전체와 정합.
