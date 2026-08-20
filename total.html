@@ -1809,7 +1809,7 @@ async function loadAll(){
     const ib=(i.data&&i.data.data)||{};
     INTL=Object.assign({}, ib.INTL2026||{}, {data2025:ib.INTL2025||{}, updatedAt:ib.updatedAt||''});
     _seedIntlStaff();
-    try{ if(window.WT_STALE) WT_STALE(CONS.updatedAt||DEVICE.updatedAt, '회계 매출자료'); }catch(e){}   // 업로드가 끊기면 화면 맨 위로 알린다
+    try{ const {data:{session:_stSs}}=await _sb.auth.getSession(); if(_stSs&&window.WT_STALE) WT_STALE(CONS.updatedAt||DEVICE.updatedAt, '회계 매출자료'); }catch(e){}   // 업로드가 끊기면 화면 맨 위로 알린다 — 미로그인 시엔 내장본(구버전) 날짜로 오경보가 나므로 세션 있을 때만
     // 해외 A/S소모품 → 해외영업서 빼고 기타(고객만족)로 이동 (회계팀 사업부 정합 · 전사 총액 불변 · 재업로드 후엔 A/S 부재로 자동 무동작)
     try{
       var _asMo=(INTL.prodMo&&INTL.prodMo['A/S소모품'])?Object.assign({},INTL.prodMo['A/S소모품']):{};
