@@ -3063,7 +3063,7 @@ async function _showLauncherOrApp(user) {
   _isAdmin = profile?.role === 'admin';
   _isMgr   = _isAdmin || profile?.role === 'manager';
   _isStrat = String(profile?.dept||'').replace(/\s/g,'').includes('영업전략');   // 영업전략파트 → 현황판 열람 허용
-  if(_isAdmin) { try{ _inboxBadge(); }catch(e){} }   // 최근 7일 오류·요청 건수를 관리자 눈에 띄게
+  /* 오류·요청 배지 비활성화(2026-08-21 유저 요청: 전체 다 안 뜨게). 조회함 자체는 관리자 메뉴에 그대로 있음. 되살리려면: if(_isAdmin) _inboxBadge(); */
   // 임시비밀번호를 아직 안 바꾼 사용자 → 강제 변경(마스터 제외)
   if(profile.temp_pw && String(profile.temp_pw).trim() && user.email !== 'pmw0406@gmail.com'){ _hideLoading(); _showForcePw(); return; }
   // 새로고침 시 이전 상태 복원
