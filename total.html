@@ -2260,7 +2260,10 @@ function renderOvProds(f,t,pend){
   const _every=Object.entries(map).map(([n,o])=>{
     const pv=prev[n]||{dom:0,intl:0}, q=qty[n]||{dom:0,intl:0};
     const v=o.dom+o.intl, p=(pv.dom||0)+(pv.intl||0);
-    return {n,dom:o.dom,intl:o.intl,v,cat:o.cat,prev:p,d:v-p,y:pct(v,p),q:(q.dom||0)+(q.intl||0)};
+    // '의료기기·부속(소액)' 은 제품이 아니라 대당 100만원 미만 행(부속품·1~2원 조정)을 모아둔 칸이다.
+    // 대수에서 빼면서 금액은 남겨야 회계와 맞아 만든 자리라, 제품 순위에 끼면 3원짜리가 28위로 잡힌다 → 기타로 내린다.
+    const _cat=/부속\(소액\)/.test(n)?'기타':o.cat;
+    return {n,dom:o.dom,intl:o.intl,v,cat:_cat,prev:p,d:v-p,y:pct(v,p),q:(q.dom||0)+(q.intl||0)};
   });
   const all=_every.filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
   // 비중 분모는 반품·충당(음수)까지 포함해야 회계와 맞음(목록에서만 음수를 감춘다)
