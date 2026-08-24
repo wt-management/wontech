@@ -11769,10 +11769,15 @@ function renderDeviceSales() {
     prods.forEach(p=>{ const ck=_cpn(p); const o=_agg[ck]||(_agg[ck]={key:ck,v26:0,v25:0,qty:0,qty25:0}); o.v26+=sp(p,rng,prodMoY); o.v25+=sp(p,yrng,prodMoY); o.qty+=sp(p,rng,prodMoQtyY); o.qty25+=sp(p,yrng,prodMoQtyY); });
     try{ var _pnd=(typeof ILBO_PEND!=='undefined'&&ILBO_PEND)||[]; var _dset={}; ['products2026','products2025','prods_dev'].forEach(k=>Object.keys((DEVICE&&DEVICE[k])||{}).forEach(n=>{_dset[_cpn(n)]=1;})); var _smo={}; rng.forEach(x=>{ if(x.y===_curYear())_smo[x.m]=1; });
       _pnd.forEach(r=>{ if(!r||(r.region&&r.region!=='국내')||r.status==='반영됨'||r.status==='취소')return; var pp=_cpn(r.product||''); if(!pp||/tip|팁|cartridge|카트리지|소모|a\/s/i.test(pp)||!_dset[pp])return; var mo=parseInt(String(r.expectedDate||r.date||'').slice(5,7),10); if(!_smo[mo])return; var o=_agg[pp]||(_agg[pp]={key:pp,v26:0,v25:0,qty:0,qty25:0}); o.v26+=(Number(r.amount)||0); o.qty+=(Number(r.qty)||0); }); }catch(e){}
-    const data = Object.values(_agg).filter(p=>p.v26>0||p.v25>0).sort((a,b)=>b.v26-a.v26);
-    const maxV = Math.max(...data.map(p=>p.v26))||1;
+    // 합계·전년비는 전년에만 있던 제품까지 넣어야 머리말 숫자가 회계와 맞는다.
+    // 다만 목록에는 올해 실적이 있는 것만 세운다 — 0원 0대 짜리가 줄을 차지하면
+    // "왜 있지" 소리부터 나온다. 사라진 제품은 아래 한 줄로 따로 알린다.
+    const _all = Object.values(_agg).filter(p=>p.v26>0||p.v25>0);
+    const data = _all.filter(p=>p.v26>0).sort((a,b)=>b.v26-a.v26);
+    const _gone = _all.filter(p=>p.v26<=0&&p.v25>0).sort((a,b)=>b.v25-a.v25);
+    const maxV = Math.max(...data.map(p=>p.v26),0)||1;
     const rngStr = rng.map(x=>x.y+'.'+x.m).join(',');
-    const totV = data.reduce((s,p)=>s+p.v26,0)||1, totQ=data.reduce((s,p)=>s+p.qty,0), totV25=data.reduce((s,p)=>s+p.v25,0);
+    const totV = _all.reduce((s,p)=>s+p.v26,0)||1, totQ=_all.reduce((s,p)=>s+p.qty,0), totV25=_all.reduce((s,p)=>s+p.v25,0);
     const totYoY = totV25>0?(totV/totV25-1)*100:null;
     const head = `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:11px;color:#64748b;padding:1px 6px 8px;border-bottom:1px solid #eef2f7;margin-bottom:2px"><span>합계 <b style="color:#1c2534;font-size:13px">${fmtW(totV)}</b> · ${totQ.toLocaleString()}대</span><span>전년 ${fmtW(totV25)} ${chgBadge(totYoY)}</span></div>`;
     return head + (data.map((p,i)=>{
@@ -11786,7 +11791,11 @@ function renderDeviceSales() {
           <span style="display:flex;align-items:center;gap:7px;flex-shrink:0"><b style="font-size:12px;color:#1d4ed8;font-variant-numeric:tabular-nums">${fmtW(p.v26)}</b><span style="font-size:10px;color:#94a3b8;width:26px;text-align:right;font-variant-numeric:tabular-nums">${share}%</span>${chgBadge(chg)}</span>
         </div>
       </div>`;
-    }).join('') || '<div class="text-muted" style="font-size:13px">해당 기간 데이터 없음</div>');
+    }).join('') || '<div class="text-muted" style="font-size:13px">해당 기간 데이터 없음</div>')
+    + (_gone.length ? `<div style="padding:8px 8px 2px;font-size:11px;color:#94a3b8;line-height:1.6">
+        <i class="bi bi-dash-circle me-1"></i>전년 이 기간엔 있었으나 올해 실적 없음 (${_gone.length}) —
+        ${_gone.slice(0,6).map(p=>`<span style="color:#64748b">${_escH(p.key)}</span> <span style="color:#b91c1c">전년 ${fmtW(p.v25)}</span>`).join(' · ')}${_gone.length>6?` 외 ${_gone.length-6}개`:''}
+      </div>` : '');
   }
 
   document.getElementById('dev-monthly-title').innerHTML = `<i class="bi bi-calendar3 me-1" style="color:#2563eb;font-size:12px"></i>최근월 <span style="font-size:11px;font-weight:400;color:#64748b">${_lastSpan.y}.${_lastSpan.m}월</span>`;
