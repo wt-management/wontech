@@ -12251,21 +12251,43 @@ function renderCapa(){
   var host=document.getElementById('capa-view'); if(!host) return;
   try{
     var lm=(typeof _lastAcctMonth==='function')?_lastAcctMonth():7; if(lm<1)lm=1;
-    // 기간 조회(조회 범위 안에서만 집계·표시) — 셀렉터 없으면 기본 1~lm(전체)
-    var _fSel=document.getElementById('capa-from-sel'), _tSel=document.getElementById('capa-to-sel');
-    if(_tSel && !_tSel.dataset.init){ _tSel.value=lm; _tSel.dataset.init='1'; }
-    var fromM=_fSel?(parseInt(_fSel.value)||1):1, _toRaw=_tSel?(parseInt(_tSel.value)||lm):lm;
-    var toM=_toRaw, _toClamped=(toM>lm);
-    if(_toClamped){ toM=lm; if(_tSel) _tSel.value=lm; }
-    if(fromM<1) fromM=1; if(fromM>toM) fromM=toM;
-    var periodMonths=toM-fromM+1;
-    var _pNote=document.getElementById('capa-period-note');
-    if(_pNote) _pNote.innerHTML=_toClamped?('<i class="bi bi-exclamation-triangle-fill"></i> 선택하신 '+_toRaw+'월까지는 회계 매출자료가 아직 반영되지 않아 '+lm+'월까지만 표시합니다(업로드되면 자동 갱신)'):'';
     var W=function(v){ return (v/1e8).toFixed(1); }, pc=function(a,c){ return c>0?Math.round(a/c*100):0; };
     var col=function(p){ return p>=100?'#16a34a':(p>=80?'#d97706':'#dc2626'); }, bg=function(p){ return p>=100?'rgba(22,163,74,.10)':(p>=80?'rgba(217,119,6,.10)':'rgba(220,38,38,.08)'); };
     var esc=(typeof _dvEsc==='function')?_dvEsc:function(s){return String(s==null?'':s);};
     var NOISE=/^전임자\(미상\)$|^미지정$|^미배정$/;
-    // 담당(_repOf)별 월별 장비실적 집계 → 대리점/직판 분류
+
+    // ── 회계 미반영(예정+일보) — 아직 회계 마감 전인 최근월도 잠정치로 보이게(제품·소모품 매출 화면과 동일 소스).
+    // 개별 담당자 순위(ctbl)엔 안 섞고 채널·전체 합계에만 반영 — 확정 전 수치를 사람별 실적으로 오인하지 않도록.
+    var _pv=(typeof _pendingView==='function')?_pendingView(2026):{items:[],agg:{}};
+    var _im=(typeof _ilboMonthMaps==='function')?_ilboMonthMaps():{consMo:{},devMo:{}};
+    var pendMo={}; for(var _pm=1;_pm<=12;_pm++) pendMo[_pm]={dealer:0,direct:0,cons:0,devUnk:0};
+    (_pv.items||[]).forEach(function(it){
+      if(!it.inYr || it.eff==='cancelled' || it.eff==='reflected') return;   // 취소·이미 회계반영된 건 제외(중복 방지)
+      var p=it.p, d=p.expected_date?new Date(p.expected_date+'T00:00:00'):null; if(!d||isNaN(d)) return;
+      var mo_=d.getMonth()+1, amt=Number(p.amount)||0; if(!mo_||!amt) return;
+      if(p.category==='소모품'){ pendMo[mo_].cons+=amt; return; }
+      var owner=(typeof _repOf==='function'?_repOf(p.hospital||''):'')||'';   // 예정분은 병원명이 있어 대리점/직판 귀속 가능(일보는 불가)
+      if(!owner){ pendMo[mo_].devUnk+=amt; return; }   // 병원명이 등록된 거래처와 매칭 안 되면 직판으로 억측하지 않고 귀속불명 처리
+      if(_CAPA_DEALER_RE.test(String(owner))) pendMo[mo_].dealer+=amt; else pendMo[mo_].direct+=amt;
+    });
+    var _imDevMo=_im.devMo||{}, _imConsMo=_im.consMo||{};
+    for(var _pm2=1;_pm2<=12;_pm2++){ pendMo[_pm2].devUnk+=Number(_imDevMo[_pm2])||0; pendMo[_pm2].cons+=Number(_imConsMo[_pm2])||0; }   // 일보 장비분은 귀속처 정보가 없어 대리점/직판에 못 나눔 → 전체에만
+    var _pendMaxM=0; for(var _cm=1;_cm<=12;_cm++){ var _t=pendMo[_cm].dealer+pendMo[_cm].direct+pendMo[_cm].cons+pendMo[_cm].devUnk; if(_t>0) _pendMaxM=_cm; }
+    var _dataCap=(typeof _dataMaxMonth==='function')?_dataMaxMonth():12;
+    var capM=Math.min(_dataCap, Math.max(lm,_pendMaxM));
+
+    // 기간 조회(조회 범위 안에서만 집계·표시) — 셀렉터 없으면 기본 1~lm(회계 기준 전체). 미반영이 있는 월까지는 capM으로 확장 허용
+    var _fSel=document.getElementById('capa-from-sel'), _tSel=document.getElementById('capa-to-sel');
+    if(_tSel && !_tSel.dataset.init){ _tSel.value=lm; _tSel.dataset.init='1'; }
+    var fromM=_fSel?(parseInt(_fSel.value)||1):1, _toRaw=_tSel?(parseInt(_tSel.value)||lm):lm;
+    var toM=_toRaw, _toClamped=(toM>capM);
+    if(_toClamped){ toM=capM; if(_tSel) _tSel.value=capM; }
+    if(fromM<1) fromM=1; if(fromM>toM) fromM=toM;
+    var periodMonths=toM-fromM+1;
+    var _pNote=document.getElementById('capa-period-note');
+    if(_pNote) _pNote.innerHTML=_toClamped?('<i class="bi bi-exclamation-triangle-fill"></i> 선택하신 '+_toRaw+'월까지는 회계·미반영 데이터가 아직 없어 '+capM+'월까지만 표시합니다(업로드/입력되면 자동 갱신)'):'';
+
+    // 담당(_repOf)별 월별 장비실적 집계 → 대리점/직판 분류(회계반영분만 — 개별 담당자 실적엔 미반영 미포함)
     var reps=(typeof _repsByMgr==='function')?_repsByMgr(DEVICE.hospitals||{}):{};
     var dealers=[], directs=[];
     Object.keys(reps).forEach(function(nm){ var o=reps[nm]||{}; var m26=o.m2026||{}, m25=o.m2025||{};
@@ -12275,26 +12297,31 @@ function renderCapa(){
       var e={name:nm, m26:m26, m25:m25, y26:y26, y25:y25, qty:Number(o.qty2026)||0, yoy:(y25>0?(y26/y25-1)*100:null)};
       if(_CAPA_DEALER_RE.test(nm)) dealers.push(e); else directs.push(e); });
     dealers.sort(function(a,b){return b.y26-a.y26;}); directs.sort(function(a,b){return b.y26-a.y26;});
-    // 월별 채널 합계
-    var mo={}; for(var m=1;m<=lm;m++) mo[m]={dealer:0,direct:0,cons:0};
+    // 월별 채널 합계(회계반영분 · capM까지 — lm을 넘는 달은 회계액 0으로 시작)
+    var mo={}; for(var m=1;m<=capM;m++) mo[m]={dealer:0,direct:0,cons:0};
     dealers.forEach(function(e){ for(var m=1;m<=lm;m++) mo[m].dealer+=Number(e.m26[m])||0; });
     directs.forEach(function(e){ for(var m=1;m<=lm;m++) mo[m].direct+=Number(e.m26[m])||0; });
     var cm=(CONS&&CONS.monthly2026)||{}; for(var m=1;m<=lm;m++) mo[m].cons=Number(cm[m])||0;
-    // 월 Capa = 1~6월(상반기) 실적 평균(고정 정책치 대신 실적 기반으로 산정, 데이터가 6월에 못 미치면 있는 만큼 평균)
+    // 월 Capa = 1~6월(상반기) 실적 평균(회계반영 기준 · 고정 정책치 대신 실적 기반으로 산정, 미반영 섞기 전에 확정)
     var _h1n=Math.max(1,Math.min(lm,6)), _h1d=0,_h1x=0,_h1c=0;
     for(var _hm=1;_hm<=Math.min(lm,6);_hm++){ _h1d+=mo[_hm].dealer; _h1x+=mo[_hm].direct; _h1c+=mo[_hm].cons; }
     var CAPA={dealer:_h1d/_h1n, direct:_h1x/_h1n, cons:_h1c/_h1n}, CAPA_TOT=CAPA.dealer+CAPA.direct+CAPA.cons;
     var _capaSub=document.getElementById('capa-subtitle'); if(_capaSub) _capaSub.innerHTML='월 Capa '+W(CAPA_TOT)+'억(장비 '+W(CAPA.dealer+CAPA.direct)+' = 대리점 '+W(CAPA.dealer)+' + 직판 '+W(CAPA.direct)+', 소모품 '+W(CAPA.cons)+') 대비 <b style="color:#64748b">채널·담당자별 달성/부진</b>을 진단 <span style="color:#cbd5e1">· 1~'+_h1n+'월 실적 평균 기준</span>';
+    // 미반영(예정+일보) 반영 — 대리점/직판/소모품엔 확정 귀속분만 더함(CAPA 목표 확정 이후라 목표엔 영향 없음)
+    var pendDealer=0,pendDirect=0,pendCons=0; for(var m=1;m<=capM;m++){ pendDealer+=pendMo[m].dealer; pendDirect+=pendMo[m].direct; pendCons+=pendMo[m].cons; mo[m].dealer+=pendMo[m].dealer; mo[m].direct+=pendMo[m].direct; mo[m].cons+=pendMo[m].cons; }
     var sum={dealer:0,direct:0,cons:0}; for(var m=fromM;m<=toM;m++){ sum.dealer+=mo[m].dealer; sum.direct+=mo[m].direct; sum.cons+=mo[m].cons; }
-    var totA=sum.dealer+sum.direct+sum.cons, last=mo[toM];
+    var sumDevUnk=0; for(var m=fromM;m<=toM;m++) sumDevUnk+=pendMo[m].devUnk;   // 일보 장비분(귀속불명) — 전체 합계에만
+    var totA=sum.dealer+sum.direct+sum.cons+sumDevUnk, last=mo[toM];
+    var periodPendDealer=0,periodPendDirect=0,periodPendCons=0; for(var m=fromM;m<=toM;m++){ periodPendDealer+=pendMo[m].dealer; periodPendDirect+=pendMo[m].direct; periodPendCons+=pendMo[m].cons; }
+    var periodPendAll=periodPendDealer+periodPendDirect+periodPendCons+sumDevUnk;
     // 전년 동월 채널 합계(YoY용)
-    var mo25={}; for(var m=1;m<=lm;m++) mo25[m]={dealer:0,direct:0,cons:0};
+    var mo25={}; for(var m=1;m<=capM;m++) mo25[m]={dealer:0,direct:0,cons:0};
     dealers.forEach(function(e){ for(var m=1;m<=lm;m++) mo25[m].dealer+=Number(e.m25[m])||0; });
     directs.forEach(function(e){ for(var m=1;m<=lm;m++) mo25[m].direct+=Number(e.m25[m])||0; });
     var cm25=(CONS&&CONS.monthly2025)||{}; for(var m=1;m<=lm;m++) mo25[m].cons=Number(cm25[m])||0;
     var sum25={dealer:0,direct:0,cons:0}; for(var m=fromM;m<=toM;m++){ sum25.dealer+=mo25[m].dealer; sum25.direct+=mo25[m].direct; sum25.cons+=mo25[m].cons; }
-    // 월별 대수(장비 txn qty) — 대리점/직판, 올해·전년
-    var moQ={}, moQ25={}; for(var m=1;m<=lm;m++){ moQ[m]={dealer:0,direct:0}; moQ25[m]={dealer:0,direct:0}; }
+    // 월별 대수(장비 txn qty) — 대리점/직판, 올해·전년(미반영은 대수 데이터가 없어 회계반영분만)
+    var moQ={}, moQ25={}; for(var m=1;m<=capM;m++){ moQ[m]={dealer:0,direct:0}; moQ25[m]={dealer:0,direct:0}; }
     Object.keys(DEVICE.hospitals||{}).forEach(function(hn){ var h=DEVICE.hospitals[hn]||{}; var owner=(typeof _repOf==='function'?_repOf(hn):'')||(typeof _sN==='function'?_sN(h.sales||''):(h.sales||'')); var isD=_CAPA_DEALER_RE.test(String(owner));
       (h.txns2026||[]).forEach(function(t){ var mm=+t[0]||0, q=Number(t[5])||0; if(mm>=1&&mm<=lm){ if(isD) moQ[mm].dealer+=q; else moQ[mm].direct+=q; } });
       (h.txns2025||[]).forEach(function(t){ var mm=+t[0]||0, q=Number(t[5])||0; if(mm>=1&&mm<=lm){ if(isD) moQ25[mm].dealer+=q; else moQ25[mm].direct+=q; } }); });
@@ -12346,8 +12373,10 @@ function renderCapa(){
     var SP='<td style="padding:0;border-left:1px solid #e8edf2"></td>', SPH='<th style="padding:0;border-left:1px solid #e8edf2"></th>';
     var TH=function(l,c){ return '<th style="padding:4px 12px 6px;border-bottom:2px solid #e7ebf0;font-weight:700"><div style="display:flex;align-items:baseline;gap:10px"><span style="flex:1;min-width:0;font-size:11px;color:#5a6675;text-align:left">'+l+' <span style="font-weight:400;color:#b6c0cc;margin-left:5px">'+c+'</span></span><span style="display:inline-flex;align-items:baseline;gap:11px;white-space:nowrap"><span style="min-width:100px;text-align:right;font-size:9px;font-weight:600;color:#aab3be">금액 (대수)</span><span style="min-width:38px;text-align:right;font-size:9px;font-weight:600;color:#aab3be">달성률</span><span style="min-width:44px;text-align:right;font-size:9px;font-weight:600;color:#aab3be">성장률</span></span></div></th>'; };
     // 월 행(평면)
-    var mRow=function(m){ var t=mo[m].dealer+mo[m].direct+mo[m].cons, tq=moQ[m].dealer+moQ[m].direct, tq25=moQ25[m].dealer+moQ25[m].direct;
-      return '<tr onclick="_dvDrill(\'month\','+m+')" style="cursor:pointer" onmouseover="this.style.filter=\'brightness(.97)\'" onmouseout="this.style.filter=\'\'" title="'+m+'월 상세내역 보기(제품·담당·대리점 · 전년대비)"><td style="padding:5px 11px;font-weight:800;color:#475569;white-space:nowrap;font-size:12px;border-bottom:1px solid #eef2f5">'+m+'월 <i class="bi bi-chevron-right" style="font-size:8px;color:#cbd5e1"></i></td>'+mCell(mo[m].dealer,CAPA.dealer,mo25[m].dealer,moQ[m].dealer,moQ25[m].dealer,true)+SP+mCell(mo[m].direct,CAPA.direct,mo25[m].direct,moQ[m].direct,moQ25[m].direct,true)+SP+mCell(mo[m].cons,CAPA.cons,mo25[m].cons,0,0,false)+SP+mCell(t,CAPA_TOT,mo25[m].dealer+mo25[m].direct+mo25[m].cons,tq,tq25,true)+'</tr>'; };
+    var mRow=function(m){ var t=mo[m].dealer+mo[m].direct+mo[m].cons+pendMo[m].devUnk, tq=moQ[m].dealer+moQ[m].direct, tq25=moQ25[m].dealer+moQ25[m].direct;
+      var _mp=pendMo[m].dealer+pendMo[m].direct+pendMo[m].cons+pendMo[m].devUnk;
+      var _badge=_mp>0?' <span title="미반영(예정+일보) +'+W(_mp)+'억 포함된 잠정치" style="font-size:9px;font-weight:800;color:#7c3aed;background:#f5f3ff;border-radius:4px;padding:0 5px;margin-left:2px">잠정</span>':'';
+      return '<tr onclick="_dvDrill(\'month\','+m+')" style="cursor:pointer" onmouseover="this.style.filter=\'brightness(.97)\'" onmouseout="this.style.filter=\'\'" title="'+m+'월 상세내역 보기(제품·담당·대리점 · 전년대비)"><td style="padding:5px 11px;font-weight:800;color:#475569;white-space:nowrap;font-size:12px;border-bottom:1px solid #eef2f5">'+m+'월'+_badge+' <i class="bi bi-chevron-right" style="font-size:8px;color:#cbd5e1"></i></td>'+mCell(mo[m].dealer,CAPA.dealer,mo25[m].dealer,moQ[m].dealer,moQ25[m].dealer,true)+SP+mCell(mo[m].direct,CAPA.direct,mo25[m].direct,moQ[m].direct,moQ25[m].direct,true)+SP+mCell(mo[m].cons,CAPA.cons,mo25[m].cons,0,0,false)+SP+mCell(t,CAPA_TOT,mo25[m].dealer+mo25[m].direct+mo25[m].cons,tq,tq25,true)+'</tr>'; };
     var hmRows=''; for(var m=fromM;m<=toM;m++){ hmRows+=mRow(m); }
     hmRows+='<tr style="border-top:2px solid #cbd5e1;background:#f6f8fb"><td style="padding:7px 11px;font-weight:800;color:#0f172a;font-size:12.5px">누계</td>'+mCell(sum.dealer,CAPA.dealer*periodMonths,sum25.dealer,sumQ.dealer,sumQ25.dealer,true)+SP+mCell(sum.direct,CAPA.direct*periodMonths,sum25.direct,sumQ.direct,sumQ25.direct,true)+SP+mCell(sum.cons,CAPA.cons*periodMonths,sum25.cons,0,0,false)+SP+mCell(totA,CAPA_TOT*periodMonths,sum25.dealer+sum25.direct+sum25.cons,sumQ.dealer+sumQ.direct,sumQ25.dealer+sumQ25.direct,true)+'</tr>';
     var COLG='<colgroup><col style="width:64px"><col><col style="width:10px"><col><col style="width:10px"><col><col style="width:10px"><col></colgroup>';
@@ -12357,13 +12386,13 @@ function renderCapa(){
       +'<div style="display:grid;grid-template-columns:64px 1fr 10px 1fr 10px 1fr 10px 1fr;margin-bottom:12px"><div></div><div>'+tile('장비 대리점',sum.dealer,CAPA.dealer,sum25.dealer)+'</div><div></div><div>'+tile('장비 직판',sum.direct,CAPA.direct,sum25.direct)+'</div><div></div><div>'+tile('소모품',sum.cons,CAPA.cons,sum25.cons)+'</div><div></div><div>'+tile('전체',totA,CAPA_TOT,sum25.dealer+sum25.direct+sum25.cons)+'</div></div>'
       +'<table style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;table-layout:fixed">'+COLG+'<thead><tr style="font-size:11px;color:#5a6675;font-weight:700"><th style="padding:4px 11px 7px;text-align:left;border-bottom:2px solid #e7ebf0">월</th>'+TH('장비 대리점','Capa '+W(CAPA.dealer)+'억')+SPH+TH('장비 직판','Capa '+W(CAPA.direct)+'억')+SPH+TH('소모품','Capa '+W(CAPA.cons)+'억')+SPH+TH('전체','Capa '+W(CAPA_TOT)+'억')+'</tr></thead><tbody>'+hmRows+'</tbody></table>'
       +'</div></div>'
-      +'<div style="margin-top:8px;font-size:10.5px;color:#94a3b8">각 칸 = 왼쪽 <b style="color:#64748b">전년 ’25 금액(대수)</b> → 오른쪽 <b style="color:#64748b">올해 금액(대수)·달성%·전년비(▲▼)</b> · <b style="color:#64748b">행 클릭 시 해당 월 상세내역</b> · 초록 100%↑·주황 80%↑·빨강 부족</div></div>';
+      +'<div style="margin-top:8px;font-size:10.5px;color:#94a3b8">각 칸 = 왼쪽 <b style="color:#64748b">전년 ’25 금액(대수)</b> → 오른쪽 <b style="color:#64748b">올해 금액(대수)·달성%·전년비(▲▼)</b> · <b style="color:#64748b">행 클릭 시 해당 월 상세내역</b> · 초록 100%↑·주황 80%↑·빨강 부족'+(periodPendAll>0?' · <span style="color:#7c3aed;font-weight:700">잠정</span>=미반영(예정+일보) 포함, 이 기간 +'+W(periodPendAll)+'억':'')+'</div></div>';
 
     // 2) 종합 진단
     var chArr=[['대리점',sum.dealer,CAPA.dealer],['직판',sum.direct,CAPA.direct],['소모품',sum.cons,CAPA.cons]];
     var worst=chArr.slice().sort(function(a,b){return pc(a[1],a[2]*periodMonths)-pc(b[1],b[2]*periodMonths);})[0];
     var bl=[];
-    bl.push('전체 달성률 <b style="color:'+col(pc(totA,CAPA_TOT*periodMonths))+'">'+pc(totA,CAPA_TOT*periodMonths)+'%</b> · 누계 '+W(totA)+'억 / Capa '+W(CAPA_TOT*periodMonths)+'억. 가장 부족한 채널 <b style="color:'+col(pc(worst[1],worst[2]*periodMonths))+'">'+worst[0]+' '+pc(worst[1],worst[2]*periodMonths)+'%</b> (누계 '+W(worst[1]-worst[2]*periodMonths)+'억).');
+    bl.push('전체 달성률 <b style="color:'+col(pc(totA,CAPA_TOT*periodMonths))+'">'+pc(totA,CAPA_TOT*periodMonths)+'%</b> · 누계 '+W(totA)+'억 / Capa '+W(CAPA_TOT*periodMonths)+'억'+(periodPendAll>0?'(회계반영 '+W(totA-periodPendAll)+'억 + 미반영 +'+W(periodPendAll)+'억)':'')+'. 가장 부족한 채널 <b style="color:'+col(pc(worst[1],worst[2]*periodMonths))+'">'+worst[0]+' '+pc(worst[1],worst[2]*periodMonths)+'%</b> (누계 '+W(worst[1]-worst[2]*periodMonths)+'억).');
     if(dealers.length){ var dTop=dealers[0]; var dY=dealers.filter(function(e){return e.yoy!=null;}); var dGrow=dY.slice().sort(function(a,b){return b.yoy-a.yoy;})[0]; var dDrop=dY.slice().sort(function(a,b){return a.yoy-b.yoy;})[0];
       bl.push('대리점 최대 기여 <b>'+esc(dTop.name)+'</b> '+W(dTop.y26)+'억'+(dGrow&&dGrow.yoy>0?' · 최고 성장 <b style="color:#16a34a">'+esc(dGrow.name)+' +'+dGrow.yoy.toFixed(0)+'%</b>':'')+(dDrop&&dDrop.yoy<0?' · 최대 부진 <b style="color:#dc2626">'+esc(dDrop.name)+' '+dDrop.yoy.toFixed(0)+'%</b>':'')+'.'); }
     if(directs.length){ var xTeam=directs.filter(function(e){return !NOISE.test(e.name)&&!_CAPA_EXCL_RE.test(e.name);}); var xTop=xTeam[0]||directs[0];
@@ -12374,11 +12403,12 @@ function renderCapa(){
 
     // 3) 소모품 월별(담당자 없음)
     var consChips=''; for(var m=fromM;m<=toM;m++){ var p=pc(mo[m].cons,CAPA.cons); consChips+='<div style="flex:1;min-width:60px;text-align:center;background:'+bg(p)+';border-radius:8px;padding:7px 4px"><div style="font-size:10px;color:#94a3b8">'+m+'월</div><div style="font-size:13px;font-weight:800;color:#1c2534">'+W(mo[m].cons)+'</div><div style="font-size:10px;font-weight:800;color:'+col(p)+'">'+p+'%</div></div>'; }
-    var consBody='<div style="display:flex;gap:6px;flex-wrap:wrap">'+consChips+'</div><div style="margin-top:8px;font-size:11px;color:#94a3b8">소모품은 담당자 배정이 없어 월 합계 기준으로만 평가합니다(월 Capa '+W(CAPA.cons)+'억).</div>';
+    var consBody='<div style="display:flex;gap:6px;flex-wrap:wrap">'+consChips+'</div><div style="margin-top:8px;font-size:11px;color:#94a3b8">소모품은 담당자 배정이 없어 월 합계 기준으로만 평가합니다(월 Capa '+W(CAPA.cons)+'억).'+(periodPendCons>0?' <span style="color:#7c3aed">미반영(예정+일보) +'+W(periodPendCons)+'억 포함</span>':'')+'</div>';
+    var _pendGapNote=function(pend){ return pend>0?'<div style="font-size:11px;color:#7c3aed;margin-bottom:8px"><i class="bi bi-info-circle me-1"></i>채널 합계엔 미반영(예정) +'+W(pend)+'억이 포함되어 있습니다 — 개별 실적은 회계 확정 전이라 아래 담당자별 표에는 반영하지 않았어요.</div>':''; };
 
     host.innerHTML=overview+diag
-      +chCard('bi-shop','#7c3aed','장비 대리점 채널 · 대리점 6곳',sum.dealer,CAPA.dealer,ctbl(dealers,CAPA.dealer,'대리점'))
-      +chCard('bi-person-badge','#2563eb','장비 직판 채널 · 영업 담당',sum.direct,CAPA.direct,ctbl(directs.filter(function(e){return !NOISE.test(e.name)&&!_CAPA_EXCL_RE.test(e.name);}),CAPA.direct,'담당자'))
+      +chCard('bi-shop','#7c3aed','장비 대리점 채널 · 대리점 6곳',sum.dealer,CAPA.dealer,_pendGapNote(periodPendDealer)+ctbl(dealers,CAPA.dealer,'대리점'))
+      +chCard('bi-person-badge','#2563eb','장비 직판 채널 · 영업 담당',sum.direct,CAPA.direct,_pendGapNote(periodPendDirect)+ctbl(directs.filter(function(e){return !NOISE.test(e.name)&&!_CAPA_EXCL_RE.test(e.name);}),CAPA.direct,'담당자'))
       +chCard('bi-capsule','#0d9488','소모품 채널',sum.cons,CAPA.cons,consBody);
   }catch(e){ host.innerHTML='<div class="card p-3" style="color:#dc2626">Capa 분석 로드 오류</div>'; console.warn('capa',e); }
 }
