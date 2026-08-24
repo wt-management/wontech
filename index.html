@@ -245,6 +245,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 /* 제품 목록(최근월·누계) — 줄마다 flex 로 밀려 오와열이 안 맞았다. 열 폭을 고정한 격자로 바꾼다.
    대수와 금액을 각각 제 칸에 넣어야 자릿수가 위아래로 떨어진다. */
 .pv-g{display:grid;grid-template-columns:minmax(0,1fr) 34px 66px 10px 34px 76px 24px 60px;align-items:center;gap:4px;font-variant-numeric:tabular-nums}
+.pv-g>span{white-space:nowrap}   /* 접히면 줄 높이만 커지고 여백처럼 보인다 */
 .pv-hd{padding:2px 8px 6px;border-bottom:1px solid #eef2f7;font-size:10px;color:#94a3b8;font-weight:600}
 .pv-row{position:relative;padding:8px;border-bottom:1px solid #f3f4f6;cursor:pointer;overflow:hidden}
 .pv-row:hover{background:#fafdfb}
@@ -255,6 +256,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 .pv-v2{font-size:12px;color:#1d4ed8;font-weight:700;text-align:right}
 .pv-sh{font-size:10px;color:#94a3b8;text-align:right}
 .pv-ar{font-size:11px;color:#cbd5e1;text-align:center}
+.pv-ch{font-size:10.5px;text-align:right;line-height:1.25}   /* 크기를 안 주면 기본 16px 라 이 칸 혼자 줄 높이를 키운다 */
 /* 화면이 좁아지면(사이드바 때문에 카드가 400px 아래로) 제품명이 잘린다 → 열을 조이고 비중은 감춘다 */
 /* display:none 으로 감추면 그 칸이 격자에서 빠져 뒤 칸들이 한 칸씩 당겨진다(전년비가 0폭 칸으로 밀렸었다).
    자리는 남기고 보이지만 않게 한다. */
@@ -11797,7 +11799,7 @@ function renderDeviceSales() {
     const totV = _all.reduce((s,p)=>s+p.v26,0)||1, totQ=_all.reduce((s,p)=>s+p.qty,0), totV25=_all.reduce((s,p)=>s+p.v25,0);
     const totYoY = totV25>0?(totV/totV25-1)*100:null;
     const head = `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:11px;color:#64748b;padding:1px 6px 8px;border-bottom:1px solid #eef2f7;margin-bottom:2px"><span>합계 <b style="color:#1c2534;font-size:13px">${fmtW(totV)}</b> · ${totQ.toLocaleString()}대</span><span>전년 ${fmtW(totV25)} ${chgBadge(totYoY)}</span></div>`;
-    const colHd = `<div class="pv-g pv-hd"><span></span><span style="text-align:right">전년</span><span style="text-align:right">전년 매출</span><span></span><span style="text-align:right">올해</span><span style="text-align:right">올해 매출</span><span style="text-align:right">비중</span><span style="text-align:right">전년비</span></div>`;
+    const colHd = `<div class="pv-g pv-hd"><span></span><span style="text-align:right">전년</span><span style="text-align:right">전년 매출</span><span></span><span style="text-align:right">올해</span><span style="text-align:right">올해 매출</span><span class="pv-sh" style="color:inherit;font-size:inherit">비중</span><span class="pv-ch">전년비</span></div>`;
     return head + colHd + (data.map((p,i)=>{
       const chg = p.v25>0?(p.v26/p.v25-1)*100:null;
       const barW = (p.v26/maxV*100)||0;
@@ -11812,7 +11814,7 @@ function renderDeviceSales() {
           <span class="pv-q2">${p.qty?p.qty+'대':''}</span>
           <span class="pv-v2">${fmtW(p.v26)}</span>
           <span class="pv-sh">${share}%</span>
-          <span style="text-align:right">${chgBadge(chg)}</span>
+          <span class="pv-ch">${chgBadge(chg)}</span>
         </div>
       </div>`;
     }).join('') || '<div class="text-muted" style="font-size:13px">해당 기간 데이터 없음</div>')
