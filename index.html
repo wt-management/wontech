@@ -570,6 +570,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <ul class="nav flex-column gap-0">
       <li><a class="nav-link active" onclick="showPage('sales-overview',this)"><i class="bi bi-bar-chart-line"></i>종합</a></li>
       <li id="nav-salesmix"><a class="nav-link" onclick="showPage('device-sales',this)"><i class="bi bi-box-seam"></i>제품·소모품 매출</a></li>
+      <li><a class="nav-link" onclick="showPage('device-model',this)"><i class="bi bi-cpu"></i>장비별 판매현황</a></li>
       <li><a class="nav-link" onclick="showPage('pending',this)"><i class="bi bi-hourglass-split"></i>회계 미반영 매출</a></li>
     </ul>
     <div class="nav-label mt-3">영업</div>
@@ -1936,6 +1937,18 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
     <div id="capa-view"></div>
   </div>
 
+  <!-- 장비별 판매현황 -->
+  <div id="page-device-model" class="page">
+    <div class="wt-mast">
+      <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-cpu me-2"></i>장비별 판매현황</div><div style="font-size:11.5px;color:#94a3b8;margin-top:3px">Oligio·울트라스킨 타이탄·Long pulse·Fractional·Q/SW·PICO <b style="color:#64748b">6개 라인업</b>의 월별 판매대수·매출 추이</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;padding:10px 14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0">
+      <span style="font-size:12px;font-weight:600;color:#374151;white-space:nowrap">📅 조회 기간</span>
+      <span id="devmod-period-host"></span>
+    </div>
+    <div id="devmod-view"></div>
+  </div>
+
   <!-- 거래처 현황 (숨김 — 병원별 분석으로 통합) -->
   <div id="page-cons-accounts" class="page" style="display:none!important"></div>
 
@@ -3269,7 +3282,7 @@ function showPage(name, el, noPush) {
   else if(!['logs','users','pipeline','performance'].includes(name) && name!=='sales-overview'){ return showPage('sales-overview', null, noPush); }
   if(el) el.classList.add('active');
   else { const links = document.querySelectorAll('.nav-link');
-    const _navLbl={'sales-overview':'종합',dashboard:'현황판',sales:'수주관리',quotes:'견적서/ROI',schedule:'일정',cdu:'CDU',roi:'견적서/ROI · ROI 계산기',speech:'Sales Speech',customers:'고객사',equipments:'장비',logs:'상담일지',products:'제품',consumables:'소모품 매출','cons-hospitals':'병원별','device-sales':'제품 매출','device-reps':'담당자별',region:'지역별 분석',pending:'회계 미반영 매출','cons-accounts':'거래처'}[name]||'';
+    const _navLbl={'sales-overview':'종합',dashboard:'현황판',sales:'수주관리',quotes:'견적서/ROI',schedule:'일정',cdu:'CDU',roi:'견적서/ROI · ROI 계산기',speech:'Sales Speech',customers:'고객사',equipments:'장비',logs:'상담일지',products:'제품',consumables:'소모품 매출','cons-hospitals':'병원별','device-sales':'제품 매출','device-model':'장비별 판매현황','device-reps':'담당자별',region:'지역별 분석',pending:'회계 미반영 매출','cons-accounts':'거래처'}[name]||'';
     if(_navLbl) links.forEach(l=>{ if(l.textContent.trim().includes(_navLbl)) l.classList.add('active'); }); }
   try{ var _GRP={'nav-analysis':['device-reps','cons-hospitals','region','capa'],'nav-custequip':['customers','equipments'],'nav-salesmix':['consumables','device-sales']};
     var _gid=null; for(var _k in _GRP){ if(_GRP[_k].indexOf(name)>=0){ _gid=_k; break; } }
@@ -3297,6 +3310,7 @@ function showPage(name, el, noPush) {
   else if(name==='cons-accounts') renderConsAccounts();
   else if(name==='region') renderRegion();
   else if(name==='capa') renderCapa();
+  else if(name==='device-model') renderDeviceModel();
   else if(name==='pending') _loadIlboPending();
   else if(name==='feedback') renderFeedbackPage();
 }
@@ -3394,7 +3408,7 @@ function _dashPeriodYMs() {
 
 // ═══════ 기간 조회 엔진 (연/월 범위 셀렉터 + 프리셋 칩, 연도경계 지원) — 분석페이지 공용 ═══════
 const _PDST = {};  // prefix -> {mode:'simple'|'custom'}
-const _RENDERFN = {ov:'renderSalesOverview', cons:'renderConsumables', dev:'renderDeviceSales', hosp:'renderConsHospitals', devrep:'renderDevReps', reg:'renderRegion'};
+const _RENDERFN = {ov:'renderSalesOverview', cons:'renderConsumables', dev:'renderDeviceSales', hosp:'renderConsHospitals', devrep:'renderDevReps', reg:'renderRegion', devmod:'renderDeviceModel'};
 function _todayLocal(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }  // 로컬(KST) 오늘 — toISOString(UTC)는 새벽 00~09시 -1일 오류
 function _ymLocal(){ return _todayLocal().slice(0,7); }
 // ── 연도 표기 ─────────────────────────────────────────────────────────────
@@ -12537,6 +12551,89 @@ function renderCapa(){
       +chCard('bi-person-badge','#2563eb','장비 직판 채널 · 영업 담당',sum.direct,CAPA.direct,_pendGapNote(periodPendDirect)+ctbl(directs.filter(function(e){return !NOISE.test(e.name)&&!_CAPA_EXCL_RE.test(e.name);}),CAPA.direct,'담당자'))
       +chCard('bi-capsule','#0d9488','소모품 채널',sum.cons,CAPA.cons,consBody);
   }catch(e){ host.innerHTML='<div class="card p-3" style="color:#dc2626">Capa 분석 로드 오류</div>'; console.warn('capa',e); }
+}
+// ── 장비별 판매현황 — 라인업 6종 분류(제품명 정확한 코드값을 몰라 키워드 매칭. '기타'로 빠지는 게 있으면 하단 목록에서 확인 가능) ──
+var _DEVMOD_CATS=[
+  {id:'oligio',     label:'Oligio(올리지오)',                    re:/oligio|올리지오/i,                          color:'#2563eb'},
+  {id:'tightan',    label:'울트라스킨 타이탄',                    re:/tightan|타이탄/i,                            color:'#0d9488'},
+  {id:'longpulse',  label:'Long pulse(산드로·V레이저·코스젯SR)',  re:/sandro|산드로|v[\s-]?laser|브이\s?레이저|코스젯\s?sr|cosjet\s?sr/i, color:'#7c3aed'},
+  {id:'fractional', label:'Fractional(아비오·라비앙)',            re:/avvio|아비오|lavieen|라비앙/i,                color:'#d97706'},
+  {id:'qsw',        label:'Q/SW laser(파스텔프로·코스젯ATR)',     re:/pastelle|파스텔|코스젯\s?atr|cosjet\s?atr/i,  color:'#dc2626'},
+  {id:'pico',       label:'PICO laser(피코엔디·마제스티·피코알렉스)', re:/pico|피코/i,                            color:'#0891b2'},
+];
+function _devmodCat(prod){ var s=String(prod||''); for(var i=0;i<_DEVMOD_CATS.length;i++){ if(_DEVMOD_CATS[i].re.test(s)) return _DEVMOD_CATS[i].id; } return 'etc'; }
+function renderDeviceModel(){
+  var host=document.getElementById('devmod-view'); if(!host) return;
+  try{
+    _injectPeriodCtrl('devmod');
+    var P=_getPeriod('devmod'), spanMs=_spanMonths(P);
+    var PP=_yoyShift(P), prevMs=_spanMonths(PP), _prevFull=PP.sy>=2025;
+    var W=function(v){ return (v/1e8).toFixed(1); };
+    var qtyOf=function(y){ return DEVICE['prodMoQty'+y]||{}; };
+    var amtOf=function(y){ return DEVICE['prodMo'+y]||{}; };
+    var esc=(typeof _dvEsc==='function')?_dvEsc:function(s){return String(s==null?'':s);};
+
+    // 이 기간(+전년 비교분)에 등장한 모든 제품명 → 카테고리 매핑
+    var seenProds={};
+    spanMs.concat(_prevFull?prevMs:[]).forEach(function(x){
+      Object.keys(qtyOf(x.y)).forEach(function(p){ seenProds[p]=1; });
+      Object.keys(amtOf(x.y)).forEach(function(p){ seenProds[p]=1; });
+    });
+    var catOfProd={}; Object.keys(seenProds).forEach(function(p){ catOfProd[p]=_devmodCat(p); });
+    var CATS=_DEVMOD_CATS.concat([{id:'etc',label:'기타(미분류)',re:null,color:'#94a3b8'}]);
+
+    // 카테고리×월 집계 {q:올해대수,a:올해금액,q0:전년대수,a0:전년금액}
+    var byCatMonth={}; CATS.forEach(function(c){ byCatMonth[c.id]={}; });
+    var addTo=function(cid,key,field,val){ if(!val) return; if(!byCatMonth[cid][key]) byCatMonth[cid][key]={q:0,a:0,q0:0,a0:0}; byCatMonth[cid][key][field]+=val; };
+    spanMs.forEach(function(x){
+      var key=x.y+'-'+x.m, qm=qtyOf(x.y), am=amtOf(x.y);
+      Object.keys(catOfProd).forEach(function(p){
+        var cid=catOfProd[p], q=Number((qm[p]||{})[x.m])||0, a=Number((am[p]||{})[x.m])||0;
+        addTo(cid,key,'q',q); addTo(cid,key,'a',a);
+      });
+    });
+    if(_prevFull) prevMs.forEach(function(x,i){
+      var cur=spanMs[i]; if(!cur) return;
+      var key=cur.y+'-'+cur.m, qm=qtyOf(x.y), am=amtOf(x.y);
+      Object.keys(catOfProd).forEach(function(p){
+        var cid=catOfProd[p], q=Number((qm[p]||{})[x.m])||0, a=Number((am[p]||{})[x.m])||0;
+        addTo(cid,key,'q0',q); addTo(cid,key,'a0',a);
+      });
+    });
+
+    // 1) 요약 타일(선택 기간 누계)
+    var col=function(g){ return g==null?'#94a3b8':g>=0?'#16a34a':'#dc2626'; };
+    var totals=CATS.map(function(c){ var o={q:0,a:0,q0:0,a0:0}; spanMs.forEach(function(x){ var v=byCatMonth[c.id][x.y+'-'+x.m]; if(v){ o.q+=v.q; o.a+=v.a; o.q0+=v.q0; o.a0+=v.a0; } }); return {c:c,o:o}; });
+    var tile=function(t){ var c=t.c,o=t.o, g=(o.q0>0)?((o.q/o.q0-1)*100):null;
+      return '<div style="background:#fff;border:1px solid #e6ebf2;border-radius:12px;padding:10px 14px;min-width:0">'
+        +'<div style="font-size:11px;color:#64748b;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+esc(c.label)+'"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+c.color+';margin-right:5px"></span>'+esc(c.label)+'</div>'
+        +'<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin:5px 0 3px"><div style="font-size:1.35rem;font-weight:800;color:#1c2534;line-height:1.1">'+o.q+'<span style="font-size:11px;color:#94a3b8">대</span></div>'
+        +'<div style="text-align:right;line-height:1.3"><div style="font-size:10.5px;font-weight:800;color:'+col(g)+'">'+(g==null?(o.q>0?'신규':'-'):(g>=0?'▲+':'▼')+Math.abs(g).toFixed(0)+'%')+'</div><div style="font-size:9.5px;color:#94a3b8">전년 '+o.q0+'대</div></div></div>'
+        +'<div style="font-size:10.5px;color:#94a3b8">매출 '+W(o.a)+'억 <span style="color:#c3cad3">(전년 '+W(o.a0)+'억)</span></div>'
+        +'</div>'; };
+
+    // 2) 월별 매트릭스(행=월, 열=카테고리)
+    var cell=function(o){ o=o||{q:0,a:0,q0:0,a0:0}; var g=(o.q0>0)?((o.q/o.q0-1)*100):null;
+      return '<td style="padding:6px 9px;border-bottom:1px solid #eef2f5;text-align:right;white-space:nowrap;vertical-align:middle">'
+        +'<div style="font-size:12.5px;font-weight:800;color:'+(o.q>0?'#1c2534':'#cbd5e1')+'">'+o.q+'대<span style="font-size:9.5px;color:#94a3b8;font-weight:600"> ('+o.q0+'대)</span></div>'
+        +'<div style="font-size:9.5px;font-weight:700;color:'+col(g)+'">'+(g==null?(o.q>0?'신규':'-'):(g>=0?'▲':'▼')+Math.abs(g).toFixed(0)+'%')+'<span style="color:#c3cad3;font-weight:500"> · '+W(o.a)+'억</span></div>'
+        +'</td>'; };
+    var monthRows=spanMs.map(function(x){
+      var key=x.y+'-'+x.m, label=String(_YR(x.y)).slice(2)+'.'+String(x.m).padStart(2,'0');
+      return '<tr><td style="padding:6px 10px;border-bottom:1px solid #eef2f5;font-weight:800;color:#475569;white-space:nowrap;font-size:12px">'+label+'</td>'+CATS.map(function(c){ return cell(byCatMonth[c.id][key]); }).join('')+'</tr>';
+    }).join('');
+    var theadCats=CATS.map(function(c){ return '<th style="padding:4px 9px 7px;border-bottom:2px solid #e7ebf0;font-weight:700;text-align:right;font-size:10.5px;color:#5a6675;white-space:nowrap"><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:'+c.color+';margin-right:4px"></span>'+esc(c.label.replace(/\(.*\)/,''))+'</th>'; }).join('');
+
+    // 3) 기타(미분류) 제품 목록 — 분류 규칙을 다시 잡을 수 있도록 투명하게 노출
+    var etcProds=Object.keys(catOfProd).filter(function(p){ return catOfProd[p]==='etc'; }).sort();
+    var etcNote=etcProds.length?('<div class="card p-3 mt-3" style="background:#fffbeb;border-color:#fde68a"><div style="font-size:12px;font-weight:800;color:#92400e;margin-bottom:4px"><i class="bi bi-exclamation-triangle me-1"></i>6개 라인업으로 분류되지 않은 제품 '+etcProds.length+'종</div><div style="font-size:11.5px;color:#78716c">'+etcProds.map(esc).join(' · ')+'</div><div style="font-size:10.5px;color:#a8a29e;margin-top:4px">분류 규칙(제품명 키워드)을 조정하고 싶으면 이 목록을 보고 알려주세요.</div></div>'):'';
+
+    host.innerHTML='<div class="card p-3 mb-3"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">'+totals.map(tile).join('')+'</div></div>'
+      +'<div class="card p-3 mb-3"><div style="font-size:13.5px;font-weight:800;margin-bottom:10px"><i class="bi bi-grid-3x3-gap me-1" style="color:#0d9488"></i>월별 판매대수 한눈에 보기 <span style="font-size:10.5px;font-weight:500;color:#94a3b8">· 셀 = 올해 대수(전년 대수) · 성장률 · 매출액</span></div>'
+      +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;table-layout:fixed"><colgroup><col style="width:60px">'+CATS.map(function(){return '<col>';}).join('')+'</colgroup>'
+      +'<thead><tr><th style="padding:4px 10px 7px;border-bottom:2px solid #e7ebf0;text-align:left;font-size:10.5px;color:#5a6675">월</th>'+theadCats+'</tr></thead><tbody>'+(monthRows||'<tr><td colspan="'+(CATS.length+1)+'" style="padding:16px;text-align:center;color:#94a3b8;font-size:12.5px">선택한 기간에 데이터가 없습니다</td></tr>')+'</tbody></table></div></div>'
+      +etcNote;
+  }catch(e){ host.innerHTML='<div class="card p-3" style="color:#dc2626">장비별 판매현황 로드 오류</div>'; console.warn('devmod',e); }
 }
 function renderDevReps() {
   var _cb=document.getElementById('claim-badge'); if(_cb){ var _pc=((typeof MGR_CLAIMS!=='undefined'?MGR_CLAIMS:[])||[]).filter(function(c){return c.status==='pending';}).length; _cb.textContent=_pc; _cb.style.display=_pc?'':'none'; }
