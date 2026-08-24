@@ -11799,6 +11799,10 @@ function renderDeviceSales() {
     const _gone = _all.filter(p=>p.v26<=0&&p.v25>0).sort((a,b)=>b.v25-a.v25);
     const maxV = Math.max(...data.map(p=>p.v26),0)||1;
     const rngStr = rng.map(x=>x.y+'.'+x.m).join(',');
+    // 팝업이 같은 숫자를 쓰도록 이 화면이 계산한 결과를 그대로 넘겨준다.
+    // (팝업이 따로 계산하면 미반영 귀속·제품명 정규화 규칙이 달라 반드시 어긋난다)
+    window._devAggByRng = window._devAggByRng || {};
+    window._devAggByRng[rngStr] = _agg;
     const totV = _all.reduce((s,p)=>s+p.v26,0)||1, totQ=_all.reduce((s,p)=>s+p.qty,0), totV25=_all.reduce((s,p)=>s+p.v25,0);
     const totYoY = totV25>0?(totV/totV25-1)*100:null;
     const head = `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:11px;color:#64748b;padding:1px 6px 8px;border-bottom:1px solid #eef2f7;margin-bottom:2px"><span>합계 <b style="color:#1c2534;font-size:13px">${fmtW(totV)}</b> · ${totQ.toLocaleString()}대</span><span>전년 ${fmtW(totV25)} ${chgBadge(totYoY)}</span></div>`;
@@ -11833,6 +11837,23 @@ function renderDeviceSales() {
   document.getElementById('dev-detail-ytd').innerHTML = renderDevDetailCol(spanMs, 'ytd');
 }
 
+// 제품 팝업의 '흐름' 부분 — 전사 종합의 제품 상세와 같은 눈높이로.
+// 그 달 거래 목록만 보여주면 이 제품이 늘고 있는지 줄고 있는지 알 수 없다.
+function _devProdFlow(prod){
+  const cp = k => (typeof _canonProd==='function')?_canonProd(k):k;
+  const pick = (src) => { const out={}; Object.keys(src||{}).forEach(k=>{ if(cp(k)!==prod) return;
+    const mo=src[k]||{}; for(const m in mo) out[m]=(out[m]||0)+(Number(mo[m])||0); }); return out; };
+  const m26=pick(DEVICE.prodMo2026), m25=pick(DEVICE.prodMo2025);
+  const q26=pick(DEVICE.prodMoQty2026), q25=pick(DEVICE.prodMoQty2025);
+  // 월별 추이는 '회계 반영분'만 그린다. 미반영은 제품명 표기가 흔들려(V Laser↔V-Laser 등)
+  // 목록과 다른 귀속 규칙을 쓰면 조용히 어긋난다 — 섞지 않고 기준을 명시한다.
+  const lastM = Math.max(0,...Object.keys(m26).map(Number).filter(x=>m26[x]));
+  const to = lastM||12;
+  const sum=(o,t)=>{let v=0;for(let m=1;m<=t;m++)v+=Number(o[m]||0);return v;};
+  return {m26,m25,q26,q25,lastM:to,
+    v26:sum(m26,12), v25:sum(m25,to), qt26:sum(q26,12), qt25:sum(q25,to)};
+}
+let _devFlowChart=null;
 function showDevTxnModal(prod, rngStr) {
   const fmtW = v => (v=Number(v||0))>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?Math.round(v/1e4).toLocaleString()+'만원':Math.round(v).toLocaleString()+'원';
   // rngStr = "2026.1,2026.2,..." (연.월 쌍)
@@ -11876,6 +11897,29 @@ function showDevTxnModal(prod, rngStr) {
     modal.onclick = e => { if(e.target===modal) modal.style.display='none'; };
     document.body.appendChild(modal);
   }
+  const F=_devProdFlow(prod);
+  // 목록이 계산해 둔 값이 있으면 그것을 진짜로 삼는다 — 화면끼리 숫자가 갈리지 않게
+  const _rec=((window._devAggByRng||{})[rngStr]||{})[prod];
+  if(_rec){ F.v26=_rec.v26; F.v25=_rec.v25; F.qt26=_rec.qty; F.qt25=_rec.qty25;
+            F.lastM=(rngStr.split(',').pop().split('.')[1]|0)||F.lastM; }
+  const fy=(a,b)=>b>0?((a/b-1)*100):null;
+  const _yv=fy(F.v26,F.v25), _yq=fy(F.qt26,F.qt25);
+  const _ar=v=>v===null?'<span style="color:#94a3b8">신규</span>':`<span style="color:${v>=0?'#16a34a':'#dc2626'}">${v>=0?'▲':'▼'}${Math.abs(v).toFixed(1)}%</span>`;
+  const kBox=(l,v,sub)=>`<div style="background:#f8fafc;border-radius:10px;padding:9px 11px;min-width:0">
+      <div style="font-size:10px;color:#64748b;font-weight:600">${l}</div>
+      <div style="font-size:14px;font-weight:800;margin-top:1px;white-space:nowrap">${v}</div>
+      ${sub?`<div style="font-size:10.5px;color:#94a3b8;margin-top:1px;white-space:nowrap">${sub}</div>`:''}</div>`;
+  const flowHtml = `
+    <div style="padding:12px 20px 0">
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px">
+        ${kBox(_rec?('올해 ('+mLabel+')'):'올해 누계', fmtW(F.v26), F.qt26?F.qt26+'대':'')}
+        ${kBox(_rec?('전년 동기 ('+mLabel+')'):('전년 동기(1~'+F.lastM+'월)'), fmtW(F.v25), F.qt25?F.qt25+'대':'')}
+        ${kBox('전년비', _ar(_yv), F.qt25?('대수 '+((_yq===null)?'신규':(_yq>=0?'▲':'▼')+Math.abs(_yq).toFixed(0)+'%')):'')}
+        ${kBox('이 달', fmtW(totalAmt+_pAmt), (totalQty+_pQty)?(totalQty+_pQty)+'대':'')}
+      </div>
+      <div style="font-size:11px;color:#94a3b8;font-weight:600;margin:12px 0 4px">월별 추이 <span style="font-weight:400">· 막대=올해 · 점선=전년 · 회계 반영분 기준 · 단위 백만원</span></div>
+      <div style="position:relative;height:150px"><canvas id="dev-flow-chart"></canvas></div>
+    </div>`;
   modal.innerHTML = `<div style="background:#fff;border-radius:14px;width:100%;max-width:680px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.25)">
     <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between">
       <div>
@@ -11885,6 +11929,8 @@ function showDevTxnModal(prod, rngStr) {
       <button onclick="document.getElementById('dev-txn-modal').style.display='none'" style="border:none;background:none;font-size:22px;color:#64748b;cursor:pointer;line-height:1">&times;</button>
     </div>
     <div style="overflow-y:auto;flex:1">
+      ${flowHtml}
+      <div style="padding:14px 20px 4px;font-size:11px;color:#94a3b8;font-weight:600;border-top:1px solid #f1f5f9;margin-top:12px">${mLabel} 거래 내역</div>
       ${txns.length ? `<table class="table table-sm mb-0">
         <thead class="table-light" style="position:sticky;top:0"><tr>
           <th>날짜</th><th>거래처명</th><th>담당자</th>
@@ -11914,6 +11960,21 @@ function showDevTxnModal(prod, rngStr) {
     </div>
   </div>`;
   modal.style.display = 'flex';
+  // 월별 추이 — 막대=올해(미반영 포함), 점선=전년
+  try{
+    if(_devFlowChart){ _devFlowChart.destroy(); _devFlowChart=null; }
+    const cv=document.getElementById('dev-flow-chart');
+    if(cv && typeof Chart!=='undefined'){
+      const lb=[],a=[],b=[];
+      for(let m=1;m<=12;m++){ lb.push(m+'월'); a.push(Math.round((Number(F.m26[m])||0)/1e6)); b.push(Math.round((Number(F.m25[m])||0)/1e6)); }
+      _devFlowChart=new Chart(cv,{data:{labels:lb,datasets:[
+        {type:'bar',label:String(_YR(2026)),data:a,backgroundColor:'#2563eb',borderRadius:3,maxBarThickness:20},
+        {type:'line',label:'전년',data:b,borderColor:'#94a3b8',borderWidth:2,borderDash:[5,4],pointRadius:0,tension:.3}
+      ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y||0).toLocaleString()+'백만원'}}},
+        scales:{x:{grid:{display:false},ticks:{font:{size:9}}},y:{grid:{color:'#f3f4f6'},ticks:{font:{size:9}}}}}});
+    }
+  }catch(e){}
 }
 
 function _devRepPeriodChange() {
