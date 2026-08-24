@@ -627,6 +627,14 @@ body{font-family:'Pretendard','Noto Sans KR',sans-serif;background:#f0f4f8;color
 .exec-sel{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#5b7591;font-weight:600}
 .exec-sel select{border:1px solid #d5dde8;border-radius:8px;padding:4px 9px;font-size:12px;font-family:inherit;background:#fff;color:#1c2534;cursor:pointer;font-weight:600}
 .pr-scroll{max-height:360px;overflow:auto}
+/* 제품별 실적 2단(왼쪽 장비 / 오른쪽 소모품) — 세로로 늘어뜨리지 않고 각 칸 안에서 스크롤 */
+.pr-2col{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.pr-col{min-width:0;border:1px solid #eef2f7;border-radius:10px;padding:10px 11px}
+.pr-ch{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:7px;padding-bottom:6px;border-bottom:1px solid #f1f5f9}
+.pr-ch .t{font-size:12.5px;font-weight:700}
+.pr-ch .s{font-size:11px;color:#94a3b8;white-space:nowrap}
+.pr-etc{margin-top:10px;padding:8px 11px;border:1px dashed #e2e8f0;border-radius:9px;font-size:12px;color:#64748b;display:flex;justify-content:space-between;gap:10px}
+@media(max-width:900px){ .pr-2col{grid-template-columns:minmax(0,1fr)} }
 .pr-scroll .pr-tbl thead th{position:sticky;top:0;background:#fff;z-index:1;box-shadow:0 1px 0 #e9eef5}
 .pr-q{display:block;font-size:10.5px;color:#64748b;font-weight:600;margin-top:1px}
 .pr-d{display:block;font-size:10.5px;font-weight:600;opacity:.85;margin-top:1px}
@@ -2282,20 +2290,41 @@ function renderOvProds(f,t,pend){
     '<span>국내 <b style="color:#2563eb">'+fmtW(t10Dom)+'</b> <span style="color:#94a3b8">'+Math.round(t10Dom/top10*100)+'%</span> · 해외 <b style="color:#0d9488">'+fmtW(t10Intl)+'</b> <span style="color:#94a3b8">'+Math.round(t10Intl/top10*100)+'%</span></span>'+
     '<span>장비 <b style="color:'+DEV_PURPLE+'">'+fmtW(catAgg['장비']||0)+'</b> · 소모품 <b style="color:'+CONS_CYAN+'">'+fmtW(catAgg['소모품']||0)+'</b></span>'+
     (t10Q>0?'<span>대수 <b style="color:#1c2534">'+t10Q.toLocaleString()+'대</b></span>':'')+'</div>';
-  const rows=arr.map((x,i)=>{
-    const col=cols[x.cat]||'#64748b';
+  // 왼쪽 장비 / 오른쪽 소모품으로 갈라 담는다. 어느 쪽도 아닌 것(기타·반품충당)은 아래 한 줄로.
+  // 제품 상세 팝업은 전체 배열 기준 번호로 열리므로 원래 index 를 그대로 들고 다닌다.
+  const _idx=new Map(); arr.forEach((x,i)=>_idx.set(x,i));
+  const gDev =arr.filter(x=>x.cat==='장비');
+  const gCons=arr.filter(x=>x.cat==='소모품');
+  const gEtc =arr.filter(x=>x.cat!=='장비'&&x.cat!=='소모품');
+  const rowsOf=list=>list.map((x,n)=>{
+    const i=_idx.get(x), col=cols[x.cat]||'#64748b';
     return '<tr class="clk" onclick="openProdInfo(_ovProdN['+i+'])" title="제품 상세">'+
-      '<td class="pr-rk">'+(i+1)+'</td>'+
+      '<td class="pr-rk">'+(n+1)+'</td>'+
       '<td class="pr-nm"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+col+';margin-right:6px;vertical-align:0"></span>'+esc(x.n)+' <span style="color:#cbd5e1">›</span></td>'+
       '<td class="pr-num" style="color:#2563eb">'+fmtW(x.dom)+'</td>'+
       '<td class="pr-num" style="color:#0d9488">'+fmtW(x.intl)+'</td>'+
       '<td class="pr-num pr-tot">'+fmtW(x.v)+(x.q>0?'<b class="pr-q">'+x.q.toLocaleString()+'대</b>':'')+'</td>'+
-      '<td class="pr-num" style="color:#64748b">'+fmtW(x.prev)+'</td>'+
       '<td class="pr-num" style="color:'+_yoyCol(x.y)+';font-weight:700">'+(x.noYoy?'<span style="color:#94a3b8">–</span>':(x.y===null?(x.prev<0?'<span style="color:#94a3b8">비교불가</span>':'신규'):arrow(x.y)))+'<b class="pr-d">'+fmtD(x.d)+'</b></td>'+
       '<td class="pr-num">'+Math.round(x.v/grand*100)+'%</td>'+
       '</tr>';
   }).join('');
-  host.innerHTML=head+'<div class="pr-scroll"><table class="pr-tbl"><thead><tr><th>#</th><th style="text-align:left">제품</th><th>국내</th><th>해외</th><th>합계·대수</th><th>전년</th><th>전년비</th><th>비중</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  // 반 폭이라 열을 줄인다 — '전년' 금액은 전년비 칸의 증감액으로 읽을 수 있어 뺐다
+  const THEAD='<thead><tr><th>#</th><th style="text-align:left">제품</th><th>국내</th><th>해외</th><th>합계·대수</th><th>전년비</th><th>비중</th></tr></thead>';
+  const panel=(title,color,list)=>{
+    const v=list.reduce((a,x)=>a+x.v,0), pv=list.reduce((a,x)=>a+x.prev,0), q=list.reduce((a,x)=>a+x.q,0);
+    const y=pct(v,pv);
+    return '<div class="pr-col">'+
+      '<div class="pr-ch"><span class="t" style="color:'+color+'">'+title+' <span style="color:#94a3b8;font-weight:600;font-size:11px">'+list.length+'개</span></span>'+
+        '<span class="s"><b style="color:#1c2534;font-size:13px">'+fmtW(v)+'</b>'+(q>0?' · '+q.toLocaleString()+'대':'')+
+        (pv>0?' <span style="color:'+_yoyCol(y)+';font-weight:700">'+arrow(y)+'</span>':'')+'</span></div>'+
+      (list.length?('<div class="pr-scroll"><table class="pr-tbl">'+THEAD+'<tbody>'+rowsOf(list)+'</tbody></table></div>')
+                  :'<div class="text-muted" style="font-size:12px;padding:10px 2px">데이터 없음</div>')+
+    '</div>';
+  };
+  const etcLine=gEtc.length
+    ? '<div class="pr-etc"><span>'+gEtc.map(x=>esc(x.n)).join(' · ')+'</span><span style="font-weight:700;color:#1c2534">'+fmtW(gEtc.reduce((a,x)=>a+x.v,0))+'</span></div>'
+    : '';
+  host.innerHTML=head+'<div class="pr-2col">'+panel('장비',DEV_PURPLE,gDev)+panel('소모품',CONS_CYAN,gCons)+'</div>'+etcLine;
 }
 
 // 제품 통합 맵: {name:{dom, intl, cat}}
