@@ -1909,6 +1909,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
         <option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
       </select>
       <button type="button" class="btn btn-outline-secondary btn-sm" onclick="_capaPeriodReset()">전체</button>
+      <span id="capa-period-note" style="font-size:11.5px;color:#d97706;font-weight:600"></span>
     </div>
     <div id="capa-view"></div>
   </div>
@@ -12253,9 +12254,13 @@ function renderCapa(){
     // 기간 조회(조회 범위 안에서만 집계·표시) — 셀렉터 없으면 기본 1~lm(전체)
     var _fSel=document.getElementById('capa-from-sel'), _tSel=document.getElementById('capa-to-sel');
     if(_tSel && !_tSel.dataset.init){ _tSel.value=lm; _tSel.dataset.init='1'; }
-    var fromM=_fSel?(parseInt(_fSel.value)||1):1, toM=_tSel?(parseInt(_tSel.value)||lm):lm;
-    if(toM>lm) toM=lm; if(fromM<1) fromM=1; if(fromM>toM) fromM=toM;
+    var fromM=_fSel?(parseInt(_fSel.value)||1):1, _toRaw=_tSel?(parseInt(_tSel.value)||lm):lm;
+    var toM=_toRaw, _toClamped=(toM>lm);
+    if(_toClamped){ toM=lm; if(_tSel) _tSel.value=lm; }
+    if(fromM<1) fromM=1; if(fromM>toM) fromM=toM;
     var periodMonths=toM-fromM+1;
+    var _pNote=document.getElementById('capa-period-note');
+    if(_pNote) _pNote.innerHTML=_toClamped?('<i class="bi bi-exclamation-triangle-fill"></i> 선택하신 '+_toRaw+'월까지는 회계 매출자료가 아직 반영되지 않아 '+lm+'월까지만 표시합니다(업로드되면 자동 갱신)'):'';
     var W=function(v){ return (v/1e8).toFixed(1); }, pc=function(a,c){ return c>0?Math.round(a/c*100):0; };
     var col=function(p){ return p>=100?'#16a34a':(p>=80?'#d97706':'#dc2626'); }, bg=function(p){ return p>=100?'rgba(22,163,74,.10)':(p>=80?'rgba(217,119,6,.10)':'rgba(220,38,38,.08)'); };
     var esc=(typeof _dvEsc==='function')?_dvEsc:function(s){return String(s==null?'':s);};
