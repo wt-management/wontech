@@ -11813,10 +11813,6 @@ function renderDeviceSales() {
     const _gone = _all.filter(p=>p.v26<=0&&p.v25>0).sort((a,b)=>b.v25-a.v25);
     const maxV = Math.max(...data.map(p=>p.v26),0)||1;
     const rngStr = rng.map(x=>x.y+'.'+x.m).join(',');
-    // 팝업이 같은 숫자를 쓰도록 이 화면이 계산한 결과를 그대로 넘겨준다.
-    // (팝업이 따로 계산하면 미반영 귀속·제품명 정규화 규칙이 달라 반드시 어긋난다)
-    window._devAggByRng = window._devAggByRng || {};
-    window._devAggByRng[rngStr] = _agg;
     const totV = _all.reduce((s,p)=>s+p.v26,0)||1, totQ=_all.reduce((s,p)=>s+p.qty,0), totV25=_all.reduce((s,p)=>s+p.v25,0);
     const totYoY = totV25>0?(totV/totV25-1)*100:null;
     const head = `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:11px;color:#64748b;padding:1px 6px 8px;border-bottom:1px solid #eef2f7;margin-bottom:2px"><span>합계 <b style="color:#1c2534;font-size:13px">${fmtW(totV)}</b> · ${totQ.toLocaleString()}대</span><span>전년 ${fmtW(totV25)} ${chgBadge(totYoY)}</span></div>`;
@@ -11912,10 +11908,9 @@ function showDevTxnModal(prod, rngStr) {
     document.body.appendChild(modal);
   }
   const F=_devProdFlow(prod);
-  // 목록이 계산해 둔 값이 있으면 그것을 진짜로 삼는다 — 화면끼리 숫자가 갈리지 않게
-  const _rec=((window._devAggByRng||{})[rngStr]||{})[prod];
-  if(_rec){ F.v26=_rec.v26; F.v25=_rec.v25; F.qt26=_rec.qty; F.qt25=_rec.qty25;
-            F.lastM=(rngStr.split(',').pop().split('.')[1]|0)||F.lastM; }
+  // 이 팝업은 처음부터 끝까지 '회계 반영분' 기준으로 통일한다.
+  // 목록(회계+미반영)과 숫자가 다를 수 있어 머리말·카드에 기준을 밝힌다 —
+  // 두 기준을 한 화면에서 섞으면 어느 쪽도 믿을 수 없게 된다.
   const fy=(a,b)=>b>0?((a/b-1)*100):null;
   const _yv=fy(F.v26,F.v25), _yq=fy(F.qt26,F.qt25);
   const _ar=v=>v===null?'<span style="color:#94a3b8">신규</span>':`<span style="color:${v>=0?'#16a34a':'#dc2626'}">${v>=0?'▲':'▼'}${Math.abs(v).toFixed(1)}%</span>`;
@@ -11925,11 +11920,14 @@ function showDevTxnModal(prod, rngStr) {
       ${sub?`<div style="font-size:10.5px;color:#94a3b8;margin-top:1px;white-space:nowrap">${sub}</div>`:''}</div>`;
   const flowHtml = `
     <div style="padding:12px 20px 0">
+      <div style="font-size:10.5px;color:#a16207;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:6px 10px;margin-bottom:8px">
+        아래 숫자는 <b>회계 반영분</b> 기준입니다 — 미반영(예정·납품완료 후 회계 전)은 포함되지 않습니다.
+      </div>
       <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px">
-        ${kBox(_rec?('올해 ('+mLabel+')'):'올해 누계', fmtW(F.v26), F.qt26?F.qt26+'대':'')}
-        ${kBox(_rec?('전년 동기 ('+mLabel+')'):('전년 동기(1~'+F.lastM+'월)'), fmtW(F.v25), F.qt25?F.qt25+'대':'')}
+        ${kBox('올해 누계 (회계)', fmtW(F.v26), F.qt26?F.qt26+'대':'')}
+        ${kBox('전년 동기 (1~'+F.lastM+'월)', fmtW(F.v25), F.qt25?F.qt25+'대':'')}
         ${kBox('전년비', _ar(_yv), F.qt25?('대수 '+((_yq===null)?'신규':(_yq>=0?'▲':'▼')+Math.abs(_yq).toFixed(0)+'%')):'')}
-        ${kBox('이 달', fmtW(totalAmt+_pAmt), (totalQty+_pQty)?(totalQty+_pQty)+'대':'')}
+        ${kBox(mLabel+' (회계)', fmtW(totalAmt), totalQty?totalQty+'대':'')}
       </div>
       <div style="font-size:11px;color:#94a3b8;font-weight:600;margin:12px 0 4px">월별 추이 <span style="font-weight:400">· 막대=올해 · 점선=전년 · 회계 반영분 기준 · 단위 백만원</span></div>
       <div style="position:relative;height:150px"><canvas id="dev-flow-chart"></canvas></div>
@@ -11938,7 +11936,7 @@ function showDevTxnModal(prod, rngStr) {
     <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between">
       <div>
         <div style="font-size:15px;font-weight:700;color:#111827">${prod} · ${mLabel} 거래 내역</div>
-        <div style="font-size:12px;color:#64748b;margin-top:2px">회계 ${txns.length}건 · ${fmtW(totalAmt)} · ${totalQty}대${_pnd.length?` <span style="color:#a16207">· 미반영 ${_pnd.length}건 ${fmtW(_pAmt)} ${_pQty}대</span>`:''}</div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px">회계 ${txns.length}건 · ${fmtW(totalAmt)} · ${totalQty}대${_pnd.length?` <span style="color:#a16207">· 미반영 ${_pnd.length}건 ${fmtW(_pAmt)} ${_pQty}대 (아래 별도)</span>`:''}</div>
       </div>
       <button onclick="document.getElementById('dev-txn-modal').style.display='none'" style="border:none;background:none;font-size:22px;color:#64748b;cursor:pointer;line-height:1">&times;</button>
     </div>
