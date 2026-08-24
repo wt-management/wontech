@@ -12599,8 +12599,31 @@ function renderDeviceModel(){
       });
     });
 
-    // 1) 요약 타일(선택 기간 누계)
+    // 0) 전체 장비 총합 + 월평균 판매대수(당해 진행 중인 당월은 평균 계산에서 제외)
     var col=function(g){ return g==null?'#94a3b8':g>=0?'#16a34a':'#dc2626'; };
+    var monthTotal=function(x){ var q=0,a=0,q0=0,a0=0; CATS.forEach(function(c){ var v=byCatMonth[c.id][x.y+'-'+x.m]; if(v){ q+=v.q; a+=v.a; q0+=v.q0; a0+=v.a0; } }); return {q:q,a:a,q0:q0,a0:a0}; };
+    var monthTotals=spanMs.map(monthTotal);
+    var grand={q:0,a:0,q0:0,a0:0}; monthTotals.forEach(function(o){ grand.q+=o.q; grand.a+=o.a; grand.q0+=o.q0; grand.a0+=o.a0; });
+    var _excludeCur=_ongoingEnd(P);   // 기간 끝이 이번 달(진행 중, 아직 안 끝남)이면 평균에서 제외
+    var avgMs=_excludeCur?monthTotals.slice(0,-1):monthTotals.slice();
+    var avgHasData=avgMs.length>0;
+    var avgN=Math.max(1,avgMs.length);
+    var avgQ=avgHasData?avgMs.reduce(function(s,o){return s+o.q;},0)/avgN:0;
+    var avgA=avgHasData?avgMs.reduce(function(s,o){return s+o.a;},0)/avgN:0;
+    var gGrow=(grand.q0>0)?((grand.q/grand.q0-1)*100):null;
+    var gTile='<div style="background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:12px;padding:10px 14px;color:#fff;min-width:0">'
+      +'<div style="font-size:11px;color:#cbd5e1;font-weight:700"><i class="bi bi-collection me-1"></i>전체 장비 총합</div>'
+      +'<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin:5px 0 3px"><div style="font-size:1.35rem;font-weight:800;line-height:1.1">'+grand.q+'<span style="font-size:11px;color:#94a3b8">대</span></div>'
+      +'<div style="text-align:right;line-height:1.3"><div style="font-size:10.5px;font-weight:800;color:'+(gGrow==null?'#94a3b8':gGrow>=0?'#4ade80':'#f87171')+'">'+(gGrow==null?(grand.q>0?'신규':'-'):(gGrow>=0?'▲+':'▼')+Math.abs(gGrow).toFixed(0)+'%')+'</div><div style="font-size:9.5px;color:#94a3b8">전년 '+grand.q0+'대</div></div></div>'
+      +'<div style="font-size:10.5px;color:#94a3b8">매출 '+W(grand.a)+'억 <span style="color:#64748b">(전년 '+W(grand.a0)+'억)</span></div>'
+      +'</div>';
+    var aTile='<div style="background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:12px;padding:10px 14px;color:#fff;min-width:0">'
+      +'<div style="font-size:11px;color:#cbd5e1;font-weight:700;white-space:nowrap"><i class="bi bi-graph-up me-1"></i>월평균 판매대수'+(_excludeCur?' <span style="font-size:9px;font-weight:700;color:#fbbf24">· 진행중 '+P.em+'월 제외</span>':'')+'</div>'
+      +'<div style="font-size:1.35rem;font-weight:800;line-height:1.1;margin:5px 0 3px">'+(avgHasData?avgQ.toFixed(1):'-')+'<span style="font-size:11px;color:#94a3b8">대/월</span></div>'
+      +'<div style="font-size:10.5px;color:#94a3b8">'+(avgHasData?('매출 '+W(avgA)+'억/월 · 완료 '+avgMs.length+'개월 기준'):'완료된 월이 선택 기간에 없습니다')+'</div>'
+      +'</div>';
+
+    // 1) 요약 타일(선택 기간 누계)
     var totals=CATS.map(function(c){ var o={q:0,a:0,q0:0,a0:0}; spanMs.forEach(function(x){ var v=byCatMonth[c.id][x.y+'-'+x.m]; if(v){ o.q+=v.q; o.a+=v.a; o.q0+=v.q0; o.a0+=v.a0; } }); return {c:c,o:o}; });
     var tile=function(t){ var c=t.c,o=t.o, g=(o.q0>0)?((o.q/o.q0-1)*100):null;
       return '<div style="background:#fff;border:1px solid #e6ebf2;border-radius:12px;padding:10px 14px;min-width:0">'
@@ -12626,7 +12649,7 @@ function renderDeviceModel(){
     var etcProds=Object.keys(catOfProd).filter(function(p){ return catOfProd[p]==='etc'; }).sort();
     var etcNote=etcProds.length?('<div class="card p-3 mt-3" style="background:#fffbeb;border-color:#fde68a"><div style="font-size:12px;font-weight:800;color:#92400e;margin-bottom:4px"><i class="bi bi-exclamation-triangle me-1"></i>6개 라인업으로 분류되지 않은 제품 '+etcProds.length+'종</div><div style="font-size:11.5px;color:#78716c">'+etcProds.map(esc).join(' · ')+'</div><div style="font-size:10.5px;color:#a8a29e;margin-top:4px">분류 규칙(제품명 키워드)을 조정하고 싶으면 이 목록을 보고 알려주세요.</div></div>'):'';
 
-    host.innerHTML='<div class="card p-3 mb-3"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">'+totals.map(tile).join('')+'</div></div>'
+    host.innerHTML='<div class="card p-3 mb-3"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">'+gTile+aTile+totals.map(tile).join('')+'</div></div>'
       +'<div class="card p-3 mb-3"><div style="font-size:13.5px;font-weight:800;margin-bottom:10px"><i class="bi bi-grid-3x3-gap me-1" style="color:#0d9488"></i>월별 판매대수 한눈에 보기 <span style="font-size:10.5px;font-weight:500;color:#94a3b8">· 셀 = 올해 대수(전년 대수) · 성장률 · 매출액</span></div>'
       +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;table-layout:fixed"><colgroup><col style="width:60px">'+CATS.map(function(){return '<col>';}).join('')+'</colgroup>'
       +'<thead><tr><th style="padding:4px 10px 7px;border-bottom:2px solid #e7ebf0;text-align:left;font-size:10.5px;color:#5a6675">월</th>'+theadCats+'</tr></thead><tbody>'+(monthRows||'<tr><td colspan="'+(CATS.length+1)+'" style="padding:16px;text-align:center;color:#94a3b8;font-size:12.5px">선택한 기간에 데이터가 없습니다</td></tr>')+'</tbody></table></div></div>'
