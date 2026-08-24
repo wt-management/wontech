@@ -244,7 +244,10 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 #sidebar-tools #wt-bell-badge{position:static!important;top:auto!important;right:auto!important;margin-left:auto;box-shadow:none}
 /* 제품 목록(최근월·누계) — 줄마다 flex 로 밀려 오와열이 안 맞았다. 열 폭을 고정한 격자로 바꾼다.
    대수와 금액을 각각 제 칸에 넣어야 자릿수가 위아래로 떨어진다. */
-.pv-g{display:grid;grid-template-columns:minmax(0,1fr) 34px 66px 10px 34px 76px 24px 60px;align-items:center;gap:4px;font-variant-numeric:tabular-nums}
+.pv-g{display:grid;align-items:center;gap:8px;font-variant-numeric:tabular-nums;
+  /* 제품명만 1fr 로 두면 남는 폭을 혼자 다 먹고 숫자들이 오른쪽 끝에 몰려 갑갑해진다.
+     각 열에 최소폭 + 비율을 함께 줘서 남는 공간을 나눠 갖게 한다. */
+  grid-template-columns:minmax(110px,1.9fr) minmax(38px,.5fr) minmax(70px,.95fr) 14px minmax(38px,.5fr) minmax(78px,1.05fr) minmax(30px,.4fr) minmax(62px,.75fr)}
 .pv-g>span{white-space:nowrap}   /* 접히면 줄 높이만 커지고 여백처럼 보인다 */
 .pv-hd{padding:2px 8px 6px;border-bottom:1px solid #eef2f7;font-size:10px;color:#94a3b8;font-weight:600}
 .pv-row{position:relative;padding:8px;border-bottom:1px solid #f3f4f6;cursor:pointer;overflow:hidden}
@@ -260,7 +263,7 @@ body{display:flex;min-height:100vh;background:var(--bg);font-family:'Noto Sans K
 /* 화면이 좁아지면(사이드바 때문에 카드가 400px 아래로) 제품명이 잘린다 → 열을 조이고 비중은 감춘다 */
 /* display:none 으로 감추면 그 칸이 격자에서 빠져 뒤 칸들이 한 칸씩 당겨진다(전년비가 0폭 칸으로 밀렸었다).
    자리는 남기고 보이지만 않게 한다. */
-@media(max-width:1280px){ .pv-g{grid-template-columns:minmax(0,1fr) 32px 60px 12px 32px 70px 0 62px;gap:4px} .pv-sh{visibility:hidden;overflow:hidden} }
+@media(max-width:1280px){ .pv-g{grid-template-columns:minmax(90px,1.6fr) minmax(32px,.5fr) minmax(60px,.95fr) 12px minmax(32px,.5fr) minmax(70px,1.05fr) 0 minmax(58px,.75fr);gap:5px} .pv-sh{visibility:hidden;overflow:hidden} }
 /* ══ WT 문서 언어 테마(2026-07-21, Madia 스터디) — 전 페이지 공통 오버라이드 ══ */
 :root{--border:#e4e8ef;--text-2:#64748b}
 .card{box-shadow:none}
