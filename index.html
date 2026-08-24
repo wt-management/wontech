@@ -11813,6 +11813,20 @@ function showDevTxnModal(prod, rngStr) {
 
   const totalAmt = txns.reduce((s,t)=>s+t.amt,0);
   const totalQty = txns.reduce((s,t)=>s+t.qty,0);
+  // 목록의 금액·대수에는 미반영(예정·납품완료 후 회계 전)이 포함되지만 거래 원장에는 없다.
+  // 그래서 회계 거래가 0건이면 '거래 내역 없음'만 뜨고, 보는 사람은 9대가 어디서 왔는지 알 수 없었다.
+  const _pnd=[];
+  (typeof ILBO_PEND!=='undefined'?ILBO_PEND:[]||[]).forEach(function(r){
+    if(String(r.region||'')==='해외') return;
+    if(String(r.status||'')==='반영됨') return;
+    if(_normPname(String(r.product||''))!==_normPname(prod)) return;
+    var d=String(r.expectedDate||r.expected_date||'');
+    if(!pairs.some(function(pr){ return d.slice(0,4)===String(pr.y) && parseInt(d.slice(5,7),10)===pr.m; })) return;
+    _pnd.push({date:d, name:String(r.customer||''), qty:Number(r.qty)||0, amt:Number(r.amount)||0,
+               memo:(String(r.type||'')==='완료'?'납품완료·회계 전':'예정')});
+  });
+  _pnd.sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
+  const _pAmt=_pnd.reduce((s,t)=>s+t.amt,0), _pQty=_pnd.reduce((s,t)=>s+t.qty,0);
   const mLabel = pairs.length===1 ? (pairs[0].y+'.'+pairs[0].m+'월') : (pairs[0].y+'.'+pairs[0].m+'~'+pairs[pairs.length-1].y+'.'+pairs[pairs.length-1].m);
 
   // build or reuse modal
@@ -11828,7 +11842,7 @@ function showDevTxnModal(prod, rngStr) {
     <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between">
       <div>
         <div style="font-size:15px;font-weight:700;color:#111827">${prod} · ${mLabel} 거래 내역</div>
-        <div style="font-size:12px;color:#64748b;margin-top:2px">총 ${txns.length}건 · ${fmtW(totalAmt)} · ${totalQty}대</div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px">회계 ${txns.length}건 · ${fmtW(totalAmt)} · ${totalQty}대${_pnd.length?` <span style="color:#a16207">· 미반영 ${_pnd.length}건 ${fmtW(_pAmt)} ${_pQty}대</span>`:''}</div>
       </div>
       <button onclick="document.getElementById('dev-txn-modal').style.display='none'" style="border:none;background:none;font-size:22px;color:#64748b;cursor:pointer;line-height:1">&times;</button>
     </div>
@@ -11845,7 +11859,20 @@ function showDevTxnModal(prod, rngStr) {
           <td class="text-end" style="font-size:12px;font-weight:600">${t.qty?t.qty+'대':''}</td>
           <td class="text-end" style="font-size:12px;font-weight:700;color:${t.amt<0?'#dc2626':'#1d4ed8'}">${t.amt<0?'−':''}${fmtW(Math.abs(t.amt))}${t.amt<0?' <span style=\"font-size:10px;font-weight:600\">보상</span>':''}</td>
         </tr>`).join('')}</tbody>
-      </table>` : '<div class="text-center text-muted py-4">거래 내역 없음</div>'}
+      </table>` : (_pnd.length ? '' : '<div class="text-center text-muted py-4">거래 내역 없음</div>')}
+      ${_pnd.length ? `<div style="padding:10px 16px 4px;font-size:12px;font-weight:700;color:#a16207;background:#fffbeb;border-top:1px solid #fde68a">
+          미반영 ${_pnd.length}건 · ${fmtW(_pAmt)} · ${_pQty}대
+          <span style="font-weight:500;color:#a16207">— 아직 회계에 잡히지 않아 거래 원장에는 없습니다</span></div>
+        <table class="table table-sm mb-0">
+          <thead class="table-light"><tr><th>예정일</th><th>거래처명</th><th>상태</th><th class="text-end">수량</th><th class="text-end">금액</th></tr></thead>
+          <tbody>${_pnd.map(t=>`<tr>
+            <td style="font-size:12px;white-space:nowrap;color:#6b7280">${_escH(t.date)}</td>
+            <td style="font-size:12px;font-weight:600;color:#0f172a">${_escH(t.name)}</td>
+            <td style="font-size:11px;color:#a16207">${_escH(t.memo)}</td>
+            <td class="text-end" style="font-size:12px;font-weight:600">${t.qty?t.qty+'대':''}</td>
+            <td class="text-end" style="font-size:12px;font-weight:700;color:#a16207">${fmtW(t.amt)}</td>
+          </tr>`).join('')}</tbody>
+        </table>` : ''}
     </div>
   </div>`;
   modal.style.display = 'flex';
