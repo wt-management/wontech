@@ -12568,11 +12568,13 @@ function renderCapa(){
 var _DEVMOD_CATS=[
   {id:'oligio',     label:'Oligio(올리지오)',                    re:/oligio|올리지오/i,                          color:'#2563eb'},
   {id:'tightan',    label:'울트라스킨 타이탄',                    re:/tightan|타이탄/i,                            color:'#0d9488'},
-  {id:'longpulse',  label:'Long pulse(산드로·V레이저·코스젯SR)',  re:/sandro|산드로|v[\s-]?laser|브이\s?레이저|코스젯\s?sr|cosjet\s?sr/i, color:'#7c3aed'},
+  {id:'longpulse',  label:'Long pulse(산드로·V레이저·ASR)',       re:/sandro|산드로|v[\s-]?laser|브이\s?레이저|\basr\b/i, color:'#7c3aed'},
   {id:'fractional', label:'Fractional(아비오·라비앙)',            re:/avvio|아비오|lavieen|라비앙/i,                color:'#d97706'},
-  {id:'qsw',        label:'Q/SW laser(파스텔프로·코스젯ATR)',     re:/pastelle|파스텔|코스젯\s?atr|cosjet\s?atr/i,  color:'#dc2626'},
+  {id:'qsw',        label:'Q/SW laser(파스텔프로·ATR)',           re:/pastelle|파스텔|\batr\b/i,                     color:'#dc2626'},
   {id:'pico',       label:'PICO laser(피코엔디·마제스티·피코알렉스)', re:/pico|피코/i,                            color:'#0891b2'},
 ];
+var _DEVMOD_EXCLUDE_RE=/부속/i;   // 의료기기 부속 — 금액이 작아 장비 판매현황 집계에서 통째로 제외
+function _devmodExcluded(prod){ return _DEVMOD_EXCLUDE_RE.test(String(prod||'')); }
 function _devmodCat(prod){ var s=String(prod||''); for(var i=0;i<_DEVMOD_CATS.length;i++){ if(_DEVMOD_CATS[i].re.test(s)) return _DEVMOD_CATS[i].id; } return 'etc'; }
 function renderDeviceModel(){
   var host=document.getElementById('devmod-view'); if(!host) return;
@@ -12591,7 +12593,7 @@ function renderDeviceModel(){
       Object.keys(qtyOf(x.y)).forEach(function(p){ seenProds[p]=1; });
       Object.keys(amtOf(x.y)).forEach(function(p){ seenProds[p]=1; });
     });
-    var catOfProd={}; Object.keys(seenProds).forEach(function(p){ catOfProd[p]=_devmodCat(p); });
+    var catOfProd={}; Object.keys(seenProds).forEach(function(p){ if(_devmodExcluded(p)) return; catOfProd[p]=_devmodCat(p); });
     var CATS=_DEVMOD_CATS.concat([{id:'etc',label:'기타(미분류)',re:null,color:'#94a3b8'}]);
     // Oligio 세부 분해(전체 집계엔 안 끼움 — 표시 전용 추가 분해) — Kiss 단독 vs 나머지(X·XM 등)
     var OLIGIO_SUB=[{id:'oligio_kiss',label:'Oligio Kiss',color:'#60a5fa'},{id:'oligio_other',label:'Oligio 기타(X·XM 등)',color:'#1d4ed8'}];
@@ -12628,6 +12630,7 @@ function renderDeviceModel(){
       (_pv2.items||[]).forEach(function(it){
         if(!it.inYr || it.eff==='cancelled' || it.eff==='reflected') return;   // 취소·이미 회계반영된 건 제외(중복 방지)
         var p=it.p; if(p.category==='소모품') return;   // 장비만
+        if(_devmodExcluded(p.product)) return;   // 의료기기 부속 등 제외
         var d=p.expected_date?new Date(p.expected_date+'T00:00:00'):null; if(!d||isNaN(d)) return;
         var mo_=d.getMonth()+1; if(!mo_) return;
         var cid=_devmodCat(p.product||'');
@@ -12640,6 +12643,7 @@ function renderDeviceModel(){
       _ilPend.forEach(function(r){
         if(!r||(r.region&&r.region!=='국내')||r.status==='반영됨'||r.status==='취소') return;
         var prod=String(r.product||''); if(!prod||/tip|팁|cartridge|카트리지|소모|a\/s/i.test(prod)) return;   // 소모품·서비스 제외, 장비만
+        if(_devmodExcluded(prod)) return;   // 의료기기 부속 등 제외
         var mo_=parseInt(String(r.expectedDate||r.date||'').slice(5,7),10); if(!mo_) return;
         var cid=_devmodCat(prod);
         addPend(cid, '2026-'+mo_, Number(r.qty)||0, Number(r.amount)||0);
