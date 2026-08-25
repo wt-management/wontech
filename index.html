@@ -12664,14 +12664,15 @@ function renderDeviceModel(){
     var _lm2=(typeof _lastAcctMonth==='function')?_lastAcctMonth():7; if(_lm2<1)_lm2=1;
     var KISSXM_RE=/kiss|키스|\bxm\b|엑스엠/i;
     var LASER_SET={longpulse:1,fractional:1,qsw:1,pico:1};
-    var _sumMo={}; var _ensureMo=function(m){ if(!_sumMo[m]) _sumMo[m]={total:{q:0,a:0},kissXm:{q:0,a:0},oligioOther:{q:0,a:0},laser:{q:0,a:0}}; return _sumMo[m]; };
+    var _grpOf=function(cid,prod){ return cid==='oligio'?(KISSXM_RE.test(prod)?'kissXm':'oligioOther'):(LASER_SET[cid]?'laser':'etc2'); };   // etc2 = 타이탄+미분류(나머지) — 총합과 일치시키려고 반드시 어딘가엔 담음
+    var _sumMo={}; var _ensureMo=function(m){ if(!_sumMo[m]) _sumMo[m]={total:{q:0,a:0},kissXm:{q:0,a:0},oligioOther:{q:0,a:0},laser:{q:0,a:0},etc2:{q:0,a:0}}; return _sumMo[m]; };
     var _addGrp=function(m,g,q,a){ if(!q&&!a) return; var o=_ensureMo(m); o.total.q+=q; o.total.a+=a; if(g){ o[g].q+=q; o[g].a+=a; } };
     (function(){   // 회계반영분
       var qm=qtyOf(2026), am=amtOf(2026), allP={};
       Object.keys(qm).forEach(function(p){allP[p]=1;}); Object.keys(am).forEach(function(p){allP[p]=1;});
       Object.keys(allP).forEach(function(p){
         if(_devmodExcluded(p)) return;
-        var cid=_devmodCat(p), g=cid==='oligio'?(KISSXM_RE.test(p)?'kissXm':'oligioOther'):(LASER_SET[cid]?'laser':null);
+        var cid=_devmodCat(p), g=_grpOf(cid,p);
         for(var m=1;m<=12;m++) _addGrp(m,g,Number((qm[p]||{})[m])||0,Number((am[p]||{})[m])||0);
       });
     })();
@@ -12680,21 +12681,21 @@ function renderDeviceModel(){
       var p=it.p; if(p.category==='소모품'||_devmodExcluded(p.product)) return;
       var d=p.expected_date?new Date(p.expected_date+'T00:00:00'):null; if(!d||isNaN(d)) return;
       var m=d.getMonth()+1; if(!m) return;
-      var cid=_devmodCat(p.product||''), g=cid==='oligio'?(KISSXM_RE.test(p.product)?'kissXm':'oligioOther'):(LASER_SET[cid]?'laser':null);
+      var cid=_devmodCat(p.product||''), g=_grpOf(cid,p.product);
       _addGrp(m,g,Number(p.qty)||0,Number(p.amount)||0);
     }); }catch(e){}
     try{ (typeof ILBO_PEND!=='undefined'?ILBO_PEND:[]||[]).forEach(function(r){   // 미반영(일보)분
       if(!r||(r.region&&r.region!=='국내')||r.status==='반영됨'||r.status==='취소') return;
       var prod=String(r.product||''); if(!prod||/tip|팁|cartridge|카트리지|소모|a\/s/i.test(prod)||_devmodExcluded(prod)) return;
       var m=parseInt(String(r.expectedDate||r.date||'').slice(5,7),10); if(!m) return;
-      var cid=_devmodCat(prod), g=cid==='oligio'?(KISSXM_RE.test(prod)?'kissXm':'oligioOther'):(LASER_SET[cid]?'laser':null);
+      var cid=_devmodCat(prod), g=_grpOf(cid,prod);
       _addGrp(m,g,Number(r.qty)||0,Number(r.amount)||0);
     }); }catch(e){}
     var _h1EndM=Math.min(_lm2,6), _h1n2=Math.max(1,_h1EndM);
     var _pendMaxM3=0; Object.keys(_sumMo).forEach(function(k){ var mm=+k, o=_sumMo[k]; if((o.total.q||o.total.a)&&mm>_pendMaxM3) _pendMaxM3=mm; });
     var _capM2=Math.min((typeof _dataMaxMonth==='function')?_dataMaxMonth():12, Math.max(_lm2,_pendMaxM3));
-    var GRP_KEYS=['total','kissXm','oligioOther','laser'];
-    var GRP_LABEL={total:'장비합계',kissXm:'올리지오 Kiss/XM',oligioOther:'올리지오 기타',laser:'Laser 합계'};
+    var GRP_KEYS=['total','kissXm','oligioOther','laser','etc2'];
+    var GRP_LABEL={total:'장비합계',kissXm:'올리지오 Kiss/XM',oligioOther:'올리지오 기타',laser:'Laser 합계',etc2:'기타(타이탄 등)'};
     var h1Avg={}; GRP_KEYS.forEach(function(g){ var q=0,a=0; for(var m=1;m<=_h1EndM;m++){ var o=_sumMo[m]; if(o){ q+=o[g].q; a+=o[g].a; } } h1Avg[g]={q:q/_h1n2,a:a/_h1n2}; });
     var diagBaseCell=function(v){ return '<td style="padding:8px 10px;border-bottom:1px solid #eef2f5;text-align:center;background:#f8fafc"><div style="font-size:12.5px;font-weight:800;color:#1c2534">'+v.q.toFixed(1)+'대 · '+W(v.a)+'억</div><div style="font-size:9.5px;color:#94a3b8">월평균</div></td>'; };
     var diagDiffCell=function(cur,base){ var dq=cur.q-base.q, da=cur.a-base.a, pq=base.q>0?(cur.q/base.q-1)*100:null, pa=base.a>0?(cur.a/base.a-1)*100:null;
@@ -12705,13 +12706,13 @@ function renderDeviceModel(){
         +'</td>'; };
     var diagRows='<tr><td style="padding:8px 10px;border-bottom:1px solid #eef2f5;font-weight:800;color:#0f172a;background:#f8fafc">상반기 평균</td>'+GRP_KEYS.map(function(g){ return diagBaseCell(h1Avg[g]); }).join('')+'</tr>';
     for(var _dm=_h1EndM+1;_dm<=_capM2;_dm++){
-      var _o=_sumMo[_dm]||{total:{q:0,a:0},kissXm:{q:0,a:0},oligioOther:{q:0,a:0},laser:{q:0,a:0}};
+      var _o=_sumMo[_dm]||{total:{q:0,a:0},kissXm:{q:0,a:0},oligioOther:{q:0,a:0},laser:{q:0,a:0},etc2:{q:0,a:0}};
       var _pv3=pendKeyTotal['2026-'+_dm];
       var _badge2=(_pv3&&(_pv3.q||_pv3.a))?' <span style="font-size:9px;font-weight:800;color:#7c3aed;background:#f5f3ff;border-radius:4px;padding:0 5px;margin-left:2px">잠정</span>':'';
       diagRows+='<tr><td style="padding:8px 10px;border-bottom:1px solid #eef2f5;font-weight:800;color:#475569">'+_dm+'월'+_badge2+'</td>'+GRP_KEYS.map(function(g){ return diagDiffCell(_o[g],h1Avg[g]); }).join('')+'</tr>';
     }
     var diagTable=(_capM2>_h1EndM)?('<div class="card p-3 mb-3"><div style="font-size:13.5px;font-weight:800;margin-bottom:4px"><i class="bi bi-clipboard2-data me-1" style="color:#e11d48"></i>상반기 평균 대비 최근월 진단</div>'
-      +'<div style="font-size:10.5px;color:#94a3b8;margin-bottom:10px">Laser 합계 = Long pulse+Fractional+Q/SW+PICO · 올리지오 기타 = 베이스·X(Kiss·XM 제외) · 회계+미반영 포함</div>'
+      +'<div style="font-size:10.5px;color:#94a3b8;margin-bottom:10px">Laser 합계 = Long pulse+Fractional+Q/SW+PICO · 올리지오 기타 = 베이스·X(Kiss·XM 제외) · 기타(타이탄 등) = 울트라스킨 타이탄+미분류 · 회계+미반영 포함 · 올리지오Kiss/XM+올리지오기타+Laser합계+기타 = 장비합계</div>'
       +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;table-layout:fixed"><colgroup><col style="width:90px">'+GRP_KEYS.map(function(){return '<col>';}).join('')+'</colgroup>'
       +'<thead><tr><th style="padding:4px 10px 7px;border-bottom:2px solid #e7ebf0;text-align:left;font-size:10.5px;color:#5a6675"></th>'+GRP_KEYS.map(function(g){ return '<th style="padding:4px 10px 7px;border-bottom:2px solid #e7ebf0;text-align:center;font-size:10.5px;color:#5a6675;font-weight:700">'+GRP_LABEL[g]+'</th>'; }).join('')+'</tr></thead>'
       +'<tbody>'+diagRows+'</tbody></table></div>'
