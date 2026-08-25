@@ -12515,7 +12515,12 @@ function renderCapa(){
       var _mp=pendMo[m].dealer+pendMo[m].direct+pendMo[m].cons+pendMo[m].devUnk;
       var _badge=_mp>0?' <span title="미반영(예정+일보) +'+W(_mp)+'억 포함된 잠정치" style="font-size:9px;font-weight:800;color:#7c3aed;background:#f5f3ff;border-radius:4px;padding:0 5px;margin-left:2px">잠정</span>':'';
       return '<tr onclick="_dvDrill(\'month\','+m+')" style="cursor:pointer" onmouseover="this.style.filter=\'brightness(.97)\'" onmouseout="this.style.filter=\'\'" title="'+m+'월 상세내역 보기(제품·담당·대리점 · 전년대비)"><td style="padding:5px 11px;font-weight:800;color:#475569;white-space:nowrap;font-size:12px;border-bottom:1px solid #eef2f5">'+m+'월'+_badge+' <i class="bi bi-chevron-right" style="font-size:8px;color:#cbd5e1"></i></td>'+mCell(mo[m].dealer,CAPA.dealer,mo25[m].dealer,moQ[m].dealer,moQ25[m].dealer,true)+SP+mCell(mo[m].direct,CAPA.direct,mo25[m].direct,moQ[m].direct,moQ25[m].direct,true)+SP+mCell(mo[m].cons,CAPA.cons,mo25[m].cons,0,0,false)+SP+mCell(t,CAPA_TOT,mo25[m].dealer+mo25[m].direct+mo25[m].cons,tq,tq25,true)+'</tr>'; };
-    var hmRows=''; for(var m=fromM;m<=toM;m++){ hmRows+=mRow(m); }
+    // 상반기(1~_h1n월)는 Capa 자체가 그 평균이라 한 줄로 요약하고, 그 이후(7·8월 등)만 개별 행으로 — 8줄 넘던 표를 확 줄임
+    var refCell=function(v){ return '<td style="padding:5px 12px 6px;border-bottom:1px solid #eef2f5;vertical-align:middle;color:#64748b"><span style="font-size:12.5px;font-weight:700">'+W(v)+'억/월</span></td>'; };
+    var h1RefRow=function(){ return '<tr style="background:#f8fafc"><td style="padding:5px 11px;font-weight:800;color:#64748b;white-space:nowrap;font-size:12px;border-bottom:1px solid #eef2f5">상반기 평균<div style="font-size:9px;font-weight:600;color:#94a3b8">(=Capa 기준)</div></td>'+refCell(CAPA.dealer)+SP+refCell(CAPA.direct)+SP+refCell(CAPA.cons)+SP+refCell(CAPA_TOT)+'</tr>'; };
+    var hmRows='';
+    if(fromM<=_h1n && toM>_h1n){ hmRows+=h1RefRow(); for(var m=_h1n+1;m<=toM;m++){ hmRows+=mRow(m); } }
+    else { for(var m=fromM;m<=toM;m++){ hmRows+=mRow(m); } }
     hmRows+='<tr style="border-top:2px solid #cbd5e1;background:#f6f8fb"><td style="padding:7px 11px;font-weight:800;color:#0f172a;font-size:12.5px">누계</td>'+mCell(sum.dealer,CAPA.dealer*periodMonths,sum25.dealer,sumQ.dealer,sumQ25.dealer,true)+SP+mCell(sum.direct,CAPA.direct*periodMonths,sum25.direct,sumQ.direct,sumQ25.direct,true)+SP+mCell(sum.cons,CAPA.cons*periodMonths,sum25.cons,0,0,false)+SP+mCell(totA,CAPA_TOT*periodMonths,sum25.dealer+sum25.direct+sum25.cons,sumQ.dealer+sumQ.direct,sumQ25.dealer+sumQ25.direct,true)+'</tr>';
     var COLG='<colgroup><col style="width:64px"><col><col style="width:10px"><col><col style="width:10px"><col><col style="width:10px"><col></colgroup>';
     var overview='<div class="card p-3 mb-3">'
