@@ -12625,6 +12625,7 @@ function renderDeviceModel(){
     var pendKeyTotal={};
     var addPend=function(cid,key,q,a){ addTo(cid,key,'q',q); addTo(cid,key,'a',a); if(!q&&!a) return; if(!pendKeyTotal[key]) pendKeyTotal[key]={q:0,a:0}; pendKeyTotal[key].q+=q; pendKeyTotal[key].a+=a; };
     var addPendSub=function(cid,key,q,a){ addTo(cid,key,'q',q); addTo(cid,key,'a',a); };   // Oligio 세부 표시용 — pendKeyTotal 이중집계 방지
+    var etcPendProds={};   // 미반영(예정+일보)에서 '기타'로 빠진 제품명 — catOfProd엔 안 잡혀서 별도 추적(하단 목록에 노출용)
     try{
       var _pv2=(typeof _pendingView==='function')?_pendingView(2026):{items:[]};
       (_pv2.items||[]).forEach(function(it){
@@ -12634,6 +12635,7 @@ function renderDeviceModel(){
         var d=p.expected_date?new Date(p.expected_date+'T00:00:00'):null; if(!d||isNaN(d)) return;
         var mo_=d.getMonth()+1; if(!mo_) return;
         var cid=_devmodCat(p.product||'');
+        if(cid==='etc'&&p.product) etcPendProds[p.product]=1;
         addPend(cid, '2026-'+mo_, Number(p.qty)||0, Number(p.amount)||0);
         if(cid==='oligio') addPendSub(_oligioSubOf(p.product), '2026-'+mo_, Number(p.qty)||0, Number(p.amount)||0);
       });
@@ -12646,6 +12648,7 @@ function renderDeviceModel(){
         if(_devmodExcluded(prod)) return;   // 의료기기 부속 등 제외
         var mo_=parseInt(String(r.expectedDate||r.date||'').slice(5,7),10); if(!mo_) return;
         var cid=_devmodCat(prod);
+        if(cid==='etc') etcPendProds[prod+' (일보)']=1;
         addPend(cid, '2026-'+mo_, Number(r.qty)||0, Number(r.amount)||0);
         if(cid==='oligio') addPendSub(_oligioSubOf(prod), '2026-'+mo_, Number(r.qty)||0, Number(r.amount)||0);
       });
@@ -12719,8 +12722,8 @@ function renderDeviceModel(){
     var theadCats='<th style="padding:4px 9px 7px;border-bottom:2px solid #e7ebf0;font-weight:800;text-align:right;font-size:10.5px;color:#334155;white-space:nowrap;background:#f8fafc">합계</th>'
       +DISPLAY_CATS.map(function(c){ return '<th style="padding:4px 9px 7px;border-bottom:2px solid #e7ebf0;font-weight:700;text-align:right;font-size:10.5px;color:#5a6675;white-space:nowrap"><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:'+c.color+';margin-right:4px"></span>'+esc(c.label.replace(/\(.*\)/,''))+'</th>'; }).join('');
 
-    // 3) 기타(미분류) 제품 목록 — 분류 규칙을 다시 잡을 수 있도록 투명하게 노출
-    var etcProds=Object.keys(catOfProd).filter(function(p){ return catOfProd[p]==='etc'; }).sort();
+    // 3) 기타(미분류) 제품 목록 — 회계반영분 + 미반영(예정+일보)분 모두 포함, 분류 규칙을 다시 잡을 수 있도록 투명하게 노출
+    var etcProds=Object.keys(catOfProd).filter(function(p){ return catOfProd[p]==='etc'; }).concat(Object.keys(etcPendProds)).sort();
     var etcNote=etcProds.length?('<div class="card p-3 mt-3" style="background:#fffbeb;border-color:#fde68a"><div style="font-size:12px;font-weight:800;color:#92400e;margin-bottom:4px"><i class="bi bi-exclamation-triangle me-1"></i>6개 라인업으로 분류되지 않은 제품 '+etcProds.length+'종</div><div style="font-size:11.5px;color:#78716c">'+etcProds.map(esc).join(' · ')+'</div><div style="font-size:10.5px;color:#a8a29e;margin-top:4px">분류 규칙(제품명 키워드)을 조정하고 싶으면 이 목록을 보고 알려주세요.</div></div>'):'';
     var pendPeriodTotal={q:0,a:0}; Object.keys(pendKeyTotal).forEach(function(k){ if(spanMs.some(function(x){return x.y+'-'+x.m===k;})){ pendPeriodTotal.q+=pendKeyTotal[k].q; pendPeriodTotal.a+=pendKeyTotal[k].a; } });
     var pendNote=(pendPeriodTotal.q||pendPeriodTotal.a)?(' · <span style="color:#7c3aed;font-weight:700">잠정</span>=미반영(예정+일보) 포함, 이 기간 +'+pendPeriodTotal.q+'대·'+W(pendPeriodTotal.a)+'억'):'';
