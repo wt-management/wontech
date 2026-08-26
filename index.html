@@ -765,6 +765,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <button class="anatab" data-sub="capa" onclick="showPage('capa')"><i class="bi bi-speedometer2"></i>Capa 분석</button>
       <button class="anatab" data-sub="dealer-diag" onclick="showPage('dealer-diag')"><i class="bi bi-shop-window"></i>대리점 진단</button>
       <button class="anatab" data-sub="oligio-diag" onclick="showPage('oligio-diag')"><i class="bi bi-circle-half"></i>올리지오 진단</button>
+      <button class="anatab" data-sub="cons-diag" onclick="showPage('cons-diag')"><i class="bi bi-capsule"></i>소모품 진단</button>
     </div>
     <div class="wt-mast">
       <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-geo-alt me-2"></i>지역별 매출 분석 <span style="font-size:12px;font-weight:400;color:#64748b">시도 · 구군</span></div></div>
@@ -1711,6 +1712,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <button class="anatab" data-sub="capa" onclick="showPage('capa')"><i class="bi bi-speedometer2"></i>Capa 분석</button>
       <button class="anatab" data-sub="dealer-diag" onclick="showPage('dealer-diag')"><i class="bi bi-shop-window"></i>대리점 진단</button>
       <button class="anatab" data-sub="oligio-diag" onclick="showPage('oligio-diag')"><i class="bi bi-circle-half"></i>올리지오 진단</button>
+      <button class="anatab" data-sub="cons-diag" onclick="showPage('cons-diag')"><i class="bi bi-capsule"></i>소모품 진단</button>
     </div>
     <div class="wt-mast">
       <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-building-check me-2"></i>병원별 영업 인텔리전스</div>
@@ -1868,6 +1870,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <button class="anatab" data-sub="capa" onclick="showPage('capa')"><i class="bi bi-speedometer2"></i>Capa 분석</button>
       <button class="anatab" data-sub="dealer-diag" onclick="showPage('dealer-diag')"><i class="bi bi-shop-window"></i>대리점 진단</button>
       <button class="anatab" data-sub="oligio-diag" onclick="showPage('oligio-diag')"><i class="bi bi-circle-half"></i>올리지오 진단</button>
+      <button class="anatab" data-sub="cons-diag" onclick="showPage('cons-diag')"><i class="bi bi-capsule"></i>소모품 진단</button>
     </div>
     <div class="wt-mast">
       <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-person-badge me-2"></i>담당자별 매출 현황</div><div style="font-size:11.5px;color:#94a3b8;margin-top:3px">담당자·대리점 실적은 <b style="color:#64748b">장비 기준</b> · 소모품은 담당자가 없어 <b style="color:#64748b">합계 매출에만 반영</b> → 합계 = 종합 전체와 일치</div></div>
@@ -1926,6 +1929,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <button class="anatab" data-sub="capa" onclick="showPage('capa')"><i class="bi bi-speedometer2"></i>Capa 분석</button>
       <button class="anatab" data-sub="dealer-diag" onclick="showPage('dealer-diag')"><i class="bi bi-shop-window"></i>대리점 진단</button>
       <button class="anatab" data-sub="oligio-diag" onclick="showPage('oligio-diag')"><i class="bi bi-circle-half"></i>올리지오 진단</button>
+      <button class="anatab" data-sub="cons-diag" onclick="showPage('cons-diag')"><i class="bi bi-capsule"></i>소모품 진단</button>
     </div>
     <div class="wt-mast">
       <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-speedometer2 me-2"></i>Capa 달성 분석</div><div id="capa-subtitle" style="font-size:11.5px;color:#94a3b8;margin-top:3px">월 Capa(1~6월 평균 기준) 대비 <b style="color:#64748b">채널·담당자별 달성/부진</b>을 진단</div></div>
@@ -1954,6 +1958,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <button class="anatab" data-sub="capa" onclick="showPage('capa')"><i class="bi bi-speedometer2"></i>Capa 분석</button>
       <button class="anatab" data-sub="dealer-diag" onclick="showPage('dealer-diag')"><i class="bi bi-shop-window"></i>대리점 진단</button>
       <button class="anatab" data-sub="oligio-diag" onclick="showPage('oligio-diag')"><i class="bi bi-circle-half"></i>올리지오 진단</button>
+      <button class="anatab" data-sub="cons-diag" onclick="showPage('cons-diag')"><i class="bi bi-capsule"></i>소모품 진단</button>
     </div>
     <div class="wt-mast">
       <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-shop-window me-2"></i>대리점 진단</div><div style="font-size:11.5px;color:#94a3b8;margin-top:3px">대리점 × 라인업 <b style="color:#64748b">상반기 평균 대비 최근월 변화</b>를 교차표로 진단</div></div>
@@ -1970,11 +1975,29 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <button class="anatab" data-sub="capa" onclick="showPage('capa')"><i class="bi bi-speedometer2"></i>Capa 분석</button>
       <button class="anatab" data-sub="dealer-diag" onclick="showPage('dealer-diag')"><i class="bi bi-shop-window"></i>대리점 진단</button>
       <button class="anatab" data-sub="oligio-diag" onclick="showPage('oligio-diag')"><i class="bi bi-circle-half"></i>올리지오 진단</button>
+      <button class="anatab" data-sub="cons-diag" onclick="showPage('cons-diag')"><i class="bi bi-capsule"></i>소모품 진단</button>
     </div>
     <div class="wt-mast">
       <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-circle-half me-2"></i>올리지오 진단</div><div style="font-size:11.5px;color:#94a3b8;margin-top:3px">개별 제품 이슈인지 <b style="color:#64748b">브랜드·시장 전체 부진</b>인지를 구매 병원 수·채널·사유로 진단</div></div>
     </div>
     <div id="oligio-diag-view"></div>
+  </div>
+
+  <!-- 소모품 진단 -->
+  <div id="page-cons-diag" class="page">
+    <div class="ana-tabs">
+      <button class="anatab" data-sub="device-reps" onclick="showPage('device-reps')"><i class="bi bi-person-badge"></i>담당자별</button>
+      <button class="anatab" data-sub="cons-hospitals" onclick="showPage('cons-hospitals')"><i class="bi bi-building-check"></i>병원별</button>
+      <button class="anatab" data-sub="region" onclick="showPage('region')"><i class="bi bi-geo-alt"></i>지역별</button>
+      <button class="anatab" data-sub="capa" onclick="showPage('capa')"><i class="bi bi-speedometer2"></i>Capa 분석</button>
+      <button class="anatab" data-sub="dealer-diag" onclick="showPage('dealer-diag')"><i class="bi bi-shop-window"></i>대리점 진단</button>
+      <button class="anatab" data-sub="oligio-diag" onclick="showPage('oligio-diag')"><i class="bi bi-circle-half"></i>올리지오 진단</button>
+      <button class="anatab" data-sub="cons-diag" onclick="showPage('cons-diag')"><i class="bi bi-capsule"></i>소모품 진단</button>
+    </div>
+    <div class="wt-mast">
+      <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-capsule me-2"></i>소모품 진단</div><div style="font-size:11.5px;color:#94a3b8;margin-top:3px">단순 사용량 감소가 아니라 <b style="color:#64748b">계절성·라인업·구매빈도</b> 관점에서 원인을 진단</div></div>
+    </div>
+    <div id="cons-diag-view"></div>
   </div>
 
   <!-- 장비별 판매현황 -->
@@ -3311,7 +3334,7 @@ function showPage(name, el, noPush) {
   // 담당자별 분석=파트장/관리자, 현황판=파트장/관리자+영업전략파트 (그 외 팀원 → 종합현황)
   if(name==='device-reps' && typeof _isMgr!=='undefined' && !_isMgr){ name='sales-overview'; el=null; }
   if(name==='dashboard'){ name='sales-overview'; el=null; }   // 현황판 메뉴 제거됨 → 종합으로
-  if((name==='cons-hospitals'||name==='region'||name==='capa'||name==='dealer-diag'||name==='oligio-diag') && typeof _isMgr!=='undefined' && !_isMgr){ name='sales-overview'; el=null; }
+  if((name==='cons-hospitals'||name==='region'||name==='capa'||name==='dealer-diag'||name==='oligio-diag'||name==='cons-diag') && typeof _isMgr!=='undefined' && !_isMgr){ name='sales-overview'; el=null; }
   sessionStorage.setItem('wt_page', name);
   if(name!=='schedule'){ try{ _schDayFromMonth=false; _schDrillSnap=null; _schOverdueOnly=false; _schDoneOnly=false; }catch(e){} }
   if(!noPush && !(history.state && history.state.page===name)) history.pushState({page: name}, '', location.href.split('#')[0] + '#' + name);   // 같은 페이지 중복 push 금지(재클릭 시 엔트리 누적 방지)
@@ -3322,7 +3345,7 @@ function showPage(name, el, noPush) {
   else if(!['logs','users','pipeline','performance'].includes(name) && name!=='sales-overview'){ return showPage('sales-overview', null, noPush); }
   if(el) el.classList.add('active');
   else { const links = document.querySelectorAll('.nav-link');
-    const _navLbl={'sales-overview':'종합',dashboard:'현황판',sales:'수주관리',quotes:'견적서/ROI',schedule:'일정',cdu:'CDU',roi:'견적서/ROI · ROI 계산기',speech:'Sales Speech',customers:'고객사',equipments:'장비',logs:'상담일지',products:'제품',consumables:'소모품 매출','cons-hospitals':'병원별','device-sales':'제품 매출','device-model':'장비별 판매현황','device-reps':'담당자별',region:'지역별 분석','dealer-diag':'대리점 진단','oligio-diag':'올리지오 진단',pending:'회계 미반영 매출','cons-accounts':'거래처'}[name]||'';
+    const _navLbl={'sales-overview':'종합',dashboard:'현황판',sales:'수주관리',quotes:'견적서/ROI',schedule:'일정',cdu:'CDU',roi:'견적서/ROI · ROI 계산기',speech:'Sales Speech',customers:'고객사',equipments:'장비',logs:'상담일지',products:'제품',consumables:'소모품 매출','cons-hospitals':'병원별','device-sales':'제품 매출','device-model':'장비별 판매현황','device-reps':'담당자별',region:'지역별 분석','dealer-diag':'대리점 진단','oligio-diag':'올리지오 진단','cons-diag':'소모품 진단',pending:'회계 미반영 매출','cons-accounts':'거래처'}[name]||'';
     if(_navLbl) links.forEach(l=>{ if(l.textContent.trim().includes(_navLbl)) l.classList.add('active'); }); }
   try{ var _GRP={'nav-analysis':['device-reps','cons-hospitals','region','capa'],'nav-custequip':['customers','equipments'],'nav-salesmix':['consumables','device-sales']};
     var _gid=null; for(var _k in _GRP){ if(_GRP[_k].indexOf(name)>=0){ _gid=_k; break; } }
@@ -3353,6 +3376,7 @@ function showPage(name, el, noPush) {
   else if(name==='device-model') renderDeviceModel();
   else if(name==='dealer-diag') renderDealerDiag();
   else if(name==='oligio-diag') renderOligioDiag();
+  else if(name==='cons-diag') renderConsDiag();
   else if(name==='pending') _loadIlboPending();
   else if(name==='feedback') renderFeedbackPage();
 }
@@ -12792,6 +12816,77 @@ function renderOligioDiag(){
       +(compArr.length?('<div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:4px">경쟁사 노출</div>'+compArr.map(function(x){return barRow2(x[0],x[1],compMax,'#ef4444');}).join('')):'')
       +'</div>';
   }catch(e){ host.innerHTML='<div class="card p-3" style="color:#dc2626">올리지오 진단 로드 오류</div>'; console.warn('oligio-diag',e); }
+}
+// ── 소모품 진단 — 단순 사용량 감소가 아니라 계절성·라인업·병원별 구매빈도 관점에서 원인 진단 ──
+function renderConsDiag(){
+  var host=document.getElementById('cons-diag-view'); if(!host) return;
+  try{
+    var W=function(v){ return (v/1e8).toFixed(1); };
+    var esc=(typeof _dvEsc==='function')?_dvEsc:function(s){return String(s==null?'':s);};
+    var col=function(g){ return g==null?'#94a3b8':g>=0?'#16a34a':'#dc2626'; };
+    var lm=(typeof _lastAcctMonth==='function')?_lastAcctMonth():7; if(lm<1)lm=1;
+    var h1EndM=Math.min(lm,6), h1n=Math.max(1,h1EndM), nH2=Math.max(0,lm-h1EndM);
+    if(nH2<=0){ host.innerHTML='<div class="card p-3" style="color:#94a3b8">상반기 이후 회계반영 데이터가 아직 없습니다</div>'; return; }
+
+    // 1) 계절성 체크 — 올해 상반기→최근월 하락 배율 vs 작년 동일 구간 하락 배율
+    var m26=CONS.monthly2026||{}, m25=CONS.monthly2025||{};
+    var sumRange=function(m,f,t){ var s=0; for(var i=f;i<=t;i++) s+=Number(m[i])||0; return s; };
+    var avg1_26=sumRange(m26,1,h1EndM)/h1n, avg2_26=sumRange(m26,h1EndM+1,lm)/nH2;
+    var avg1_25=sumRange(m25,1,h1EndM)/h1n, avg2_25=sumRange(m25,h1EndM+1,lm)/nH2;
+    var thisRatio=avg1_26>0?avg2_26/avg1_26:null, lastRatio=avg1_25>0?avg2_25/avg1_25:null;
+    var seasonText;
+    if(thisRatio==null||lastRatio==null) seasonText='작년 동기 비교 데이터가 부족해 계절성 여부를 판단할 수 없습니다.';
+    else { var gapPct=(thisRatio-lastRatio)*100;
+      if(Math.abs(gapPct)<=10) seasonText='작년에도 이맘때 비슷한 비율로 줄었습니다 — <b>계절적 패턴(매년 반복되는 현상)</b>일 가능성이 큽니다.';
+      else if(gapPct<-10) seasonText='작년 같은 시기보다 <b>올해 하락폭이 훨씬 큽니다</b>(올해 '+(thisRatio*100).toFixed(0)+'% vs 작년 '+(lastRatio*100).toFixed(0)+'%, 상반기 대비 비율) — 단순 계절성이 아니라 올해만의 특이 요인이 있는 것으로 보입니다.';
+      else seasonText='작년 같은 시기보다 오히려 덜 줄었습니다(올해 '+(thisRatio*100).toFixed(0)+'% vs 작년 '+(lastRatio*100).toFixed(0)+'%) — 계절 요인보다 다른 변수를 봐야 할 수 있습니다.';
+    }
+
+    // 2) 라인업별(장비별) 소모품 매출 — 병원 txns 전수 스캔해 _devmodCat으로 분류
+    var CATS3=_DEVMOD_CATS.concat([{id:'etc',label:'기타',color:'#94a3b8'}]);
+    var catH1={}, catH2={}; CATS3.forEach(function(c){ catH1[c.id]=0; catH2[c.id]=0; });
+    var hospStat=[];
+    Object.keys(CONS.hospitals||{}).forEach(function(hn){
+      var h=CONS.hospitals[hn]||{}, h1amt=0,h2amt=0,h1cnt=0,h2cnt=0;
+      (h.txns2026||[]).forEach(function(t){
+        var mo=+t[0]||0, prod=t[2]||'', amt=Number(t[3])||0; if(mo<1||mo>12||!amt) return;
+        var cid=_devmodCat(prod);
+        if(mo<=h1EndM){ catH1[cid]+=amt; h1amt+=amt; h1cnt++; } else if(mo<=lm){ catH2[cid]+=amt; h2amt+=amt; h2cnt++; }
+      });
+      if(!h1amt&&!h2amt) return;
+      var h1AvgAmt=h1amt/h1n, expAmt=h1AvgAmt*nH2, h1AvgCnt=h1cnt/h1n, expCnt=h1AvgCnt*nH2;
+      hospStat.push({name:hn, h1AvgAmt:h1AvgAmt, h2amt:h2amt, diffAmt:h2amt-expAmt, pctAmt:expAmt>0?(h2amt/expAmt-1)*100:null,
+        h1AvgCnt:h1AvgCnt, h2cnt:h2cnt, pctCnt:expCnt>0?(h2cnt/expCnt-1)*100:null});
+    });
+    hospStat.sort(function(a,b){ return a.diffAmt-b.diffAmt; });
+    var cntH1=hospStat.reduce(function(s,x){return s+x.h1AvgCnt*h1n;},0)/h1n, cntH2=hospStat.reduce(function(s,x){return s+x.h2cnt;},0)/Math.max(1,nH2);
+    var freqPct=cntH1>0?(cntH2/cntH1-1)*100:null;
+
+    // 3) 렌더
+    var catCell=function(cid,label,color){ var h1v=catH1[cid]/h1n, exp=h1v*nH2, act=catH2[cid], pct=exp>0?(act/exp-1)*100:null;
+      return '<div style="background:#fff;border:1px solid #e6ebf2;border-radius:12px;padding:9px 13px;min-width:0">'
+        +'<div style="font-size:10.5px;color:#64748b;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:'+color+';margin-right:5px"></span>'+esc(label)+'</div>'
+        +'<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:6px;margin:4px 0 2px"><span style="font-size:1.1rem;font-weight:800;color:#1c2534">'+W(act)+'<span style="font-size:10px;color:#94a3b8">억</span></span><span style="font-size:10.5px;font-weight:800;color:'+col(pct)+'">'+(pct==null?'-':(pct>=0?'▲+':'▼')+Math.abs(pct).toFixed(0)+'%')+'</span></div>'
+        +'<div style="font-size:9px;color:#94a3b8">상반기 '+W(h1v)+'억/월</div></div>'; };
+    var declineRows=hospStat.slice(0,12).map(function(x){
+      return '<tr style="border-top:1px solid #f1f5f9"><td style="padding:6px 8px;font-weight:700;font-size:12px;color:#0f172a;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(x.name)+'">'+esc(x.name)+'</td>'
+        +'<td style="padding:6px 8px;text-align:right;font-size:11px;color:#94a3b8;white-space:nowrap">'+W(x.h1AvgAmt)+'억/월</td>'
+        +'<td style="padding:6px 8px;text-align:right;font-size:12px;font-weight:700;white-space:nowrap">'+W(x.h2amt)+'억</td>'
+        +'<td style="padding:6px 8px;text-align:right;font-size:11px;font-weight:800;color:'+col(x.pctAmt)+';white-space:nowrap">'+(x.pctAmt==null?'-':(x.pctAmt>=0?'▲+':'▼')+Math.abs(x.pctAmt).toFixed(0)+'%')+'</td>'
+        +'<td style="padding:6px 8px;text-align:right;font-size:11px;font-weight:700;color:'+col(x.pctCnt)+';white-space:nowrap">'+(x.pctCnt==null?'-':(x.pctCnt>=0?'▲+':'▼')+Math.abs(x.pctCnt).toFixed(0)+'%')+'</td></tr>';
+    }).join('');
+
+    host.innerHTML='<div class="card p-3 mb-3" style="background:#fbfdff"><div style="font-size:13.5px;font-weight:800;margin-bottom:6px"><i class="bi bi-clipboard2-pulse me-1" style="color:#e11d48"></i>계절성 자동 진단</div><div style="font-size:12.5px;color:#475569;line-height:1.6">'+seasonText+'</div></div>'
+      +'<div class="card p-3 mb-3"><div style="font-size:13.5px;font-weight:800;margin-bottom:8px">전체 구매 빈도 <span style="font-size:10.5px;font-weight:500;color:#94a3b8">· 상반기 월평균 vs '+(h1EndM+1)+'~'+lm+'월</span></div>'
+      +'<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap"><span style="font-size:11px;color:#64748b">주문 건수 월평균 <b style="color:#1c2534">'+cntH1.toFixed(0)+'건</b> → <b style="color:#1c2534">'+cntH2.toFixed(0)+'건</b></span><span style="font-size:12px;font-weight:800;color:'+col(freqPct)+'">'+(freqPct==null?'-':(freqPct>=0?'▲+':'▼')+Math.abs(freqPct).toFixed(0)+'%')+'</span></div>'
+      +'<div style="font-size:10.5px;color:#94a3b8;margin-top:4px">매출 하락률과 이 수치를 비교해보세요 — 주문건수가 매출만큼 줄었으면 "덜 자주 삼", 주문건수는 안 줄었는데 매출만 줄었으면 "한 번에 덜 삼(건당 구매액 감소)"입니다.</div></div>'
+      +'<div class="card p-3 mb-3"><div style="font-size:13.5px;font-weight:800;margin-bottom:10px">라인업별(장비별) 소모품 매출 <span style="font-size:10.5px;font-weight:500;color:#94a3b8">· 상반기 월평균 vs '+(h1EndM+1)+'~'+lm+'월</span></div>'
+      +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">'+CATS3.map(function(c){ return catCell(c.id,(c.label||'').replace(/\(.*\)/,''),c.color); }).join('')+'</div></div>'
+      +'<div class="card p-3 mb-3"><div style="font-size:13.5px;font-weight:800;margin-bottom:8px">병원별 급감 <span style="font-size:10.5px;font-weight:500;color:#94a3b8">· 하락폭 큰 순 상위 12곳 · 매출증감 vs 주문빈도증감</span></div>'
+      +(declineRows?'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;table-layout:fixed"><colgroup><col><col style="width:90px"><col style="width:80px"><col style="width:64px"><col style="width:70px"></colgroup>'
+        +'<thead><tr style="font-size:10px;color:#94a3b8;font-weight:700;border-bottom:2px solid #eef2f7"><th style="padding:4px 8px;text-align:left">병원</th><th style="padding:4px 8px;text-align:right">상반기 평균</th><th style="padding:4px 8px;text-align:right">'+(h1EndM+1)+'~'+lm+'월</th><th style="padding:4px 8px;text-align:right">매출증감</th><th style="padding:4px 8px;text-align:right">빈도증감</th></tr></thead><tbody>'+declineRows+'</tbody></table></div>'
+        :'<div style="font-size:12px;color:#94a3b8">해당 병원이 없습니다</div>')+'</div>';
+  }catch(e){ host.innerHTML='<div class="card p-3" style="color:#dc2626">소모품 진단 로드 오류</div>'; console.warn('cons-diag',e); }
 }
 // ── 장비별 판매현황 — 라인업 6종 분류(제품명 정확한 코드값을 몰라 키워드 매칭. '기타'로 빠지는 게 있으면 하단 목록에서 확인 가능) ──
 var _DEVMOD_CATS=[
