@@ -12500,8 +12500,17 @@ function renderCapa(){
       if(!owner){ pendMo[mo_].devUnk+=amt; return; }   // 병원명이 등록된 거래처와 매칭 안 되면 직판으로 억측하지 않고 귀속불명 처리
       if(_CAPA_DEALER_RE.test(String(owner))) pendMo[mo_].dealer+=amt; else pendMo[mo_].direct+=amt;
     });
-    var _imDevMo=_im.devMo||{}, _imConsMo=_im.consMo||{};
-    for(var _pm2=1;_pm2<=12;_pm2++){ pendMo[_pm2].devUnk+=Number(_imDevMo[_pm2])||0; pendMo[_pm2].cons+=Number(_imConsMo[_pm2])||0; }   // 일보 장비분은 귀속처 정보가 없어 대리점/직판에 못 나눔 → 전체에만
+    var _imConsMo=_im.consMo||{};
+    for(var _pm2=1;_pm2<=12;_pm2++){ pendMo[_pm2].cons+=Number(_imConsMo[_pm2])||0; }
+    (ILBO_PEND||[]).forEach(function(r){   // 일보 장비분도 거래처명이 있으면 _repOf로 대리점/직판 귀속 시도(예전엔 무조건 귀속불명 처리했음)
+      if(typeof _pendIsCons==='function' && _pendIsCons(r)) return;   // 소모품은 위 _imConsMo에서 이미 반영
+      var _d3=String(r.expectedDate||''); if(_d3.slice(0,4)!=='2026') return;
+      var _mo3=parseInt(_d3.slice(5,7),10); if(!_mo3) return;
+      var _amt3=Number(r.amount)||0; if(!_amt3) return;
+      var _owner3=(typeof _repOf==='function'?_repOf(r.customer||''):'')||'';
+      if(!_owner3){ pendMo[_mo3].devUnk+=_amt3; return; }   // 담당자 등록 자체가 없는 거래처만 귀속불명으로 남김
+      if(_CAPA_DEALER_RE.test(String(_owner3))) pendMo[_mo3].dealer+=_amt3; else pendMo[_mo3].direct+=_amt3;
+    });
     var _pendMaxM=0; for(var _cm=1;_cm<=12;_cm++){ var _t=pendMo[_cm].dealer+pendMo[_cm].direct+pendMo[_cm].cons+pendMo[_cm].devUnk; if(_t>0) _pendMaxM=_cm; }
     var _dataCap=(typeof _dataMaxMonth==='function')?_dataMaxMonth():12;
     var capM=Math.min(_dataCap, Math.max(lm,_pendMaxM));
