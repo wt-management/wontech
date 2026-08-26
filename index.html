@@ -763,6 +763,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <button class="anatab" data-sub="cons-hospitals" onclick="showPage('cons-hospitals')"><i class="bi bi-building-check"></i>병원별</button>
       <button class="anatab" data-sub="region" onclick="showPage('region')"><i class="bi bi-geo-alt"></i>지역별</button>
       <button class="anatab" data-sub="capa" onclick="showPage('capa')"><i class="bi bi-speedometer2"></i>Capa 분석</button>
+      <button class="anatab" data-sub="dealer-diag" onclick="showPage('dealer-diag')"><i class="bi bi-shop-window"></i>대리점 진단</button>
     </div>
     <div class="wt-mast">
       <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-geo-alt me-2"></i>지역별 매출 분석 <span style="font-size:12px;font-weight:400;color:#64748b">시도 · 구군</span></div></div>
@@ -1707,6 +1708,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <button class="anatab" data-sub="cons-hospitals" onclick="showPage('cons-hospitals')"><i class="bi bi-building-check"></i>병원별</button>
       <button class="anatab" data-sub="region" onclick="showPage('region')"><i class="bi bi-geo-alt"></i>지역별</button>
       <button class="anatab" data-sub="capa" onclick="showPage('capa')"><i class="bi bi-speedometer2"></i>Capa 분석</button>
+      <button class="anatab" data-sub="dealer-diag" onclick="showPage('dealer-diag')"><i class="bi bi-shop-window"></i>대리점 진단</button>
     </div>
     <div class="wt-mast">
       <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-building-check me-2"></i>병원별 영업 인텔리전스</div>
@@ -1862,6 +1864,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <button class="anatab" data-sub="cons-hospitals" onclick="showPage('cons-hospitals')"><i class="bi bi-building-check"></i>병원별</button>
       <button class="anatab" data-sub="region" onclick="showPage('region')"><i class="bi bi-geo-alt"></i>지역별</button>
       <button class="anatab" data-sub="capa" onclick="showPage('capa')"><i class="bi bi-speedometer2"></i>Capa 분석</button>
+      <button class="anatab" data-sub="dealer-diag" onclick="showPage('dealer-diag')"><i class="bi bi-shop-window"></i>대리점 진단</button>
     </div>
     <div class="wt-mast">
       <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-person-badge me-2"></i>담당자별 매출 현황</div><div style="font-size:11.5px;color:#94a3b8;margin-top:3px">담당자·대리점 실적은 <b style="color:#64748b">장비 기준</b> · 소모품은 담당자가 없어 <b style="color:#64748b">합계 매출에만 반영</b> → 합계 = 종합 전체와 일치</div></div>
@@ -1918,6 +1921,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <button class="anatab" data-sub="cons-hospitals" onclick="showPage('cons-hospitals')"><i class="bi bi-building-check"></i>병원별</button>
       <button class="anatab" data-sub="region" onclick="showPage('region')"><i class="bi bi-geo-alt"></i>지역별</button>
       <button class="anatab" data-sub="capa" onclick="showPage('capa')"><i class="bi bi-speedometer2"></i>Capa 분석</button>
+      <button class="anatab" data-sub="dealer-diag" onclick="showPage('dealer-diag')"><i class="bi bi-shop-window"></i>대리점 진단</button>
     </div>
     <div class="wt-mast">
       <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-speedometer2 me-2"></i>Capa 달성 분석</div><div id="capa-subtitle" style="font-size:11.5px;color:#94a3b8;margin-top:3px">월 Capa(1~6월 평균 기준) 대비 <b style="color:#64748b">채널·담당자별 달성/부진</b>을 진단</div></div>
@@ -1935,6 +1939,21 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       <span id="capa-period-note" style="font-size:11.5px;color:#d97706;font-weight:600"></span>
     </div>
     <div id="capa-view"></div>
+  </div>
+
+  <!-- 대리점 진단 -->
+  <div id="page-dealer-diag" class="page">
+    <div class="ana-tabs">
+      <button class="anatab" data-sub="device-reps" onclick="showPage('device-reps')"><i class="bi bi-person-badge"></i>담당자별</button>
+      <button class="anatab" data-sub="cons-hospitals" onclick="showPage('cons-hospitals')"><i class="bi bi-building-check"></i>병원별</button>
+      <button class="anatab" data-sub="region" onclick="showPage('region')"><i class="bi bi-geo-alt"></i>지역별</button>
+      <button class="anatab" data-sub="capa" onclick="showPage('capa')"><i class="bi bi-speedometer2"></i>Capa 분석</button>
+      <button class="anatab" data-sub="dealer-diag" onclick="showPage('dealer-diag')"><i class="bi bi-shop-window"></i>대리점 진단</button>
+    </div>
+    <div class="wt-mast">
+      <div><div class="kick">WONTECH SALES</div><div class="t"><i class="bi bi-shop-window me-2"></i>대리점 진단</div><div style="font-size:11.5px;color:#94a3b8;margin-top:3px">대리점별 <b style="color:#64748b">상반기 평균 대비 7·8월 라인업 변화 · 거래처별 원인(CDU 사유·경쟁사)</b>을 한 화면에</div></div>
+    </div>
+    <div id="dealer-diag-view"></div>
   </div>
 
   <!-- 장비별 판매현황 -->
@@ -3271,7 +3290,7 @@ function showPage(name, el, noPush) {
   // 담당자별 분석=파트장/관리자, 현황판=파트장/관리자+영업전략파트 (그 외 팀원 → 종합현황)
   if(name==='device-reps' && typeof _isMgr!=='undefined' && !_isMgr){ name='sales-overview'; el=null; }
   if(name==='dashboard'){ name='sales-overview'; el=null; }   // 현황판 메뉴 제거됨 → 종합으로
-  if((name==='cons-hospitals'||name==='region'||name==='capa') && typeof _isMgr!=='undefined' && !_isMgr){ name='sales-overview'; el=null; }
+  if((name==='cons-hospitals'||name==='region'||name==='capa'||name==='dealer-diag') && typeof _isMgr!=='undefined' && !_isMgr){ name='sales-overview'; el=null; }
   sessionStorage.setItem('wt_page', name);
   if(name!=='schedule'){ try{ _schDayFromMonth=false; _schDrillSnap=null; _schOverdueOnly=false; _schDoneOnly=false; }catch(e){} }
   if(!noPush && !(history.state && history.state.page===name)) history.pushState({page: name}, '', location.href.split('#')[0] + '#' + name);   // 같은 페이지 중복 push 금지(재클릭 시 엔트리 누적 방지)
@@ -3282,7 +3301,7 @@ function showPage(name, el, noPush) {
   else if(!['logs','users','pipeline','performance'].includes(name) && name!=='sales-overview'){ return showPage('sales-overview', null, noPush); }
   if(el) el.classList.add('active');
   else { const links = document.querySelectorAll('.nav-link');
-    const _navLbl={'sales-overview':'종합',dashboard:'현황판',sales:'수주관리',quotes:'견적서/ROI',schedule:'일정',cdu:'CDU',roi:'견적서/ROI · ROI 계산기',speech:'Sales Speech',customers:'고객사',equipments:'장비',logs:'상담일지',products:'제품',consumables:'소모품 매출','cons-hospitals':'병원별','device-sales':'제품 매출','device-model':'장비별 판매현황','device-reps':'담당자별',region:'지역별 분석',pending:'회계 미반영 매출','cons-accounts':'거래처'}[name]||'';
+    const _navLbl={'sales-overview':'종합',dashboard:'현황판',sales:'수주관리',quotes:'견적서/ROI',schedule:'일정',cdu:'CDU',roi:'견적서/ROI · ROI 계산기',speech:'Sales Speech',customers:'고객사',equipments:'장비',logs:'상담일지',products:'제품',consumables:'소모품 매출','cons-hospitals':'병원별','device-sales':'제품 매출','device-model':'장비별 판매현황','device-reps':'담당자별',region:'지역별 분석','dealer-diag':'대리점 진단',pending:'회계 미반영 매출','cons-accounts':'거래처'}[name]||'';
     if(_navLbl) links.forEach(l=>{ if(l.textContent.trim().includes(_navLbl)) l.classList.add('active'); }); }
   try{ var _GRP={'nav-analysis':['device-reps','cons-hospitals','region','capa'],'nav-custequip':['customers','equipments'],'nav-salesmix':['consumables','device-sales']};
     var _gid=null; for(var _k in _GRP){ if(_GRP[_k].indexOf(name)>=0){ _gid=_k; break; } }
@@ -3311,6 +3330,7 @@ function showPage(name, el, noPush) {
   else if(name==='region') renderRegion();
   else if(name==='capa') renderCapa();
   else if(name==='device-model') renderDeviceModel();
+  else if(name==='dealer-diag') renderDealerDiag();
   else if(name==='pending') _loadIlboPending();
   else if(name==='feedback') renderFeedbackPage();
 }
@@ -12569,6 +12589,105 @@ function renderCapa(){
       +chCard('bi-person-badge','#2563eb','장비 직판 채널 · 영업 담당',sum.direct,CAPA.direct,_pendGapNote(periodPendDirect)+ctbl(directs.filter(function(e){return !NOISE.test(e.name)&&!_CAPA_EXCL_RE.test(e.name);}),CAPA.direct,'담당자'))
       +chCard('bi-capsule','#0d9488','소모품 채널',sum.cons,CAPA.cons,consBody);
   }catch(e){ host.innerHTML='<div class="card p-3" style="color:#dc2626">Capa 분석 로드 오류</div>'; console.warn('capa',e); }
+}
+// ── 대리점 진단 — 대리점별 상반기 평균 대비 7·8월(회계반영분) 변화 + 거래처별 CDU 사유·경쟁사 결합 ──
+function renderDealerDiag(){
+  var host=document.getElementById('dealer-diag-view'); if(!host) return;
+  try{
+    var W=function(v){ return (v/1e8).toFixed(1); };
+    var esc=(typeof _dvEsc==='function')?_dvEsc:function(s){return String(s==null?'':s);};
+    var col=function(g){ return g==null?'#94a3b8':g>=0?'#16a34a':'#dc2626'; };
+    var lm=(typeof _lastAcctMonth==='function')?_lastAcctMonth():7; if(lm<1)lm=1;
+    var h1EndM=Math.min(lm,6), h1n=Math.max(1,h1EndM), nH2=Math.max(0,lm-h1EndM);
+
+    // 1) CDU 방문 인덱스(병원명 정규화 키) — 최근 사유·조치·경쟁사·방문일을 1회 스캔으로 확보
+    var cduIdx={};
+    (typeof _cduVisits==='function'?_cduVisits():[]).forEach(function(v){
+      if(v.status==='planned') return;
+      var key=(typeof _cduNorm==='function'?_cduNorm(v.custName||''):String(v.custName||'').toLowerCase().replace(/\s+/g,'')); if(!key) return;
+      var cur=cduIdx[key];
+      if(!cur||String(v.date||'')>String(cur.date||'')){
+        var comps=(v.competitor||'').split(/[\/,·]/).map(function(x){return x.trim();}).filter(function(x){return x&&!/^(n|a|na|없음|해당없음|미정|-)$/i.test(x);});
+        cduIdx[key]={date:v.date||'',reason:(v.noBuyReason||'').trim(),action:(v.action||'').trim(),competitor:comps.join('·')};
+      }
+    });
+    var cduOf=function(hn){ return cduIdx[(typeof _cduNorm==='function'?_cduNorm(hn):String(hn).toLowerCase().replace(/\s+/g,''))]||null; };
+
+    // 2) 대리점별 소속 병원 그룹핑(담당=_repOf가 대리점 정규식과 일치하는 병원)
+    var dealers={};
+    Object.keys(DEVICE.hospitals||{}).forEach(function(hn){
+      var h=DEVICE.hospitals[hn]||{};
+      var owner=(typeof _repOf==='function'?_repOf(hn):'')||(typeof _sN==='function'?_sN(h.sales||''):(h.sales||''));
+      owner=String(owner||'').trim();
+      if(!_CAPA_DEALER_RE.test(owner)) return;
+      if(!dealers[owner]) dealers[owner]=[];
+      dealers[owner].push(hn);
+    });
+    var dealerNames=Object.keys(dealers);
+    if(!dealerNames.length){ host.innerHTML='<div class="card p-3" style="color:#94a3b8">대리점 데이터가 없습니다</div>'; return; }
+
+    // 3) 대리점별 계산: 병원별 상반기평균/7~lm월 합, 라인업별(6종+기타) 동일 비교
+    var CATS2=_DEVMOD_CATS.concat([{id:'etc',label:'기타',color:'#94a3b8'}]);
+    var build=function(dn){
+      var hosps=dealers[dn];
+      var catH1={}, catH2={}; CATS2.forEach(function(c){ catH1[c.id]=0; catH2[c.id]=0; });
+      var dH1=0, dH2=0, hospStat=[];
+      hosps.forEach(function(hn){
+        var h=DEVICE.hospitals[hn]||{}, h1=0, h2=0;
+        (h.txns2026||[]).forEach(function(t){
+          var mo=+t[0]||0, amt=Number(t[4])||0, prod=t[3]||''; if(mo<1||mo>12) return;
+          if(_devmodExcluded(prod)) return;
+          var cid=_devmodCat(prod);
+          if(mo<=h1EndM){ h1+=amt; catH1[cid]+=amt; } else if(mo<=lm){ h2+=amt; catH2[cid]+=amt; }
+        });
+        dH1+=h1; dH2+=h2;
+        var h1Avg=h1/h1n, expect=h1Avg*nH2, diff=h2-expect;
+        hospStat.push({name:hn, h1Avg:h1Avg, h2:h2, expect:expect, diff:diff, cdu:cduOf(hn)});
+      });
+      hospStat.sort(function(a,b){ return a.diff-b.diff; });   // 급감(마이너스 큰 순)부터
+      var dH1Avg=dH1/h1n, dExpect=dH1Avg*nH2, dDiff=dH2-dExpect, dPct=dExpect>0?(dH2/dExpect-1)*100:null;
+      var catDiag=CATS2.map(function(c){ var h1avg=catH1[c.id]/h1n, exp=h1avg*nH2, act=catH2[c.id], d=act-exp; return {c:c,h1avg:h1avg,act:act,d:d,pct:exp>0?(act/exp-1)*100:null}; })
+        .filter(function(x){ return x.h1avg>0||x.act>0; }).sort(function(a,b){ return a.d-b.d; });
+      return {name:dn, hosps:hosps, dH1Avg:dH1Avg, dH2:dH2, dExpect:dExpect, dDiff:dDiff, dPct:dPct, hospStat:hospStat, catDiag:catDiag};
+    };
+    var results=dealerNames.map(build).sort(function(a,b){ return a.dDiff-b.dDiff; });   // 제일 부진한 대리점부터
+
+    // 4) 렌더
+    var reasonBadge=function(cdu){
+      if(!cdu) return '<span style="font-size:10px;color:#cbd5e1">CDU 기록 없음</span>';
+      var parts=[];
+      if(cdu.reason) parts.push('<span style="font-size:10px;font-weight:700;color:#b45309;background:#fffbeb;border-radius:4px;padding:1px 6px">'+esc(cdu.reason)+'</span>');
+      if(cdu.competitor) parts.push('<span style="font-size:10px;font-weight:700;color:#be123c;background:#fff1f2;border-radius:4px;padding:1px 6px">경쟁 '+esc(cdu.competitor)+'</span>');
+      parts.push('<span style="font-size:9.5px;color:#94a3b8">최근방문 '+esc(cdu.date||'-')+'</span>');
+      return parts.join(' ');
+    };
+    var hospRow=function(x){
+      var g=x.expect>0?(x.h2/x.expect-1)*100:null;
+      return '<tr style="border-top:1px solid #f1f5f9"><td style="padding:6px 8px;font-weight:700;font-size:12px;color:#0f172a;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(x.name)+'">'+esc(x.name)+'</td>'
+        +'<td style="padding:6px 8px;text-align:right;font-size:11px;color:#94a3b8;white-space:nowrap">'+W(x.h1Avg)+'억/월</td>'
+        +'<td style="padding:6px 8px;text-align:right;font-size:12px;font-weight:700;white-space:nowrap">'+W(x.h2)+'억</td>'
+        +'<td style="padding:6px 8px;text-align:right;font-size:11px;font-weight:800;color:'+col(g)+';white-space:nowrap">'+(g==null?'-':(g>=0?'▲+':'▼')+Math.abs(g).toFixed(0)+'%')+'</td>'
+        +'<td style="padding:6px 8px">'+reasonBadge(x.cdu)+'</td></tr>';
+    };
+    var dealerCardHtml=function(r){
+      var worst=r.catDiag.slice(0,2).filter(function(x){ return x.d<0; });
+      var worstBadge=worst.length?worst.map(function(x){ return '<span style="font-size:10.5px;font-weight:700;color:#dc2626;background:#fef2f2;border-radius:6px;padding:2px 8px;margin-right:4px">'+esc(x.c.label.replace(/\(.*\)/,''))+' '+(x.pct==null?'':(x.pct>=0?'▲':'▼')+Math.abs(x.pct).toFixed(0)+'%')+'</span>';}).join(''):'<span style="font-size:10.5px;color:#94a3b8">뚜렷한 특정 라인업 쏠림 없음</span>';
+      var rows=r.hospStat.filter(function(x){ return x.h1Avg>0||x.h2>0; }).slice(0,10).map(hospRow).join('');
+      var noCdu=r.hospStat.filter(function(x){ return !x.cdu&&(x.h1Avg>0); }).length;
+      return '<div class="card p-3 mb-3">'
+        +'<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px"><span style="font-size:14px;font-weight:800">'+esc(r.name)+'</span><span style="font-size:11px;color:#94a3b8">담당 병원 '+r.hosps.length+'곳</span></div>'
+        +'<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:8px"><span style="font-size:11px;color:#64748b">상반기 월평균 <b style="color:#1c2534">'+W(r.dH1Avg)+'억</b></span><span style="font-size:11px;color:#64748b">→ '+(h1EndM+1)+'~'+lm+'월 합 <b style="color:#1c2534">'+W(r.dH2)+'억</b></span><span style="font-size:12px;font-weight:800;color:'+col(r.dPct)+'">'+(r.dPct==null?'-':(r.dPct>=0?'▲+':'▼')+Math.abs(r.dPct).toFixed(0)+'%')+'</span><span style="font-size:10.5px;color:#94a3b8">(상반기 페이스 대비 '+(r.dDiff>=0?'+':'')+W(r.dDiff)+'억)</span></div>'
+        +'<div style="margin-bottom:10px">'+worstBadge+'</div>'
+        +(rows?'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;table-layout:fixed"><colgroup><col><col style="width:80px"><col style="width:80px"><col style="width:64px"><col style="width:260px"></colgroup>'
+          +'<thead><tr style="font-size:10px;color:#94a3b8;font-weight:700;border-bottom:2px solid #eef2f7"><th style="padding:4px 8px;text-align:left">거래처</th><th style="padding:4px 8px;text-align:right">상반기 평균</th><th style="padding:4px 8px;text-align:right">'+(h1EndM+1)+'~'+lm+'월</th><th style="padding:4px 8px;text-align:right">증감</th><th style="padding:4px 8px;text-align:left">CDU 최근 사유·경쟁사</th></tr></thead>'
+          +'<tbody>'+rows+'</tbody></table></div>'
+          +(noCdu>0?'<div style="margin-top:6px;font-size:10.5px;color:#94a3b8">거래처 '+noCdu+'곳은 CDU 방문 기록이 없어 사유를 알 수 없습니다 — 방문해서 확인이 필요합니다</div>':'')
+          :'<div style="font-size:12px;color:#94a3b8;padding:6px 2px">거래처 매출 데이터가 없습니다</div>')
+        +'</div>';
+    };
+    host.innerHTML='<div style="font-size:11px;color:#94a3b8;margin-bottom:10px"><i class="bi bi-info-circle me-1"></i>회계반영 기준입니다(미반영 예정·일보 미포함) · 대리점 부진이 큰 순서로 정렬 · 거래처는 하락폭 큰 순 상위 10곳까지만 표시</div>'
+      +results.map(dealerCardHtml).join('');
+  }catch(e){ host.innerHTML='<div class="card p-3" style="color:#dc2626">대리점 진단 로드 오류</div>'; console.warn('dealer-diag',e); }
 }
 // ── 장비별 판매현황 — 라인업 6종 분류(제품명 정확한 코드값을 몰라 키워드 매칭. '기타'로 빠지는 게 있으면 하단 목록에서 확인 가능) ──
 var _DEVMOD_CATS=[
