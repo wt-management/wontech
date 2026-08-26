@@ -12541,11 +12541,12 @@ function renderCapa(){
         +'</div>'
         +'<div style="font-size:9.5px;color:#94a3b8;margin-top:2px">실적 '+W(a)+'억 / Capa '+W(cap)+'억</div>'
         +'</div>'; };
-    var moTotal=last.dealer+last.direct+last.cons+((pendMo[toM]&&pendMo[toM].devUnk)||0);
+    var moDevUnk=(pendMo[toM]&&pendMo[toM].devUnk)||0;
+    var moTotal=last.dealer+last.direct+last.cons+moDevUnk;
     var moDiff='<div class="card p-3 mb-3"><div style="font-size:13.5px;font-weight:800;margin-bottom:10px"><i class="bi bi-calendar-check me-1" style="color:#e11d48"></i>'+toM+'월 단월 Capa 대비 과부족</div>'
       +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">'
       +moTile('대리점',last.dealer,CAPA.dealer)+moTile('직판',last.direct,CAPA.direct)+moTile('소모품',last.cons,CAPA.cons)+moTile('전체',moTotal,CAPA_TOT)
-      +'</div></div>';
+      +'</div>'+(moDevUnk>0?'<div style="margin-top:8px;font-size:10.5px;color:#94a3b8">전체 = 대리점+직판+소모품 + <span style="color:#7c3aed;font-weight:700">귀속불명 미반영(일보) +'+W(moDevUnk)+'억</span> — 대리점·직판 어느 쪽인지 알 수 없는 일보 장비분이라 전체에만 더했습니다</div>':'')+'</div>';
 
     // 2) 종합 진단
     var chArr=[['대리점',sum.dealer,CAPA.dealer],['직판',sum.direct,CAPA.direct],['소모품',sum.cons,CAPA.cons]];
