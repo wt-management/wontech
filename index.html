@@ -6665,6 +6665,27 @@ function _decideClaim(btn, idx, approve){
   c.decidedBy=admin; c.decidedAt=new Date().toISOString().slice(0,10);
   _saveClaims().then(function(){ try{ renderDevReps(); }catch(e){} openClaimReview(); showToast(approve?(c.hosp+' → '+c.by+' 담당으로 정정됨'):(c.hosp+' 신청 반려'), true); });
 }
+// 담당자별 분석 상세모달의 거래처 목록에서 파트장이 바로 담당 재배정(승인 절차 없이 즉시 반영) — 요청/승인 두 단계를 안 거치고 파트장이 직접 보정할 때 사용
+function _quickReassign(hosp, curRep){
+  if(!(typeof _isMgr!=='undefined'&&_isMgr)){ alert('파트장/관리자만 사용할 수 있습니다.'); return; }
+  var admin=((typeof currentUserName==='function'?currentUserName():'')||'').trim();
+  var cur=_repOf(hosp)||curRep||'미배정';
+  var next=prompt(hosp+' — 새 담당자명을 입력하세요\n(현재: '+cur+')', cur);
+  if(next==null) return;   // 취소
+  next=next.trim();
+  if(!next||next===cur){ return; }
+  var hi=HOSP_INFO[hosp]||(HOSP_INFO[hosp]={});
+  var prev=(hi.mgr||'').trim();
+  hi.mgrHistory=(hi.mgrHistory||[]).concat([{mgr:next, prev:prev, from:new Date().toISOString().slice(0,10), by:admin, reason:'담당자별 분석에서 직접 정정'}]);
+  hi.mgr=next; hi.updatedBy=admin; hi.updatedAt=new Date().toISOString().slice(0,10);
+  _sb.from('cons_cache').upsert({key:'hospital_info',data:HOSP_INFO},{onConflict:'key'}).then(function(r){
+    if(r&&r.error){ showToast('저장 실패: '+r.error.message, true, true); return; }
+    _KW_SORTED=null;
+    showToast(hosp+' → '+next+' 담당으로 정정됨', true);
+    try{ renderDevReps(); }catch(e){}
+    try{ if(typeof showDevRepDetail==='function' && document.getElementById('devrep-modal')&&document.getElementById('devrep-modal').style.display!=='none'){ showDevRepDetail(curRep); } }catch(e){}
+  });
+}
 // 내 실적 모달: 미배정·대리점 매출 검색 필터(병원·담당·장비)
 function _myPerfFilter(){
   var el=document.getElementById('myperf-claim-q'); if(!el) return;
@@ -13768,17 +13789,18 @@ function showDevRepDetail(repName) {
   Object.entries(DEVICE.hospitals||{}).forEach(([hn,h])=>{ [["txns2026",2026],["txns2025",2025]].forEach(([tk,y])=>{ (h[tk]||[]).forEach(t=>{ const mo=+t[0]; if(_ownerOfTxn(hn,h,y,mo)!==repName) return; const amt=Number(t[4]||0), key=y+"-"+mo; const o=_hAgg[hn]||(_hAgg[hn]={cur:0,pre:0,topProd:h.topProd||'',lastDate:h.lastDate||''}); if(_spanKeysR[key]) o.cur+=amt; if(_preKeysR[key]) o.pre+=amt; }); }); });
   const hospList = Object.entries(_hAgg).map(([name,o])=>({name,cur:o.cur,pre:o.pre,topProd:o.topProd,lastDate:o.lastDate})).filter(h=>h.cur>0||h.pre>0).sort((a,b)=>String(b.lastDate||'').localeCompare(String(a.lastDate||'')));
 
+  const _canReassign = (typeof _isMgr!=='undefined'&&_isMgr);
   const hospHtml = hospList.length
     ? `<table class="table table-sm mb-0">
         <thead class="table-light" style="position:sticky;top:0"><tr>
-          <th>거래처명</th><th class="text-end">전년YTD</th><th class="text-end">당해YTD</th><th>주력제품</th><th class="text-end">최근거래</th>
+          <th>거래처명</th><th class="text-end">전년YTD</th><th class="text-end">당해YTD</th><th>주력제품</th><th class="text-end">최근거래</th>${_canReassign?'<th class="text-center">담당</th>':''}
         </tr></thead>
         <tbody>${hospList.map(h=>`<tr style="cursor:pointer" onclick="_drillHospOver('${_jsArg(h.name)}')" title="클릭하면 병원 상세">
           <td style="font-size:12px;font-weight:600;color:#0f172a">${h.name} <i class="bi bi-search" style="font-size:8px;color:#cbd5e1"></i></td>
           <td class="text-end" style="font-size:11px;color:#64748b">${fmtW(h.pre)}</td>
           <td class="text-end" style="font-size:12px;font-weight:600;color:#1d4ed8">${fmtW(h.cur)}</td>
           <td style="font-size:11px;color:#6b7280">${h.topProd}</td>
-          <td class="text-end" style="font-size:11px;color:#64748b">${h.lastDate}</td>
+          <td class="text-end" style="font-size:11px;color:#64748b">${h.lastDate}</td>${_canReassign?`<td class="text-center" onclick="event.stopPropagation()"><button class="btn btn-sm btn-outline-secondary" style="font-size:10.5px;padding:1px 7px" onclick="_quickReassign('${_jsArg(h.name)}','${_jsArg(repName)}')" title="담당 재배정(실적 정정)"><i class="bi bi-pencil-square"></i> 정정</button></td>`:''}
         </tr>`).join('')}</tbody>
       </table>`
     : '<div class="text-muted p-2" style="font-size:12px">해당 기간 거래처 없음</div>';
