@@ -3152,7 +3152,7 @@ async function init() {
 }
 
 // 런처 카테고리(키→그룹). 여기 없는 신규 키는 '기타'로 자동 표시(registry 자동반영 유지)
-const _LAUNCH_GRPS=[['매출 현황',['total','korea','intl']],['해외법인',['japan','us','th']],['영업전략파트',['kor_sales','daily','equip','ar','export']]];
+const _LAUNCH_GRPS=[['매출 현황',['total','korea','intl']],['해외법인',['japan','us','th']],['영업전략파트',['kor_sales','daily','portfolio','equip','ar','export']]];
 function _buildLauncherCardsHTML(access) {
   // site_registry 기반 — 신규 사이트는 DB row 추가만으로 여기 자동 반영됨
   const cardStyle = 'background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(12px);border-radius:18px;width:222px;cursor:pointer;transition:transform .18s,box-shadow .18s,border-color .18s;overflow:hidden';
