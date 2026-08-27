@@ -13087,33 +13087,46 @@ function saveStagNotes(){
   DB.save('logs').then(function(){ if(msg) msg.innerHTML='<span style="color:#16a34a"><i class="bi bi-check-circle"></i> 저장됨 · '+by+' · '+rec.updatedAt+'</span>'; });
 }
 // ── 근거자료 드릴다운(공용 dashDetailModal 재사용) — 8개 가설별 그래프 ──
+function _hasDatalabels(){ return !!window.ChartDataLabels; }
+function _ensureDatalabels(cb){
+  if(_hasDatalabels()){ cb(); return; }
+  var ex=document.getElementById('_datalabels-js');
+  if(ex){ ex.addEventListener('load', cb); ex.addEventListener('error', cb); return; }
+  var s=document.createElement('script'); s.id='_datalabels-js'; s.src='https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js';
+  s.onload=cb; s.onerror=cb; document.head.appendChild(s);
+}
 function _stagChartCfg(hypId){
   var d=window._stagChartData; if(!d) return null;
   var W=function(v){ return +((v/1e8).toFixed(2)); };
   var lm=d.lm, h1EndM=d.h1EndM;
   var months=[]; for(var mm=1;mm<=lm;mm++) months.push(mm+'월');
+  var dlBase={color:'#334155',font:{size:9,weight:'700'},anchor:'end',align:'top',offset:2};
+  var dlOff={display:false};
+  var pctFmt=function(v){ return v==null?'':((v>=0?'+':'')+v+'%'); };
+  var amtFmt=function(v){ return v==null?'':v+'억'; };
+  var cntFmt=function(v){ return v==null?'':v+'곳'; };
   if(hypId==='kissxm'||hypId==='titan'){
     var moAmt=hypId==='kissxm'?d.kissXmMoAmt:d.catMoAmt.tightan;
     var arr=[]; for(var m1=1;m1<=lm;m1++) arr.push(W(moAmt[m1]||0));
     var h1n=Math.max(1,h1EndM), h1sum=0; for(var m2=1;m2<=h1EndM;m2++) h1sum+=(moAmt[m2]||0);
     var h1avg=W(h1sum/h1n);
     return {type:'bar', data:{labels:months, datasets:[
-      {label:(hypId==='kissxm'?'Kiss/XM 매출(억)':'울트라스킨 타이탄 매출(억)'), data:arr, backgroundColor:months.map(function(_,i){return i<h1EndM?'rgba(37,99,235,.35)':'rgba(124,58,237,.85)';}), borderRadius:4},
-      {label:'상반기 월평균', data:months.map(function(){return h1avg;}), type:'line', borderColor:'#94a3b8', borderDash:[5,3], pointRadius:0, borderWidth:2}
-    ]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}}},scales:{y:{ticks:{callback:function(v){return v+'억';}}}}}};
+      {label:(hypId==='kissxm'?'Kiss/XM 매출(억)':'울트라스킨 타이탄 매출(억)'), data:arr, backgroundColor:months.map(function(_,i){return i<h1EndM?'rgba(37,99,235,.35)':'rgba(124,58,237,.85)';}), borderRadius:4, datalabels:{formatter:amtFmt}},
+      {label:'상반기 월평균', data:months.map(function(){return h1avg;}), type:'line', borderColor:'#94a3b8', borderDash:[5,3], pointRadius:0, borderWidth:2, datalabels:dlOff}
+    ]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},datalabels:dlBase},scales:{y:{ticks:{callback:function(v){return v+'억';}}}}}};
   }
   if(hypId==='oligio'){
     var cnt=d.oHospCntMo, arr2=[]; for(var m3=1;m3<=lm;m3++) arr2.push(cnt[m3]||0);
     var h1n2=Math.max(1,h1EndM), h1sum2=0; for(var m4=1;m4<=h1EndM;m4++) h1sum2+=(cnt[m4]||0);
     var h1avg2=+((h1sum2/h1n2).toFixed(1));
     return {type:'bar', data:{labels:months, datasets:[
-      {label:'구매 병원 수', data:arr2, backgroundColor:months.map(function(_,i){return i<h1EndM?'rgba(37,99,235,.35)':'rgba(220,38,38,.75)';}), borderRadius:4},
-      {label:'상반기 월평균', data:months.map(function(){return h1avg2;}), type:'line', borderColor:'#94a3b8', borderDash:[5,3], pointRadius:0, borderWidth:2}
-    ]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}}},scales:{y:{ticks:{callback:function(v){return v+'곳';}}}}}};
+      {label:'구매 병원 수', data:arr2, backgroundColor:months.map(function(_,i){return i<h1EndM?'rgba(37,99,235,.35)':'rgba(220,38,38,.75)';}), borderRadius:4, datalabels:{formatter:cntFmt}},
+      {label:'상반기 월평균', data:months.map(function(){return h1avg2;}), type:'line', borderColor:'#94a3b8', borderDash:[5,3], pointRadius:0, borderWidth:2, datalabels:dlOff}
+    ]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},datalabels:dlBase},scales:{y:{ticks:{callback:function(v){return v+'곳';}}}}}};
   }
   if(hypId==='laser'){
     var cats=[['longpulse','Long pulse','#7c3aed'],['fractional','Fractional','#d97706'],['qsw','Q/SW laser','#dc2626'],['pico','PICO laser','#0891b2']];
-    var datasets=cats.map(function(c){ var mo=d.catMoAmt[c[0]]||{}; var arr=[]; for(var m=1;m<=lm;m++) arr.push(W(mo[m]||0)); return {label:c[1], data:arr, borderColor:c[2], backgroundColor:c[2], fill:false, tension:.25, pointRadius:2}; });
+    var datasets=cats.map(function(c){ var mo=d.catMoAmt[c[0]]||{}; var arr=[]; for(var m=1;m<=lm;m++) arr.push(W(mo[m]||0)); return {label:c[1], data:arr, borderColor:c[2], backgroundColor:c[2], fill:false, tension:.25, pointRadius:2, datalabels:{color:c[2],font:{size:8,weight:'700'},formatter:amtFmt,align:'top',offset:3}}; });
     return {type:'line', data:{labels:months, datasets:datasets}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}}},scales:{y:{ticks:{callback:function(v){return v+'억';}}}}}};
   }
   if(hypId==='cons'||hypId==='season'){
@@ -13121,22 +13134,22 @@ function _stagChartCfg(hypId){
     var arr26=[]; for(var m6=1;m6<=12;m6++) arr26.push(m6<=lm?W(d.consMo26[m6]||0):null);
     var arr25=[]; for(var m7=1;m7<=12;m7++) arr25.push(W(d.consMo25[m7]||0));
     return {type:'bar', data:{labels:labels12, datasets:[
-      {label:'올해(2026)', data:arr26, backgroundColor:'rgba(37,99,235,.75)', borderRadius:4},
-      {label:'작년(2025)', data:arr25, type:'line', borderColor:'#94a3b8', borderDash:[5,3], pointRadius:2, borderWidth:2}
-    ]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}}},scales:{y:{ticks:{callback:function(v){return v+'억';}}}}}};
+      {label:'올해(2026)', data:arr26, backgroundColor:'rgba(37,99,235,.75)', borderRadius:4, datalabels:{formatter:amtFmt}},
+      {label:'작년(2025)', data:arr25, type:'line', borderColor:'#94a3b8', borderDash:[5,3], pointRadius:2, borderWidth:2, datalabels:{color:'#94a3b8',font:{size:8,weight:'700'},formatter:amtFmt,align:'bottom',offset:3}}
+    ]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},datalabels:dlBase},scales:{y:{ticks:{callback:function(v){return v+'억';}}}}}};
   }
   if(hypId==='dealer'){
     var rs=d.dealerRes;
     return {type:'bar', data:{labels:rs.map(function(x){return x.name;}), datasets:[
-      {label:'상반기 페이스 대비 증감%', data:rs.map(function(x){return x.pct==null?0:+x.pct.toFixed(0);}), backgroundColor:rs.map(function(x){return (x.pct!=null&&x.pct<0)?'#dc2626':'#16a34a';}), borderRadius:4}
-    ]}, options:{indexAxis:'y', responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:function(v){return v+'%';}}}}}};
+      {label:'상반기 페이스 대비 증감%', data:rs.map(function(x){return x.pct==null?0:+x.pct.toFixed(0);}), backgroundColor:rs.map(function(x){return (x.pct!=null&&x.pct<0)?'#dc2626':'#16a34a';}), borderRadius:4, datalabels:{formatter:pctFmt}}
+    ]}, options:{indexAxis:'y', responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{color:'#334155',font:{size:10,weight:'700'},anchor:'end',align:'right'}},scales:{x:{ticks:{callback:function(v){return v+'%';}}}}}};
   }
   if(hypId==='competitor'){
     var ca=d.compArr.slice(0,10);
     if(!ca.length) return null;
     return {type:'bar', data:{labels:ca.map(function(x){return x[0];}), datasets:[
-      {label:'노출 건수', data:ca.map(function(x){return x[1];}), backgroundColor:'#ef4444', borderRadius:4}
-    ]}, options:{indexAxis:'y', responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}};
+      {label:'노출 건수', data:ca.map(function(x){return x[1];}), backgroundColor:'#ef4444', borderRadius:4, datalabels:{formatter:function(v){return v+'건';}}}
+    ]}, options:{indexAxis:'y', responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{color:'#334155',font:{size:10,weight:'700'},anchor:'end',align:'right'}}}};
   }
   return null;
 }
@@ -13152,11 +13165,12 @@ function _stagDrill(hypId){
     body.innerHTML='<div style="position:relative;height:'+h+'px"><canvas id="stag-drill-chart"></canvas></div>';
   }
   new bootstrap.Modal(document.getElementById('dashDetailModal')).show();
-  if(cfg) requestAnimationFrame(function(){
+  if(cfg) _ensureDatalabels(function(){ requestAnimationFrame(function(){
     var ctx=document.getElementById('stag-drill-chart'); if(!ctx) return;
     if(_stagDrillChart){ _stagDrillChart.destroy(); _stagDrillChart=null; }
+    if(window.ChartDataLabels) cfg.plugins=[window.ChartDataLabels];
     _stagDrillChart=new Chart(ctx, cfg);
-  });
+  }); });
 }
 function renderStagSummary(){
   var host=document.getElementById('stag-summary-view'); if(!host) return;
