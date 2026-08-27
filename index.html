@@ -13086,6 +13086,78 @@ function saveStagNotes(){
   var msg=document.getElementById('stag-save-msg'); if(msg) msg.innerHTML='<span style="color:#6b7280">저장 중…</span>';
   DB.save('logs').then(function(){ if(msg) msg.innerHTML='<span style="color:#16a34a"><i class="bi bi-check-circle"></i> 저장됨 · '+by+' · '+rec.updatedAt+'</span>'; });
 }
+// ── 근거자료 드릴다운(공용 dashDetailModal 재사용) — 8개 가설별 그래프 ──
+function _stagChartCfg(hypId){
+  var d=window._stagChartData; if(!d) return null;
+  var W=function(v){ return +((v/1e8).toFixed(2)); };
+  var lm=d.lm, h1EndM=d.h1EndM;
+  var months=[]; for(var mm=1;mm<=lm;mm++) months.push(mm+'월');
+  if(hypId==='kissxm'||hypId==='titan'){
+    var moAmt=hypId==='kissxm'?d.kissXmMoAmt:d.catMoAmt.tightan;
+    var arr=[]; for(var m1=1;m1<=lm;m1++) arr.push(W(moAmt[m1]||0));
+    var h1n=Math.max(1,h1EndM), h1sum=0; for(var m2=1;m2<=h1EndM;m2++) h1sum+=(moAmt[m2]||0);
+    var h1avg=W(h1sum/h1n);
+    return {type:'bar', data:{labels:months, datasets:[
+      {label:(hypId==='kissxm'?'Kiss/XM 매출(억)':'울트라스킨 타이탄 매출(억)'), data:arr, backgroundColor:months.map(function(_,i){return i<h1EndM?'rgba(37,99,235,.35)':'rgba(124,58,237,.85)';}), borderRadius:4},
+      {label:'상반기 월평균', data:months.map(function(){return h1avg;}), type:'line', borderColor:'#94a3b8', borderDash:[5,3], pointRadius:0, borderWidth:2}
+    ]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}}},scales:{y:{ticks:{callback:function(v){return v+'억';}}}}}};
+  }
+  if(hypId==='oligio'){
+    var cnt=d.oHospCntMo, arr2=[]; for(var m3=1;m3<=lm;m3++) arr2.push(cnt[m3]||0);
+    var h1n2=Math.max(1,h1EndM), h1sum2=0; for(var m4=1;m4<=h1EndM;m4++) h1sum2+=(cnt[m4]||0);
+    var h1avg2=+((h1sum2/h1n2).toFixed(1));
+    return {type:'bar', data:{labels:months, datasets:[
+      {label:'구매 병원 수', data:arr2, backgroundColor:months.map(function(_,i){return i<h1EndM?'rgba(37,99,235,.35)':'rgba(220,38,38,.75)';}), borderRadius:4},
+      {label:'상반기 월평균', data:months.map(function(){return h1avg2;}), type:'line', borderColor:'#94a3b8', borderDash:[5,3], pointRadius:0, borderWidth:2}
+    ]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}}},scales:{y:{ticks:{callback:function(v){return v+'곳';}}}}}};
+  }
+  if(hypId==='laser'){
+    var cats=[['longpulse','Long pulse','#7c3aed'],['fractional','Fractional','#d97706'],['qsw','Q/SW laser','#dc2626'],['pico','PICO laser','#0891b2']];
+    var datasets=cats.map(function(c){ var mo=d.catMoAmt[c[0]]||{}; var arr=[]; for(var m=1;m<=lm;m++) arr.push(W(mo[m]||0)); return {label:c[1], data:arr, borderColor:c[2], backgroundColor:c[2], fill:false, tension:.25, pointRadius:2}; });
+    return {type:'line', data:{labels:months, datasets:datasets}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}}},scales:{y:{ticks:{callback:function(v){return v+'억';}}}}}};
+  }
+  if(hypId==='cons'||hypId==='season'){
+    var labels12=[]; for(var m5=1;m5<=12;m5++) labels12.push(m5+'월');
+    var arr26=[]; for(var m6=1;m6<=12;m6++) arr26.push(m6<=lm?W(d.consMo26[m6]||0):null);
+    var arr25=[]; for(var m7=1;m7<=12;m7++) arr25.push(W(d.consMo25[m7]||0));
+    return {type:'bar', data:{labels:labels12, datasets:[
+      {label:'올해(2026)', data:arr26, backgroundColor:'rgba(37,99,235,.75)', borderRadius:4},
+      {label:'작년(2025)', data:arr25, type:'line', borderColor:'#94a3b8', borderDash:[5,3], pointRadius:2, borderWidth:2}
+    ]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}}},scales:{y:{ticks:{callback:function(v){return v+'억';}}}}}};
+  }
+  if(hypId==='dealer'){
+    var rs=d.dealerRes;
+    return {type:'bar', data:{labels:rs.map(function(x){return x.name;}), datasets:[
+      {label:'상반기 페이스 대비 증감%', data:rs.map(function(x){return x.pct==null?0:+x.pct.toFixed(0);}), backgroundColor:rs.map(function(x){return (x.pct!=null&&x.pct<0)?'#dc2626':'#16a34a';}), borderRadius:4}
+    ]}, options:{indexAxis:'y', responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:function(v){return v+'%';}}}}}};
+  }
+  if(hypId==='competitor'){
+    var ca=d.compArr.slice(0,10);
+    if(!ca.length) return null;
+    return {type:'bar', data:{labels:ca.map(function(x){return x[0];}), datasets:[
+      {label:'노출 건수', data:ca.map(function(x){return x[1];}), backgroundColor:'#ef4444', borderRadius:4}
+    ]}, options:{indexAxis:'y', responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}};
+  }
+  return null;
+}
+var _stagDrillChart=null;
+function _stagDrill(hypId){
+  var titleMap={kissxm:'Kiss/XM 월별 매출',oligio:'올리지오 구매 병원 수(월별)',laser:'레이저 라인업별 월별 매출',titan:'울트라스킨 타이탄 월별 매출',cons:'소모품 월별 매출(작년 vs 올해)',season:'소모품 월별 매출(작년 vs 올해, 계절성 확인)',dealer:'대리점별 상반기 페이스 대비 증감',competitor:'CDU 경쟁사 노출 건수'};
+  var t=document.getElementById('dashDetailTitle'); if(t) t.textContent=titleMap[hypId]||'근거자료';
+  var body=document.getElementById('dashDetailBody'); if(!body) return;
+  var cfg=_stagChartCfg(hypId);
+  if(!cfg){ body.innerHTML='<div class="text-center text-muted py-4">표시할 데이터가 없습니다(표본 부족)</div>'; }
+  else {
+    var h=(hypId==='dealer'||hypId==='competitor')?Math.max(220,cfg.data.labels.length*32):280;
+    body.innerHTML='<div style="position:relative;height:'+h+'px"><canvas id="stag-drill-chart"></canvas></div>';
+  }
+  new bootstrap.Modal(document.getElementById('dashDetailModal')).show();
+  if(cfg) requestAnimationFrame(function(){
+    var ctx=document.getElementById('stag-drill-chart'); if(!ctx) return;
+    if(_stagDrillChart){ _stagDrillChart.destroy(); _stagDrillChart=null; }
+    _stagDrillChart=new Chart(ctx, cfg);
+  });
+}
 function renderStagSummary(){
   var host=document.getElementById('stag-summary-view'); if(!host) return;
   try{
@@ -13100,10 +13172,10 @@ function renderStagSummary(){
     var pf=function(v){ return v==null?'-':(v>=0?'+':'')+v.toFixed(0)+'%'; };
     var col=function(g){ return g==null?'#94a3b8':g>=0?'#16a34a':'#dc2626'; };
 
-    // A) 제품명 전수 스캔 — 라인업별(6종) H1평균·H2합·YoY, Kiss/XM 서브
-    var catH1={},catH2={},catYoyCur={},catYoyPrev={};
-    _DEVMOD_CATS.forEach(function(c){catH1[c.id]=0;catH2[c.id]=0;catYoyCur[c.id]=0;catYoyPrev[c.id]=0;});
-    var kissXmH1=0,kissXmH2=0,kissXmYoyCur=0,kissXmYoyPrev=0;
+    // A) 제품명 전수 스캔 — 라인업별(6종) H1평균·H2합·YoY, Kiss/XM 서브 (+ 근거자료 드릴다운용 월별 시계열)
+    var catH1={},catH2={},catYoyCur={},catYoyPrev={},catMoAmt={};
+    _DEVMOD_CATS.forEach(function(c){catH1[c.id]=0;catH2[c.id]=0;catYoyCur[c.id]=0;catYoyPrev[c.id]=0;catMoAmt[c.id]={};for(var mi=1;mi<=lm;mi++)catMoAmt[c.id][mi]=0;});
+    var kissXmH1=0,kissXmH2=0,kissXmYoyCur=0,kissXmYoyPrev=0,kissXmMoAmt={}; for(var mj=1;mj<=lm;mj++) kissXmMoAmt[mj]=0;
     var allProds={}; Object.keys(amtOf(2026)).forEach(function(p){allProds[p]=1;}); Object.keys(amtOf(2025)).forEach(function(p){allProds[p]=1;});
     Object.keys(allProds).forEach(function(p){
       if(_devmodExcluded(p)) return;
@@ -13113,6 +13185,7 @@ function renderStagSummary(){
       catYoyCur[cid]+=yc; catYoyPrev[cid]+=yp;
       var h1v=0,h2v=0; for(var pm1=1;pm1<=h1EndM;pm1++) h1v+=Number(am26[pm1])||0; for(var pm2=h1EndM+1;pm2<=lm;pm2++) h2v+=Number(am26[pm2])||0;
       catH1[cid]+=h1v; catH2[cid]+=h2v;
+      for(var pm3=1;pm3<=lm;pm3++){ var v3=Number(am26[pm3])||0; catMoAmt[cid][pm3]+=v3; if(cid==='oligio'&&KISSXM_RE.test(p)) kissXmMoAmt[pm3]+=v3; }
       if(cid==='oligio'&&KISSXM_RE.test(p)){ kissXmH1+=h1v; kissXmH2+=h2v; kissXmYoyCur+=yc; kissXmYoyPrev+=yp; }
     });
     var catPct=function(cid){ var a=catH1[cid]/h1n, e=a*nH2, act=catH2[cid]; return e>0?(act/e-1)*100:null; };
@@ -13132,6 +13205,7 @@ function renderStagSummary(){
     });
     var oH1CA=[]; for(var oc=1;oc<=h1EndM;oc++) oH1CA.push(Object.keys(oSetH1[oc]).length);
     var oH2CA=[]; for(var od=h1EndM+1;od<=lm;od++) oH2CA.push(Object.keys(oSetH2[od]).length);
+    var oHospCntMo={}; for(var oe=1;oe<=h1EndM;oe++) oHospCntMo[oe]=Object.keys(oSetH1[oe]).length; for(var of_=h1EndM+1;of_<=lm;of_++) oHospCntMo[of_]=Object.keys(oSetH2[of_]).length;
     var oH1AvgCnt=oH1CA.reduce(function(s,v){return s+v;},0)/h1n, oH2AvgCnt=oH2CA.reduce(function(s,v){return s+v;},0)/Math.max(1,nH2);
     var oCntPct=oH1AvgCnt>0?(oH2AvgCnt/oH1AvgCnt-1)*100:null;
     var oTotH1=0,oTotH2=0; Object.keys(oHospAgg).forEach(function(hn){oTotH1+=oHospAgg[hn].h1;oTotH2+=oHospAgg[hn].h2;});
@@ -13175,7 +13249,7 @@ function renderStagSummary(){
         });
       });
       var h1Avg=h1/h1n, exp=h1Avg*nH2, pct=exp>0?(h2/exp-1)*100:null;
-      return {name:dn, pct:pct};
+      return {name:dn, pct:pct, h1Avg:h1Avg, h2:h2};
     }).sort(function(a,b){ return (a.pct==null?0:a.pct)-(b.pct==null?0:b.pct); });
     var dealerDown=dealerRes.filter(function(x){return x.pct!=null&&x.pct<=-20;});
     var dealerUp=dealerRes.filter(function(x){return x.pct!=null&&x.pct>=0;});
@@ -13232,6 +13306,14 @@ function renderStagSummary(){
         period:'-' }
     };
 
+    // ── 근거자료 드릴다운용 데이터 스냅샷(모달에서 차트 그릴 때 사용) ──
+    window._stagChartData={
+      lm:lm, h1EndM:h1EndM,
+      catMoAmt:catMoAmt, kissXmMoAmt:kissXmMoAmt, oHospCntMo:oHospCntMo,
+      consMo26:m26, consMo25:m25,
+      dealerRes:dealerRes, compArr:compArr
+    };
+
     // ── 렌더 ──
     var badge=function(v){ var m={yes:['유','#dc2626','#fef2f2'],no:['무','#16a34a','#f0fdf4'],unclear:['미비','#64748b','#f1f5f9']}; var d=m[v]||m.unclear;
       return '<span style="display:inline-block;font-size:12px;font-weight:800;color:'+d[1]+';background:'+d[2]+';border-radius:6px;padding:3px 10px">'+d[0]+'</span>'; };
@@ -13240,7 +13322,7 @@ function renderStagSummary(){
     var theadCells=_STAG_HYPS.map(function(h){ return '<th style="padding:8px 10px;border-bottom:2px solid #e7ebf0;text-align:left;font-size:12.5px;font-weight:800;color:#0f172a;min-width:190px">'+esc(h.label)+'</th>'; }).join('');
     var rowLbl=function(t){ return '<td style="padding:8px 10px;border-bottom:1px solid #eef2f5;font-weight:700;font-size:12px;color:#64748b;white-space:nowrap;vertical-align:top">'+t+'</td>'; };
     var rowVerdict='<tr>'+rowLbl('영향 여부')+_STAG_HYPS.map(function(h){ return '<td style="padding:8px 10px;border-bottom:1px solid #eef2f5;vertical-align:top">'+badge(hyp[h.id].verdict)+'</td>'; }).join('')+'</tr>';
-    var rowEvid='<tr>'+rowLbl('근거자료')+_STAG_HYPS.map(function(h){ return '<td style="padding:8px 10px;border-bottom:1px solid #eef2f5;font-size:11.5px;color:#334155;line-height:1.5;vertical-align:top">'+hyp[h.id].evid+'</td>'; }).join('')+'</tr>';
+    var rowEvid='<tr>'+rowLbl('근거자료')+_STAG_HYPS.map(function(h){ return '<td onclick="_stagDrill(\''+h.id+'\')" style="padding:8px 10px;border-bottom:1px solid #eef2f5;font-size:11.5px;color:#334155;line-height:1.5;vertical-align:top;cursor:pointer" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'" title="클릭하면 그래프로 보기">'+hyp[h.id].evid+' <i class="bi bi-bar-chart-line" style="font-size:10px;color:#94a3b8"></i></td>'; }).join('')+'</tr>';
     var rowExtra='<tr>'+rowLbl('근거데이터<br>있으면 추가')+_STAG_HYPS.map(function(h){ var v=(curData[h.id]&&curData[h.id].extra)||''; return '<td style="padding:6px 8px;border-bottom:1px solid #eef2f5;vertical-align:top"><textarea id="stag-extra-'+h.id+'" class="form-control form-control-sm" rows="2" style="font-size:11.5px" placeholder="추가 근거 입력">'+esc(v)+'</textarea></td>'; }).join('')+'</tr>';
     var rowPeriod='<tr>'+rowLbl('일시적/지속적')+_STAG_HYPS.map(function(h){ return '<td style="padding:8px 10px;border-bottom:1px solid #eef2f5;font-size:11.5px;color:#334155;line-height:1.5;vertical-align:top">'+esc(hyp[h.id].period)+'</td>'; }).join('')+'</tr>';
     var rowPlan='<tr>'+rowLbl('대응방안')+_STAG_HYPS.map(function(h){ var v=(curData[h.id]&&curData[h.id].plan)||''; return '<td style="padding:6px 8px;border-bottom:1px solid #eef2f5;vertical-align:top"><textarea id="stag-plan-'+h.id+'" class="form-control form-control-sm" rows="3" style="font-size:11.5px" placeholder="대응방안 작성">'+esc(v)+'</textarea></td>'; }).join('')+'</tr>';
