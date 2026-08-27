@@ -2930,9 +2930,18 @@ function showMgrHist(name){
 }
 // ── 병원 담당자 단일 출처(SSOT) ──
 // HOSP_INFO.mgr(고객사에서 수정) 우선 → 없으면 회계 담당(sales). 이걸 전 페이지가 쓰면 mgr 수정이 즉시 반영됨.
+// 거래처명이 회계마다 표기가 조금씩 달라져도(주식회사/(주) 유무·띄어쓰기 등) 잡히도록 키워드 기반 담당 고정 규칙.
+// hospital_info(name 완전일치)로 못 잡는 변형 표기 대비 — 새 거래처명 변형이 발견되면 여기 추가.
+var _REP_KEYWORD_RULES=[
+  {re:/에이엠에스글로벌/, rep:'송재원'},
+  {re:/오피앤/, rep:'송재원'},
+  {re:/신한에스/, rep:'송재원'},
+  {re:/디와이메디/, rep:'송재원'},
+];
 function _repOf(name){
   try{
     const m=((HOSP_INFO[name]||{}).mgr||'').trim(); if(m) return _sN(m);
+    for(var _i=0;_i<_REP_KEYWORD_RULES.length;_i++){ if(_REP_KEYWORD_RULES[_i].re.test(String(name||''))) return _REP_KEYWORD_RULES[_i].rep; }
     const h=(CONS.hospitals&&CONS.hospitals[name])||(DEVICE.hospitals&&DEVICE.hospitals[name])||{};
     return _sN(String(h.sales||'').trim());
   }catch(e){ return ''; }
