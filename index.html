@@ -2345,7 +2345,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 </div></div></div>
 
 <!-- 현황판 상세(다음 액션 / 보증만료) 모달 -->
-<div class="modal fade" id="dashDetailModal" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content">
+<div class="modal fade" id="dashDetailModal" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable modal-xl"><div class="modal-content">
   <div class="modal-header"><h5 class="modal-title" id="dashDetailTitle">상세</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
   <div class="modal-body" id="dashDetailBody"></div>
 </div></div></div>
@@ -13193,9 +13193,9 @@ function _stagDrillDealer(){
     +'<table class="table table-sm" style="font-size:12px"><thead><tr><th>대리점</th><th style="text-align:right">누계(총)</th><th style="text-align:right">상반기 월평균</th><th style="text-align:right">최근 실적</th><th style="text-align:right">상반기 페이스 대비</th></tr></thead><tbody>'+rows+'</tbody></table>'
     +'<div class="d-flex align-items-center gap-2 mb-2 mt-2"><label style="font-size:12px;font-weight:700">대리점 선택</label><select id="stag-dealer-sel" class="form-select form-select-sm" style="width:auto">'+opts+'</select></div>'
     +'<div style="font-size:12px;font-weight:700;margin-bottom:4px">월별 실적</div>'
-    +'<div style="position:relative;height:180px"><canvas id="stag-dealer-mo-chart"></canvas></div>'
+    +'<div style="position:relative;height:220px"><canvas id="stag-dealer-mo-chart"></canvas></div>'
     +'<div style="font-size:12px;font-weight:700;margin:10px 0 4px">월별 장비(라인업)별 판매</div>'
-    +'<div style="position:relative;height:220px"><canvas id="stag-dealer-lineup-chart"></canvas></div>'
+    +'<div style="position:relative;height:280px"><canvas id="stag-dealer-lineup-chart"></canvas></div>'
     +'</div>';
 }
 function _stagDrill(hypId){
@@ -13218,7 +13218,7 @@ function _stagDrill(hypId){
   var cfg=_stagChartCfg(hypId);
   if(!cfg){ body.innerHTML='<div class="text-center text-muted py-4">표시할 데이터가 없습니다(표본 부족)</div>'; }
   else {
-    var h=(hypId==='competitor')?Math.max(220,cfg.data.labels.length*32):280;
+    var h=(hypId==='competitor')?Math.max(260,cfg.data.labels.length*36):340;
     body.innerHTML='<div style="position:relative;height:'+h+'px"><canvas id="stag-drill-chart"></canvas></div>';
   }
   new bootstrap.Modal(document.getElementById('dashDetailModal')).show();
