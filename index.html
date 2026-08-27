@@ -2932,18 +2932,24 @@ function showMgrHist(name){
 // HOSP_INFO.mgr(고객사에서 수정) 우선 → 없으면 회계 담당(sales). 이걸 전 페이지가 쓰면 mgr 수정이 즉시 반영됨.
 // 거래처명이 회계마다 표기가 조금씩 달라져도(주식회사/(주) 유무·띄어쓰기 등) 잡히도록 키워드 기반 담당 고정 규칙.
 // hospital_info(name 완전일치)로 못 잡는 변형 표기 대비 — 새 거래처명 변형이 발견되면 여기 추가.
-var _REP_KEYWORD_RULES=[
+// 회계상 "담당자" 필드에 딜러사명이 그대로 찍히는 경우 → 실제 귀속 담당으로 치환.
+// 표기가 회계마다 흔들려도(주식회사/(주) 유무·"메드"/"메디" 등) 잡히게 키워드로 매칭.
+var _REP_ALIAS_RULES=[
   {re:/에이엠에스글로벌/, rep:'송재원'},
   {re:/오피앤/, rep:'송재원'},
   {re:/신한에스/, rep:'송재원'},
-  {re:/디와이메디/, rep:'송재원'},
+  {re:/디와이메[드디]/, rep:'송재원'},   // "디와이메드"(실제 회계 표기)·"디와이메디" 둘 다 대응
 ];
+function _repAlias(rep){
+  var s=String(rep||'');
+  for(var _i=0;_i<_REP_ALIAS_RULES.length;_i++){ if(_REP_ALIAS_RULES[_i].re.test(s)) return _REP_ALIAS_RULES[_i].rep; }
+  return rep;
+}
 function _repOf(name){
   try{
-    const m=((HOSP_INFO[name]||{}).mgr||'').trim(); if(m) return _sN(m);
-    for(var _i=0;_i<_REP_KEYWORD_RULES.length;_i++){ if(_REP_KEYWORD_RULES[_i].re.test(String(name||''))) return _REP_KEYWORD_RULES[_i].rep; }
+    const m=((HOSP_INFO[name]||{}).mgr||'').trim(); if(m) return _repAlias(_sN(m));
     const h=(CONS.hospitals&&CONS.hospitals[name])||(DEVICE.hospitals&&DEVICE.hospitals[name])||{};
-    return _sN(String(h.sales||'').trim());
+    return _repAlias(_sN(String(h.sales||'').trim()));
   }catch(e){ return ''; }
 }
 // 데이터에 실제 존재하는 담당자 전체(팀원 + 대리점) — 필터 드롭다운용
