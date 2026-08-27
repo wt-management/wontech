@@ -2939,6 +2939,9 @@ var _REP_ALIAS_RULES=[
   {re:/오피앤/, rep:'송재원'},
   {re:/신한에스/, rep:'송재원'},
   {re:/디와이메[드디]/, rep:'송재원'},   // "디와이메드"(실제 회계 표기)·"디와이메디" 둘 다 대응
+  {re:/제이온\s*헬스케어/, rep:'송재원'},
+  {re:/엔오에이치/, rep:'송재원'},
+  {re:/플러그엠/, rep:'송재원'},
 ];
 function _repAlias(rep){
   var s=String(rep||'');
@@ -13763,7 +13766,7 @@ function showDevRepDetail(repName) {
   const _preKeysR={}; _prev.forEach(x=>{_preKeysR[x.y+"-"+x.m]=1;});
   const _hAgg={};
   Object.entries(DEVICE.hospitals||{}).forEach(([hn,h])=>{ [["txns2026",2026],["txns2025",2025]].forEach(([tk,y])=>{ (h[tk]||[]).forEach(t=>{ const mo=+t[0]; if(_ownerOfTxn(hn,h,y,mo)!==repName) return; const amt=Number(t[4]||0), key=y+"-"+mo; const o=_hAgg[hn]||(_hAgg[hn]={cur:0,pre:0,topProd:h.topProd||'',lastDate:h.lastDate||''}); if(_spanKeysR[key]) o.cur+=amt; if(_preKeysR[key]) o.pre+=amt; }); }); });
-  const hospList = Object.entries(_hAgg).map(([name,o])=>({name,cur:o.cur,pre:o.pre,topProd:o.topProd,lastDate:o.lastDate})).filter(h=>h.cur>0||h.pre>0).sort((a,b)=>b.cur-a.cur);
+  const hospList = Object.entries(_hAgg).map(([name,o])=>({name,cur:o.cur,pre:o.pre,topProd:o.topProd,lastDate:o.lastDate})).filter(h=>h.cur>0||h.pre>0).sort((a,b)=>String(b.lastDate||'').localeCompare(String(a.lastDate||'')));
 
   const hospHtml = hospList.length
     ? `<table class="table table-sm mb-0">
