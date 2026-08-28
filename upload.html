@@ -169,9 +169,14 @@ async function init(){
   if(!session){ _wtToCentral(true); return; }   // 세션 없음 → 중앙 로그인(로그인 후 여기로 복귀)
   await showApp();
 }
-// 업로드 권한 = 마스터(pmw0406) 전용 (당분간)
+// 업로드 권한 = 마스터(pmw0406) + 영업전략파트·관리자
 async function _canUpload(user){
-  return user.email==='pmw0406@gmail.com';
+  if(user.email==='pmw0406@gmail.com') return true;
+  try{
+    const {data:p}=await _sb.from('crm_profiles').select('dept,role').eq('id',user.id).maybeSingle();
+    if(p){ if(p.role==='admin') return true; if(String(p.dept||'').indexOf('영업전략')>=0) return true; }
+  }catch(e){}
+  return false;
 }
 /* ── 자동 로그아웃: 60분 무동작 시 자동 로그아웃 ── */
 (function(){
