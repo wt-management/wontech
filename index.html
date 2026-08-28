@@ -11190,8 +11190,8 @@ const PERM_PRESETS = [
   {name:'일본법인',              access:'japan',                       upload:''},
   {name:'소모품담당(일보)',      access:'daily',                       upload:'daily'},
   {name:'국내(영업+소모품+종합)', access:'korea,daily,total',           upload:''},
-  {name:'임원(전체 보기)',       access:'korea,intl,japan,total,daily,pm,portfolio,equip', upload:''},
-  {name:'전체관리자',            access:'korea,intl,japan,total,daily,pm,portfolio,equip', upload:'korea,intl,japan,total,daily,pm,portfolio,equip'}
+  {name:'임원(전체 보기)',       access:'ar,daily,equip,export,intl,japan,korea,kor_sales,portfolio,th,total,us', upload:''},
+  {name:'전체관리자',            access:'ar,daily,equip,export,intl,japan,korea,kor_sales,portfolio,th,total,us', upload:'ar,daily,equip,export,intl,japan,korea,kor_sales,portfolio,th,total,us'}
 ];
 function _normPerm(s){ return (s||'').split(',').map(x=>x.trim()).filter(Boolean).sort().join(','); }
 function _matchPreset(p){
