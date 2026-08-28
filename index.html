@@ -12323,7 +12323,8 @@ function _devRepName(e){
     return (inf.dept?'<span style="font-size:9px;font-weight:800;color:#0891b2;background:#ecfeff;border-radius:4px;padding:1px 6px;margin-right:6px;vertical-align:middle">'+esc(String(inf.dept).replace(/^한국영업/,''))+'</span>':'')
       +esc(e.name)+(inf.pos?' <span style="font-size:10.5px;font-weight:600;color:#64748b">'+esc(inf.pos)+'</span>':'');
   }
-  return esc(e.name)+'<span style="font-size:8.5px;font-weight:700;color:#a16207;background:#fef9c3;border-radius:4px;padding:1px 5px;margin-left:5px;vertical-align:middle">대리점</span>';
+  const isRealDealer = (typeof _CAPA_DEALER_RE!=='undefined') && _CAPA_DEALER_RE.test(e.name);
+  return esc(e.name)+(isRealDealer?'<span style="font-size:8.5px;font-weight:700;color:#a16207;background:#fef9c3;border-radius:4px;padding:1px 5px;margin-left:5px;vertical-align:middle">대리점</span>':'');
 }
 /* ===== 매출 증감 분해(월별/누계) + 상세 드릴다운 — 요청 기반 ===== */
 var _devVarMode='cum', _dvIdx=null;
