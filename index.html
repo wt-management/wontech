@@ -7393,7 +7393,7 @@ function _cduDrillCompAll(){ _cduDrill('경쟁사 노출 전체', _cduRepVs.filt
 function _cduDrillChan(c){ _cduDrill('마케팅 채널: '+c, _cduRepVs.filter(v=>(v.channels||'').split(/[\/,·]/).map(s=>s.trim()).indexOf(c)>=0)); }
 function _cduDrillSales(s){ _cduDrill('담당자 방문: '+s, _cduRepVs.filter(v=>((v.sales||'').trim()||'미지정')===s)); }
 function _cduDrillBand(i){ var b=_CDU_BANDS[i]; if(!b)return; _cduDrill('시술 수가 '+b[0], _cduRepVs.filter(v=>{var p=Number(v.price)||0; return p>0&&b[1](p);}), 'price'); }
-function _cduDrillEvent(){ _cduDrill('이벤트 진행 병원', _cduRepVs.filter(v=>/^(원내|외부|O)$/i.test((v.event||'').trim())), 'event'); }
+function _cduDrillEvent(){ _cduDrill('이벤트 진행 병원', _cduRepVs.filter(v=>/^(원내|외부|O|X)$/i.test((v.event||'').trim())), 'event'); }
 function _cduDrillReels(){ _cduDrill('릴스 촬영 병원', _cduRepVs.filter(v=>/^(촬영완료|O)$/i.test((v.reels||'').trim())), 'reels'); }
 function _cduDrillAll(){ _cduDrill('전체 방문 병원', _cduRepVs.slice()); }
 function _cduDrillWeek(w){ var _t=_cduTodayStr(); _cduDrill(w+' 방문 상세', _cduBaseFiltered().filter(function(v){ return v.status!=='planned' && String(v.date||'').slice(0,10)<=_t && _cduWeekLabel(v.date)===w; })); }
@@ -7464,8 +7464,8 @@ function _cduDrill(title, arr, kind){
     _glance=gl('<b>이탈 리스크 선제 대응</b> · <b>'+nH+'개처</b> 감지'+(totRev?' · 방어 대상 팁매출 <b>'+_cduWon(totRev)+'</b>':''), '#fef2f2', '#b91c1c', '#fecaca');
     cells.push(col(box('리스크 유형 분포',(chArr.length?chArr.slice(0,8).map(x=>barW(x[0],x[1],mxCh,'#ea580c',x[1]+'개처')).join(''):'<div style="font-size:12px;color:#94a3b8">유형 미기재</div>')+note('유형별 대응 방식이 다릅니다. <b>팁매출 큰 병원부터</b> 우선 방문·케어하세요. 목록은 매출 순.'))));
   } else if(kind==='event'){
-    var evIn=0,evOut=0,evEtc=0; arr.forEach(function(v){var e=(v.event||'').trim(); if(/^원내$/.test(e))evIn++; else if(/^외부$/.test(e))evOut++; else if(/^O$/i.test(e))evEtc++;});
-    var evArr=[['원내',evIn],['외부',evOut]].concat(evEtc?[['기타(구)',evEtc]]:[]).filter(x=>x[1]); var mxE=_mx(evArr.map(x=>x[1]));
+    var evIn=0,evOut=0,evEtc=0; arr.forEach(function(v){var e=(v.event||'').trim(); if(/^원내$/.test(e))evIn++; else if(/^외부$/.test(e))evOut++; else if(/^(O|X)$/i.test(e))evEtc++;});
+    var evArr=[['원내',evIn],['외부',evOut]].concat(evEtc?[['기타',evEtc]]:[]).filter(x=>x[1]); var mxE=_mx(evArr.map(x=>x[1]));
     _glance=gl('<b>마케팅 이벤트</b> · 총 <b>'+arr.length+'건</b> · 원내 '+evIn+' · 외부 '+evOut, '#eff6ff', '#1d4ed8', '#dbeafe');
     cells.push(col(box('진행 유형',(evArr.length?evArr.map(x=>barW(x[0],x[1],mxE,'#2563eb',x[1]+'건')).join(''):'<div style="font-size:12px;color:#94a3b8">유형 미기재</div>')+note('<b>원내</b>=병원 자체 이벤트 지원, <b>외부</b>=공동 마케팅. 매출 높은 병원의 이벤트를 우수 사례로 공유하세요.'))));
   } else if(kind==='reels'){
@@ -7603,7 +7603,7 @@ function renderCDUReport(vs){
     var hn=(v.custName||'').trim(); if(hn) (v.competitor||'').split(/[\/,·]/).map(function(x){return x.trim();}).filter(function(x){return x&&!/^(n|a|na|없음|해당없음|미정|-)$/i.test(x);}).forEach(function(cc){ (comp[cc]=comp[cc]||{})[hn]=1; });
     (v.channels||'').split(/[\/,·]/).map(s=>s.trim()).filter(function(x){return x&&!/^(n|a|na|없음|해당없음|미정|-)$/i.test(x);}).forEach(ch=>{ if(hn){(chan[ch]=chan[ch]||{})[hn]=1;} });
     var p=num(v.price); if(p>0) prices.push(p);
-    if(/^(원내|외부|O)$/i.test((v.event||'').trim())) ev++;
+    if(/^(원내|외부|O|X)$/i.test((v.event||'').trim())) ev++;
     if(/^(촬영완료|O)$/i.test((v.reels||'').trim())){ rl++; var _rn=(v.custName||'').trim(); if(_rn) _reelsHset[_rn]=1; }
     if((v.churnRisk||'').trim()) churn.push(v);
     if(v.date) days.add(String(v.date).slice(0,10));
@@ -7641,7 +7641,7 @@ function renderCDUReport(vs){
   var weeks=_allW.slice(-4);
   var _wkSet={}; weeks.forEach(function(w){ _wkSet[w]=1; });
   var wk={}; weeks.forEach(w=>wk[w]={hs:{},psum:0,pn:0,ev:0});
-  base.forEach(function(v){ var w=_cduWeekLabel(v.date); if(!w||!_wkSet[w])return; var nm=(v.custName||'').trim(); if(nm) wk[w].hs[nm]=1; var p=num(v.price); if(p>0){wk[w].psum+=p;wk[w].pn++;} if(/^(원내|외부|O)$/i.test((v.event||'').trim()))wk[w].ev++; });
+  base.forEach(function(v){ var w=_cduWeekLabel(v.date); if(!w||!_wkSet[w])return; var nm=(v.custName||'').trim(); if(nm) wk[w].hs[nm]=1; var p=num(v.price); if(p>0){wk[w].psum+=p;wk[w].pn++;} if(/^(원내|외부|O|X)$/i.test((v.event||'').trim()))wk[w].ev++; });
   weeks.forEach(function(w){ wk[w].n=Object.keys(wk[w].hs).length; });
   var maxWkN=Math.max.apply(null,weeks.map(w=>wk[w].n).concat([1]));
   var focusW=(weeks.length?weeks[weeks.length-1]:''); var fi=weeks.indexOf(focusW); var prevW=fi>0?weeks[fi-1]:'';
@@ -8010,7 +8010,7 @@ function _cduInputList(vs){
       +'<td style="font-size:12.5px;color:#dc2626" '+oc(v.id)+'>'+_cduEsc(v.competitor||'')+'</td>'
       +'<td style="font-size:12px;color:#2563eb;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" '+oc(v.id)+'>'+_cduEsc(v.channels||'')+'</td>'
       +'<td class="text-end" style="font-size:12.5px" '+oc(v.id)+'>'+((v.price||v.priceX||v.priceKiss)?_cduPriceDisp(v):'-')+'</td>'
-      +'<td class="text-center" style="font-size:12.5px" '+oc(v.id)+'>'+(/^(원내|외부|O)$/i.test((v.event||'').trim())?'<span style="color:#7c3aed;font-weight:700">이벤트</span> ':'')+(/^(촬영완료|O)$/i.test((v.reels||'').trim())?'<span style="color:#db2777;font-weight:700">릴스</span>':(/^제안$/.test((v.reels||'').trim())?'<span style="color:#f472b6;font-weight:700">릴스제안</span>':''))+'</td>'
+      +'<td class="text-center" style="font-size:12.5px" '+oc(v.id)+'>'+(/^(원내|외부|O|X)$/i.test((v.event||'').trim())?'<span style="color:#7c3aed;font-weight:700">이벤트</span> ':'')+(/^(촬영완료|O)$/i.test((v.reels||'').trim())?'<span style="color:#db2777;font-weight:700">릴스</span>':(/^제안$/.test((v.reels||'').trim())?'<span style="color:#f472b6;font-weight:700">릴스제안</span>':''))+'</td>'
       +'<td style="font-size:12px;color:#64748b" '+oc(v.id)+'>'+_cduEsc(v.sales||'')+'</td>'
       +'<td class="text-end" style="white-space:nowrap"><button class="btn btn-link btn-sm p-0 me-2" title="병원 이력" onclick="openCDUHosp(\''+_cduEsc(v.custName||'').replace(/\x27/g,"\\x27")+'\')"><i class="bi bi-clock-history" style="font-size:12.5px;color:#94a3b8"></i></button><button class="btn btn-link btn-sm p-0 me-2" title="복사(재방문)" onclick="openCDUVisit(\''+v.id+'\',true)"><i class="bi bi-files" style="font-size:12.5px;color:#94a3b8"></i></button><i class="bi bi-pencil" '+oc(v.id)+' style="color:#94a3b8;font-size:13px;cursor:pointer"></i></td></tr>';
     }).join('');
@@ -8334,7 +8334,7 @@ function openCDUHosp(name){
   var keyHtml=keys.length?'<div style="margin-bottom:12px"><div style="font-size:13px;font-weight:700;color:#334155;margin-bottom:4px"><i class="bi bi-person-rolodex me-1 text-info"></i>Keyman 연락처</div>'
     +keys.map(k=>'<div style="font-size:13px;padding:3px 0"><b>'+_cduEsc(k.contactName||'')+'</b> <span style="color:#94a3b8">'+_cduEsc(k.title||'')+'</span> · <span style="font-family:monospace">'+_cduEsc(k.phone||'')+'</span>'+(k.note?' <span style="color:#94a3b8">('+_cduEsc(k.note)+')</span>':'')+'</div>').join('')+'</div>':'';
   var timeline=vs.slice().reverse().map(function(v){
-    var badges=[]; if(/^(원내|외부|O)$/i.test((v.event||'').trim()))badges.push('<span style="font-size:11.5px;font-weight:700;color:#7c3aed;background:#f5f3ff;border-radius:4px;padding:1px 6px">이벤트</span>');
+    var badges=[]; if(/^(원내|외부|O|X)$/i.test((v.event||'').trim()))badges.push('<span style="font-size:11.5px;font-weight:700;color:#7c3aed;background:#f5f3ff;border-radius:4px;padding:1px 6px">이벤트</span>');
     if(/^(촬영완료|O)$/i.test((v.reels||'').trim()))badges.push('<span style="font-size:11.5px;font-weight:700;color:#db2777;background:#fdf2f8;border-radius:4px;padding:1px 6px">릴스</span>');else if(/^제안$/.test((v.reels||'').trim()))badges.push('<span style="font-size:11.5px;font-weight:700;color:#f472b6;background:#fdf2f8;border-radius:4px;padding:1px 6px">릴스제안</span>');
     if(v.competitor)badges.push('<span style="font-size:11.5px;font-weight:700;color:#dc2626;background:#fef2f2;border-radius:4px;padding:1px 6px">'+_cduEsc(v.competitor)+'</span>');
     return '<div style="border-left:2px solid #e2e8f0;padding:0 0 14px 14px;position:relative">'
@@ -8402,7 +8402,7 @@ function renderCDUWeekly(){
   var hs={}; vs.forEach(v=>{ var n=(v.custName||'').trim(); if(n)hs[n]=1; });
   var prices=vs.map(v=>Number(v.price)||0).filter(p=>p>0);
   var comp=vs.filter(v=>(v.competitor||'').trim()).length;
-  var ev=vs.filter(v=>/^(원내|외부|O)$/i.test((v.event||'').trim())).length;
+  var ev=vs.filter(v=>/^(원내|외부|O|X)$/i.test((v.event||'').trim())).length;
   var rl=vs.filter(v=>/^(촬영완료|O)$/i.test((v.reels||'').trim())).length;
   var churn=vs.filter(v=>(v.churnRisk||'').trim());
   var reps=[...new Set(vs.map(v=>(v.sales||'').trim()).filter(Boolean))];
