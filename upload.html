@@ -246,6 +246,13 @@ function parseMibanyong(wb){
     const _mx=Math.max.apply(null,sheetList.map(_mo));
     if(_mx>0) sheetList=sheetList.filter(n=>_mo(n)===_mx);
   }
+  // ★같은 달 안에서도 일자별 스냅샷이 여러 장(예: 8월_20260814~20260828)이면 최신 날짜 1장만★
+  // 안 그러면 스냅샷마다 겹치는 미반영이 전부 더해져 금액이 배수로 부풀어난다(260828 실측: 8월 스냅샷 10장 합산→8~10배 과다).
+  if(sheetList.length>1){
+    const _dt=n=>{const m=String(n).match(/(\d{8})/);return m?+m[1]:0;};
+    const withDate=sheetList.filter(n=>_dt(n)>0);
+    if(withDate.length){ const _mxd=Math.max.apply(null,withDate.map(_dt)); sheetList=withDate.filter(n=>_dt(n)===_mxd); }
+  }
   const out=[]; let di=0, ii=0, foundAny=false;
   sheetList.forEach(function(sn){
     const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,raw:true,defval:null});
