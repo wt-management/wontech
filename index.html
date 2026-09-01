@@ -1628,6 +1628,22 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       </div>
     </div>
 
+    <!-- ④ 그룹별 지역 분포 -->
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <div class="card p-3 h-100">
+          <div class="fw-bold mb-2" style="font-size:13px"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#2563eb;margin-right:6px;vertical-align:middle"></span>Oligio 지역별 매출 <span style="font-size:10px;font-weight:400;color:#94a3b8" id="cons-reg-og-info"></span></div>
+          <div id="cons-region-og"></div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card p-3 h-100">
+          <div class="fw-bold mb-2" style="font-size:13px"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#16324f;margin-right:6px;vertical-align:middle"></span>Oligio X/XM 지역별 매출 <span style="font-size:10px;font-weight:400;color:#94a3b8" id="cons-reg-xm-info"></span></div>
+          <div id="cons-region-xm"></div>
+        </div>
+      </div>
+    </div>
+
     <div id="cons-cart-row" style="display:none"></div>
     <div id="cons-group-bars" style="display:none"></div>
     <!-- 드릴다운 패널 -->
@@ -5768,6 +5784,43 @@ function renderConsumables() {
   // 누계 (전체 선택 기간)
   document.getElementById('cons-ytd-title').innerHTML=`<i class="bi bi-pie-chart-fill me-1" style="color:#ff4500;font-size:12px"></i>누계 <span style="font-size:11px;font-weight:400;color:#64748b">${P.label}</span>`;
   document.getElementById('cons-detail-ytd').innerHTML=renderDetailCol(spanMs,prevMs);
+
+  // ④ 그룹별(Oligio / Oligio X/XM) 지역별(시도) 매출 — 병원 트랜잭션을 병원별 지역으로 귀속
+  (function renderConsRegion(){
+    const sumRngG = (h, rng, keys) => { let tot=0; rng.forEach(x=>{ const arr = x.y===2026?h.txns2026:(x.y===2025?h.txns2025:null); if(arr) arr.forEach(t=>{ if(t[0]===x.m && keys.includes(t[2])) tot+=t[3]; }); }); return tot; };
+    const grpBySido = keys => {
+      const sido={};
+      Object.entries(CONS.hospitals||{}).forEach(([name,h])=>{
+        const v26=sumRngG(h,spanMs,keys), v25=sumRngG(h,prevMs,keys);
+        if(!v26 && !v25) return;
+        const r=_hospRegion(name); const s=(r&&r[0])?r[0]:'미분류';
+        if(!sido[s]) sido[s]={v26:0,v25:0};
+        sido[s].v26+=v26; sido[s].v25+=v25;
+      });
+      return sido;
+    };
+    const renderList = sido => {
+      const entries=Object.entries(sido).filter(([,o])=>o.v26>0||o.v25>0).sort((a,b)=>b[1].v26-a[1].v26);
+      if(!entries.length) return '<div style="padding:16px;text-align:center;color:#94a3b8;font-size:12px">데이터 없음</div>';
+      const maxV=entries[0][1].v26||1;
+      return entries.map(([name,o])=>{
+        const isUn=name==='미분류';
+        return '<div style="padding:5px 6px;border-bottom:1px solid #f6f8fa">'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:2px">'
+          +'<span style="font-weight:600'+(isUn?';color:#94a3b8':'')+'">'+_ovEsc(name)+'</span>'
+          +'<span style="display:flex;gap:6px;align-items:center"><span style="font-weight:700">'+_ovFmt(o.v26)+'</span>'+_grBadge(o.v26,o.v25)+'</span>'
+          +'</div>'
+          +'<div style="background:#f3f4f6;border-radius:3px;height:4px"><div style="width:'+(o.v26/maxV*100).toFixed(1)+'%;height:100%;background:'+(isUn?'#cbd5e1':'#2563eb')+';border-radius:3px"></div></div>'
+          +'</div>';
+      }).join('');
+    };
+    const oligKeys = OLIG.filter(p=>p.grp==='Oligio').map(p=>p.key);
+    const xmKeys = OLIG.filter(p=>p.grp==='Oligio X/XM').map(p=>p.key);
+    const elOg=document.getElementById('cons-region-og'); if(elOg) elOg.innerHTML = renderList(grpBySido(oligKeys));
+    const elXm=document.getElementById('cons-region-xm'); if(elXm) elXm.innerHTML = renderList(grpBySido(xmKeys));
+    const infoOg=document.getElementById('cons-reg-og-info'); if(infoOg) infoOg.textContent = P.label+' 기준';
+    const infoXm=document.getElementById('cons-reg-xm-info'); if(infoXm) infoXm.textContent = P.label+' 기준';
+  })();
 
   if(consDonutChart){consDonutChart.destroy();consDonutChart=null;}
 
