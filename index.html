@@ -1628,16 +1628,18 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
       </div>
     </div>
 
-    <!-- ④ 그룹별 지역 분포 -->
+    <!-- ④ 그룹별 지역 분포 — 각 그룹 전체폭, 표 안에서 왼쪽열↓ 다음 오른쪽열↓ 2단 배치 -->
     <div class="row g-3 mb-3">
-      <div class="col-md-6">
-        <div class="card p-3 h-100">
+      <div class="col-12">
+        <div class="card p-3">
           <div class="fw-bold mb-2" style="font-size:13px"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#2563eb;margin-right:6px;vertical-align:middle"></span>Oligio 지역별 매출 <span style="font-size:10px;font-weight:400;color:#94a3b8" id="cons-reg-og-info"></span></div>
           <div id="cons-region-og"></div>
         </div>
       </div>
-      <div class="col-md-6">
-        <div class="card p-3 h-100">
+    </div>
+    <div class="row g-3 mb-3">
+      <div class="col-12">
+        <div class="card p-3">
           <div class="fw-bold mb-2" style="font-size:13px"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#16324f;margin-right:6px;vertical-align:middle"></span>Oligio X/XM 지역별 매출 <span style="font-size:10px;font-weight:400;color:#94a3b8" id="cons-reg-xm-info"></span></div>
           <div id="cons-region-xm"></div>
         </div>
@@ -5788,19 +5790,29 @@ function renderConsumables() {
   // ④ 그룹별(Oligio / Oligio X/XM) 지역별(시도) 매출 — 병원 트랜잭션을 병원별 지역으로 귀속
   //    행 클릭 시 해당 시도·그룹의 월별 추이를 모달로 조회(_consRegionDrill)
   (function renderConsRegion(){
-    // sido별 월별(1~12, 연도별) 원본 + 선택기간(v26/v25) 합계를 한 번에 집계
+    // sido별 월별(1~12, 연도별) 원본 + 선택기간(v26/v25) 합계 + 병원별·제품별 내역까지 한 번에 집계
+    // (상세 모달에서 월별표·제품구성·구매병원 리스트를 그래프 하나로 끝내지 않고 다 보여주기 위함)
+    const curSet={}, prevSet={};
+    spanMs.forEach(x=>{ (curSet[x.y]||(curSet[x.y]=new Set())).add(x.m); });
+    prevMs.forEach(x=>{ (prevSet[x.y]||(prevSet[x.y]=new Set())).add(x.m); });
     const grpBySido = keys => {
       const sido={};
       Object.entries(CONS.hospitals||{}).forEach(([name,h])=>{
-        const mo26={}, mo25={}; let any=false;
-        (h.txns2026||[]).forEach(t=>{ if(keys.includes(t[2])){ mo26[t[0]]=(mo26[t[0]]||0)+t[3]; any=true; } });
-        (h.txns2025||[]).forEach(t=>{ if(keys.includes(t[2])){ mo25[t[0]]=(mo25[t[0]]||0)+t[3]; any=true; } });
+        const mo26={}, mo25={}; let hv26=0, hv25=0; const pb26={}, pb25={}; let any=false;
+        (h.txns2026||[]).forEach(t=>{ if(!keys.includes(t[2])) return; any=true; mo26[t[0]]=(mo26[t[0]]||0)+t[3];
+          if(curSet[2026]&&curSet[2026].has(t[0])){ hv26+=t[3]; pb26[t[2]]=(pb26[t[2]]||0)+t[3]; }
+          if(prevSet[2026]&&prevSet[2026].has(t[0])){ hv25+=t[3]; pb25[t[2]]=(pb25[t[2]]||0)+t[3]; } });
+        (h.txns2025||[]).forEach(t=>{ if(!keys.includes(t[2])) return; any=true; mo25[t[0]]=(mo25[t[0]]||0)+t[3];
+          if(curSet[2025]&&curSet[2025].has(t[0])){ hv26+=t[3]; pb26[t[2]]=(pb26[t[2]]||0)+t[3]; }
+          if(prevSet[2025]&&prevSet[2025].has(t[0])){ hv25+=t[3]; pb25[t[2]]=(pb25[t[2]]||0)+t[3]; } });
         if(!any) return;
         const r=_hospRegion(name); const s=(r&&r[0])?r[0]:'미분류';
-        if(!sido[s]) sido[s]={v26:0,v25:0,mo26:{},mo25:{}};
+        if(!sido[s]) sido[s]={v26:0,v25:0,mo26:{},mo25:{},hosps:{},prod:{}};
         for(let m=1;m<=12;m++){ if(mo26[m]) sido[s].mo26[m]=(sido[s].mo26[m]||0)+mo26[m]; if(mo25[m]) sido[s].mo25[m]=(sido[s].mo25[m]||0)+mo25[m]; }
-        spanMs.forEach(x=>{ const v=(x.y===2026?mo26:x.y===2025?mo25:null); if(v&&v[x.m]) sido[s].v26+=v[x.m]; });
-        prevMs.forEach(x=>{ const v=(x.y===2026?mo26:x.y===2025?mo25:null); if(v&&v[x.m]) sido[s].v25+=v[x.m]; });
+        sido[s].v26+=hv26; sido[s].v25+=hv25;
+        if(hv26||hv25) sido[s].hosps[name]={v26:hv26,v25:hv25};
+        Object.keys(pb26).forEach(k=>{ if(!sido[s].prod[k]) sido[s].prod[k]={v26:0,v25:0}; sido[s].prod[k].v26+=pb26[k]; });
+        Object.keys(pb25).forEach(k=>{ if(!sido[s].prod[k]) sido[s].prod[k]={v26:0,v25:0}; sido[s].prod[k].v25+=pb25[k]; });
       });
       return sido;
     };
@@ -5817,7 +5829,7 @@ function renderConsumables() {
         +'<th style="'+thB+';text-align:right">증감</th>'
         +'<th style="'+thB+';text-align:left;border-radius:0 8px 0 0">비중</th>'
         +'</tr></thead>';
-      const rows=entries.map(([name,o],i)=>{
+      const rowHtml=(name,o,i)=>{
         const isUn=name==='미분류';
         const safe=String(name).replace(/"/g,'&quot;');
         const pct=o.v26/grand*100;
@@ -5830,13 +5842,19 @@ function renderConsumables() {
           +'<td style="'+tdB+';text-align:right;white-space:nowrap">'+_grBadge(o.v26,o.v25)+'</td>'
           +'<td style="'+tdB+';min-width:66px"><div style="display:flex;align-items:center;gap:6px"><div style="flex:1;background:#eef2f7;border-radius:99px;height:6px;overflow:hidden;min-width:18px"><div style="width:'+pct.toFixed(1)+'%;height:100%;background:'+col+';border-radius:99px"></div></div><span style="color:#64748b;font-size:10px;min-width:26px;text-align:right">'+pct.toFixed(0)+'%</span></div></td>'
           +'</tr>';
-      }).join('');
-      return '<div style="overflow-x:auto;border:1px solid #eef2f7;border-radius:10px"><table style="width:100%;border-collapse:collapse;font-size:12px">'+thead+'<tbody>'+rows+'</tbody></table></div>';
+      };
+      const tbl=rowsHtml=>'<div style="overflow-x:auto;border:1px solid #eef2f7;border-radius:10px"><table style="width:100%;border-collapse:collapse;font-size:12px">'+thead+'<tbody>'+rowsHtml+'</tbody></table></div>';
+      // 왼쪽열을 위→아래로 먼저 채우고, 그다음 오른쪽열 — 지역별 분석 페이지와 동일한 2단 배치
+      const half=Math.ceil(entries.length/2);
+      const L=entries.slice(0,half).map(([name,o],i)=>rowHtml(name,o,i)).join('');
+      const R=entries.slice(half).map(([name,o],i)=>rowHtml(name,o,half+i)).join('');
+      return entries.length<=4 ? tbl(L+R)
+        : '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:12px;align-items:start">'+tbl(L)+(R?tbl(R):'')+'</div>';
     };
     const oligKeys = OLIG.filter(p=>p.grp==='Oligio').map(p=>p.key);
     const xmKeys = OLIG.filter(p=>p.grp==='Oligio X/XM').map(p=>p.key);
     const sidoOg=grpBySido(oligKeys), sidoXm=grpBySido(xmKeys);
-    window._consRegionData = {'Oligio':sidoOg, 'Oligio X/XM':sidoXm, _periodLabel:P.label};
+    window._consRegionData = {'Oligio':sidoOg, 'Oligio X/XM':sidoXm, _periodLabel:P.label, _prodMeta:OLIG};
     const elOg=document.getElementById('cons-region-og'); if(elOg) elOg.innerHTML = renderList(sidoOg,'Oligio','#2563eb');
     const elXm=document.getElementById('cons-region-xm'); if(elXm) elXm.innerHTML = renderList(sidoXm,'Oligio X/XM','#16324f');
     const infoOg=document.getElementById('cons-reg-og-info'); if(infoOg) infoOg.textContent = P.label+' 기준 · 클릭하면 월별 추이';
@@ -5859,11 +5877,48 @@ function _consRegionDrill(grp, sidoName){
   const col = grp==='Oligio' ? '#2563eb' : '#16324f';
   const fmtB = v => (v/1e8).toFixed(2)+'억';
   const plabel = window._consRegionData._periodLabel || '';
-  document.getElementById('dashDetailTitle').innerHTML='<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:'+col+';margin-right:7px;vertical-align:middle"></span>'+_escH(sidoName)+' <span style="color:#94a3b8;font-weight:500">· '+_escH(grp)+'</span> <span style="font-size:12px;font-weight:400;color:#94a3b8">월별 추이</span>';
-  document.getElementById('dashDetailBody').innerHTML=
-    '<div style="font-size:12.5px;color:#64748b;margin-bottom:12px">'+_escH(plabel)+' 기준 <b style="font-size:15px;color:#111827">'+fmtB(o.v26)+'</b> · 전년 동기 '+fmtB(o.v25)+' '+_grBadge(o.v26,o.v25)+'</div>'
-    +'<div style="position:relative;height:280px"><canvas id="cons-region-drill-chart"></canvas></div>';
+  const prodMeta = (window._consRegionData._prodMeta||[]).filter(p=>p.grp===grp);
+
+  // 제품 구성(선택기간 기준)
+  const prodRows = prodMeta.map(p=>({label:p.label, col:p.col, v26:(o.prod[p.key]||{}).v26||0, v25:(o.prod[p.key]||{}).v25||0}));
+  const prodMax = Math.max.apply(null, prodRows.map(p=>p.v26).concat([1]));
+  const prodHtml = prodRows.map(p=>
+    '<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:3px"><span style="font-weight:600"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+p.col+';margin-right:5px;vertical-align:middle"></span>'+_escH(p.label)+'</span><span style="font-weight:700;font-variant-numeric:tabular-nums">'+_ovFmt(p.v26)+'</span></div><div style="background:#f3f4f6;border-radius:3px;height:5px"><div style="width:'+(p.v26/prodMax*100).toFixed(1)+'%;height:100%;background:'+p.col+';border-radius:3px"></div></div><div style="font-size:10px;color:#94a3b8;margin-top:1px">전년 '+_ovFmt(p.v25)+'</div></div>'
+  ).join('') || '<div style="color:#94a3b8;font-size:12px">데이터 없음</div>';
+
+  // 월별 상세(값이 있는 달만)
   const MO=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const monthRows = MO.map((lab,i)=>{
+    const m=i+1, v26=o.mo26[m]||0, v25=o.mo25[m]||0;
+    if(!v26 && !v25) return '';
+    return '<tr><td style="padding:4px 8px;border-bottom:1px solid #f6f8fa;color:#64748b">'+lab+'</td><td style="padding:4px 8px;border-bottom:1px solid #f6f8fa;text-align:right;color:#94a3b8;font-variant-numeric:tabular-nums">'+_ovFmt(v25)+'</td><td style="padding:4px 8px;border-bottom:1px solid #f6f8fa;text-align:right;font-weight:700;font-variant-numeric:tabular-nums">'+_ovFmt(v26)+'</td><td style="padding:4px 8px;border-bottom:1px solid #f6f8fa;text-align:right">'+_grBadge(v26,v25)+'</td></tr>';
+  }).join('');
+
+  // 구매 병원 목록(선택기간 기준, 매출순)
+  const hospEntries = Object.entries(o.hosps||{}).filter(([,h])=>h.v26>0||h.v25>0).sort((a,b)=>b[1].v26-a[1].v26);
+  const hospHtml = hospEntries.length ? hospEntries.map(([name,h],i)=>{
+    const safe=String(name).replace(/"/g,'&quot;');
+    return '<tr onclick="try{bootstrap.Modal.getInstance(document.getElementById(\'dashDetailModal\')).hide();}catch(e){} showHospitalDetail(this.dataset.n)" data-n="'+safe+'" style="cursor:pointer" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'">'
+      +'<td style="padding:5px 8px;border-bottom:1px solid #f6f8fa;color:#cbd5e1;font-size:10.5px;text-align:center">'+(i+1)+'</td>'
+      +'<td style="padding:5px 8px;border-bottom:1px solid #f6f8fa;font-weight:600;color:#2563eb;text-decoration:underline dotted;white-space:nowrap">'+_escH(name)+'</td>'
+      +'<td style="padding:5px 8px;border-bottom:1px solid #f6f8fa;text-align:right;color:#94a3b8;font-variant-numeric:tabular-nums;white-space:nowrap">'+_ovFmt(h.v25)+'</td>'
+      +'<td style="padding:5px 8px;border-bottom:1px solid #f6f8fa;text-align:right;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap">'+_ovFmt(h.v26)+'</td>'
+      +'<td style="padding:5px 8px;border-bottom:1px solid #f6f8fa;text-align:right">'+_grBadge(h.v26,h.v25)+'</td>'
+      +'</tr>';
+  }).join('') : '<tr><td colspan="5" style="padding:16px;text-align:center;color:#94a3b8;font-size:12px">해당 기간 구매 병원 없음</td></tr>';
+
+  document.getElementById('dashDetailTitle').innerHTML='<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:'+col+';margin-right:7px;vertical-align:middle"></span>'+_escH(sidoName)+' <span style="color:#94a3b8;font-weight:500">· '+_escH(grp)+'</span> <span style="font-size:12px;font-weight:400;color:#94a3b8">상세내역</span>';
+  document.getElementById('dashDetailBody').innerHTML=
+    '<div style="font-size:12.5px;color:#64748b;margin-bottom:14px">'+_escH(plabel)+' 기준 <b style="font-size:15px;color:#111827">'+fmtB(o.v26)+'</b> · 전년 동기 '+fmtB(o.v25)+' '+_grBadge(o.v26,o.v25)+' · 거래처 '+hospEntries.length+'곳</div>'
+    +'<div class="row g-3">'
+      +'<div class="col-md-7"><div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:8px"><i class="bi bi-graph-up-arrow me-1"></i>월별 추이(2025 vs 2026)</div><div style="position:relative;height:230px"><canvas id="cons-region-drill-chart"></canvas></div></div>'
+      +'<div class="col-md-5"><div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:8px"><i class="bi bi-pie-chart me-1"></i>제품 구성</div>'+prodHtml+'</div>'
+    +'</div>'
+    +'<div class="row g-3 mt-1">'
+      +'<div class="col-md-5"><div style="font-size:12px;font-weight:700;color:#374151;margin:8px 0 8px"><i class="bi bi-table me-1"></i>월별 상세</div><div style="max-height:280px;overflow-y:auto;border:1px solid #eef2f7;border-radius:8px"><table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="background:#f8fafc;color:#94a3b8;font-size:10px"><th style="padding:5px 8px;text-align:left;position:sticky;top:0;background:#f8fafc">월</th><th style="padding:5px 8px;text-align:right;position:sticky;top:0;background:#f8fafc">전년</th><th style="padding:5px 8px;text-align:right;position:sticky;top:0;background:#f8fafc">올해</th><th style="padding:5px 8px;text-align:right;position:sticky;top:0;background:#f8fafc">증감</th></tr></thead><tbody>'+(monthRows||'<tr><td colspan="4" style="padding:16px;text-align:center;color:#94a3b8;font-size:12px">데이터 없음</td></tr>')+'</tbody></table></div></div>'
+      +'<div class="col-md-7"><div style="font-size:12px;font-weight:700;color:#374151;margin:8px 0 8px"><i class="bi bi-hospital me-1"></i>구매 병원</div><div style="max-height:280px;overflow-y:auto;border:1px solid #eef2f7;border-radius:8px"><table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="background:#f8fafc;color:#94a3b8;font-size:10px"><th style="padding:5px 8px;width:24px;position:sticky;top:0;background:#f8fafc">#</th><th style="padding:5px 8px;text-align:left;position:sticky;top:0;background:#f8fafc">병원명</th><th style="padding:5px 8px;text-align:right;position:sticky;top:0;background:#f8fafc">전년</th><th style="padding:5px 8px;text-align:right;position:sticky;top:0;background:#f8fafc">올해</th><th style="padding:5px 8px;text-align:right;position:sticky;top:0;background:#f8fafc">증감</th></tr></thead><tbody>'+hospHtml+'</tbody></table></div></div>'
+    +'</div>';
+
   const d25=Array.from({length:12},(_,i)=>(o.mo25[i+1]||0)/1e8);
   const d26=Array.from({length:12},(_,i)=>o.mo26[i+1]!=null?o.mo26[i+1]/1e8:null);
   if(window._consRegionDrillChart){ try{ window._consRegionDrillChart.destroy(); }catch(e){} }
