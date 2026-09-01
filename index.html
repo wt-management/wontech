@@ -5786,40 +5786,49 @@ function renderConsumables() {
   document.getElementById('cons-detail-ytd').innerHTML=renderDetailCol(spanMs,prevMs);
 
   // ④ 그룹별(Oligio / Oligio X/XM) 지역별(시도) 매출 — 병원 트랜잭션을 병원별 지역으로 귀속
+  //    행 클릭 시 해당 시도·그룹의 월별 추이를 모달로 조회(_consRegionDrill)
   (function renderConsRegion(){
-    const sumRngG = (h, rng, keys) => { let tot=0; rng.forEach(x=>{ const arr = x.y===2026?h.txns2026:(x.y===2025?h.txns2025:null); if(arr) arr.forEach(t=>{ if(t[0]===x.m && keys.includes(t[2])) tot+=t[3]; }); }); return tot; };
+    // sido별 월별(1~12, 연도별) 원본 + 선택기간(v26/v25) 합계를 한 번에 집계
     const grpBySido = keys => {
       const sido={};
       Object.entries(CONS.hospitals||{}).forEach(([name,h])=>{
-        const v26=sumRngG(h,spanMs,keys), v25=sumRngG(h,prevMs,keys);
-        if(!v26 && !v25) return;
+        const mo26={}, mo25={}; let any=false;
+        (h.txns2026||[]).forEach(t=>{ if(keys.includes(t[2])){ mo26[t[0]]=(mo26[t[0]]||0)+t[3]; any=true; } });
+        (h.txns2025||[]).forEach(t=>{ if(keys.includes(t[2])){ mo25[t[0]]=(mo25[t[0]]||0)+t[3]; any=true; } });
+        if(!any) return;
         const r=_hospRegion(name); const s=(r&&r[0])?r[0]:'미분류';
-        if(!sido[s]) sido[s]={v26:0,v25:0};
-        sido[s].v26+=v26; sido[s].v25+=v25;
+        if(!sido[s]) sido[s]={v26:0,v25:0,mo26:{},mo25:{}};
+        for(let m=1;m<=12;m++){ if(mo26[m]) sido[s].mo26[m]=(sido[s].mo26[m]||0)+mo26[m]; if(mo25[m]) sido[s].mo25[m]=(sido[s].mo25[m]||0)+mo25[m]; }
+        spanMs.forEach(x=>{ const v=(x.y===2026?mo26:x.y===2025?mo25:null); if(v&&v[x.m]) sido[s].v26+=v[x.m]; });
+        prevMs.forEach(x=>{ const v=(x.y===2026?mo26:x.y===2025?mo25:null); if(v&&v[x.m]) sido[s].v25+=v[x.m]; });
       });
       return sido;
     };
-    const renderList = sido => {
+    const renderList = (sido,grp) => {
       const entries=Object.entries(sido).filter(([,o])=>o.v26>0||o.v25>0).sort((a,b)=>b[1].v26-a[1].v26);
       if(!entries.length) return '<div style="padding:16px;text-align:center;color:#94a3b8;font-size:12px">데이터 없음</div>';
-      const maxV=entries[0][1].v26||1;
       return entries.map(([name,o])=>{
         const isUn=name==='미분류';
-        return '<div style="padding:5px 6px;border-bottom:1px solid #f6f8fa">'
-          +'<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:2px">'
-          +'<span style="font-weight:600'+(isUn?';color:#94a3b8':'')+'">'+_ovEsc(name)+'</span>'
-          +'<span style="display:flex;gap:6px;align-items:center"><span style="font-weight:700">'+_ovFmt(o.v26)+'</span>'+_grBadge(o.v26,o.v25)+'</span>'
-          +'</div>'
-          +'<div style="background:#f3f4f6;border-radius:3px;height:4px"><div style="width:'+(o.v26/maxV*100).toFixed(1)+'%;height:100%;background:'+(isUn?'#cbd5e1':'#2563eb')+';border-radius:3px"></div></div>'
+        const safe=String(name).replace(/"/g,'&quot;');
+        return '<div onclick="_consRegionDrill(\''+grp+'\',this.dataset.s)" data-s="'+safe+'" style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 6px;border-bottom:1px solid #f6f8fa;cursor:pointer" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'">'
+          +'<span style="font-size:12.5px;font-weight:600'+(isUn?';color:#94a3b8':'')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+_ovEsc(name)+'</span>'
+          +'<span style="display:flex;align-items:center;gap:10px;flex-shrink:0;font-variant-numeric:tabular-nums">'
+            +'<span style="font-size:11px;color:#94a3b8;white-space:nowrap">전년 '+_ovFmt(o.v25)+'</span>'
+            +'<span style="font-size:13px;font-weight:800;white-space:nowrap">'+_ovFmt(o.v26)+'</span>'
+            +_grBadge(o.v26,o.v25)
+            +'<i class="bi bi-chevron-right" style="font-size:10px;color:#cbd5e1"></i>'
+          +'</span>'
           +'</div>';
       }).join('');
     };
     const oligKeys = OLIG.filter(p=>p.grp==='Oligio').map(p=>p.key);
     const xmKeys = OLIG.filter(p=>p.grp==='Oligio X/XM').map(p=>p.key);
-    const elOg=document.getElementById('cons-region-og'); if(elOg) elOg.innerHTML = renderList(grpBySido(oligKeys));
-    const elXm=document.getElementById('cons-region-xm'); if(elXm) elXm.innerHTML = renderList(grpBySido(xmKeys));
-    const infoOg=document.getElementById('cons-reg-og-info'); if(infoOg) infoOg.textContent = P.label+' 기준';
-    const infoXm=document.getElementById('cons-reg-xm-info'); if(infoXm) infoXm.textContent = P.label+' 기준';
+    const sidoOg=grpBySido(oligKeys), sidoXm=grpBySido(xmKeys);
+    window._consRegionData = {'Oligio':sidoOg, 'Oligio X/XM':sidoXm, _periodLabel:P.label};
+    const elOg=document.getElementById('cons-region-og'); if(elOg) elOg.innerHTML = renderList(sidoOg,'Oligio');
+    const elXm=document.getElementById('cons-region-xm'); if(elXm) elXm.innerHTML = renderList(sidoXm,'Oligio X/XM');
+    const infoOg=document.getElementById('cons-reg-og-info'); if(infoOg) infoOg.textContent = P.label+' 기준 · 클릭하면 월별 추이';
+    const infoXm=document.getElementById('cons-reg-xm-info'); if(infoXm) infoXm.textContent = P.label+' 기준 · 클릭하면 월별 추이';
   })();
 
   if(consDonutChart){consDonutChart.destroy();consDonutChart=null;}
@@ -5830,6 +5839,43 @@ function renderConsumables() {
       showConsDrill(window._consDrillLast.prodKeys, window._consDrillLast.label, true); }
 }
 
+// 소모품 지역별 카드 클릭 → 시도×그룹 월별 추이 모달(기존 dashDetailModal 재사용)
+function _consRegionDrill(grp, sidoName){
+  const store = window._consRegionData && window._consRegionData[grp];
+  const o = store && store[sidoName];
+  if(!o) return;
+  const col = grp==='Oligio' ? '#2563eb' : '#16324f';
+  const fmtB = v => (v/1e8).toFixed(2)+'억';
+  const plabel = window._consRegionData._periodLabel || '';
+  document.getElementById('dashDetailTitle').innerHTML='<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:'+col+';margin-right:7px;vertical-align:middle"></span>'+_escH(sidoName)+' <span style="color:#94a3b8;font-weight:500">· '+_escH(grp)+'</span> <span style="font-size:12px;font-weight:400;color:#94a3b8">월별 추이</span>';
+  document.getElementById('dashDetailBody').innerHTML=
+    '<div style="font-size:12.5px;color:#64748b;margin-bottom:12px">'+_escH(plabel)+' 기준 <b style="font-size:15px;color:#111827">'+fmtB(o.v26)+'</b> · 전년 동기 '+fmtB(o.v25)+' '+_grBadge(o.v26,o.v25)+'</div>'
+    +'<div style="position:relative;height:280px"><canvas id="cons-region-drill-chart"></canvas></div>';
+  const MO=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const d25=Array.from({length:12},(_,i)=>(o.mo25[i+1]||0)/1e8);
+  const d26=Array.from({length:12},(_,i)=>o.mo26[i+1]!=null?o.mo26[i+1]/1e8:null);
+  if(window._consRegionDrillChart){ try{ window._consRegionDrillChart.destroy(); }catch(e){} }
+  window._consRegionDrillChart = new Chart(document.getElementById('cons-region-drill-chart').getContext('2d'),{
+    type:'line',
+    data:{labels:MO, datasets:[
+      {label:sidoName+' 2025', data:d25, borderColor:'rgba(100,116,139,0.4)', borderWidth:1.5, borderDash:[5,3], pointRadius:2, tension:0.3, fill:false},
+      {label:sidoName+' 2026', data:d26, borderColor:col, backgroundColor:col+'1f', borderWidth:3, pointRadius:4, pointBackgroundColor:col, tension:0.3, fill:true, spanGaps:false},
+    ]},
+    options:{
+      maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{position:'top', align:'end', labels:{font:{size:11},boxWidth:10,padding:10,usePointStyle:true}},
+        tooltip:{callbacks:{label:ctx=>ctx.raw!=null?`${ctx.dataset.label}: ${ctx.raw.toFixed(2)}억`:null}}
+      },
+      scales:{
+        y:{ticks:{callback:v=>v+'억',font:{size:10}},grid:{color:'#f3f4f6'},beginAtZero:true},
+        x:{grid:{display:false},ticks:{font:{size:10}}}
+      }
+    }
+  });
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('dashDetailModal')).show();
+}
 
 function showConsDrill(prodKeys, label, noScroll) {
   // prodKeys: 제품명 배열 또는 null(전체). noScroll: 조회기간 변경으로 자동갱신될 때 스크롤 생략
