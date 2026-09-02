@@ -40,7 +40,7 @@ function parseAccounting(wb,fname){
   if(!rd) lines.forEach(function(l){ if(!rd||l.date>rd) rd=l.date; });
   var curMo=rd?parseInt(rd.slice(5,7),10):new Date().getMonth()+1;
   // 월 롤오버 가드: 당월(파일명 월)에 매출 데이터가 없으면 데이터 있는 마지막 월로 캡 (총합계 무영향, 당월 표시/미반영대조 정상화)
-  var _dm=lines.map(function(l){return l.month;}).filter(Boolean); var _maxMo=_dm.length?Math.max.apply(null,_dm):curMo; if(curMo>_maxMo) curMo=_maxMo;
+  var _dm=lines.map(function(l){return l.month;}).filter(Boolean); var _maxMo=_dm.length?Math.max.apply(null,_dm):curMo; var _curYr=rd?parseInt(rd.slice(0,4),10):new Date().getFullYear(); var _now=new Date(); if(curMo>_maxMo && !(_curYr===_now.getFullYear()&&curMo===_now.getMonth()+1)) curMo=_maxMo; // 당월(달력 현재 연·월)은 데이터가 없어도 캡하지 않고 즉시 롤오버; 과거 월만 데이터 최신월로 캡 — wt-consumables/ilbo.html의 parseAccounting과 동기화(2026-09 드리프트 발견)
   var cl=lines.filter(function(l){return l.month===curMo;});
   return {reportDate:rd,curMonth:curMo,monthly:monthly,consMonthly:consMonthly,lines:cl,products:products,updatedAt:rd};
 }
