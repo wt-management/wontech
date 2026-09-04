@@ -13818,18 +13818,26 @@ function renderDeviceModel(){
     var chQAmtCell=function(v,isAvg){ v=v||{q:0,a:0}; var qv=isAvg?v.q.toFixed(1):Math.round(v.q); var bg=isAvg?';background:#f8fafc':'';
       return '<td style="padding:6px 8px;border-bottom:1px solid #eef2f5;text-align:center;font-size:11.5px;font-weight:700;color:#1c2534'+bg+'">'+qv+'대</td>'
         +'<td style="padding:6px 8px;border-bottom:1px solid #eef2f5;text-align:center;font-size:11.5px;font-weight:700;color:#1c2534'+bg+'">'+W(v.a)+'억</td>'; };
+    var chTotalCell=function(amt,isAvg){ var bg=isAvg?';background:#f8fafc':'';
+      return '<td style="padding:6px 8px;border-bottom:1px solid #eef2f5;text-align:center;font-size:12px;font-weight:800;color:#0f172a'+bg+'">'+W(amt)+'억</td>'; };
+    var chRowAmtSum=function(o,consAmt){ return o.dealerOligio.a+o.dealerOther.a+o.directOligio.a+o.directOther.a+consAmt; };
+    var chH1TotalAmt=chRowAmtSum(chH1Avg,consH1Avg);
     var chRows='<tr><td style="padding:6px 8px;border-bottom:1px solid #eef2f5;font-weight:800;color:#0f172a;background:#f8fafc;white-space:nowrap">상반기 평균</td>'
+      +chTotalCell(chH1TotalAmt,true)
       +CH_GRPS.map(function(g){ return chQAmtCell(chH1Avg[g],true); }).join('')
       +'<td style="padding:6px 8px;border-bottom:1px solid #eef2f5;text-align:center;font-size:11.5px;font-weight:700;color:#1c2534;background:#f8fafc">'+W(consH1Avg)+'억</td></tr>';
     for(var _cm3=_h1EndM+1;_cm3<=_capM2;_cm3++){
       var _oc=_sumMoCh[_cm3]||{dealerOligio:{q:0,a:0},dealerOther:{q:0,a:0},directOligio:{q:0,a:0},directOther:{q:0,a:0}};
       var _pv4=pendKeyTotal['2026-'+_cm3];
       var _badge3=(_pv4&&(_pv4.q||_pv4.a))?' <span style="font-size:9px;font-weight:800;color:#7c3aed;background:#f5f3ff;border-radius:4px;padding:0 5px;margin-left:2px">잠정</span>':'';
+      var _consAmtM=consMoAll[_cm3]||0;
       chRows+='<tr><td style="padding:6px 8px;border-bottom:1px solid #eef2f5;font-weight:800;color:#475569;white-space:nowrap">'+_cm3+'월'+_badge3+'</td>'
+        +chTotalCell(chRowAmtSum(_oc,_consAmtM),false)
         +CH_GRPS.map(function(g){ return chQAmtCell(_oc[g],false); }).join('')
-        +'<td style="padding:6px 8px;border-bottom:1px solid #eef2f5;text-align:center;font-size:11.5px;font-weight:700;color:#1c2534">'+W(consMoAll[_cm3]||0)+'억</td></tr>';
+        +'<td style="padding:6px 8px;border-bottom:1px solid #eef2f5;text-align:center;font-size:11.5px;font-weight:700;color:#1c2534">'+W(_consAmtM)+'억</td></tr>';
     }
     var chTheadRow1='<tr><th rowspan="3" style="padding:4px 8px 7px;border-bottom:2px solid #e7ebf0;text-align:left;font-size:10.5px;color:#5a6675;vertical-align:bottom">구분</th>'
+      +'<th rowspan="3" style="padding:4px 8px 7px;border-bottom:2px solid #e7ebf0;text-align:center;font-size:10.5px;color:#5a6675;vertical-align:bottom">매출 종합<br>금액</th>'
       +'<th colspan="4" style="padding:4px 8px 3px;border-bottom:1px solid #eef2f5;text-align:center;font-size:11px;color:#334155;font-weight:800">장비 대리점</th>'
       +'<th colspan="4" style="padding:4px 8px 3px;border-bottom:1px solid #eef2f5;text-align:center;font-size:11px;color:#334155;font-weight:800">장비 직판</th>'
       +'<th rowspan="3" style="padding:4px 8px 7px;border-bottom:2px solid #e7ebf0;text-align:center;font-size:10.5px;color:#5a6675;vertical-align:bottom">소모품<br>금액</th></tr>';
