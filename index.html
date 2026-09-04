@@ -13773,9 +13773,11 @@ function renderDeviceModel(){
       +'<div style="margin-top:8px;font-size:10px;color:#94a3b8">각 월 칸 = 실적(대수·금액) · 아래 두 줄은 상반기 평균 대비 증감(대수/금액, 괄호는 %)</div></div>'):'';
 
     // ── 채널(대리점/직판) × 라인업(올리지오/레이저기타) 결합표 — 엑셀 보던 표 형식과 맞춤 ──
-    // 회계반영 기준만 사용(미반영은 병원명 매칭이 안 되는 건이 있어 채널 귀속이 불확실 — Capa 페이지의 devUnk 처리와 같은 이유로 여기선 아예 제외).
+    // 회계+미반영(예정+일보) 모두 포함(위 진단표와 동일 범위). 미반영은 병원명이 등록 거래처와 매칭돼야 채널을 알 수 있어,
+    // 매칭 안 되는 건은 Capa 페이지의 devUnk와 같은 이유로 대리점/직판 어느 쪽에도 넣지 않고 '귀속불명'으로 따로 집계해 각주에 표시.
     var CH_GRPS=['dealerOligio','dealerOther','directOligio','directOther'];
     var _sumMoCh={}; var _ensureMoCh=function(m){ if(!_sumMoCh[m]) _sumMoCh[m]={dealerOligio:{q:0,a:0},dealerOther:{q:0,a:0},directOligio:{q:0,a:0},directOther:{q:0,a:0}}; return _sumMoCh[m]; };
+    var _chUnk={q:0,a:0};
     Object.keys(DEVICE.hospitals||{}).forEach(function(hn){
       var h=DEVICE.hospitals[hn]||{};
       var owner=(typeof _repOf==='function'?_repOf(hn):'')||(typeof _sN==='function'?_sN(h.sales||''):(h.sales||''));
@@ -13787,6 +13789,29 @@ function renderDeviceModel(){
         var o=_ensureMoCh(mm); o[grp].q+=q; o[grp].a+=amt;
       });
     });
+    try{ (_pv2.items||[]).forEach(function(it){   // 미반영(예정)분 — 진단표와 같은 필터
+      if(!it.inYr || it.eff==='cancelled' || it.eff==='reflected') return;
+      var p=it.p; if(p.category==='소모품'||_devmodExcluded(p.product)) return;
+      var d=p.expected_date?new Date(p.expected_date+'T00:00:00'):null; if(!d||isNaN(d)) return;
+      var m=d.getMonth()+1; if(!m) return;
+      var q=Number(p.qty)||0, a=Number(p.amount)||0; if(!q&&!a) return;
+      var owner=(typeof _repOf==='function'?_repOf(p.hospital||''):'')||'';
+      if(!owner){ _chUnk.q+=q; _chUnk.a+=a; return; }
+      var isD=_CAPA_DEALER_RE.test(String(owner));
+      var grp=(isD?'dealer':'direct')+(_devmodCat(p.product||'')==='oligio'?'Oligio':'Other');
+      var o=_ensureMoCh(m); o[grp].q+=q; o[grp].a+=a;
+    }); }catch(e){}
+    try{ (typeof ILBO_PEND!=='undefined'?ILBO_PEND:[]).forEach(function(r){   // 미반영(일보)분
+      if(!r||(r.region&&r.region!=='국내')||r.status==='반영됨'||r.status==='취소') return;
+      var prod=String(r.product||''); if(!prod||/tip|팁|cartridge|카트리지|소모|a\/s/i.test(prod)||_devmodExcluded(prod)) return;
+      var m=parseInt(String(r.expectedDate||r.date||'').slice(5,7),10); if(!m) return;
+      var q=Number(r.qty)||0, a=Number(r.amount)||0; if(!q&&!a) return;
+      var owner=(typeof _repOf==='function'?_repOf(r.customer||''):'')||'';
+      if(!owner){ _chUnk.q+=q; _chUnk.a+=a; return; }
+      var isD=_CAPA_DEALER_RE.test(String(owner));
+      var grp=(isD?'dealer':'direct')+(_devmodCat(prod)==='oligio'?'Oligio':'Other');
+      var o=_ensureMoCh(m); o[grp].q+=q; o[grp].a+=a;
+    }); }catch(e){}
     var consMoAll={}; for(var _cma=1;_cma<=12;_cma++) consMoAll[_cma]=Number(((CONS&&CONS.monthly2026)||{})[_cma])||0;
     var chH1Avg={}; CH_GRPS.forEach(function(g){ var q=0,a=0; for(var m=1;m<=_h1EndM;m++){ var o=_sumMoCh[m]; if(o){ q+=o[g].q; a+=o[g].a; } } chH1Avg[g]={q:q/_h1n2,a:a/_h1n2}; });
     var consH1Avg=0; for(var _cma2=1;_cma2<=_h1EndM;_cma2++) consH1Avg+=consMoAll[_cma2]; consH1Avg/=_h1n2;
@@ -13796,9 +13821,11 @@ function renderDeviceModel(){
     var chRows='<tr><td style="padding:6px 8px;border-bottom:1px solid #eef2f5;font-weight:800;color:#0f172a;background:#f8fafc;white-space:nowrap">상반기 평균</td>'
       +CH_GRPS.map(function(g){ return chQAmtCell(chH1Avg[g],true); }).join('')
       +'<td style="padding:6px 8px;border-bottom:1px solid #eef2f5;text-align:center;font-size:11.5px;font-weight:700;color:#1c2534;background:#f8fafc">'+W(consH1Avg)+'억</td></tr>';
-    for(var _cm3=_h1EndM+1;_cm3<=_lm2;_cm3++){
+    for(var _cm3=_h1EndM+1;_cm3<=_capM2;_cm3++){
       var _oc=_sumMoCh[_cm3]||{dealerOligio:{q:0,a:0},dealerOther:{q:0,a:0},directOligio:{q:0,a:0},directOther:{q:0,a:0}};
-      chRows+='<tr><td style="padding:6px 8px;border-bottom:1px solid #eef2f5;font-weight:800;color:#475569;white-space:nowrap">'+_cm3+'월</td>'
+      var _pv4=pendKeyTotal['2026-'+_cm3];
+      var _badge3=(_pv4&&(_pv4.q||_pv4.a))?' <span style="font-size:9px;font-weight:800;color:#7c3aed;background:#f5f3ff;border-radius:4px;padding:0 5px;margin-left:2px">잠정</span>':'';
+      chRows+='<tr><td style="padding:6px 8px;border-bottom:1px solid #eef2f5;font-weight:800;color:#475569;white-space:nowrap">'+_cm3+'월'+_badge3+'</td>'
         +CH_GRPS.map(function(g){ return chQAmtCell(_oc[g],false); }).join('')
         +'<td style="padding:6px 8px;border-bottom:1px solid #eef2f5;text-align:center;font-size:11.5px;font-weight:700;color:#1c2534">'+W(consMoAll[_cm3]||0)+'억</td></tr>';
     }
@@ -13808,8 +13835,9 @@ function renderDeviceModel(){
       +'<th rowspan="3" style="padding:4px 8px 7px;border-bottom:2px solid #e7ebf0;text-align:center;font-size:10.5px;color:#5a6675;vertical-align:bottom">소모품<br>금액</th></tr>';
     var chTheadRow2='<tr>'+['올리지오','레이저기타','올리지오','레이저기타'].map(function(t){ return '<th colspan="2" style="padding:2px 8px;border-bottom:1px solid #eef2f5;text-align:center;font-size:10px;color:#64748b;font-weight:700">'+t+'</th>'; }).join('')+'</tr>';
     var chTheadRow3='<tr>'+['대수','금액','대수','금액','대수','금액','대수','금액'].map(function(t){ return '<th style="padding:2px 8px 6px;border-bottom:2px solid #e7ebf0;text-align:center;font-size:9.5px;color:#94a3b8;font-weight:700">'+t+'</th>'; }).join('')+'</tr>';
-    var chTable=(_lm2>_h1EndM)?('<div class="card p-3 mb-3"><div style="font-size:13.5px;font-weight:800;margin-bottom:4px"><i class="bi bi-table me-1" style="color:#0d9488"></i>채널×라인업 결합표(대리점/직판 · 올리지오/레이저기타)</div>'
-      +'<div style="font-size:10.5px;color:#94a3b8;margin-bottom:10px">회계반영 기준(미반영 예정·일보 미포함) · 레이저기타 = 올리지오를 제외한 전 라인업(울트라스킨 타이탄·Long pulse·Fractional·Q/SW·PICO·미분류) · 소모품은 채널 구분 없이 금액만 표기</div>'
+    var chUnkNote=(_chUnk.q||_chUnk.a)?(' · <span style="color:#d97706;font-weight:700">귀속불명</span> 미반영 '+Math.round(_chUnk.q)+'대·'+W(_chUnk.a)+'억은 담당 거래처 매칭이 안 돼 대리점/직판 어느 쪽에도 넣지 않음(장비합계 진단표엔 포함됨)'):'';
+    var chTable=(_capM2>_h1EndM)?('<div class="card p-3 mb-3"><div style="font-size:13.5px;font-weight:800;margin-bottom:4px"><i class="bi bi-table me-1" style="color:#0d9488"></i>채널×라인업 결합표(대리점/직판 · 올리지오/레이저기타)</div>'
+      +'<div style="font-size:10.5px;color:#94a3b8;margin-bottom:10px">회계+미반영(예정+일보) 포함 · 레이저기타 = 올리지오를 제외한 전 라인업(울트라스킨 타이탄·Long pulse·Fractional·Q/SW·PICO·미분류) · 소모품은 채널 구분 없이 금액만 표기'+chUnkNote+'</div>'
       +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums"><thead>'+chTheadRow1+chTheadRow2+chTheadRow3+'</thead>'
       +'<tbody>'+chRows+'</tbody></table></div></div>'):'';
 
