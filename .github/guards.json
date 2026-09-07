@@ -45,6 +45,11 @@
         "id": "ilbo-curmonth-rollover-exception",
         "must": "!(_curYr===_now.getFullYear()&&curMo===_now.getMonth()+1)",
         "why": "wt-consumables/ilbo.html의 parseAccounting에는 있던 예외가 이 파일엔 빠져 있어서, 새 달 첫 며칠(회계 전표가 아직 안 올라온 기간)에 일일매출일보 대시보드가 전월로 표시되는 드리프트가 있었음(2026-09 발견). 당월(달력 기준)은 회계 데이터가 없어도 바로 롤오버해야 함"
+      },
+      {
+        "id": "dept-map-2026-09-codes",
+        "must": "'A04010040':'해외영업','A0401050':'Surgical','B0901030':'Surgical','B04030020':'Surgical'",
+        "why": "재무팀이 부서코드를 또 바꿔서(2026-09) A04010040(해외법인영업팀)·B04030020(써지컬사업팀)가 DEPT_MAP에 없어 '기타'로 잘못 떨어짐 — wtu_engine.js(부서 텍스트 매칭)와 18.2억 어긋나 업로드 확정이 잠겼었음. 부서코드는 재무팀이 수시로 바꾸니 대조 잠금이 다시 걸리면 이 표부터 확인할 것"
       }
     ]
   }
