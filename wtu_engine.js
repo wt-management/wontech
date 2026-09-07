@@ -363,7 +363,7 @@ function build(sheets, existing){
     if(d.indexOf('해외법인영업')>=0) return '해외영업';
     if(/지컬/.test(d))              return '서지컬';
     if(/B2C/i.test(d))              return 'B2C';
-    if(/CS파트/.test(d))            return '고객만족';
+    if(/CS\d*(파트|팀)/.test(d))    return '고객만족';
     if(/한국영업|국내영업|영업\s*\d\s*파트/.test(d)) return '국내영업';
     return '기타';
   };
