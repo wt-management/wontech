@@ -535,7 +535,17 @@ async function doWrite(){
     // 미반영치를 새로 쓸 때 '전월 이월 조정(carry)'을 함께 넘긴다.
     // carry 는 파일이 아니라 일보 화면에서 손으로 넣는 값이라, 그냥 덮어쓰면 조용히 사라진다.
     const _keepCarry = o => { const c = BUILT.__prevPendCarry || []; return (c.length && o && !o.carry) ? Object.assign({}, o, {carry:c}) : o; };
-    if(_pendFromFile) writes.push(['ilbo_pending',_keepCarry(_pendFromFile)]);            // 미반영치 파일 올렸으면 전체 교체
+    if(_pendFromFile){
+      const _freshRows=JSON.parse(JSON.stringify(_pendFromFile.rows||[]));
+      const _freshRec=reconcilePending(_freshRows, BUILT.ilbo, BUILT.intl);
+
+      writes.push(['ilbo_pending',_keepCarry({
+        rows:_freshRows,
+        updatedAt:_pendFromFile.updatedAt
+      })]);
+
+      log('새 미반영 자동대조: 회계반영 '+_freshRec.auto+'건 / 확인필요 '+_freshRec.near+'건');
+    }            // 미반영치 파일 올렸으면 전체 교체
     else if(BUILT.ilboPending) writes.push(['ilbo_pending',_keepCarry(BUILT.ilboPending)]);  // 아니면 기존 미반영 자동대조분
     const skipped=[];
     if(!BUILT.sp) skipped.push('Sales Portfolio(sales_portfolio) — 포트폴리오 집계 실패로 미갱신 (이전 데이터 유지)');
