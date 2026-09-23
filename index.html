@@ -3389,11 +3389,25 @@ function _pendIsCons(r){
 // 일매출일보 미반영분 — 소모품/제품 분류 후 월별 금액 맵(2026). 카테고리 명시 우선, 없으면 소모품 제품명 목록과 대조
 function _ilboMonthMaps(){
   var consMo={}, devMo={};
+  var curYm=String((CONS&&CONS.updatedAt)||(DEVICE&&DEVICE.updatedAt)||'');
+  var curY=curYm.slice(0,4);
+  var curM=parseInt(curYm.slice(5,7),10)||0;
+
   (ILBO_PEND||[]).forEach(function(r){
-    var d=String(r.expectedDate||''); if(d.slice(0,4)!=='2026') return;
-    var m=parseInt(d.slice(5,7),10); if(!m) return;
+    var d=String(r.expectedDate||'');
+    var y=d.slice(0,4);
+    var m=parseInt(d.slice(5,7),10);
+
+    if(r.type==='완료' && curY==='2026' && curM){
+      y=curY;
+      m=curM;
+    }
+
+    if(y!=='2026'||!m) return;
+
     var amt=Number(r.amount)||0;
-    if(_pendIsCons(r)) consMo[m]=(consMo[m]||0)+amt; else devMo[m]=(devMo[m]||0)+amt;
+    if(_pendIsCons(r)) consMo[m]=(consMo[m]||0)+amt;
+    else devMo[m]=(devMo[m]||0)+amt;
   });
   // 전월 이월 조정(마감월 납품(선적) 잔액) — 전사 종합과 같은 규칙으로 해당 월에 가산
   (ILBO_CARRY||[]).forEach(function(c){
