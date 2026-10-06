@@ -278,14 +278,55 @@ function parseMibanyong(wb){
   });
   if(!foundAny) throw new Error("미반영치 형식 인식 실패: '거래처명/제품명' 헤더를 찾지 못했습니다. 일매출일보 양식인지 확인하세요.");
   return out;
+  }
+
+  function parseDomesticMonthly(wb){
+  const best={};
+
+  wb.SheetNames.forEach(function(sn){
+    const m=String(sn).match(/^일매출일보_(\d{1,2})월(?:_(\d{8}))?/);
+    if(!m) return;
+
+    const mo=Number(m[1]);
+    const dt=Number(m[2]||0);
+    if(!(mo>=1&&mo<=12)) return;
+
+    // 같은 월 시트가 여러 개면 가장 최신 날짜 시트 사용
+    if(!best[mo] || dt>=best[mo].dt) best[mo]={sn:sn,dt:dt};
+  });
+
+  const out={};
+
+  Object.keys(best).forEach(function(k){
+    const ws=wb.Sheets[best[k].sn];
+    const dev=_mvNum(ws&&ws['BD8']&&ws['BD8'].v);
+    const cons=_mvNum(ws&&ws['BD9']&&ws['BD9'].v);
+
+    if(dev||cons){
+      out[k]={
+        dev:dev,
+        cons:cons,
+        total:dev+cons,
+        sheet:best[k].sn
+      };
+    }
+  });
+
+  return out;
 }
+
 async function handleMv(file){
   const info=document.getElementById('fileMvInfo'); info.style.display='block';
   try{
     const buf=await file.arrayBuffer(); const wb=XLSX.read(buf,{type:'array',cellDates:true});
     const rows=parseMibanyong(wb);
+    const domesticMonthly=parseDomesticMonthly(wb);
     if(!rows.length) throw new Error('미납품·미선적 행이 없습니다(전부 0). 파일 확인.');
-    _pendFromFile={rows:rows, updatedAt:(BUILT&&BUILT.ilbo&&BUILT.ilbo.reportDate)||new Date().toISOString().slice(0,10)};
+    _pendFromFile={
+      rows:rows,
+      domesticMonthly:domesticMonthly,
+      updatedAt:(BUILT&&BUILT.ilbo&&BUILT.ilbo.reportDate)||new Date().toISOString().slice(0,10)
+    };
     const dom=rows.filter(p=>p.region==='국내'), intl=rows.filter(p=>p.region==='해외');
     const done=rows.filter(p=>p.type==='완료'), plan=rows.filter(p=>p.type==='예정');
     const sum=a=>a.reduce((s,p)=>s+p.amount,0);
@@ -553,6 +594,7 @@ async function doWrite(){
 
       writes.push(['ilbo_pending',_keepCarry({
         rows:_freshRows,
+        domesticMonthly:_pendFromFile.domesticMonthly||{},
         updatedAt:_pendFromFile.updatedAt
       })]);
 

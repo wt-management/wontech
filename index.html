@@ -2830,6 +2830,7 @@ let stageChart=null, salesChart=null, perfChart=null, custPerfChart=null;
 let qItemCount=0;
 let PENDING = [];   // 예정분(회계 미반영 매출)
 let ILBO_PEND = []; // 일매출일보 미반영분(국내) — 종합 KPI에 금액 합산
+let ILBO_DOM_MONTHLY = {};
 let ILBO_CARRY = []; // 전월 이월 조정(마감월의 납품(선적) 잔액) — 일보에서 입력, 해당 월 실적에 가산
 
 // 해외 병원명 접두사 목록
@@ -3360,6 +3361,7 @@ async function _loadIlboPending(){
     const {data}=await _sb.from('cons_cache').select('data').eq('key','ilbo_pending').maybeSingle();
     const rows=((data&&data.data&&data.data.rows)||[]).filter(function(p){return p.region==='국내'&&p.status!=='반영됨'&&p.status!=='취소';});
     ILBO_PEND = rows;
+    ILBO_DOM_MONTHLY = (data&&data.data&&data.data.domesticMonthly)||{};
     ILBO_CARRY = ((data&&data.data&&data.data.carry)||[]).filter(function(c){ return c.region!=='해외' && Number(c.amount); });
     var tb=document.getElementById('ilbo-pend-tbody'),emp=document.getElementById('ilbo-pend-empty'),sum=document.getElementById('ilbo-pend-sum');
     if(!tb) return;
@@ -3389,6 +3391,30 @@ function _pendIsCons(r){
 // 일매출일보 미반영분 — 소모품/제품 분류 후 월별 금액 맵(2026). 카테고리 명시 우선, 없으면 소모품 제품명 목록과 대조
 function _ilboMonthMaps(){
   var consMo={}, devMo={};
+
+  // 일매출일보 월별 확정값이 있으면:
+  // 화면의 회계값과 일보값의 차이만 '미반영'으로 계산
+  // → 회계 + 미반영 = 일매출일보 월별 금액과 정확히 일치
+  if(ILBO_DOM_MONTHLY && Object.keys(ILBO_DOM_MONTHLY).length){
+    Object.keys(ILBO_DOM_MONTHLY).forEach(function(k){
+      var m=Number(k);
+      if(!(m>=1&&m<=12)) return;
+
+      var src=ILBO_DOM_MONTHLY[k]||{};
+      var reportCons=Number(src.cons)||0;
+      var reportDev=Number(src.dev)||0;
+
+      var accCons=Number((CONS.monthly2026||{})[m])||0;
+      var accDev=Number((DEVICE.monthly2026||{})[m])||0;
+
+      consMo[m]=reportCons-accCons;
+      devMo[m]=reportDev-accDev;
+    });
+
+    return {consMo:consMo, devMo:devMo};
+  }
+
+  // 구 데이터용 fallback
   var curYm=String((CONS&&CONS.updatedAt)||(DEVICE&&DEVICE.updatedAt)||'');
   var curY=curYm.slice(0,4);
   var curM=parseInt(curYm.slice(5,7),10)||0;
@@ -3409,13 +3435,16 @@ function _ilboMonthMaps(){
     if(_pendIsCons(r)) consMo[m]=(consMo[m]||0)+amt;
     else devMo[m]=(devMo[m]||0)+amt;
   });
-  // 전월 이월 조정(마감월 납품(선적) 잔액) — 전사 종합과 같은 규칙으로 해당 월에 가산
+
   (ILBO_CARRY||[]).forEach(function(c){
-    var ym=String(c.ym||''); if(ym.slice(0,4)!=='2026') return;
+    var ym=String(c.ym||'');
+    if(ym.slice(0,4)!=='2026') return;
     var m=parseInt(ym.slice(5,7),10), amt=Number(c.amount)||0;
     if(!(m>=1&&m<=12)||!amt) return;
-    if(c.item==='소모품') consMo[m]=(consMo[m]||0)+amt; else devMo[m]=(devMo[m]||0)+amt;
+    if(c.item==='소모품') consMo[m]=(consMo[m]||0)+amt;
+    else devMo[m]=(devMo[m]||0)+amt;
   });
+
   return {consMo:consMo, devMo:devMo};
 }
 
