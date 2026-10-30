@@ -3388,6 +3388,14 @@ function _baseDateLabel(){
   if(ib&&acc&&ib!==acc) return '일보 '+md(ib)+' · 회계전표 '+md(acc)+'까지';
   return (ib||acc)?('기준일 '+(ib||acc)):'';
 }
+// 종합 카드 문구: 날짜가 각각 무엇의 기준인지 괄호로 붙인다. '·'로 나열하면 해석이 안 됨(2026-10-30 실무 피드백)
+function _cardBasisNote(){
+  var acc=String((CONS&&CONS.updatedAt)||(DEVICE&&DEVICE.updatedAt)||'').replace(/-/g,'.');
+  var ib=String(ILBO_REPORT_DATE||'').replace(/-/g,'.').slice(0,10);
+  var md=function(d){ return d.length>=10?d.slice(5,10):d; };
+  if(ib&&acc&&ib!==acc) return '실적 = 회계(전표 '+md(acc)+'까지) + 미반영(일보 '+md(ib)+' 기준)';
+  return '실적 = 회계 + 미반영'+((ib||acc)?(' · 기준일 '+(ib||acc)):'');
+}
 function _normPname(s){ return String(s||'').replace(/[\s\[\]()\/]/g,'').toLowerCase(); }
 // 미반영 1건이 소모품인지 판정 — KPI(_ilboMonthMaps)와 제품 목록이 같은 규칙을 써야 두 화면이 어긋나지 않는다
 function _pendIsCons(r){
@@ -3912,7 +3920,7 @@ function renderSalesOverview() {
     ? '<div class="ovsb-gauge"><div class="fill" style="width:'+Math.min(_yAch,100).toFixed(1)+'%"></div><div class="pace" style="left:'+_pace+'%"></div></div><div class="ovsb-s">연간 목표 '+fmtW(_yTgt)+' · 누적달성 '+(_cAch==null?'-':_cAch.toFixed(1)+'%')+' · <b style="color:#d97706">시간진도 '+_pace+'%</b></div>'
     : '<div class="ovsb-s" style="margin-top:12px;color:#94a3b8">담당자별 목표(targets) 미적재 — 성과 탭에서 등록 시 표시</div>';
   const _ovKpiHtml='<div class="ovsb">'
-    +'<div class="ovsb-head"><span class="ovsb-title"><i class="bi bi-lightning-charge-fill me-1"></i>한국영업 종합 · 당월·전월·누계</span><span class="ovsb-note">실적 = 회계 + 미반영 · '+_escH(_baseDateLabel())+'</span></div>'
+    +'<div class="ovsb-head"><span class="ovsb-title"><i class="bi bi-lightning-charge-fill me-1"></i>한국영업 종합 · 당월·전월·누계</span><span class="ovsb-note">'+_escH(_cardBasisNote())+'</span></div>'
     +'<div class="ovsb-grid">'
       +_sbCell('당월 · '+_endM+'월','bi-calendar-check',_moVal,_moPrev,_moYoy,_moPend,_moDevV,_moConsV,'openOvMonth('+_endM+','+_endY+')')
       +_sbCell('전월 · '+_pmM+'월','bi-calendar-minus',_pmVal,_pmPrev,_pmYoy,_pmPend,_pmDevV,_pmConsV,'openOvMonth('+_pmM+','+_pmY+')')
