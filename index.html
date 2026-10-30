@@ -2831,6 +2831,7 @@ let qItemCount=0;
 let PENDING = [];   // 예정분(회계 미반영 매출)
 let ILBO_PEND = []; // 일매출일보 미반영분(국내) — 종합 KPI에 금액 합산
 let ILBO_DOM_MONTHLY = {};
+let ILBO_REPORT_DATE = '';   // 일매출일보(미반영) 기준일 — 화면 기준일 표시용(회계전표 마지막일과 함께 표시)
 let ILBO_CARRY = []; // 전월 이월 조정(마감월의 납품(선적) 잔액) — 일보에서 입력, 해당 월 실적에 가산
 
 // 해외 병원명 접두사 목록
@@ -3362,6 +3363,7 @@ async function _loadIlboPending(){
     const rows=((data&&data.data&&data.data.rows)||[]).filter(function(p){return p.region==='국내'&&p.status!=='반영됨'&&p.status!=='취소';});
     ILBO_PEND = rows;
     ILBO_DOM_MONTHLY = (data&&data.data&&data.data.domesticMonthly)||{};
+    ILBO_REPORT_DATE = String((data&&data.data&&data.data.updatedAt)||'');
     ILBO_CARRY = ((data&&data.data&&data.data.carry)||[]).filter(function(c){ return c.region!=='해외' && Number(c.amount); });
     var tb=document.getElementById('ilbo-pend-tbody'),emp=document.getElementById('ilbo-pend-empty'),sum=document.getElementById('ilbo-pend-sum');
     if(!tb) return;
@@ -3376,6 +3378,15 @@ async function _loadIlboPending(){
     tb.innerHTML=html;
     if(sum) sum.textContent='· '+rows.length+'건'+(ILBO_CARRY.length?(' + 이월조정 '+ILBO_CARRY.length+'건'):'')+' · '+Math.round(total).toLocaleString()+'원';
   }catch(e){ console.warn('ilbo pending load',e); }
+}
+// 기준일 표시: 일보 날짜(파일 기준)와 회계전표 마지막 승인일이 다르면 둘 다 보여준다.
+// 회계전표 날짜만 찍으면 매일 적재해도 '기준일이 며칠 전'으로 보여 업로드가 안 된 것처럼 오해한다(2026-10-28).
+function _baseDateLabel(){
+  var acc=String((CONS&&CONS.updatedAt)||(DEVICE&&DEVICE.updatedAt)||'').replace(/-/g,'.');
+  var ib=String(ILBO_REPORT_DATE||'').replace(/-/g,'.').slice(0,10);
+  var md=function(d){ return d.length>=10?d.slice(5,10):d; };
+  if(ib&&acc&&ib!==acc) return '일보 '+md(ib)+' · 회계전표 '+md(acc)+'까지';
+  return (ib||acc)?('기준일 '+(ib||acc)):'';
 }
 function _normPname(s){ return String(s||'').replace(/[\s\[\]()\/]/g,'').toLowerCase(); }
 // 미반영 1건이 소모품인지 판정 — KPI(_ilboMonthMaps)와 제품 목록이 같은 규칙을 써야 두 화면이 어긋나지 않는다
@@ -3800,7 +3811,7 @@ function renderSalesOverview() {
 
   const upd = CONS.updatedAt||DEVICE.updatedAt||'';
   const ovUpd = document.getElementById('overview-updated');
-  if (ovUpd) ovUpd.textContent = upd ? '기준일 '+upd : '';
+  if (ovUpd) ovUpd.textContent = upd ? _baseDateLabel() : '';
 
   const badge = v => v===null?'':'<span style="font-size:11px;font-weight:700;color:'+(v>=0?'#16a34a':'#dc2626')+'">'+(v>=0?'▲':'▼')+Math.abs(v).toFixed(1)+'%</span>';
   const periodLbl = P.label;
@@ -3901,7 +3912,7 @@ function renderSalesOverview() {
     ? '<div class="ovsb-gauge"><div class="fill" style="width:'+Math.min(_yAch,100).toFixed(1)+'%"></div><div class="pace" style="left:'+_pace+'%"></div></div><div class="ovsb-s">연간 목표 '+fmtW(_yTgt)+' · 누적달성 '+(_cAch==null?'-':_cAch.toFixed(1)+'%')+' · <b style="color:#d97706">시간진도 '+_pace+'%</b></div>'
     : '<div class="ovsb-s" style="margin-top:12px;color:#94a3b8">담당자별 목표(targets) 미적재 — 성과 탭에서 등록 시 표시</div>';
   const _ovKpiHtml='<div class="ovsb">'
-    +'<div class="ovsb-head"><span class="ovsb-title"><i class="bi bi-lightning-charge-fill me-1"></i>한국영업 종합 · 당월·전월·누계</span><span class="ovsb-note">실적 = 회계 + 미반영 · 기준일 '+_escH(CONS.updatedAt||DEVICE.updatedAt||'')+'</span></div>'
+    +'<div class="ovsb-head"><span class="ovsb-title"><i class="bi bi-lightning-charge-fill me-1"></i>한국영업 종합 · 당월·전월·누계</span><span class="ovsb-note">실적 = 회계 + 미반영 · '+_escH(_baseDateLabel())+'</span></div>'
     +'<div class="ovsb-grid">'
       +_sbCell('당월 · '+_endM+'월','bi-calendar-check',_moVal,_moPrev,_moYoy,_moPend,_moDevV,_moConsV,'openOvMonth('+_endM+','+_endY+')')
       +_sbCell('전월 · '+_pmM+'월','bi-calendar-minus',_pmVal,_pmPrev,_pmYoy,_pmPend,_pmDevV,_pmConsV,'openOvMonth('+_pmM+','+_pmY+')')

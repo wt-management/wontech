@@ -11,6 +11,16 @@
         "id": "pending-devclass",
         "must": "return !/tip|팁|cartridge|카트리지|소모품|face ?tip/i.test(String(p));",
         "why": "증감분해 미반영 판정. 등록 제품목록으로 거르면 표기 다른 건과 '기타' 마이너스가 누락돼 미반영이 과대계상됨(8.05억 vs 7.53억)"
+      },
+      {
+        "id": "base-date-dual-label",
+        "must": "if(ib&&acc&&ib!==acc) return '일보 '+md(ib)+' · 회계전표 '+md(acc)+'까지';",
+        "why": "종합 기준일을 회계전표 마지막일만 찍으면 매일 적재해도 며칠 전 날짜로 보여 업로드 누락으로 오해함(2026-10-28). 일보 날짜와 회계전표 날짜를 함께 표시"
+      },
+      {
+        "id": "ilbo-domestic-monthly-load",
+        "must": "ILBO_DOM_MONTHLY = (data&&data.data&&data.data.domesticMonthly)||{};",
+        "why": "일매출일보 월별 확정값(BD8+BD9) 로드. 빠지면 월 rollover 때 과거월·누계가 일보와 다시 어긋남(2026-10 PR #6)"
       }
     ],
     "total.html": [
