@@ -21,6 +21,11 @@
         "id": "ilbo-domestic-monthly-load",
         "must": "ILBO_DOM_MONTHLY = (data&&data.data&&data.data.domesticMonthly)||{};",
         "why": "일매출일보 월별 확정값(BD8+BD9) 로드. 빠지면 월 rollover 때 과거월·누계가 일보와 다시 어긋남(2026-10 PR #6)"
+      },
+      {
+        "id": "card-basis-note",
+        "must": "return '실적 = 회계(전표 '+md(acc)+'까지) + 미반영(일보 '+md(ib)+' 기준)';",
+        "why": "종합 카드에 날짜를 '·'로 나열하면 어느 날짜가 회계/미반영 기준인지 해석 불가(2026-10-30). 괄호로 각 기준을 명시"
       }
     ],
     "total.html": [
